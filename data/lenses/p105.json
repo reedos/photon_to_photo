@@ -1,0 +1,286 @@
+{
+  "id": "p105",
+  "focalLength": 105,
+  "maxFno": 1.45,
+  "markedFno": 1.4,
+  "name": "105 mm f/1.4 (patent example, Nikon large-aperture medium-telephoto)",
+  "representativeOf": "Nikon AF-S NIKKOR 105mm f/1.4E ED",
+  "representativeSource": "photonstophotos.net Optical Bench Hub row \"WO2019-116563 Example03P Nikon AF-S Nikkor 105mm f/1.4E ED\", https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026. Corroborated structurally: our transcription of the Third Embodiment (Table 3) has 14 elements in 9 groups, matching Nikon's published \"14 elements in 9 groups\" spec (nikonusa.com).",
+  "source": {
+    "kind": "patent",
+    "ref": "WO 2019/116563 A1, Table 3 / Third Embodiment (\"第3実施例\")",
+    "url": "https://patents.google.com/patent/WO2019116563A1/en",
+    "assignee": "Nikon Corp",
+    "published": "6/20/2019",
+    "accessed": "9/28/2026",
+    "location": "(Table 3) [Overall specifications] and [Lens specification], Third Embodiment"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 228.1479,
+      "t": 4.915,
+      "medium": "glass",
+      "nd": 1.59349,
+      "vd": 67,
+      "sd": 64.17,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1"
+    },
+    {
+      "r": 6415.6205,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 63.01,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 98.0319,
+      "t": 9.004,
+      "medium": "glass",
+      "nd": 1.497,
+      "vd": 81.61,
+      "sd": 62.97,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2"
+    },
+    {
+      "r": -860.7055,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 58.81,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 70.0561,
+      "t": 11.648,
+      "medium": "glass",
+      "nd": 1.497,
+      "vd": 81.61,
+      "sd": 58.74,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3 (cemented)"
+    },
+    {
+      "r": -266.9895,
+      "t": 3.5,
+      "medium": "glass",
+      "nd": 1.72047,
+      "vd": 34.71,
+      "sd": 49.85,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4 (cemented)"
+    },
+    {
+      "r": 168.2737,
+      "t": 7.956,
+      "medium": "air",
+      "sd": 47.61,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap D7 (G1 to G2)"
+    },
+    {
+      "r": -156.9444,
+      "t": 4,
+      "medium": "glass",
+      "nd": 1.6594,
+      "vd": 26.87,
+      "sd": 40.48,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L5 (cemented, G2)"
+    },
+    {
+      "r": -74.8277,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 63.88,
+      "sd": 38.73,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 (cemented, G2)"
+    },
+    {
+      "r": 48.8369,
+      "t": 17.029,
+      "medium": "air",
+      "sd": 37.41,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap D10 (G2 to G3)"
+    },
+    {
+      "r": 59.4115,
+      "t": 7.084,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.13,
+      "sd": 30.52,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7"
+    },
+    {
+      "r": -9603.9985,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 27.27,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 101.9988,
+      "t": 8.889,
+      "medium": "glass",
+      "nd": 1.6968,
+      "vd": 55.52,
+      "sd": 27.18,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L8 (cemented)"
+    },
+    {
+      "r": -54.3899,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.71736,
+      "vd": 29.57,
+      "sd": 21.38,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 (cemented)"
+    },
+    {
+      "r": 28.023,
+      "t": 5.843,
+      "medium": "air",
+      "sd": 20.23,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap to iris"
+    },
+    {
+      "r": null,
+      "t": 1.6,
+      "medium": "air",
+      "sd": 16.83,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "aperture stop S"
+    },
+    {
+      "r": 118.55,
+      "t": 5.54,
+      "medium": "glass",
+      "nd": 1.497,
+      "vd": 81.61,
+      "sd": 17.31,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10"
+    },
+    {
+      "r": -59.9736,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 18.16,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": -74.139,
+      "t": 1.6,
+      "medium": "glass",
+      "nd": 1.72047,
+      "vd": 34.71,
+      "sd": 18.17,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 (cemented)"
+    },
+    {
+      "r": 23.5612,
+      "t": 8.119,
+      "medium": "glass",
+      "nd": 1.76684,
+      "vd": 46.78,
+      "sd": 18.41,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 (cemented)"
+    },
+    {
+      "r": -400.5055,
+      "t": 2.828,
+      "medium": "air",
+      "sd": 19.42,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": -39.0208,
+      "t": 1.6,
+      "medium": "glass",
+      "nd": 1.58144,
+      "vd": 40.98,
+      "sd": 19.93,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 (cemented)"
+    },
+    {
+      "r": 124.0696,
+      "t": 5.332,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.13,
+      "sd": 20.42,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 (cemented)"
+    },
+    {
+      "r": -52.6359,
+      "t": 39.632,
+      "medium": "air",
+      "sd": 21.51,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 rear; t = BF at infinity focus"
+    }
+  ],
+  "stated": {
+    "f": 102.148,
+    "fno": 1.45,
+    "halfFieldDeg": 11.921,
+    "imageHeight": 21.63,
+    "bf": 39.632,
+    "totalLength": 150.819
+  },
+  "focus": {
+    "method": "inner",
+    "gaps": [
+      {
+        "surface": 6,
+        "atInfinity": 7.956,
+        "atClose": 19.956,
+        "closeObjectDistance": 876,
+        "note": "patent tabulates this focus condition by magnification only (beta = -0.132), not object distance; closeObjectDistance is DERIVED here as a thin-lens approximation, f*(1/|beta|+1) = 102.148*(1/0.132+1) = ~876mm from the lens, not a patent-given figure. index 6 = patent surface 7, gap before the single moving inner group G2 (surfaces 8-10)."
+      },
+      {
+        "surface": 9,
+        "atInfinity": 17.029,
+        "atClose": 5.029,
+        "closeObjectDistance": 876,
+        "note": "same derived closeObjectDistance as the D7 gap above (both belong to the single rigid inner-focus group G2). index 9 = patent surface 10, gap after G2; moves in lockstep with the D7 gap since G2 shifts as one rigid group (inner focus, G1 and G3 fixed)."
+      }
+    ],
+    "minFocusM": 1,
+    "minFocusSource": "Nikon AF-S NIKKOR 105mm f/1.4E ED overview/specifications, https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview, accessed 9/28/2026 (\"Minimum Focus Distance: 1.0 m (3.3 ft.) from focal plane\")"
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Nikon AF-S NIKKOR 105mm f/1.4E ED overview/specifications, https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview, accessed 9/28/2026 (\"Diaphragm Blades: 9\")",
+    "ev": "spec"
+  },
+  "elements": 14,
+  "groups": 9,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "All-spherical design: no surface in Table 3 is marked with the patent's aspheric-surface asterisk, so no `asph` blocks are used for this lens.",
+    "This WO document describes several unrelated embodiments at different focal lengths/apertures in one filing (Table 1 f=12.6mm relay-like, Table 2 f=47mm, Table 3 f=102.1mm/F1.45, Table 4 f=392mm, ...); only Table 3 (Third Embodiment) is used here, since that is the one photonstophotos.net ties to the 105mm f/1.4E product.",
+    "Patent gives no effective-diameter column; all `sd` values are our own paraxial-trace estimates.",
+    "Both variable gaps (D7, D10) belong to a single rigid inner-focus group G2 (surfaces 8-10), so they are read directly off the patent's [Short-distance shooting variable interval data] table rather than derived."
+  ]
+}

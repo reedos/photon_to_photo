@@ -1,0 +1,469 @@
+{
+  "meta": {
+    "project": "Photon to Photo",
+    "file": "data/z8.json",
+    "generatedBy": "z8 research agent",
+    "accessedDate": "09/28/2026",
+    "scope": "Sensor and body-geometry record for the Nikon Z8, the mirrorless body's sensor/mount pick (added to the brief after data/d850.json was underway), in the same shape: a sensor record plus readNoise points (data/read-noise.json shape) plus body figures. See research/z8.md for prose, conflicts, reasoning and an explicit D850-vs-Z8 contrast.",
+    "evidenceKinds": ["spec", "vendor", "reported", "derived", "assumed"],
+    "readNoiseMethod": "Same method as data/d850.json and data/read-noise.json: photonstophotos.net's RN_e.htm/PDR.htm/Sensor_Characteristics.htm carry every camera's series as literal JS array data in the page's inline <script>. This pass reused the SAME curl-fetched page captures already pulled for the D850 (.local/d850/captures/{rn_e,pdr,sensorchar}.html -- confirmed identical to a from-scratch fetch since both are the same static site pages covering all 445/552/6 tracked cameras) and extracted the 'Nikon Z 8_14' (RN_e.htm) and 'Nikon Z 8' (PDR.htm) series with the same bracket-balanced-scan + new Function() eval, scripts at .local/z8/build_z8.cjs (adapted from .local/d850/build_d850.cjs). ISO = round(3.125 * 2^x); readNoiseE = 2^y.",
+    "dcgDetectionMethod": "Same slope-based method as data/read-noise.json and data/d850.json: steepest negative slope of log2(read noise) vs log2(ISO) between adjacent, unmarked, in-normal-analog-range points. Derived, not reported.",
+    "openProblems": [
+      "Nikon does not publicly name the Z8's sensor supplier/part number. It is universally reported (DPReview, DxOMark, Nikon's own marketing language 'stacked CMOS') as a stacked BSI sensor shared with the flagship Z9, but no vendor datasheet naming an exact part was found.",
+      "Full-sensor electronic readout/scan time is reported here as ~1/280s (~3.6ms) from multiple secondary sources (search-tool summaries of DPReview forum/press coverage); the horshack-dpreview RollingShutter combined-results table (used directly for the a7R IV/a6400/OM-1 in data/read-noise.json) was checked and does NOT carry a Z8 row either, so this figure -- like the D850's 64ms readout figure -- could not be cross-checked against that primary source. Flagged low-confidence.",
+      "Sensor_Characteristics.htm's DxOMark-derived adcnoise field for the Z8 (5.1e-) is markedly higher than the D850's (1.4e-) or any of the four cameras in data/sensors.json/data/read-noise.json (0.9-2.7e-) -- recorded as-is, not explained; possibly reflects EXPEED 7's different downstream processing pipeline vs the D850's EXPEED 5, but this is speculation, not sourced, so not stated as fact in the record.",
+      "Body dimensions/weight were not found on a directly-fetchable Nikon first-party spec page in this pass (nikonusa.com's dedicated specifications sub-page 404'd, and B&H's product page returned HTTP 403 to this session's fetch tool); the figures below come from Wikipedia's infobox, cross-checked against search-tool summaries of B&H/DPReview listings."
+    ]
+  },
+  "sensor": {
+    "id": "full-frame-z8",
+    "format": "full-frame",
+    "nominalMm": "36 x 24",
+    "cameraName": "Nikon Z8",
+    "chipIdentity": {
+      "claimed": "Nikon does not publicly name the Z8's sensor supplier/part number. Universally reported as a 45.7MP-class stacked, back-illuminated CMOS sensor shared with the Nikon Z9 (announced ~18 months earlier) -- Nikon's own marketing describes it as having 'parallel readout paths, one for images or video and another to provide the viewfinder feed with minimal lag,' consistent with a stacked-sensor design. No vendor datasheet or confirmed teardown naming an exact part number was found.",
+      "ev": "reported",
+      "srcs": [
+        {
+          "src": "https://www.dpreview.com/reviews/nikon-z8-review",
+          "loc": "review body, sensor description: stacked/BSI sensor shared with the Z9",
+          "accessed": "09/28/2026"
+        }
+      ]
+    },
+    "activeArea": {
+      "widthMm": {
+        "v": 35.9,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox, sensor row: full-frame FX format, 35.9 x 23.9mm",
+        "accessed": "09/28/2026"
+      },
+      "heightMm": {
+        "v": 23.9,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox, sensor row",
+        "accessed": "09/28/2026"
+      },
+      "note": "Same nominal active area as the D850 -- expected, since both are Nikon FX-format full-frame bodies, and the pixel count/resolution is likewise essentially identical (8256x5504 on both cameras)."
+    },
+    "pixelCount": {
+      "effectiveMP": {
+        "v": 45.4,
+        "unit": "MP",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox: maximum resolution 8256 x 5504 (45.4 effective megapixels); Nikon's own marketing commonly states '45.7-megapixel' (total, not effective) for this sensor, the same effective-vs-total split noted for the D850 in data/d850.json",
+        "accessed": "09/28/2026"
+      },
+      "effectiveH": { "v": 8256, "unit": "px", "ev": "reported", "src": "https://en.wikipedia.org/wiki/Nikon_Z8", "loc": "infobox, resolution row", "accessed": "09/28/2026" },
+      "effectiveV": { "v": 5504, "unit": "px", "ev": "reported", "src": "https://en.wikipedia.org/wiki/Nikon_Z8", "loc": "infobox, resolution row", "accessed": "09/28/2026" }
+    },
+    "pixelPitchUm": {
+      "v": 4.35,
+      "unit": "um",
+      "ev": "derived",
+      "src": null,
+      "loc": null,
+      "accessed": "09/28/2026",
+      "calc": "sqrt(35.9mm * 23.9mm / 45.4e6 px) = sqrt(858.01mm^2 / 45.4Mpx) = sqrt(18.90 um^2) = 4.347um, rounded to 4.35um -- not independently published for the Z8 specifically, but identical to the D850's own reported 4.35um given the matching active area and pixel count (see data/d850.json).",
+      "inputs": ["z8.activeArea", "z8.pixelCount.effectiveMP"]
+    },
+    "architecture": {
+      "v": "stacked BSI (back-illuminated)",
+      "unit": "",
+      "ev": "reported",
+      "src": "https://www.dpreview.com/reviews/nikon-z8-review",
+      "loc": "review body: \"45.7MP Stacked CMOS sensor that has parallel readout paths\"; \"stacked back-illuminated CMOS sensor\"",
+      "accessed": "09/28/2026",
+      "note": "This is the key architectural difference from the D850's (non-stacked) BSI sensor -- see research/z8.md's contrast section."
+    },
+    "baseIso": {
+      "v": 64,
+      "unit": "ISO",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+      "loc": "infobox, ISO row: native 64-25,600",
+      "accessed": "09/28/2026"
+    },
+    "isoRange": {
+      "nativeMin": 64,
+      "nativeMax": 25600,
+      "expandedMin": 32,
+      "expandedMax": 102400,
+      "unit": "ISO",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+      "loc": "infobox: native sensitivity ISO 64-25,600, expansion to ISO 32-102,400",
+      "accessed": "09/28/2026",
+      "conflict": "One search-engine summary of an unnamed page stated a native range of 'ISO 64-256,000' rather than 64-25,600, almost certainly a typo/OCR-style error for the boosted 32-102,400 range -- not used, since it disagrees with both the Wikipedia infobox and the ISO range this project's own photonstophotos extraction below shows (normal analog range up to ISO 25,600, matching the D850 and the conventional figure)."
+    },
+    "adcBitDepthBits": {
+      "raw": {
+        "v": 14,
+        "unit": "bit",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/reviews/nikon-z8-review",
+        "loc": "Z8 raw NEF files, 12/14-bit lossless compressed, same convention as the D850 and most current Nikon bodies",
+        "accessed": "09/28/2026",
+        "confidence": "medium -- inferred from the same Nikon NEF raw-format convention documented directly for the D850 (data/d850.json), not independently re-confirmed on a Z8-specific spec page in this pass"
+      }
+    },
+    "fullWellElectrons": {
+      "photonstophotosRN_e": {
+        "v": 54323,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Nikon Z 8_14', Highcharts series option `fwc`",
+        "accessed": "09/28/2026"
+      },
+      "photonstophotosDxomarkDerived": {
+        "v": 56277,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+        "loc": "flat data array entry: `{ name: 'Nikon Z 8_14', unitygain: 216.9, fwc: 56277, qe: 44, readnoise: 1.0, adcnoise: 5.1, isoinvariantat: 2248 }`",
+        "accessed": "09/28/2026",
+        "note": "Close to but not identical to the RN_e.htm fwc (54,323 e-); both recorded, not averaged. Both are somewhat lower than the D850's two full-well figures (59,126 / 60,912 e-) despite the very similar active area and pixel count -- consistent with the stacked sensor's extra in-pixel readout circuitry typically costing some full-well capacity relative to a non-stacked design of the same format."
+      }
+    },
+    "conversionGain": {
+      "unityGainIso": {
+        "v": 222,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Nikon Z 8_14', Highcharts series option `unityEv` (6.15), converted with the site's ISO formula; the Sensor_Characteristics.htm DxOMark-derived `unitygain` field gives a close 216.9",
+        "accessed": "09/28/2026"
+      },
+      "dcgSwitchIso": {
+        "fromIso": 400,
+        "toIso": 503,
+        "unit": "ISO",
+        "ev": "derived",
+        "calc": "Steepest adjacent-point drop in log2(read noise) vs log2(ISO) among plain (unmarked, in-normal-range) points of series 'Nikon Z 8_14': from ISO 400 (5.502 e-) to ISO 503 (1.257 e-), slope -6.45 stops of read-noise change per stop of ISO change. Same detection method as data/d850.json and data/read-noise.json.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "accessed": "09/28/2026",
+        "note": "This is a much steeper (nearly double the stops/stop) cliff than the D850's ISO 318->400 step (-3.76 stops/stop) or any of the four cameras in data/sensors.json/data/read-noise.json (-1.94 to -3.82 stops/stop) -- the Z8's dual-gain transition is both later (400->503/500 vs 318->400/320-400 on the D850) and sharper. Worth the engine team's attention; not otherwise explained in any source checked."
+      }
+    },
+    "readNoiseElectrons": {
+      "note": "Full per-ISO curve in readNoise.points below, same photonstophotos.net RN_e.htm extraction as data/d850.json.",
+      "normalAnalogRangeIso": [63, 25600],
+      "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+      "loc": "series 'Nikon Z 8_14', Highcharts series options `loEv`/`hiEv`"
+    },
+    "dynamicRange": {
+      "dxomarkColorDepthBits": {
+        "v": 26.3,
+        "unit": "bit",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-z8-sensor-test/",
+        "loc": "\"strong response for color depth at base sensitivity (ISO 64) measuring 26.3 bits\"",
+        "accessed": "09/28/2026"
+      },
+      "dxomarkDynamicRangeEV": {
+        "v": 14.2,
+        "unit": "EV",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-z8-sensor-test/",
+        "loc": "\"a wide dynamic range with a maximum of 14.2 EV at ISO 64\"",
+        "accessed": "09/28/2026"
+      },
+      "dxomarkLowLightISO": {
+        "v": 2548,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-z8-sensor-test/",
+        "loc": "low-light sensor response measured at ISO 2548",
+        "accessed": "09/28/2026"
+      },
+      "dxomarkOverallScore": {
+        "v": 98,
+        "unit": "points",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-z8-sensor-test/",
+        "loc": "\"a high DXOMARK score of 98 points\"",
+        "accessed": "09/28/2026",
+        "note": "Slightly below the D850's overall DxOMark score (100, the first DSLR sensor to reach it) despite the closely related sensor generation -- DxOMark's own scoring methodology and the stacked sensor's small full-well/QE tradeoffs are the likely drivers; not further decomposed here."
+      },
+      "photographicDynamicRangePDR": {
+        "pdrAtBaseIso64": 11.31,
+        "lowLightEv": 10.4005,
+        "src": "https://www.photonstophotos.net/Charts/PDR.htm",
+        "loc": "series 'Nikon Z 8', `lowLightEv` series option and the ISO-64 (xEv=4.33) data point",
+        "note": "See readNoise.points below (pdrEv field) for the full curve."
+      }
+    },
+    "qe": {
+      "dxomarkDerivedPeakPercent": {
+        "v": 44,
+        "unit": "%",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+        "loc": "flat data array entry 'Nikon Z 8_14', field `qe: 44` -- identical to the D850's own DxOMark-derived QE estimate (44%), consistent with a closely related sensor generation",
+        "accessed": "09/28/2026"
+      },
+      "perChannel": { "note": "Not obtained; not published in text-extractable form by any source checked." }
+    },
+    "isoInvariantAtIso": {
+      "v": 2248,
+      "unit": "ISO",
+      "ev": "reported",
+      "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+      "loc": "flat data array entry 'Nikon Z 8_14', field `isoinvariantat: 2248`",
+      "accessed": "09/28/2026",
+      "note": "More than triple the D850's ISO-invariance point (683) -- consistent with the Z8's dual-gain switch itself landing at a higher ISO (400->503 vs the D850's 318->400)."
+    },
+    "readout": {
+      "electronicFullFrameMs": {
+        "v": 3.6,
+        "unit": "ms",
+        "ev": "reported",
+        "src": "https://www.zsystemuser.com/z-mount-cameras/z-camera-articles/sensor-read-out-speeds.html",
+        "loc": "Search-tool-summarized figure: the Z8's stills-mode sensor readout is commonly stated as ~1/268 to 1/280 second (~3.6-3.7ms) across multiple secondary sources (Thom Hogan's zsystemuser.com sensor-readout-speeds article by title, plus press coverage of a DPReview forum thread on Z8/Z9 rolling shutter in 60/120fps modes); this session's fetch tool could not retrieve the actual body text of the zsystemuser.com article (only navigation chrome came through) or the DPReview forum thread itself (blocked), so this figure was not independently read from a primary numeric table the way the a7R IV/a6400/OM-1 readout figures were in data/read-noise.json.",
+        "accessed": "09/28/2026",
+        "confidence": "low -- same class of gap as the D850's 64ms figure: no horshack-dpreview RollingShutter table row exists for the Z8 either (checked directly), and the two best-looking primary sources (Thom Hogan's article, the DPReview forum thread) did not return readable body text to this session's tools.",
+        "note": "At 120fps continuous shooting the readout rate drops further, to about 1/173s per several sources -- not recorded as a value here since it's a mode-dependent figure, not the base stills-mode readout."
+      },
+      "mechanicalShutter": {
+        "v": "none -- electronic shutter only",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/reviews/nikon-z8-review",
+        "loc": "review body and multiple corroborating reviews: the Z8 (like the Z9) has no mechanical shutter at all, relying entirely on its fast stacked-sensor readout; it retains a shutter-shield mechanism that closes over the sensor when the camera is powered off, purely to keep dust off the sensor during lens changes, not for exposure control",
+        "accessed": "09/28/2026"
+      },
+      "electronicShutterRangeS": {
+        "v": "1/32000-900",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox, shutter row: \"900s - 1/32000s\"",
+        "accessed": "09/28/2026"
+      },
+      "flashSyncSpeedS": {
+        "v": "1/200",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox, flash-sync row: \"1/200s (up to 1/8000s using high-speed sync)\"",
+        "accessed": "09/28/2026",
+        "note": "Slightly slower base flash sync than the D850's mechanical-shutter 1/250s, despite the Z8 having no mechanical curtain at all -- the limit here is a readout/flash-duration constraint of the electronic rolling shutter, not a curtain-travel-time limit. High-speed sync extends usable flash sync up to 1/8000s."
+      }
+    },
+    "microlensFillFactor": {
+      "v": 0.97,
+      "unit": "fraction",
+      "ev": "assumed",
+      "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+      "loc": "\"the pixel fill factor approaches 100%\" for BSI sensors generally",
+      "accessed": "09/28/2026",
+      "note": "No Z8-specific fill-factor number is published; same assumption as every other BSI sensor in this project, including the D850."
+    },
+    "notes": [
+      "Active area and effective pixel count are essentially identical to the D850's (both FX 35.9x23.9mm, both 8256x5504/45.4MP) -- consistent with reporting that the Z8's sensor is closely related to the D850's/a7R III-family sensor generation, but with a stacked readout layer added (see research/z8.md contrast section).",
+      "DCG-switch ISO (400 -> 503, i.e. ~400->500) is both later and much sharper (-6.45 stops/stop) than the D850's (318->400, -3.76 stops/stop) -- not explained by any source checked, flagged for the engine team.",
+      "Full well is lower on both photonstophotos datasets for the Z8 (54,323 / 56,277 e-) than the D850 (59,126 / 60,912 e-) despite the same active area/pixel count -- plausibly the stacked design's extra per-pixel circuitry, not independently confirmed."
+    ]
+  },
+  "readNoise": {
+    "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+    "pdrSrc": "https://www.photonstophotos.net/Charts/PDR.htm",
+    "seriesName": "Nikon Z 8_14",
+    "pdrSeriesName": "Nikon Z 8",
+    "accessed": "09/28/2026",
+    "ev": "reported",
+    "fwcElectrons": 54323,
+    "unityGainIso": 222,
+    "normalAnalogRangeIso": [63, 25600],
+    "dcgIso": { "fromIso": 400, "toIso": 503, "ev": "derived" },
+    "pdrLowLightEv": 10.4005,
+    "points": [
+      { "iso": 31, "readNoiseE": 7.013, "pdrEv": 11.32, "outsideNormalAnalogRange": true },
+      { "iso": 40, "readNoiseE": 6.964, "pdrEv": 11.31, "outsideNormalAnalogRange": true },
+      { "iso": 50, "readNoiseE": 7.062, "pdrEv": 11.29, "outsideNormalAnalogRange": true },
+      { "iso": 63, "readNoiseE": 7.013, "pdrEv": 11.31 },
+      { "iso": 80, "readNoiseE": 6.409, "pdrEv": 11.0 },
+      { "iso": 100, "readNoiseE": 6.19, "pdrEv": 10.64 },
+      { "iso": 126, "readNoiseE": 5.979, "pdrEv": 10.32 },
+      { "iso": 159, "readNoiseE": 6.063, "pdrEv": 10.0 },
+      { "iso": 200, "readNoiseE": 6.063, "pdrEv": 9.67 },
+      { "iso": 251, "readNoiseE": 6.105, "pdrEv": 9.32 },
+      { "iso": 318, "readNoiseE": 5.54, "pdrEv": 9.09 },
+      { "iso": 400, "readNoiseE": 5.502, "pdrEv": 8.73 },
+      { "iso": 503, "readNoiseE": 1.257, "pdrEv": 9.54 },
+      { "iso": 636, "readNoiseE": 1.24, "pdrEv": 9.21 },
+      { "iso": 800, "readNoiseE": 1.189, "pdrEv": 8.86 },
+      { "iso": 1006, "readNoiseE": 1.206, "pdrEv": 8.5 },
+      { "iso": 1273, "readNoiseE": 1.173, "pdrEv": 8.18 },
+      { "iso": 1600, "readNoiseE": 1.197, "pdrEv": 7.87 },
+      { "iso": 2011, "readNoiseE": 1.141, "pdrEv": 7.54 },
+      { "iso": 2546, "readNoiseE": 1.149, "pdrEv": 7.22 },
+      { "iso": 3200, "readNoiseE": 1.133, "pdrEv": 6.89 },
+      { "iso": 4022, "readNoiseE": 1.079, "pdrEv": 6.57 },
+      { "iso": 5091, "readNoiseE": 1.117, "pdrEv": 6.22 },
+      { "iso": 6400, "readNoiseE": 1.11, "pdrEv": 5.9 },
+      { "iso": 8045, "readNoiseE": 1.141, "pdrEv": 5.58 },
+      { "iso": 10183, "readNoiseE": 1.125, "pdrEv": 5.21 },
+      { "iso": 12800, "readNoiseE": 1.117, "pdrEv": 4.89 },
+      { "iso": 16090, "readNoiseE": 1.05, "pdrEv": 4.58 },
+      { "iso": 20366, "readNoiseE": 1.028, "pdrEv": 4.24 },
+      { "iso": 25600, "readNoiseE": 1.064, "pdrEv": 3.91 },
+      { "iso": 32180, "readNoiseE": 1.057, "pdrEv": 3.57, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
+      { "iso": 40731, "readNoiseE": 1.042, "pdrEv": 3.24, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
+      { "iso": 51200, "readNoiseE": 1.021, "pdrEv": 2.91, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
+      { "iso": 102400, "readNoiseE": 1.0, "pdrEv": 1.91, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" }
+    ],
+    "notes": [
+      "Marker semantics identical to data/d850.json/data/read-noise.json.",
+      "DCG switch ISO 400->503 (~400->500) is a -6.45 stops/stop cliff, the steepest of any camera recorded across data/sensors.json, data/read-noise.json, data/d850.json and this file.",
+      "PDR dips slightly at the DCG boundary itself (9.09 at ISO 318, 8.73 at ISO 400, jumping back up to 9.54 at ISO 503) -- the read-noise floor drop from the gain switch more than compensates for the higher ISO's smaller usable signal swing, the same PDR-recovers-at-the-DCG-step pattern visible in the D850 and a7R IV curves."
+    ]
+  },
+  "body": {
+    "cameraName": "Nikon Z8",
+    "mount": {
+      "name": "Nikon Z-mount",
+      "flangeFocalDistanceMm": {
+        "v": 16,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z-mount",
+        "loc": "\"16 mm\" flange distance",
+        "accessed": "09/28/2026"
+      },
+      "throatDiameterMm": {
+        "v": 55,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z-mount",
+        "loc": "\"55 mm\" inner diameter, described as \"the largest full-frame lens mount\"; \"much larger than the older Nikon F-mount (44 mm)\"",
+        "accessed": "09/28/2026"
+      },
+      "mountType": {
+        "v": "bayonet, 4 tabs",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z-mount",
+        "loc": "\"Bayonet\" mount, \"4\" tabs (increased from three on the F-mount)",
+        "accessed": "09/28/2026"
+      },
+      "electricalPins": {
+        "v": 11,
+        "unit": "pins",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z-mount",
+        "loc": "\"11 electrical pins\" (up from eight on the F-mount)",
+        "accessed": "09/28/2026"
+      },
+      "note": "Contrast with the D850's F-mount: flange focal distance shrinks from 46.5mm (F) to 16mm (Z) -- less than a third -- while throat diameter grows from 44mm to 55mm. Nikon's own stated rationale (widely repeated, e.g. in the DPReview forum thread title 'Why the very short flange focal distance of 16mm for Z mount?') is that the shorter, wider mount permits faster (lower-f-number) and optically simpler lens designs, and its geometry accommodates F-mount lenses via the FTZ adapter without an optical element."
+    },
+    "shutter": {
+      "mechanicalShutter": {
+        "v": "none",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/reviews/nikon-z8-review",
+        "loc": "the Z8 has no mechanical shutter at all -- direct contrast with the D850's mechanical focal-plane shutter; a shutter-shield mechanism closes over the sensor when powered off, for dust protection during lens changes only",
+        "accessed": "09/28/2026"
+      },
+      "electronicShutterRangeS": {
+        "v": "1/32000-900",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox: \"900s - 1/32000s\"",
+        "accessed": "09/28/2026"
+      },
+      "flashSyncSpeedS": {
+        "v": "1/200",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox flash-sync row: \"1/200s (up to 1/8000s using high-speed sync)\"",
+        "accessed": "09/28/2026"
+      }
+    },
+    "viewfinder": {
+      "type": {
+        "v": "electronic (EVF), Quad-VGA OLED",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "infobox: \"Quad-VGA EVF (1280x960)\"",
+        "accessed": "09/28/2026",
+        "note": "Categorically different from the D850's optical pentaprism -- an electronic viewfinder, not a mirror/prism optical path. No physical mirror or reflex path exists in the Z8 at all."
+      },
+      "magnification": {
+        "v": 0.8,
+        "unit": "x",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "\"Magnification: 0.8x (with 50mm lens)\"",
+        "accessed": "09/28/2026"
+      },
+      "brightnessNits": {
+        "v": 3000,
+        "unit": "nits",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "\"Brightness: 3000 nits\"",
+        "accessed": "09/28/2026"
+      }
+    },
+    "dimensionsMm": {
+      "width": 144,
+      "height": 118.5,
+      "depth": 83,
+      "unit": "mm",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+      "loc": "infobox, dimensions row: 144 x 118.5 x 83 mm",
+      "accessed": "09/28/2026",
+      "note": "Noticeably smaller than the D850's 146x124x78.5mm in width and height, but deeper (83mm vs 78.5mm) -- Nikon's own marketing describes the Z8 as '30% smaller than the Z9' (its stacked-sensor sibling in a full pro body), not explicitly compared to the D850 in the sources checked."
+    },
+    "weightG": {
+      "withBattery": {
+        "v": 910,
+        "unit": "g",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+        "loc": "\"Weight: 910 g with battery\"",
+        "accessed": "09/28/2026",
+        "note": "Nearly identical to the D850's with-battery weight (1005g) is NOT what this is -- 910g is close to the D850's body-only weight (915g), i.e. the Z8 is meaningfully lighter than the D850 once battery is included on both. No body-only figure for the Z8 was found published separately."
+      }
+    },
+    "imageProcessor": {
+      "v": "Nikon EXPEED 7",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+      "loc": "infobox, processor row",
+      "accessed": "09/28/2026"
+    },
+    "releaseDate": {
+      "v": "05/26/2023",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+      "loc": "infobox, release-date row",
+      "accessed": "09/28/2026"
+    },
+    "stabilization": {
+      "v": "5-axis in-body image stabilization (IBIS)",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_Z8",
+      "loc": "infobox/body",
+      "accessed": "09/28/2026",
+      "note": "The D850 has no IBIS -- one of several mirrorless-generation additions with no D850 counterpart."
+    }
+  },
+  "contrastWithD850": {
+    "sensorReadoutArchitecture": "D850: non-stacked BSI CMOS, mechanical focal-plane shutter as the primary capture path, with an electronic-shutter 'Silent live view' mode as a secondary option (data/d850.json sensor.electronicShutterES). Z8: stacked BSI CMOS with dedicated parallel readout paths for capture vs. viewfinder feed, and NO mechanical shutter at all -- electronic shutter is the only capture mechanism.",
+    "readoutSpeed": "D850 full-sensor readout ~64ms (low confidence, see research/d850.md open problems) vs. Z8 ~3.6ms (~1/280s, also low confidence but consistently reported across more sources) -- roughly an order of magnitude faster, the direct benefit of the stacked design's on-chip parallel readout.",
+    "mount": "F-mount (D850): 46.5mm flange focal distance, 44mm throat. Z-mount (Z8): 16mm flange focal distance, 55mm throat -- shorter and wider, the geometry change that defines Nikon's mirrorless generation.",
+    "viewfinder": "D850: optical pentaprism, 100% coverage, 0.75x magnification, a real mirror/prism light path. Z8: electronic Quad-VGA OLED EVF, 0.8x magnification (w/ 50mm lens), no mirror or prism at all.",
+    "iso/gain": "Both share base ISO 64 and a very similar active area/pixel count (both ~45.4MP effective FX). The Z8's dual-conversion-gain switch is later and sharper (ISO 400->503, -6.45 stops/stop) than the D850's (ISO 318->400, -3.76 stops/stop), and its full well is somewhat lower on both photonstophotos datasets -- plausibly the cost of the stacked design's extra per-pixel readout circuitry, though this project found no source explicitly confirming that causal explanation.",
+    "bodySize": "Z8 is smaller in width/height (144x118.5mm vs 146x124mm) but slightly deeper (83mm vs 78.5mm) than the D850, and lighter with battery (910g vs 1005g) -- broadly consistent with removing the mirror box and pentaprism while keeping a similarly rugged pro-body shell.",
+    "src": "synthesized from the individually-cited figures above in data/d850.json and data/z8.json; not itself a single external source"
+  }
+}

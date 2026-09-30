@@ -1,0 +1,331 @@
+{
+  "dataset": "24-bin equal-width wavelength binning proposal for spectral ray tracing, 380-780 nm",
+  "ev": "derived",
+  "calc": "380-780 nm split into 24 EQUAL-width bins (16.6667 nm each), because equal width is the simplest scheme to explain on the page and to index from a wavelength in a shader (bin = floor((lambda-380)/width)), and it keeps every visible sub-range represented even though the eye's sensitivity is very uneven across it (the brief's own WACR 16-bin-minimum spec is a bin COUNT, not a weighting scheme). Center = arithmetic midpoint of the bin, for the same reason (a Y-weighted centroid would pull centers toward 555 nm and complicate the index math for a small accuracy gain). cmf_integral is the EXACT bin-integrated (x_bar,y_bar,z_bar) -- computed by linearly interpolating the 1 nm CIE 1931 table to 0.1 nm and Riemann-summing -- so a renderer that assigns one spectral radiance value L_i to bin i can reconstruct XYZ = sum_i L_i * cmf_integral_i exactly enough for display, without re-integrating CMFs per frame. luminance_share is cmf_integral.Y normalized to sum to 1 across all bins, i.e. how much each bin actually contributes to perceived brightness under a flat (equal-radiance) spectrum -- useful for deciding where noise will be most visible if bins are stochastically sampled rather than all traced every frame.",
+  "source": "Computed here from cie1931-2deg-cmf.json (CIE 018:2019 Table 6, CC BY-SA 4.0)",
+  "accessed": "9/28/2026",
+  "wavelength_unit": "nm",
+  "n_bins": 24,
+  "range_nm": [
+    380,
+    780
+  ],
+  "bin_width_nm": 16.6667,
+  "edges_nm": [
+    380.0,
+    396.6667,
+    413.3333,
+    430.0,
+    446.6667,
+    463.3333,
+    480.0,
+    496.6667,
+    513.3333,
+    530.0,
+    546.6667,
+    563.3333,
+    580.0,
+    596.6667,
+    613.3333,
+    630.0,
+    646.6667,
+    663.3333,
+    680.0,
+    696.6667,
+    713.3333,
+    730.0,
+    746.6667,
+    763.3333,
+    780.0
+  ],
+  "bins": [
+    {
+      "index": 0,
+      "edge_low_nm": 380.0,
+      "edge_high_nm": 396.667,
+      "center_nm": 388.333,
+      "cmf_integral": {
+        "X": 0.06745059142,
+        "Y": 0.0019148104080000004,
+        "Z": 0.31885999915000013
+      },
+      "luminance_share": 1.8e-05
+    },
+    {
+      "index": 1,
+      "edge_low_nm": 396.667,
+      "edge_high_nm": 413.333,
+      "center_nm": 405.0,
+      "cmf_integral": {
+        "X": 0.47139747958,
+        "Y": 0.013084767201999997,
+        "Z": 2.244022765400001
+      },
+      "luminance_share": 0.000122
+    },
+    {
+      "index": 2,
+      "edge_low_nm": 413.333,
+      "edge_high_nm": 430.0,
+      "center_nm": 421.667,
+      "cmf_integral": {
+        "X": 2.746863258,
+        "Y": 0.09225181789999999,
+        "Z": 13.271621056000003
+      },
+      "luminance_share": 0.000863
+    },
+    {
+      "index": 3,
+      "edge_low_nm": 430.0,
+      "edge_high_nm": 446.667,
+      "center_nm": 438.333,
+      "cmf_integral": {
+        "X": 5.576003605999999,
+        "Y": 0.35346708299999996,
+        "Z": 27.89767906600001
+      },
+      "luminance_share": 0.003308
+    },
+    {
+      "index": 4,
+      "edge_low_nm": 446.667,
+      "edge_high_nm": 463.333,
+      "center_nm": 455.0,
+      "cmf_integral": {
+        "X": 5.244333217999998,
+        "Y": 0.8169703256000004,
+        "Z": 28.77346663100001
+      },
+      "luminance_share": 0.007645
+    },
+    {
+      "index": 5,
+      "edge_low_nm": 463.333,
+      "edge_high_nm": 480.0,
+      "center_nm": 471.667,
+      "cmf_integral": {
+        "X": 2.973619075999999,
+        "Y": 1.6560336514000003,
+        "Z": 20.037310547999994
+      },
+      "luminance_share": 0.015498
+    },
+    {
+      "index": 6,
+      "edge_low_nm": 480.0,
+      "edge_high_nm": 496.667,
+      "center_nm": 488.333,
+      "cmf_integral": {
+        "X": 0.7396799642,
+        "Y": 3.3186472250000003,
+        "Z": 8.873221427999994
+      },
+      "luminance_share": 0.031057
+    },
+    {
+      "index": 7,
+      "edge_low_nm": 496.667,
+      "edge_high_nm": 513.333,
+      "center_nm": 505.0,
+      "cmf_integral": {
+        "X": 0.11424490480000007,
+        "Y": 6.896693493000004,
+        "Z": 3.599188750999997
+      },
+      "luminance_share": 0.064542
+    },
+    {
+      "index": 8,
+      "edge_low_nm": 513.333,
+      "edge_high_nm": 530.0,
+      "center_nm": 521.667,
+      "cmf_integral": {
+        "X": 1.371184803,
+        "Y": 12.141072282000001,
+        "Z": 1.2450773660000003
+      },
+      "luminance_share": 0.11362
+    },
+    {
+      "index": 9,
+      "edge_low_nm": 530.0,
+      "edge_high_nm": 546.667,
+      "center_nm": 538.333,
+      "cmf_integral": {
+        "X": 4.509926982,
+        "Y": 15.631886377999994,
+        "Z": 0.4092495110000001
+      },
+      "luminance_share": 0.146289
+    },
+    {
+      "index": 10,
+      "edge_low_nm": 546.667,
+      "edge_high_nm": 563.333,
+      "center_nm": 555.0,
+      "cmf_integral": {
+        "X": 8.580596657999996,
+        "Y": 16.620832843999995,
+        "Z": 0.10501073699999995
+      },
+      "luminance_share": 0.155544
+    },
+    {
+      "index": 11,
+      "edge_low_nm": 563.333,
+      "edge_high_nm": 580.0,
+      "center_nm": 571.667,
+      "cmf_integral": {
+        "X": 13.06660176,
+        "Y": 15.546500578000007,
+        "Z": 0.034935905449999985
+      },
+      "luminance_share": 0.14549
+    },
+    {
+      "index": 12,
+      "edge_low_nm": 580.0,
+      "edge_high_nm": 596.667,
+      "center_nm": 588.333,
+      "cmf_integral": {
+        "X": 16.770496368,
+        "Y": 12.956931684000008,
+        "Z": 0.020793305350000003
+      },
+      "luminance_share": 0.121256
+    },
+    {
+      "index": 13,
+      "edge_low_nm": 596.667,
+      "edge_high_nm": 613.333,
+      "center_nm": 605.0,
+      "cmf_integral": {
+        "X": 17.261415169999996,
+        "Y": 9.469390411999996,
+        "Z": 0.009751748297999996
+      },
+      "luminance_share": 0.088618
+    },
+    {
+      "index": 14,
+      "edge_low_nm": 613.333,
+      "edge_high_nm": 630.0,
+      "center_nm": 621.667,
+      "cmf_integral": {
+        "X": 13.529585162,
+        "Y": 6.003367903999996,
+        "Z": 0.002574613557499994
+      },
+      "luminance_share": 0.056182
+    },
+    {
+      "index": 15,
+      "edge_low_nm": 630.0,
+      "edge_high_nm": 646.667,
+      "center_nm": 638.333,
+      "cmf_integral": {
+        "X": 8.053049049999991,
+        "Y": 3.192968889999996,
+        "Z": 0.0004072366475199988
+      },
+      "luminance_share": 0.029881
+    },
+    {
+      "index": 16,
+      "edge_low_nm": 646.667,
+      "edge_high_nm": 663.333,
+      "center_nm": 655.0,
+      "cmf_integral": {
+        "X": 3.7388819519999945,
+        "Y": 1.4005230593999978,
+        "Z": 9.263332979999855e-06
+      },
+      "luminance_share": 0.013107
+    },
+    {
+      "index": 17,
+      "edge_low_nm": 663.333,
+      "edge_high_nm": 680.0,
+      "center_nm": 671.667,
+      "cmf_integral": {
+        "X": 1.3739907079999976,
+        "Y": 0.5031564805999995,
+        "Z": 0.0
+      },
+      "luminance_share": 0.004709
+    },
+    {
+      "index": 18,
+      "edge_low_nm": 680.0,
+      "edge_high_nm": 696.667,
+      "center_nm": 688.333,
+      "cmf_integral": {
+        "X": 0.4577589387999995,
+        "Y": 0.1658213566199997,
+        "Z": 0.0
+      },
+      "luminance_share": 0.001552
+    },
+    {
+      "index": 19,
+      "edge_low_nm": 696.667,
+      "edge_high_nm": 713.333,
+      "center_nm": 705.0,
+      "cmf_integral": {
+        "X": 0.14263526409999985,
+        "Y": 0.051509545799999924,
+        "Z": 0.0
+      },
+      "luminance_share": 0.000482
+    },
+    {
+      "index": 20,
+      "edge_low_nm": 713.333,
+      "edge_high_nm": 730.0,
+      "center_nm": 721.667,
+      "cmf_integral": {
+        "X": 0.04536613204999988,
+        "Y": 0.01638254097999997,
+        "Z": 0.0
+      },
+      "luminance_share": 0.000153
+    },
+    {
+      "index": 21,
+      "edge_low_nm": 730.0,
+      "edge_high_nm": 746.667,
+      "center_nm": 738.333,
+      "cmf_integral": {
+        "X": 0.01391620169099998,
+        "Y": 0.00502539513799999,
+        "Z": 0.0
+      },
+      "luminance_share": 4.7e-05
+    },
+    {
+      "index": 22,
+      "edge_low_nm": 746.667,
+      "edge_high_nm": 763.333,
+      "center_nm": 755.0,
+      "cmf_integral": {
+        "X": 0.0041506810209999976,
+        "Y": 0.0014988868261999987,
+        "Z": 0.0
+      },
+      "luminance_share": 1.4e-05
+    },
+    {
+      "index": 23,
+      "edge_low_nm": 763.333,
+      "edge_high_nm": 780.0,
+      "center_nm": 771.667,
+      "cmf_integral": {
+        "X": 0.0013030951649999976,
+        "Y": 0.0004705715057999994,
+        "Z": 0.0
+      },
+      "luminance_share": 4e-06
+    }
+  ]
+}

@@ -1,0 +1,352 @@
+{
+  "id": "p28",
+  "focalLength": 28,
+  "maxFno": 1.8,
+  "markedFno": 1.8,
+  "name": "28 mm f/1.8 wide-angle (patent numerical example)",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2021-018277 A (JP 7293017 B2 as granted), Numerical Example 3 / Embodiment 3",
+    "url": "https://patents.google.com/patent/JP2021018277A/en",
+    "assignee": "Canon Inc.",
+    "published": "2/15/2021",
+    "accessed": "9/28/2026",
+    "location": "[Numerical Example 3] surface-data table and [Various data] block (machine translation)"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 50.059,
+      "t": 1.5,
+      "medium": "glass",
+      "nd": 1.83481,
+      "vd": 42.7,
+      "sd": 23.032,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1 front"
+    },
+    {
+      "r": 18.734,
+      "t": 6.57,
+      "medium": "air",
+      "sd": 22.086,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1 rear"
+    },
+    {
+      "r": 143.57,
+      "t": 3.72,
+      "medium": "glass",
+      "nd": 1.80518,
+      "vd": 25.4,
+      "sd": 20.953,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 front"
+    },
+    {
+      "r": -51.393,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 20.355,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 rear"
+    },
+    {
+      "r": -56.075,
+      "t": 1.35,
+      "medium": "glass",
+      "nd": 1.58913,
+      "vd": 61.1,
+      "sd": 20.294,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3 front"
+    },
+    {
+      "r": 65.386,
+      "t": 11.39,
+      "medium": "air",
+      "sd": 19.958,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": 0.00000871643,
+        "A6": 4.80876e-9,
+        "A8": 5.73527e-11,
+        "convention": "patent prints K with K=0 sphere; A4/A6/A8 sag coefficients directly"
+      },
+      "label": "L3 rear (aspheric)"
+    },
+    {
+      "r": 180.217,
+      "t": 6.16,
+      "medium": "glass",
+      "nd": 1.755,
+      "vd": 52.3,
+      "sd": 17.499,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4 front (cemented doublet L4-L5 front)"
+    },
+    {
+      "r": -19.511,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.51742,
+      "vd": 52.4,
+      "sd": 16.484,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L4-L5 cemented interface"
+    },
+    {
+      "r": -162.37,
+      "t": 2.31,
+      "medium": "air",
+      "sd": 16.097,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L5 rear"
+    },
+    {
+      "r": 40.195,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.84666,
+      "vd": 23.8,
+      "sd": 14.847,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 front (cemented doublet L6-L7 front)"
+    },
+    {
+      "r": 19.211,
+      "t": 3.91,
+      "medium": "glass",
+      "nd": 1.51823,
+      "vd": 58.9,
+      "sd": 14.292,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L6-L7 cemented interface"
+    },
+    {
+      "r": 53.641,
+      "t": 1.89,
+      "medium": "air",
+      "sd": 12.722,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7 rear"
+    },
+    {
+      "r": null,
+      "t": 8.26,
+      "medium": "air",
+      "sd": 11.802,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "STO (aperture stop, flat)"
+    },
+    {
+      "r": 28.338,
+      "t": 4.96,
+      "medium": "glass",
+      "nd": 1.83481,
+      "vd": 42.7,
+      "sd": 16.193,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L8 front"
+    },
+    {
+      "r": -100.526,
+      "t": 0.5,
+      "medium": "air",
+      "sd": 16.341,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L8 rear"
+    },
+    {
+      "r": -174.847,
+      "t": 2.22,
+      "medium": "glass",
+      "nd": 1.755,
+      "vd": 52.3,
+      "sd": 16.3,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 front"
+    },
+    {
+      "r": -46.525,
+      "t": 0.33,
+      "medium": "air",
+      "sd": 16.287,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 rear"
+    },
+    {
+      "r": -40.822,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.68893,
+      "vd": 31.1,
+      "sd": 16.196,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10 front"
+    },
+    {
+      "r": 22.046,
+      "t": 4.85,
+      "medium": "air",
+      "sd": 16.195,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10 rear"
+    },
+    {
+      "r": 42.3,
+      "t": 4.16,
+      "medium": "glass",
+      "nd": 1.84666,
+      "vd": 23.8,
+      "sd": 18.641,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 front"
+    },
+    {
+      "r": -83.103,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 18.937,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 rear"
+    },
+    {
+      "r": 36.525,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.1,
+      "sd": 18.93,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 front"
+    },
+    {
+      "r": 21.48,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 18.582,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 rear"
+    },
+    {
+      "r": 20.944,
+      "t": 7.54,
+      "medium": "glass",
+      "nd": 1.43875,
+      "vd": 94.7,
+      "sd": 18.611,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 front"
+    },
+    {
+      "r": -42.909,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 18.064,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 rear"
+    },
+    {
+      "r": -409.522,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.84666,
+      "vd": 23.8,
+      "sd": 18.035,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 front"
+    },
+    {
+      "r": 110.006,
+      "t": 4.93,
+      "medium": "air",
+      "sd": 17.871,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 rear"
+    },
+    {
+      "r": -26.949,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.854,
+      "vd": 40.4,
+      "sd": 17.308,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -0.0000176678,
+        "A6": -1.00929e-8,
+        "A8": -7.53781e-11,
+        "convention": "same as surface 6 (K=0 sphere convention)"
+      },
+      "label": "L15 front (aspheric)"
+    },
+    {
+      "r": -83.777,
+      "t": 15.85,
+      "medium": "air",
+      "sd": 17.589,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L15 rear / last surface, t = BF"
+    }
+  ],
+  "stated": {
+    "f": 28,
+    "fno": 1.8,
+    "halfFieldDeg": 37.69,
+    "imageHeight": 21.64,
+    "bf": 15.85,
+    "totalLength": 100
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 12,
+        "atInfinity": 8.26,
+        "atClose": 0.5,
+        "closeObjectDistance": 280,
+        "note": "d13 in patent numbering (surface 13, 1-based) = gap after the stop; object distance 280 mm is the patent's own [Variable Distances] entry, reference point not stated in the machine translation"
+      },
+      {
+        "surface": 14,
+        "atInfinity": 0.5,
+        "atClose": 2.26,
+        "closeObjectDistance": 280,
+        "note": "d15 in patent numbering"
+      },
+      {
+        "surface": 18,
+        "atInfinity": 4.85,
+        "atClose": 10.85,
+        "closeObjectDistance": 280,
+        "note": "d19 in patent numbering"
+      }
+    ],
+    "minFocusM": 0.28,
+    "minFocusSource": "assumed - typical minimum focus for a fast full-frame 28 mm prime; taken from a comparable product, NOT this patent example (Sigma 28mm F1.4 DG HSM Art = 0.28 m per https://www.sigmaphoto.com/28mm-f1-4-dg-hsm-a, accessed 9/28/2026 - the Sigma page directly quotes '28cm / 11 in'). That Sigma lens is a different maker and a different F-number class (17 elements/12 groups/9 blades at F1.4) from this Canon F1.8 patent example, so this is only an order-of-magnitude class stand-in, not evidence of identity"
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "assumed - typical rounded-blade count for a modern fast 28 mm prime; not tied to this specific patent example",
+    "ev": "assumed"
+  },
+  "elements": 15,
+  "groups": 13,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is Canon JP2021-018277A ('Optical system and image pickup apparatus'), same patent family and application as p24.json (application JP2019-132360, filed 7/18/2019, published 2/15/2021, granted JP7293017B2). Machine-translated (Google Patents) English text; original Japanese.",
+    "Numerical Example 3 of the same six-example application (Examples 1,4,5 are 24 mm; Example 2 is 35 mm F1.8; Example 6 is 50 mm F1.4). Example 3 is the only 28 mm example.",
+    "No public source ties this example to a shipped product, so `representativeOf` is omitted. Canon has not (as of 9/28/2026) shipped an RF 28mm prime at this aperture class; this appears to be an unbuilt design from Canon's exploratory patent family.",
+    "Surfaces 7-8 and 10-11 are cemented doublets (shared vertex, second glass on the same table row) per patent convention; marked coated:false.",
+    "closeObjectDistance (280 mm) transcribed as printed; reference point (first surface vs. image plane) not stated in the translated text.",
+    "No semi-diameters given in the patent text; all surfaces use sdSource 'estimated-from-marginal-ray' via the same two-ray paraxial method as p24.json/p20.json/p35.json (.local/lens-wide/raytrace.py), scaled to the patent's own stated Fno=1.80 and half field 37.69 deg. Treat front-group sd as a paraxial lower bound (see p24.json notes for the general caveat).",
+    "medium is 'glass' everywhere (no named glass catalog in the patent, only nd/vd)."
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "id": "p85",
+  "focalLength": 85,
+  "maxFno": 1.46,
+  "markedFno": 1.4,
+  "name": "85 mm f/1.4 (patent example, Sigma large-aperture medium-telephoto)",
+  "representativeOf": "Sigma 85mm F1.4 EX DG HSM",
+  "representativeSource": "camera-wiki.org \"Lens patents\" table (row: JP2011170128, FF SLR, \"Sigma DG 85 mm f/1.4 EX HSM\", filed 2010.02.19, published 2011.09.01, SIGMA CORP, inventor Yamamoto Yukihiro), https://camera-wiki.org/wiki/Lens_patents, accessed 9/28/2026; matched by photonstophotos.net Optical Bench Hub row \"JP2011-170128 Example05P Sigma 85mm F1.4 EX DG HSM\". Corroborated structurally: our transcription of Numerical Example 5 has 11 elements in 8 groups, matching Sigma's published \"11 Elements in 8 Groups\" spec.",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2011-170128 A, Numerical Example 5 (\"実施例5\")",
+    "url": "https://patents.google.com/patent/JP2011170128A/en",
+    "assignee": "Sigma Corp",
+    "published": "9/1/2011",
+    "accessed": "9/28/2026",
+    "location": "[Lens specification] / [レンズ諸元] table under Numerical Example 5"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 77.1278,
+      "t": 5.9572,
+      "medium": "glass",
+      "nd": 1.497,
+      "vd": 81.61,
+      "sd": 28.62,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1"
+    },
+    {
+      "r": 136.2759,
+      "t": 4.4241,
+      "medium": "air",
+      "sd": 27.89,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 49.2495,
+      "t": 10.753,
+      "medium": "glass",
+      "nd": 1.72916,
+      "vd": 54.67,
+      "sd": 27.52,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2"
+    },
+    {
+      "r": 428.2395,
+      "t": 3.6308,
+      "medium": "air",
+      "sd": 24.48,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 831.2882,
+      "t": 1.9,
+      "medium": "glass",
+      "nd": 1.60342,
+      "vd": 38.01,
+      "sd": 22.85,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3"
+    },
+    {
+      "r": 38.6222,
+      "t": 15.252,
+      "medium": "air",
+      "sd": 22.3,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap d6"
+    },
+    {
+      "r": 43.2002,
+      "t": 1.4,
+      "medium": "glass",
+      "nd": 1.72825,
+      "vd": 28.32,
+      "sd": 20.51,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4 (cemented)"
+    },
+    {
+      "r": 30.6749,
+      "t": 7.9685,
+      "medium": "glass",
+      "nd": 1.83481,
+      "vd": 42.72,
+      "sd": 20.14,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L5 (cemented)"
+    },
+    {
+      "r": 192.8074,
+      "t": 0.6824,
+      "medium": "air",
+      "sd": 17.83,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 82.8291,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.58763,
+      "vd": 61.08,
+      "sd": 17.52,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -0.00000406305,
+        "A6": -1.62462e-9,
+        "A8": 1.4199e-12,
+        "A10": -8.95411e-16,
+        "A12": 0,
+        "convention": "patent prints kappa (K) directly with K=0 meaning no added conic term, same convention as k here"
+      },
+      "label": "L6 (asph front)"
+    },
+    {
+      "r": 33.2068,
+      "t": 5.5771,
+      "medium": "air",
+      "sd": 16.86,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": -109.9496,
+      "t": 1.1,
+      "medium": "glass",
+      "nd": 1.6727,
+      "vd": 32.17,
+      "sd": 15.29,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7"
+    },
+    {
+      "r": 51.793,
+      "t": 4.4081,
+      "medium": "air",
+      "sd": 15.17,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap to iris"
+    },
+    {
+      "r": null,
+      "t": 1.4608,
+      "medium": "air",
+      "sd": 15.21,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "aperture stop S"
+    },
+    {
+      "r": 233.908,
+      "t": 1,
+      "medium": "glass",
+      "nd": 1.72825,
+      "vd": 28.32,
+      "sd": 15.22,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L8 (cemented)"
+    },
+    {
+      "r": 42.5258,
+      "t": 12.5388,
+      "medium": "glass",
+      "nd": 1.883,
+      "vd": 40.81,
+      "sd": 15.2,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 (cemented)"
+    },
+    {
+      "r": -323.569,
+      "t": 0.4192,
+      "medium": "air",
+      "sd": 14.57,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 262.3712,
+      "t": 8.4689,
+      "medium": "glass",
+      "nd": 1.883,
+      "vd": 40.81,
+      "sd": 14.52,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10 (cemented)"
+    },
+    {
+      "r": -35.542,
+      "t": 1,
+      "medium": "glass",
+      "nd": 1.6398,
+      "vd": 34.57,
+      "sd": 13.7,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 (cemented)"
+    },
+    {
+      "r": -130.0407,
+      "t": 39.87,
+      "medium": "air",
+      "sd": 13.53,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 rear; t = BF at infinity, DERIVED (patent prints 'B.F.' symbolically with no numeric value; see notes)"
+    }
+  ],
+  "stated": {
+    "f": 83.58,
+    "fno": 1.46,
+    "imageHeight": 21.63
+  },
+  "focus": {
+    "method": "front-group",
+    "gaps": [
+      {
+        "surface": 5,
+        "atInfinity": 15.252,
+        "atClose": 4.8554,
+        "closeObjectDistance": 850,
+        "note": "patent's close-focus condition: 'shooting distance 0.85 m'; index 5 = patent surface 6, the sole variable gap (single moving front sub-group between the two negative-preceded positive triplets)."
+      }
+    ],
+    "minFocusM": 0.85,
+    "minFocusSource": "Sigma 85mm F1.4 EX DG HSM spec page, https://www.sigma-global.com/en/lenses/85_14/, accessed 9/28/2026 (\"Minimum Focusing Distance: 85cm / 33.5in.\")"
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Sigma 85mm F1.4 EX DG HSM spec page, https://www.sigma-global.com/en/lenses/85_14/, accessed 9/28/2026 (\"Number of Diaphragm Blades: 9 Blades (Rounded Diaphragm)\")",
+    "ev": "spec"
+  },
+  "elements": 11,
+  "groups": 8,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "This patent's tables never print a numeric back focal distance: every example's last surface row prints the literal text 'B.F.' (or 'BF') instead of a number, in both the Japanese original and the English machine translation. No other table in the document (no separate 'total length' or 'various data' section) supplies it either.",
+    "Because of that gap, the last surface's t (39.87 mm) is DERIVED here by our own paraxial y-nu trace through the other 19 surfaces (see .local/lens-normal/selfcheck.py), not copied from patent text. `stated.bf` is left unset because the patent does not state it; the self-check for this lens therefore checks EFL against the patent's f=83.58 only, not BF against a patent figure.",
+    "Patent gives no effective-diameter column; all `sd` values are our own paraxial-trace estimates.",
+    "Single aspheric surface (patent 10, the front face of L6); K, A4, A6, A8, A10, A12 all printed, A12=0."
+  ]
+}

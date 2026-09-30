@@ -1,0 +1,384 @@
+{
+  "id": "p20",
+  "focalLength": 20,
+  "maxFno": 1.46,
+  "markedFno": 1.4,
+  "name": "20 mm f/1.4 retrofocus wide-angle (patent numerical example)",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2019-117419 A (granted as JP 6665960 B2), Numerical Example 1 / Embodiment 1",
+    "url": "https://patents.google.com/patent/JP2019117419A/en",
+    "assignee": "Sigma Corp",
+    "published": "7/18/2019",
+    "accessed": "9/28/2026",
+    "location": "Numerical embodiment 1 [Plane data] surface table, [Aspheric surface data], [Various data] and [Variable interval data] blocks"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 55.8667,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.92286,
+      "vd": 20.88,
+      "sd": 43.0653,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1a front (lens component G1)"
+    },
+    {
+      "r": 32.188,
+      "t": 11.1453,
+      "medium": "air",
+      "sd": 41.216,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1a rear (G1)"
+    },
+    {
+      "r": 39.6726,
+      "t": 3,
+      "medium": "glass",
+      "nd": 1.6935,
+      "vd": 53.2,
+      "sd": 34.5705,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": -2.4116,
+        "A4": 6.6683e-7,
+        "A6": -8.6532e-9,
+        "A8": 1.5787e-11,
+        "A10": -1.446e-14,
+        "A12": 5.7555e-18,
+        "convention": "patent's own text: \"conic coefficient K\" with the standard sag form z = c*h^2/(1+sqrt(1-(1+K)*c^2*h^2)) + A4*h^4 + A6*h^6 + ...; K=0 is a sphere. Same convention as p24/p28."
+      },
+      "label": "L1b front (aspheric)"
+    },
+    {
+      "r": 20.4304,
+      "t": 19.693,
+      "medium": "air",
+      "sd": 32.4437,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": -0.9479,
+        "A4": -1.1248e-7,
+        "A6": -1.995e-8,
+        "A8": 3.17347e-11,
+        "A10": -3.4771e-14,
+        "A12": 1.7899e-17,
+        "convention": "same as surface 3 (K=0-sphere conic convention)"
+      },
+      "label": "L1b rear (aspheric)"
+    },
+    {
+      "r": 518.9274,
+      "t": 1.9,
+      "medium": "glass",
+      "nd": 1.497,
+      "vd": 81.61,
+      "sd": 30.4884,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1c front"
+    },
+    {
+      "r": 46.5995,
+      "t": 7.4808,
+      "medium": "air",
+      "sd": 30.3254,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1c rear"
+    },
+    {
+      "r": 88.5605,
+      "t": 8.0408,
+      "medium": "glass",
+      "nd": 1.883,
+      "vd": 40.8,
+      "sd": 31.7837,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1d front (lens subunit L1r starts here)"
+    },
+    {
+      "r": -88.5605,
+      "t": 2.8258,
+      "medium": "air",
+      "sd": 31.2629,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1d rear"
+    },
+    {
+      "r": -48.6468,
+      "t": 1.9,
+      "medium": "glass",
+      "nd": 1.437,
+      "vd": 95.1,
+      "sd": 30.0374,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1e front (cemented doublet L1e-L1f front)"
+    },
+    {
+      "r": 63.2408,
+      "t": 6.9907,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.13,
+      "sd": 29.8208,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L1e-L1f cemented interface"
+    },
+    {
+      "r": -165.6233,
+      "t": 7.5732,
+      "medium": "air",
+      "sd": 28.3193,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1f rear (end of lens unit L1)"
+    },
+    {
+      "r": 48.77,
+      "t": 5.3297,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.63,
+      "sd": 23.7682,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2a front (lens unit L2 starts here)"
+    },
+    {
+      "r": -173.3714,
+      "t": 0.2,
+      "medium": "air",
+      "sd": 20.7906,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2a rear"
+    },
+    {
+      "r": 55.4982,
+      "t": 5.8716,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.63,
+      "sd": 20.5985,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2b front (cemented doublet L2b-L2c front)"
+    },
+    {
+      "r": -55.4982,
+      "t": 0.9,
+      "medium": "glass",
+      "nd": 1.8061,
+      "vd": 33.27,
+      "sd": 16.245,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L2b-L2c cemented interface"
+    },
+    {
+      "r": 26.2988,
+      "t": 5.2496,
+      "medium": "air",
+      "sd": 15.6876,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2c rear (end of lens unit L2)"
+    },
+    {
+      "r": null,
+      "t": 3.1958,
+      "medium": "air",
+      "sd": 12.34,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "STO (aperture stop, flat)"
+    },
+    {
+      "r": -149.925,
+      "t": 8.4815,
+      "medium": "glass",
+      "nd": 1.437,
+      "vd": 95.1,
+      "sd": 14.2171,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3a front (cemented triplet L3a-L3b-L3c front, lens unit L3 starts here)"
+    },
+    {
+      "r": -17.7149,
+      "t": 0.9,
+      "medium": "glass",
+      "nd": 1.8061,
+      "vd": 33.27,
+      "sd": 17.9283,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L3a-L3b cemented interface"
+    },
+    {
+      "r": 112.16,
+      "t": 3.2223,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.63,
+      "sd": 18.4278,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L3b-L3c cemented interface"
+    },
+    {
+      "r": -112.16,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 20.5265,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3c rear"
+    },
+    {
+      "r": 61.3754,
+      "t": 7.6624,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.63,
+      "sd": 20.6658,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3d front"
+    },
+    {
+      "r": -36.1032,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 24.1741,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3d rear"
+    },
+    {
+      "r": -205.2853,
+      "t": 0.9,
+      "medium": "glass",
+      "nd": 1.70154,
+      "vd": 41.15,
+      "sd": 24.2239,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3e front"
+    },
+    {
+      "r": 51.6317,
+      "t": 0.3905,
+      "medium": "air",
+      "sd": 24.4435,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3e rear"
+    },
+    {
+      "r": 54.8683,
+      "t": 7.1599,
+      "medium": "glass",
+      "nd": 1.7645,
+      "vd": 49.1,
+      "sd": 24.7353,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -0.0000030887,
+        "A6": -3.8195e-9,
+        "A8": 1.5976e-11,
+        "A10": -2.5938e-14,
+        "A12": 0,
+        "convention": "same K=0-sphere conic convention as surfaces 3/4"
+      },
+      "label": "L3f front (aspheric)"
+    },
+    {
+      "r": -39.1917,
+      "t": 36.5001,
+      "medium": "air",
+      "sd": 26.3689,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": 0.0000045465,
+        "A6": -3.8413e-9,
+        "A8": 1.6837e-11,
+        "A10": -1.1342e-14,
+        "A12": 0,
+        "convention": "same K=0-sphere conic convention as surfaces 3/4"
+      },
+      "label": "L3f rear (aspheric, end of lens unit L3)"
+    },
+    {
+      "r": null,
+      "t": 1.45,
+      "medium": "glass",
+      "nd": 1.52301,
+      "vd": 58.59,
+      "sd": 22.2893,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "filter/cover-glass front",
+      "plate": "filter"
+    },
+    {
+      "r": null,
+      "t": 1.001,
+      "medium": "air",
+      "sd": 22.1829,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "filter/cover-glass rear, image-side last surface, t = Bf (derived, see notes: the patent prints only the symbolic placeholder \"BF\" here, never a number)"
+    }
+  ],
+  "stated": {
+    "f": 20.69,
+    "fno": 1.46,
+    "halfFieldDeg": 46.845,
+    "imageHeight": 21.63,
+    "totalLength": 161.26
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 10,
+        "atInfinity": 7.5732,
+        "atClose": 6.5175,
+        "closeObjectDistance": 959,
+        "note": "d11 in the patent's own numbering (surface 11, 1-based) = gap at the end of lens unit L1; object distance 959 mm is the patent's own [Variable interval data] 'INF shooting distance 959mm' column heading, reference point (first surface vs. image plane) not stated in the text"
+      },
+      {
+        "surface": 15,
+        "atInfinity": 5.2496,
+        "atClose": 5.7528,
+        "closeObjectDistance": 959,
+        "note": "d16 in patent numbering (surface 16, 1-based) = gap at the end of lens unit L2"
+      },
+      {
+        "surface": 26,
+        "atInfinity": 36.5001,
+        "atClose": 37.0527,
+        "closeObjectDistance": 959,
+        "note": "d27 in patent numbering (surface 27, 1-based) = gap at the end of lens unit L3, into the filter"
+      }
+    ],
+    "minFocusM": 0.276,
+    "minFocusSource": "spec - Sigma 20mm F1.4 DG HSM | Art spec page, https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a, accessed 9/28/2026: \"Minimum Focusing Distance: 27.6cm / 10.9in.\" The patent itself states no minimum focus."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "spec - Sigma 20mm F1.4 DG HSM | Art spec page, https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a, accessed 9/28/2026: \"Number of Diaphragm Blades: 9 (Rounded diaphragm)\".",
+    "ev": "spec"
+  },
+  "elements": 15,
+  "groups": 11,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is Sigma Corp JP2019-117419A ('Large-aperture wide-angle lens'), application JP2019-084483, filed 4/25/2019, published 7/18/2019, granted as JP 6665960 B2. Read via patents.google.com's rendered text (fetched through the r.jina.ai reader proxy after patents.google.com itself returned HTTP 503 to every direct fetch and curl attempt this session -- same IP-level rate limiting the lens-wide agent hit; patentimages.storage.googleapis.com figure URLs appear in the fetched text, confirming the page itself rendered correctly through the proxy). Bibliographic data (assignee, application/priority/filing/publication dates, granted number JP6665960B2) came from a second fetch of the same URL through the proxy requesting raw HTML (header X-Return-Format: html), since the default markdown extraction omitted the biblio sidebar entirely.",
+    "This application discloses five numerical examples (Examples 1-5), all 'large aperture wide-angle lens' variants at f = 20.39-20.98mm, F1.44-1.48, total length 156.4-161.8mm (see the [Conditional expression corresponding value] table at the end of the description, which tabulates all five, and the per-example 'Lens total length' rows). Example 1 (this file) was used because photonstophotos.net's Optical Bench Hub ties this specific example (not 2-5) to 'Sigma 20mm F1.4 DG HSM Art', and because Example 1's own element/group breakdown (15/11) matches Sigma's published spec exactly.",
+    "Lead correction 9/28/2026: representativeOf is set. An earlier note argued against the tie from a ~1 mm back focus and a total length longer than the product; both readings were wrong. The last two surfaces are a flat 1.45 mm filter/cover-glass plate, so the back focus from the last lens surface to the image is 36.50 + 1.45 + 1.00 = 38.95 mm, and the patent's \"Lens total length\" (161.26 mm) runs from the first surface to the image plane. Minus the EF flange distance (44 mm) that leaves about 117 mm from the front element to the mount, consistent with the product's 129.8 mm length measured from the mount including the front barrel. The tie rests on Photons to Photos plus the exact 15/11 element and group match.",
+    "Digit-level cross-check: every numerical-example table in this patent is printed twice in the fetched text -- once in the original Japanese, once in Google's English machine translation, immediately following it. All digits agree between the two copies for every surface in Example 1, with one exception: surface 28's radius and surface 29's radius are both r = infinity in the Japanese original ('28 ∞ 1.4500 1.52301 58.59', '29 ∞ BF'), but the English machine-translation copy renders the infinity symbol on surface 28 as the garbled digits '1.4' ('28 1.4 1.4500 1.52301 58.59') while correctly showing '29 ∞ BF' immediately below with the symbol intact one line later at a different occurrence -- an isolated OCR/translation artifact on a single character, not a real value; r = infinity (flat) is used for surface 28 here, matching the Japanese original and matching the physical expectation for a flat filter/cover-glass surface.",
+    "The patent prints no numeric back focus (the last row reads \"BF\"). The last t (1.001 mm, filter rear surface to image) is derived from our own paraxial trace; stated.bf is left unset. The lens back focus to the filter is the 36.50 mm air gap after surface 26.",
+    "Cross-check on the derived last gap: the paraxial trace gives 1.0010 mm; the patent total length (161.26 mm) minus the sum of t for surfaces 1-28 (160.263 mm) gives 0.997 mm. They agree within the total length's rounding.",
+    "Surfaces 9-10 (L1e-L1f), 14-15 (L2b-L2c) and 18-19-20 (L3a-L3b-L3c, a cemented triplet) are cemented interfaces per patent convention (shared vertex, second/third glass listed as the medium of the same surface row); those interfaces are marked coated:false.",
+    "closeObjectDistance (959mm) is transcribed as printed in the patent's [Variable interval data] table ('INF shooting distance 959mm' is the column header over both the infinity and close-focus d-values); the patent does not state in the text whether 959mm is measured from the object to the first lens surface or to the image plane, so it is recorded as-is with that caveat, matching how p24/p28 handle their own closeObjectDistance figures.",
+    "halfFieldDeg (46.845) is derived (not directly the patent's own printed value): the patent states 'Total angle of view 2omega = 93.69 deg' (full angle of view, not the half angle omega our schema's halfFieldDeg field expects), so halfFieldDeg = 93.69/2 = 46.845 is a straightforward derived half. This unusually wide angle is itself corroborating evidence that this is a genuine ~20mm-class full-frame design (2omega approx 94deg matches a 20mm lens's well-known diagonal field of view on a 43.3mm image circle).",
+    "Semi-diameters are not given anywhere in the patent text (no 'effective diameter' table was found; confirmed by reading both the Japanese-original and English-MT copies of the full description), so every surface uses sdSource 'estimated-from-marginal-ray'; see research/lenses-20.md for the paraxial marginal-ray-plus-chief-ray method (same method and same script family as research/lenses-wide.md and research/lenses-normal.md), run via .local/lens-20/raytrace.py (a copy of .local/lens-wide/raytrace.py). This paraxial estimate is a known lower bound for the front group of a fast retrofocus wide-angle design (see the wide-primes note); treat front-group sd values here the same way.",
+    "medium is 'glass' (not a catalog key) everywhere because the patent gives only nd/vd, never a named glass catalog product."
+  ],
+  "representativeOf": "Sigma 20mm F1.4 DG HSM | Art",
+  "representativeSource": "photonstophotos.net Optical Bench Hub ties JP2019-117419 Example 1 to this lens (https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026); the example's 15 elements in 11 groups match Sigma's published spec (https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a, accessed 9/28/2026). Photons to Photos notes that a production lens may not follow a patent prescription exactly."
+}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex"> <!-- private and undeployed until Reed says go live, per docs/BRIEF.md -->
+<title>Camera Models</title>
+<meta name="description" content="The scripted-Blender camera bodies and lenses, the lens mounted as it seats, rotatable, with a cutaway and every named part selectable.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/src/styles/tokens.css">
+<link rel="stylesheet" href="/src/styles/base.css">
+<link rel="stylesheet" href="/src/styles/app.css">
+<style>
+  /* the model viewer fills the screen under the top bar: one stage, the parts panel beside it (below it on phones) */
+  .mv-body { padding-top: calc(var(--bar) + env(safe-area-inset-top, 0px)); }
+  .mv-body .body { border-bottom: 1px solid var(--line); }
+  .mv-body .viewer, .mv-body .panel { height: calc(100vh - var(--bar)); height: calc(100svh - var(--bar) - env(safe-area-inset-top, 0px)); }
+  .mv-veil { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: #000; transition: opacity .4s; }
+  .mv-veil.off { opacity: 0; pointer-events: none; }
+  .mv-veil p { margin: 0; font: 500 11px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-align: center; max-width: 36ch; }
+  .mv-veil.err p { color: var(--vendor); }
+  .mv-body .panel-scroll { grid-auto-rows: max-content; }
+  .mv-sel { min-height: 118px; }
+  .mv-sel .none { color: var(--faint); }
+  .parts .pn { font-size: 10px; }
+  #facts { white-space: pre-line; }
+  .mv-lens button { padding: 0 12px; }
+  @media (max-width: 760px) { .mv-lens { max-width: calc(100vw - 20px); overflow-x: auto; scrollbar-width: none; }
+    .mv-lens button { padding: 0 9px; font-size: 10.5px; white-space: nowrap; } }
+  .mv-group { margin: 10px 0 0; font: 500 10.5px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  @media (max-width: 1100px) {
+    .mv-body .viewer { height: 64svh; min-height: 360px; }
+    .mv-body .panel { height: auto; }
+  }
+  @media (max-width: 760px) {
+    .mv-body .view { height: 100%; }
+    .hud.tr { gap: 6px; }
+  }
+</style>
+</head>
+<body class="mv-body">
+<header class="topbar">
+  <a class="brand" href="./index.html" aria-label="Photon to Photo, the camera">
+    <span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-t">Photon to Photo</span>
+  </a>
+  <!-- the same bar as the main page: its three sections, then this page (R1-11) -->
+  <nav class="topnav" id="topnav" aria-label="Site">
+    <a class="navlink" href="./index.html#stage-section">The camera</a>
+    <a class="navlink" href="./index.html#scenario">Settings</a>
+    <a class="navlink" href="./index.html#finalimg">Final image</a>
+    <span class="sep" aria-hidden="true"></span>
+    <a class="navlink" href="./models.html" aria-current="true">Models</a>
+  </nav>
+  <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
+    <span aria-hidden="true"></span>Menu
+  </button>
+</header>
+<div class="body">
+  <section class="viewer" aria-label="Camera model">
+    <div class="view" id="view">
+      <canvas id="gl" aria-label="Camera and lens. Drag to rotate, pinch or scroll to zoom, tap a part to select it."></canvas>
+      <div class="hud tl"><span class="sub" id="sub">Scripted in Blender · mm scale</span><span class="ttl" id="ttl">Camera body</span></div>
+      <div class="hud tr">
+        <div class="mode" role="group" aria-label="Body">
+          <button type="button" data-body="dslr" aria-pressed="true">DSLR</button>
+          <button type="button" data-body="mirrorless" aria-pressed="false">Mirrorless</button>
+        </div>
+        <div class="mode mv-lens" role="group" aria-label="Lens" id="lens-seg"></div>
+        <div class="mode" role="group" aria-label="View">
+          <button type="button" data-view="outside" aria-pressed="true">Outside</button>
+          <button type="button" data-view="cutaway" aria-pressed="false">Cutaway</button>
+        </div>
+      </div>
+      <div class="hud br">
+        <div class="hud-btns"><button type="button" class="btn" id="reset">Reset view</button></div>
+        <span class="backend-chip" id="backend"><span class="dot2"></span><span>…</span></span>
+      </div>
+      <div class="mv-veil" id="veil"><p id="veil-msg">Loading the model</p></div>
+    </div>
+  </section>
+  <aside class="panel" aria-label="Parts">
+    <div class="panel-scroll">
+      <div class="card mv-sel" id="sel">
+        <span class="k">Selected part</span>
+        <h3 id="sel-t">Nothing yet</h3>
+        <p id="sel-d" class="none">Tap any part of the camera or lens, or pick one from the list. Inside parts switch the view to the cutaway.</p>
+      </div>
+      <div>
+        <div class="parts-head"><span class="eyebrow" id="parts-k">Parts</span><button type="button" class="btn" id="clear" disabled>Clear</button></div>
+        <p class="mv-group">Outside</p>
+        <ul class="parts" id="parts-out"></ul>
+        <div id="lens-group"><p class="mv-group">Lens</p>
+        <ul class="parts" id="parts-lens"></ul></div>
+        <p class="mv-group">Inside (cutaway)</p>
+        <ul class="parts" id="parts-in"></ul>
+      </div>
+      <p class="intro" id="facts"></p>
+    </div>
+  </aside>
+</div>
+<script type="module" src="/src/app/models.ts"></script>
+</body>
+</html>

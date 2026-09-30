@@ -1,0 +1,219 @@
+{
+  "meta": {
+    "project": "Photon to Photo",
+    "file": "data/hardware/body.json",
+    "generatedBy": "exteriors agent",
+    "accessedDate": "09/28/2026",
+    "scope": "A representative, generic, unbranded full-frame mirrorless camera body envelope (Task B), the sensor filter stack and focal-plane shutter (Task C), per Reed's 09/28/2026 decision: body dimensions are representative, never one model's product. See research/exteriors.md for prose, conflicts and what is assumed.",
+    "evidenceKinds": ["spec", "vendor", "reported", "derived", "assumed"],
+    "openProblems": [
+      "No maker publishes IBIS sensor-shift travel range in millimeters. The ibis block below is fully assumed from teardown/forum commentary that gives only qualitative statements (\"a surprising amount of range\", \"just a millimeter or two\") and from the physical constraint that the sensor must clear the mount's image circle without vignetting; treat ibis.travelMm as a rough order-of-magnitude placeholder for the modeler, not a citable figure.",
+      "Full-well/refractive-index figures for the sensor filter stack are patchy: LensRentals' Roger Cicala gives an air-equivalent-thickness method and a typical 0.7mm result assuming n=1.52, but does not publish a single canonical full-frame-mirrorless figure; a Kolari Vision comparison implies Sony E ~2.5mm and Nikon Z ~1.6mm physical stack thickness but that specific pairing was seen only in third-party discussion of a Kolari page, not confirmed on Kolari's own page text in this session.",
+      "Nikon AF-S NIKKOR 200mm f/2G ED VR II's own drop-in filter size was not independently confirmed this session (see data/hardware/lens-exteriors.json p200 note); the shutter/body data here doesn't depend on it, noted for completeness only."
+    ]
+  },
+  "envelope": {
+    "widthMm": {
+      "v": 136,
+      "ev": "assumed",
+      "note": "Rounded representative value from four current full-frame mirrorless bodies (131.3, 138, 138.5, 134.3mm); range 131.3-138.5mm, not any one camera's own figure.",
+      "classSources": [
+        {"body": "Sony a7 IV (ILCE-7M4)", "widthMm": 131.3, "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17_IV", "loc": "infobox, dimensions 131.3 x 96.4 x 79.8mm", "accessed": "09/28/2026"},
+        {"body": "Canon EOS R5", "widthMm": 138, "src": "https://en.wikipedia.org/wiki/Canon_EOS_R5", "loc": "infobox, dimensions 138 x 97.5 x 88mm", "accessed": "09/28/2026"},
+        {"body": "Nikon Z6III", "widthMm": 138.5, "src": "search summary citing Nikon/backscatter-published specification pages", "loc": "dimensions approx. 5.5 x 4 x 3in (138.5 x 101.5 x 74mm)", "accessed": "09/28/2026"},
+        {"body": "Panasonic Lumix S5II", "widthMm": 134.3, "src": "search summary citing Panasonic-published specification pages", "loc": "dimensions W134.3 x H102.3 x D90.1mm", "accessed": "09/28/2026"}
+      ]
+    },
+    "heightMm": {
+      "v": 99,
+      "ev": "assumed",
+      "note": "Rounded representative value from the same four bodies (96.4, 97.5, 101.5, 102.3mm); range 96.4-102.3mm.",
+      "classSources": [
+        {"body": "Sony a7 IV", "heightMm": 96.4},
+        {"body": "Canon EOS R5", "heightMm": 97.5},
+        {"body": "Nikon Z6III", "heightMm": 101.5},
+        {"body": "Panasonic Lumix S5II", "heightMm": 102.3}
+      ]
+    },
+    "depthMm": {
+      "v": 83,
+      "ev": "assumed",
+      "note": "Rounded representative value from the same four bodies, body-only depth excluding grip protrusion where the source distinguishes it (79.8, 88, 74, 90.1mm); range 74-90.1mm is wide because this figure is measured inconsistently across makers (some include the EVF hump and grip, some do not) -- see research/exteriors.md.",
+      "classSources": [
+        {"body": "Sony a7 IV", "depthMm": 79.8},
+        {"body": "Canon EOS R5", "depthMm": 88},
+        {"body": "Nikon Z6III", "depthMm": 74},
+        {"body": "Panasonic Lumix S5II", "depthMm": 90.1}
+      ]
+    },
+    "gripDepthMm": {
+      "v": 38,
+      "ev": "assumed",
+      "note": "No maker separately publishes a grip-only depth figure; this is derived as roughly half of the representative body depthMm (a common rule of thumb visible in comparing full-frame mirrorless body renders, where the grip protrudes to roughly 40-50% of total body depth beyond the lens-mount plate) and is not independently sourced. Flagged for the modeler: refine against an actual body CAD reference or drawing if one becomes available, rather than trusting this number.",
+      "src": null
+    }
+  },
+  "dials": {
+    "modeDial": {
+      "v": true,
+      "ev": "assumed",
+      "note": "Present on 3 of the 4 cited bodies (Sony a7 IV, Nikon Z6III, Panasonic S5II each have a top-plate PASM mode dial); Canon EOS R5 instead uses a mode button + rear dial combination. Majority convention taken as representative.",
+      "classSources": [
+        {"body": "Sony a7 IV", "modeDial": true, "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17_IV", "accessed": "09/28/2026"},
+        {"body": "Canon EOS R5", "modeDial": false, "note": "mode button, not a dial", "src": "https://en.wikipedia.org/wiki/Canon_EOS_R5", "accessed": "09/28/2026"},
+        {"body": "Nikon Z6III", "modeDial": true, "src": "https://en.wikipedia.org/wiki/Nikon_Z6III", "accessed": "09/28/2026"},
+        {"body": "Panasonic Lumix S5II", "modeDial": true, "src": "https://en.wikipedia.org/wiki/Panasonic_Lumix_S5II", "accessed": "09/28/2026"}
+      ]
+    },
+    "frontCommandDial": {
+      "v": true,
+      "ev": "assumed",
+      "note": "All four cited bodies have a front control/command dial near the shutter button, operated by the index finger while gripping.",
+      "classSources": [
+        {"body": "Sony a7 IV", "frontCommandDial": true},
+        {"body": "Canon EOS R5", "frontCommandDial": true, "note": "Canon calls it the Main Dial"},
+        {"body": "Nikon Z6III", "frontCommandDial": true, "note": "Nikon calls it the Sub-command dial"},
+        {"body": "Panasonic Lumix S5II", "frontCommandDial": true}
+      ]
+    },
+    "rearCommandDial": {
+      "v": true,
+      "ev": "assumed",
+      "note": "All four cited bodies have a rear control/command dial, typically thumb-operated at the top-right rear of the body.",
+      "classSources": [
+        {"body": "Sony a7 IV", "rearCommandDial": true},
+        {"body": "Canon EOS R5", "rearCommandDial": true, "note": "Canon's Quick Control Dial position"},
+        {"body": "Nikon Z6III", "rearCommandDial": true, "note": "Nikon calls it the Main command dial"},
+        {"body": "Panasonic Lumix S5II", "rearCommandDial": true}
+      ]
+    },
+    "exposureCompDial": {
+      "v": true,
+      "ev": "assumed",
+      "note": "Present as a dedicated top-plate dial on Sony a7 IV and Panasonic S5II; Nikon Z6III and Canon EOS R5 instead assign exposure compensation to a command dial + button combination in their default control scheme (Nikon's higher-end bodies like the Zf do have a dedicated dial, but the Z6III does not). Included as true because it is common enough across the class and is a natural, distinct top-plate control point the model should render; noted as a 2-of-4 feature, not unanimous.",
+      "classSources": [
+        {"body": "Sony a7 IV", "exposureCompDial": true, "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17_IV", "accessed": "09/28/2026"},
+        {"body": "Canon EOS R5", "exposureCompDial": false, "note": "button + dial, no dedicated top dial", "accessed": "09/28/2026"},
+        {"body": "Nikon Z6III", "exposureCompDial": false, "note": "button + dial, no dedicated top dial", "accessed": "09/28/2026"},
+        {"body": "Panasonic Lumix S5II", "exposureCompDial": true, "accessed": "09/28/2026"}
+      ]
+    }
+  },
+  "evf": {
+    "hump": {
+      "v": true,
+      "ev": "assumed",
+      "note": "All four cited bodies have a central EVF housing that reads visually as a hump/bump above the top-plate line, even where (as on Sony/Panasonic) it is not a true SLR-style pentaprism hump. Included as a modeled feature of the generic body.",
+      "src": null
+    },
+    "resolutionDots": {
+      "v": 3680000,
+      "ev": "assumed",
+      "note": "Representative middle-of-class figure; the four cited bodies' own EVF resolutions range from about 3.69M dots (Sony a7 IV) to 5.76M dots (Nikon Z6III), a wide spread reflecting real generational/price differences, not used for anything physically load-bearing in this project's optics -- recorded for completeness only.",
+      "classSources": [
+        {"body": "Sony a7 IV", "evfDots": 3680000, "magnification": 0.78, "src": "search summary citing Sony/manufacturer specification pages", "accessed": "09/28/2026"},
+        {"body": "Nikon Z6III", "evfDots": 5760000, "src": "search summary citing Nikon-published specification pages", "accessed": "09/28/2026"},
+        {"body": "Panasonic Lumix S5II", "evfDots": null, "magnification": 0.78, "note": "dot count not obtained this session; magnification 0.78x confirmed", "src": "search summary citing Panasonic-published specification pages", "accessed": "09/28/2026"}
+      ]
+    }
+  },
+  "screen": {
+    "sizeInches": {
+      "v": 3.0,
+      "ev": "assumed",
+      "note": "3 of 4 cited bodies (Sony a7 IV, Panasonic S5II, and Nikon's own historical Z6-series convention) use a 3.0in rear screen; Nikon Z6III specifically uses a larger 3.2in screen. Majority value (3.0in) taken as representative.",
+      "classSources": [
+        {"body": "Sony a7 IV", "sizeInches": 3.0, "dots": 1037000, "src": "search summary citing Sony-published specification pages", "accessed": "09/28/2026"},
+        {"body": "Nikon Z6III", "sizeInches": 3.2, "dots": 2100000, "src": "search summary citing Nikon-published specification pages", "accessed": "09/28/2026"},
+        {"body": "Panasonic Lumix S5II", "sizeInches": 3.0, "dots": 1840000, "src": "search summary citing Panasonic-published specification pages", "accessed": "09/28/2026"}
+      ]
+    }
+  },
+  "imagePlaneMark": {
+    "description": "The circle-with-a-line symbol (Phi) engraved on the top plate marks the exact plane where the sensor sits inside the body; it is the datum photographers use to measure subject distance for macro work and stitched panoramas, rather than measuring from the front of the lens.",
+    "ev": "reported",
+    "src": "https://havecamerawilltravel.com/what-is-a-cameras-focal-plane-mark/",
+    "loc": "article body: \"the circle-with-a-line symbol (Phi)... marks the exact sensor or film plane... The line is aligned perfectly with the focal plane of the camera\"",
+    "accessed": "09/28/2026",
+    "corroboration": {
+      "src": "https://petapixel.com/2018/07/16/that-weird-symbol-on-your-camera-is-the-film-plane-indicator/",
+      "loc": "article body corroborates the same symbol and its meaning as the film/sensor plane indicator",
+      "accessed": "09/28/2026"
+    }
+  },
+  "sensorStack": {
+    "thicknessMm": {
+      "v": 2.0,
+      "ev": "assumed",
+      "note": "LensRentals (Roger Cicala) states that air-equivalent sensor-stack-thickness measurements assuming a refractive index of 1.52 are \"probably accurate to 0.5mm or perhaps 0.25mm\" and that stacks across DSLR/mirrorless cameras of that era varied roughly 2-4.5mm physically; a Kolari Vision filter-stack comparison (seen only through third-party discussion, not this session's own read of Kolari's page) puts modern full-frame mirrorless stacks at roughly 1.6mm (Nikon Z) to 2.5mm (Sony E). 2.0mm is a rounded midpoint of that discussion and should be treated as a placeholder pending a direct read of Kolari's or LensRentals' own numeric table.",
+      "src": "https://wordpress.lensrentals.com/blog/2014/06/sensor-stack-thickness-when-does-it-matter/",
+      "loc": "article body: \"All of these measurements are guesstimates, probably accurate to 0.5mm or perhaps 0.25mm\"; \"assuming a refractive index of 1.52... typically has a thickness of 0.7mm\" (describing the air-equivalent, not physical, thickness convention)",
+      "accessed": "09/28/2026"
+    },
+    "index": {
+      "v": 1.52,
+      "ev": "reported",
+      "note": "The refractive index LensRentals' own air-equivalent-thickness convention assumes for the stack glass, not a measurement of any one camera's actual glass. It is representative of ordinary optical borosilicate cover glass (close to N-BK7's nd of about 1.517).",
+      "src": "https://wordpress.lensrentals.com/blog/2014/06/sensor-stack-thickness-when-does-it-matter/",
+      "loc": "article body: \"assuming a refractive index of 1.52\"",
+      "accessed": "09/28/2026"
+    },
+    "layers": [
+      "sensor cover glass (protects the photodiode array and microlenses)",
+      "IR-cut / UV-cut absorption or interference filter (blocks near-infrared and ultraviolet light the silicon would otherwise see, which the eye does not, so color rendering matches human vision)",
+      "optical low-pass (anti-aliasing) filter, where present -- increasingly omitted on high-resolution modern sensors since the pixel pitch itself out-resolves the lens before aliasing becomes visible"
+    ],
+    "whyItMattersOptically": "A lens's rear elements are computed assuming light passes through a stack of a given physical thickness and index before reaching the photodiode; that glass shifts the effective back focal distance and, for fast (low f-number) designs especially, introduces spherical aberration and coma if the actual stack differs from the design assumption. This is why adapted rangefinder lenses (designed for a thin or absent stack) and thinned/removed-filter conversions (Kolari's Ultra-Thin mod, 0.2mm) change a fast lens's off-axis performance measurably, and why lens designers publish a nominal cover-glass thickness as part of a prescription.",
+    "ev": "derived",
+    "src": "https://phillipreeve.net/blog/different-filter-stacks-and-what-they-mean-for-us-sony-e-nikon-z-leica-m-kolari-ut/",
+    "loc": "article body explains that the stack composition and thickness affect adapted-lens rendering, and that \"they could still be made of different glass types with different refraction indices, leading to different results, despite having the same thickness on paper\"",
+    "accessed": "09/28/2026"
+  },
+  "shutter": {
+    "curtainTravelMs": {
+      "v": 4,
+      "ev": "derived",
+      "note": "Derived from the relationship between flash x-sync speed and curtain travel time: a camera that syncs at 1/250s has a first-curtain travel time across the frame of roughly 1/250s = 4ms (the second curtain cannot begin closing until the first has fully opened, so sync speed is essentially the travel time, with a small mechanical margin in practice). A period-correct measured reference point, the Nikon FE2 (which specifically advertised its curtain speed), had a curtain travel time of 3.3ms supporting a 1/250s sync -- consistent with this derivation. This project's default exposure uses 1/250s per docs/BRIEF and the shell's stated default, so 4ms (with the FE2's 3.3ms as a lower-bound cross-check) is used as the representative full-frame mechanical curtain travel time.",
+      "src": "https://en.wikipedia.org/wiki/Nikon_FE2",
+      "loc": "infobox / body: Nikon FE2 shutter curtain travel time 3.3 milliseconds supporting 1/250s flash sync",
+      "accessed": "09/28/2026",
+      "crossCheck": {
+        "note": "General exposure-technique sources state that for an X-sync speed of 1/250s, shutter curtain travel time across the sensor is typically about 1/300 to 1/400s (2.5-3.3ms), i.e. somewhat faster than the sync speed itself, which is why 1/250 is achievable as the sync speed rather than being the raw travel time exactly.",
+        "src": "https://www.scantips.com/lights/flashbasics2c.html",
+        "accessed": "09/28/2026"
+      }
+    },
+    "syncS": {
+      "v": 0.004,
+      "displayAs": "1/250 s",
+      "ev": "derived",
+      "note": "Matches this project's stated default shutter speed (1/250s, f/4, ISO 100) per the shell's current default exposure; follows directly from curtainTravelMs above (sync speed = the shutter speed at which first-curtain travel completes just as second-curtain travel begins, i.e. sync period approx. curtain travel time).",
+      "src": "https://en.wikipedia.org/wiki/Nikon_FE2",
+      "accessed": "09/28/2026"
+    },
+    "electronicReadoutComparisonMs": {
+      "v": 100.3,
+      "ev": "reported",
+      "note": "The full-sensor electronic-shutter rolling readout time for a real full-frame sensor (Sony a7R IV / IMX455), taken directly from data/sensors.json's own \"full-frame-a7r4-imx455\" record, given here for the mechanical-vs-electronic comparison the brief asks for. 100.3ms of electronic rolling-shutter readout is roughly 25x slower than the ~4ms a mechanical first-curtain sweep takes to cross the same frame, which is the physical reason rolling-shutter skew is dramatic on fast-moving subjects in full electronic-shutter mode but essentially invisible with a mechanical or electronic-first-curtain shutter.",
+      "src": "https://horshack-dpreview.github.io/RollingShutter/",
+      "loc": "as transcribed in data/sensors.json, sensors[0].readout.electronicFullFrameMs, combined-results table row \"Sony A7R IV\", \"Photo mode\" column: \"100.30 ms\"",
+      "accessed": "09/28/2026"
+    }
+  },
+  "ibis": {
+    "present": true,
+    "travelMm": {
+      "v": 2,
+      "ev": "assumed",
+      "note": "No maker publishes a sensor-shift travel-range figure in millimeters for any current full-frame mirrorless body. Forum/teardown commentary on the mechanism (Sony a7 II teardown, general IBIS explainer threads) describes \"a surprising amount of range\" and separately notes informally that \"just one millimeter is enough for it to work, and two millimeters in each direction would probably make a huge difference\" -- neither is a citable spec. 2mm (interpreted as roughly the sensor's total linear travel budget in-plane) is recorded as a rough order-of-magnitude placeholder only, consistent with the physical constraint that the sensor must stay within the lens's image circle (which typically has several mm of margin beyond the sensor's active area) without vignetting. The modeler should not treat this as authoritative.",
+      "src": "https://www.lensrentals.com/blog/2015/02/the-a7ii-teardown-a-look-inside-sonys-new-camera/",
+      "loc": "teardown body, qualitative description of the sensor-stabilizer's range of movement",
+      "accessed": "09/28/2026"
+    },
+    "axes": 5,
+    "axesEv": "reported",
+    "axesNote": "5-axis stabilization (pitch, yaw, roll, and X/Y shift) is the industry-standard description across all major full-frame mirrorless makers with IBIS (Sony, Canon, Nikon, Panasonic all use this language for their systems).",
+    "axesSrc": "https://en.wikipedia.org/wiki/Image_stabilization",
+    "axesAccessed": "09/28/2026"
+  }
+}

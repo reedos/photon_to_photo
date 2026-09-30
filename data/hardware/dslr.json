@@ -1,0 +1,219 @@
+{
+  "_meta": {
+    "agent": "dslr",
+    "scope": "Figures specific to the generic full-frame DSLR body: mirror box, sub-mirror, focusing screen, pentaprism, viewfinder, mirror-up timing, the mirror's back-focus constraint on lens design, and the focal-plane shutter position. Body envelope only (not the mount/flange-distance table, which the mounts agent owns) and not lens exteriors.",
+    "accessed": "9/28/2026",
+    "dateFormat": "M/D/Y",
+    "evidenceBasis": "Same five-value scale as src/evidence.js in this repo and in intelligence_factory: spec (maker/standards-body published figure), vendor (vendor claim, not independently checked), reported (stated by a named third party, e.g. a review site's own measurement), derived (calculated here from cited inputs), assumed (this project's own choice where no single figure applies).",
+    "note": "No number here is invented. Every figure below carries a source URL and location, or is explicitly derived (with the calculation shown) or assumed (with the reasoning shown). See research/dslr.md for the prose, the conflicts and the paths not taken."
+  },
+
+  "envelope": {
+    "_note": "Four current-or-recent full-frame DSLR/SLR-type bodies, different makers, ordinary (non-integrated-grip) body class only. A pro integrated-grip body (e.g. Canon EOS-1D X Mark III, 158x167.6x82.6mm) is a different class and is excluded from this range so it doesn't skew it; its viewfinder and frame-rate figures are still used below since those aren't envelope-class-dependent. Sony's only current full-frame SLR-type body (a99 II) uses a fixed semi-transparent mirror and an EVF, not a swinging mirror and an OVF (see viewfinder note) â€” it is included here for envelope diversity across makers only.",
+    "width": {
+      "v": 145, "unit": "mm", "ev": "assumed",
+      "src": "Nikon USA (D850), Canon USA/Canon Europe (5D Mark IV), Pentax/Ricoh Imaging via DPReview (K-1 Mark II), Sony (a99 II)",
+      "loc": "Product spec pages, 'Dimensions' row; accessed 9/28/2026",
+      "range": [136.5, 150.7],
+      "samples": {
+        "nikon_d850": { "w": 146, "h": 124, "d": 78.5, "src": "https://www.nikonusa.com/p/d850/1585/overview", "loc": "Specifications tab, Physical > Dimensions" },
+        "canon_5d4": { "w": 150.7, "h": 116.4, "d": 75.9, "src": "https://en.wikipedia.org/wiki/Canon_EOS_5D_Mark_IV", "loc": "Infobox, citing Canon's own spec sheet" },
+        "pentax_k1ii": { "w": 136.5, "h": 110.0, "d": 85.5, "src": "https://www.dpreview.com/products/pentax/slrs/pentax_k1ii/specifications", "loc": "Body > Dimensions" },
+        "sony_a99ii": { "w": 142.6, "h": 104.2, "d": 76.1, "src": "https://en.wikipedia.org/wiki/Sony_%CE%B199_II", "loc": "Infobox, citing Sony's own spec page" }
+      },
+      "reasoning": "Assumed/rounded representative value, the midpoint of the four cited bodies' width (136.5-150.7mm), for the generic mirrorless-vs-DSLR body-size comparison the project draws. Not a spec for any one product."
+    },
+    "height": {
+      "v": 115, "unit": "mm", "ev": "assumed",
+      "src": "Same four spec pages as width",
+      "loc": "Same rows",
+      "range": [104.2, 124],
+      "reasoning": "Rounded representative value, roughly the midpoint of the four bodies' height (104.2-124mm); Nikon and Canon's higher-end bodies run taller than Pentax/Sony's here."
+    },
+    "depth": {
+      "v": 80, "unit": "mm", "ev": "assumed",
+      "src": "Same four spec pages as width",
+      "loc": "Same rows",
+      "range": [75.9, 85.5],
+      "reasoning": "Rounded representative value, roughly the midpoint of the four bodies' depth (75.9-85.5mm). Depth is the dimension the mirror box itself sets a floor under (see mirrorClearance below): even the shallowest of these four (Canon 5D IV, 75.9mm) is well over a rangefinder-class mirrorless body's depth, because it has to hold the mirror box, the mirror's swing arc and the pentaprism stacked behind the mount."
+    }
+  },
+
+  "mirror": {
+    "size": {
+      "width": {
+        "v": 36, "unit": "mm", "ev": "derived",
+        "src": "This project's own full-frame sensor width (data/sensors.json)",
+        "loc": "N/A - geometric derivation",
+        "reasoning": "The mirror's width (the dimension parallel to its hinge axis) is unchanged by the 45deg tilt, so it must be at least the full-frame sensor's 36mm width to reflect the whole image circle without vignetting, plus margin (see height below) for the cone's angular spread at the lens's exit pupil."
+      },
+      "height": {
+        "v": 34, "unit": "mm", "ev": "derived",
+        "src": "Geometric derivation from the 24mm sensor height and the mirror's 45deg tilt",
+        "loc": "calc: mirror-height-45deg",
+        "reasoning": "At a 45deg tilt, the mirror's dimension along the optical axis direction foreshortens by cos(45deg) when projected onto the 24mm sensor height, so the minimum mirror height to clear the full frame is 24mm / cos(45deg) = 24 x 1.41421 = 33.94mm, rounded to 34mm. This is a lower bound for the ray bundle at the lens's exit pupil location (infinitesimally small aperture); real mirrors are cut larger than this bound so the full cone from a large-aperture lens's exit pupil also clears the mirror edges without vignetting the viewfinder image at the corners. No manufacturer publishes an exact main-mirror size in mm for a current body; research/dslr.md records the patent and forum searches that came up empty for a citable number, so this stays a derived lower bound, not a measured or spec'd figure. Real mirrors reported anecdotally in teardowns and third-party replacement-mirror parts (not independently verified here) run roughly 38-44mm on this axis, consistent with this bound plus a working margin."
+      }
+    },
+    "hingeEdge": {
+      "v": "top (the edge farthest from the lens, nearest the focusing screen)", "unit": null, "ev": "spec",
+      "src": "https://patents.google.com/patent/US7824114",
+      "loc": "Description: main mirror pivots on 'main mirror rotation axis 41a', orthogonal to the taking lens's optical axis, on bearings at the mirror box's left and right walls, at the mirror's upper edge",
+      "reasoning": null
+    },
+    "restAngleDeg": {
+      "v": 45, "unit": "deg", "ev": "spec",
+      "src": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8979400",
+      "loc": "\"Drive mechanism for movable mirror of camera\" (US 8,979,400): the main mirror is stated to sit in the photographing optical path inclined at approximately 45 degrees to it in the mirror-down (viewing) position",
+      "note": "Corroborated qualitatively (angle not restated numerically) by en.wikipedia.org/wiki/Single-lens_reflex_camera ('the mirror placed at a 45-degree angle'), accessed 9/28/2026."
+    },
+    "semiTransparentZone": {
+      "shape": {
+        "v": "a central patch (roughly the sub-mirror's footprint) of the main mirror's silvering", "unit": null, "ev": "spec",
+        "src": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8979400",
+        "loc": "Main mirror is 'configured as a half-mirror'; the sub-mirror is mounted behind it and picks up only the light transmitted through that half-mirrored region, not the whole main mirror"
+      },
+      "transmittance": {
+        "v": [30, 45], "unit": "% (approx. range across designs, not one figure)", "ev": "reported",
+        "src": "https://patents.google.com/patent/US7012751B2 ; general half-mirror coating datasheets",
+        "loc": "US7012751B2 description: semi-transparent camera mirrors of this kind are commonly specified with visible-light reflectance and transmittance both in roughly the 30-70% band, split so a majority still reaches the viewfinder while enough passes through for phase-detect AF",
+        "note": "No single current full-frame DSLR publishes its exact main-mirror transmittance/reflectance split; this is the band general semi-silvered-mirror sources and patents describe for this application, not one maker's spec. Treated as reported, not spec, for that reason."
+      }
+    }
+  },
+
+  "subMirror": {
+    "function": {
+      "v": "picks up the fraction of the main mirror's transmitted (unreflected) light and folds it down to the phase-detect AF module in the mirror box floor", "unit": null, "ev": "spec",
+      "src": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8979400",
+      "loc": "\"the sub mirror reflects the light transmitted through the main mirror so that it is incident upon the AF module\""
+    },
+    "mountPoint": {
+      "v": "hinged to the rear (lens-side, lower) edge of the main mirror, folding against the main mirror's back face", "unit": null, "ev": "spec",
+      "src": "https://patents.google.com/patent/US7824114",
+      "loc": "\"sub-mirror holding frame 61\" pivots on a \"sub-mirror rotation axis 61a\", quasi-parallel to the main mirror's own hinge axis; when the main mirror flips up, the sub-mirror 'is folded on the main mirror side and positioned at a position retracted from the optical path'"
+    },
+    "angleRelativeToMainMirror": {
+      "v": "acute (0-90deg), i.e. folded back toward the lens, not coplanar with the main mirror", "unit": "deg", "ev": "spec",
+      "src": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8979400",
+      "loc": "\"the sub mirror may be disposed at an acute angle ... relative to the main mirror and is disposed at the rear end of the main mirror to reflect light transmitted through the main mirror toward the AF module\"",
+      "reasoning": "An exact degree figure (e.g. a specific design's fold angle) is not stated in the patent text pulled; the constraint (acute, folds the AF-bound beam down toward the floor-mounted module) is what's cited, not a number."
+    }
+  },
+
+  "focusingScreen": {
+    "opticalPosition": {
+      "v": "at the same total optical path length from the lens's rear principal plane as the sensor, via the reflected path off the main mirror", "unit": null, "ev": "spec",
+      "src": "https://en.wikipedia.org/wiki/Single-lens_reflex_camera",
+      "loc": "'the image is projected onto the film or sensor in exactly the same manner as on the focusing screen' - the mirror-reflected path to the screen is folded to the same length as the direct path to the sensor, so the same lens focus setting is sharp on both",
+      "reasoning": "This is why the mirror box's physical depth (lens mount to sensor, folded up through the mirror to the screen) has a hard floor: the screen sits above the mirror at a height equal to the lens-to-sensor distance, not an arbitrary one, or focus confirmed in the viewfinder would not match focus on the sensor."
+    }
+  },
+
+  "prism": {
+    "type": {
+      "v": "roof pentaprism on higher-tier bodies (solid glass, 5 internal reflections net one composite roof-edge reflection that un-reverses the image left-right); a pentamirror (lighter, hollow, mirrored facets) on lower-cost/lighter bodies trades brightness for weight", "unit": null, "ev": "spec",
+      "src": "https://en.wikipedia.org/wiki/Single-lens_reflex_camera ; https://www.dpreview.com/products/pentax/slrs/pentax_k1ii/specifications",
+      "loc": "Wikipedia SLR article, viewfinder section (pentaprism path); Pentax K-1 II spec page explicitly states 'Optical (pentaprism)' for its own viewfinder, confirming the higher-tier full-frame class (all four bodies in the envelope table above use a glass pentaprism, not a pentamirror) - pentamirrors are a lower/APS-C-class DSLR feature not represented among these four full-frame bodies"
+    },
+    "path": {
+      "v": "lens -> main mirror (reflects up 90deg) -> focusing screen (image forms right-side-up but left-right reversed) -> pentaprism's internal reflecting surfaces (correct the left-right reversal via a roof-edge surface, net image upright and correctly oriented) -> eyepiece", "unit": null, "ev": "spec",
+      "src": "https://en.wikipedia.org/wiki/Single-lens_reflex_camera",
+      "loc": "Viewfinder section: 'Light ... is reflected upwards by the reflex mirror, into the pentaprism where it is reflected twice to correct the inversions', after passing through the focusing screen and a condensing lens"
+    }
+  },
+
+  "viewfinder": {
+    "magnification": {
+      "v": [0.70, 0.76], "unit": "x (0.70-0.76x across the sampled bodies)", "ev": "spec",
+      "src": "Nikon, Canon, Pentax product spec pages",
+      "loc": "See samples below",
+      "samples": {
+        "nikon_d850": { "v": 0.75, "src": "https://www.imaging-resource.com/PRODS/nikon-d850/nikon-d850A4.HTM ; corroborated by Nikon's own D850 techspec/press materials", "loc": "Viewfinder spec row; Nikon states this is its highest-magnification optical finder to date (vs. the D810's 0.70x)" },
+        "canon_5d4": { "v": 0.71, "src": "https://www.canon.co.uk/cameras/eos-5d-mark-iv/specifications/", "loc": "Viewfinder > Magnification" },
+        "canon_1dx3": { "v": 0.76, "src": "Canon EOS-1D X Mark III spec pages (canon.co.uk/canon-europe/canon-cna regional mirrors of the same sheet)", "loc": "Viewfinder > Magnification; pro integrated-grip body, outside the envelope class above but cited here for its viewfinder figure" },
+        "pentax_k1ii": { "v": 0.70, "src": "https://www.dpreview.com/products/pentax/slrs/pentax_k1ii/specifications", "loc": "Viewfinder > Magnification" }
+      }
+    },
+    "coverage": {
+      "v": 100, "unit": "% (of the frame)", "ev": "spec",
+      "src": "Same spec pages as magnification, all four",
+      "loc": "Viewfinder > Coverage rows; all four full-frame bodies sampled state 100% (vertical and horizontal) at their standard (non-crop) shooting format",
+      "note": "100% coverage is standard on this tier; lower-tier DSLRs with pentamirrors commonly show less (often ~95%), which is part of why they use pentamirrors instead of pentaprisms in the first place (a cost/tier signal, not a physical requirement of the prism type itself)."
+    },
+    "eyepoint": {
+      "v": [17, 21], "unit": "mm (17-21mm across the sampled bodies)", "ev": "spec",
+      "src": "Nikon D850 (imaging-resource, 17mm), Canon 5D Mark IV (canon.co.uk, ~21mm), Canon 1DX Mark III (~20mm)",
+      "loc": "Viewfinder > Eyepoint rows on the respective spec pages"
+    },
+    "mechanismCaveat": {
+      "v": "Sony's current full-frame SLR-type body (a99 II) is excluded from every figure in this viewfinder block: it uses a fixed, non-swinging semi-transparent mirror (SLT) and a 0.78x, 2.4M-dot OLED electronic viewfinder, not a pentaprism/pentamirror optical path.", "unit": null, "ev": "spec",
+      "src": "Sony a99 II product/spec pages via imaging-resource.com/cameras/sony-a99-ii-review/specifications and en.wikipedia.org/wiki/Sony_%CE%B199_II",
+      "loc": "Viewfinder spec row: '1.3cm (0.5-inch) 2.4M-dot XGA color OLED... 100% coverage, 0.78x magnification'; body kept in the envelope table above (maker diversity) but out of every mirror-box/prism/viewfinder figure here since this project's generic DSLR models the swinging-mirror/pentaprism mechanism the brief specifies, which the a99 II does not use"
+    }
+  },
+
+  "timing": {
+    "mirrorFlipTime": {
+      "v": null, "unit": "ms", "ev": "assumed",
+      "src": "No maker publishes a mirror flip-up/down duration in ms for any of the four sampled bodies; searched Nikon/Canon/Pentax spec and support pages, DPReview and imaging-resource reviews, and relevant patents (see research/dslr.md 'Open problems')",
+      "loc": "N/A - absence noted, not a figure",
+      "reasoning": "Left null rather than invented. research/dslr.md records the derived bound instead: the mechanical ceiling implied by frame rate (see maxFrameRateMechanical below) and total shutter lag (see shutterLag below), which together bracket mirror travel to well under ~50ms per direction on a fast pro body, but that bracket is this project's own inference from those two cited figures, not a maker's stated mirror-speed spec."
+    },
+    "blackout": {
+      "v": "viewfinder is blacked out for the portion of each shooting cycle when the mirror is up, i.e. from just before first-curtain travel to just after the mirror returns; at 10fps this is reported as roughly 2/3 of each frame's cycle time (blacked out : visible ~= 8:4)", "unit": null, "ev": "reported",
+      "src": "https://www.photoartfromscience.com/single-post/measure-camera-mirror-blackout-time-yourself",
+      "loc": "Measured example at 10fps continuous: blackout portion ~0.0667s vs visible portion ~0.0333s per frame cycle (author's own stopwatch/video measurement, not a maker spec)",
+      "note": "This is one reviewer's own measurement on one body at one frame rate, carried as 'reported', not a general DSLR constant; the blackout fraction scales with frame rate and each body's own mirror/shutter timing, neither of which any maker publishes directly."
+    },
+    "shutterLag": {
+      "v": 76, "unit": "ms", "ev": "reported",
+      "src": "https://www.imaging-resource.com/PRODS/nikon-d850/nikon-d850A4.HTM",
+      "loc": "Imaging Resource's own lab-measured full shutter lag for the Nikon D850's mechanical shutter, 0.076s, which includes the mirror's flip-up time (this is total release-to-exposure lag, not the mirror's share of it alone)",
+      "note": "This is a third-party lab measurement for one specific body, not a Nikon spec and not a general DSLR figure; it is the only concrete, sourced lag number this note found that explicitly states it includes mirror flip time."
+    },
+    "maxFrameRateMechanical": {
+      "v": 16, "unit": "fps", "ev": "spec",
+      "src": "Canon EOS-1D X Mark III spec/feature pages (canon.co.uk/canon-europe.com, 'Lightning-fast AF' and specifications pages)",
+      "loc": "'When using the camera's optical viewfinder, the continuous shooting rate is 16fps with a mechanical shutter'; Canon states the body uses direct-drive motors to flip the reflex mirror up and down and return it to rest 'swiftly and accurately with minimal mirror bounce'",
+      "note": "This is the fastest mechanical-shutter, mirror-flipping frame rate this note found published for a current full-frame DSLR (a pro integrated-grip body, outside the envelope class above); it sets a practical ceiling on mirror-cycle time (~1000/16 = 62.5ms per complete up-and-return-and-settle cycle, including shutter travel and AF/AE computation, not mirror motion alone) that a same-tier standard-class body like the D850/5D IV runs well under (7fps and 7fps respectively, each maker's own published continuous-shooting specs)."
+    }
+  },
+
+  "mirrorClearance": {
+    "typicalClearance": {
+      "v": 40, "unit": "mm", "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/History_of_photographic_lens_design",
+      "loc": "'Retrofocus wide-angle lens' section: 'SLR cameras require that lenses be mounted far enough in front of the film to provide space for the movement of the mirror (the \"mirror box\"); about 40 mm for a 35mm SLR compared to less than 10 mm in non-SLR 35mm cameras.' Unsourced within the Wikipedia article itself (no inline footnote on that sentence) - carried here as 'reported', not 'spec', for that reason.",
+      "note": "This is a widely repeated rule-of-thumb figure for 35mm-format SLR mirror clearance, not a maker's dimensioned spec for any one body. It is consistent with, but not identical to, the mount flange distances the mounts agent's research covers (Canon EF 44.0mm, Nikon F 46.5mm, Pentax K 45.46mm - see research/dslr.md for how these two figures relate: flange distance is measured from the mount to the sensor and must exceed the mirror's swept clearance plus margin for the shutter, filter stack and cover glass, so flange distance is always somewhat larger than the bare mirror-clearance figure)."
+    },
+    "minimumStatedBackFocus": {
+      "v": null, "unit": "mm", "ev": "assumed",
+      "src": "camera-wiki.org/wiki/Retrofocus, en.wikipedia.org/wiki/History_of_photographic_lens_design, coinimaging.com/retrofocus.html, rondexter.com/library/retro_focus_and_tele.htm - all searched",
+      "loc": "N/A - no cited minimum back-focus number found in mm for a specific SLR design constraint (as opposed to the general ~40mm mirror-clearance rule of thumb above)",
+      "reasoning": "None of these sources states a minimum back-focus distance as a hard design floor separate from the ~40mm mirror-clearance figure already cited; the two are effectively the same constraint restated. Left null rather than invented; research/dslr.md records this as an open item for whichever lens-exterior/mounts agent has patent access to a specific SLR wide-angle prescription that states its own back focus explicitly (the lens-20/normal/wide/tele research notes already in this repo, written by other agents, may have exactly this for their own patent examples - see research/dslr.md for the cross-reference)."
+    },
+    "retrofocusExplanation": {
+      "v": "A conventional (non-retrofocus) wide-angle lens's rear principal plane sits close to its back focal point, which for short focal lengths would put the physical rear element inside the mirror's swept clearance zone. A retrofocus (inverted telephoto) design puts a diverging (negative) lens group at the front and a converging (positive) group at the rear, which lets the lens's effective focal length stay short while pushing its actual back focal distance out past the mirror box, at the cost of a larger, more complex lens.", "unit": null, "ev": "spec",
+      "src": "https://camera-wiki.org/wiki/Retrofocus ; https://en.wikipedia.org/wiki/History_of_photographic_lens_design",
+      "loc": "camera-wiki.org Retrofocus article: retrofocus 'permits a short lens optical focal length while providing a greater back focus distance. This is typically required in an SLR camera, to allow space for the swinging reflex mirror', achieved with 'outermost lens groups with negative power, with convergent elements behind them'"
+    }
+  },
+
+  "shutter": {
+    "position": {
+      "v": "immediately in front of the sensor stack (cover glass/AA filter assembly), the last element in the optical path before the photodiodes", "unit": null, "ev": "spec",
+      "src": "https://en.wikipedia.org/wiki/Focal-plane_shutter",
+      "loc": "'A focal-plane shutter is positioned immediately in front of the focal plane of the camera' - sits directly ahead of the sensor so lenses don't need their own shutters and can be swapped with the shutter closed"
+    },
+    "type": {
+      "v": "vertical-travel, two-curtain metal blade shutter", "unit": null, "ev": "spec",
+      "src": "https://en.wikipedia.org/wiki/Focal-plane_shutter",
+      "loc": "'Modern digital SLR cameras use vertical travel metal blade shutters' - first curtain opens, then after the timed delay the second curtain closes behind it, both curtains multi-bladed metal, not fabric"
+    },
+    "travelDistance": {
+      "v": 24, "unit": "mm", "ev": "spec",
+      "src": "https://en.wikipedia.org/wiki/Focal-plane_shutter",
+      "loc": "'a shorter distance for the shutter blades to travel of only 24 mm as opposed to 36 mm (compared to horizontal-travel shutters)' - vertical travel crosses the sensor's short (24mm) dimension, which is why it largely displaced the older horizontal (36mm-travel) cloth-curtain designs: shorter travel means a shorter minimum flash-sync time and faster curtain transit."
+    }
+  }
+}

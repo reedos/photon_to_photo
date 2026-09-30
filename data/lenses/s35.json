@@ -1,0 +1,326 @@
+{
+  "id": "s35",
+  "system": "dslr",
+  "focalLength": 35,
+  "maxFno": 1.45,
+  "markedFno": 1.4,
+  "name": "35 mm f/1.4 double-Gauss-derivative wide-angle (patent numerical example)",
+  "representativeOf": "Sigma 35mm F1.4 DG HSM | Art",
+  "representativeSource": "photonstophotos.net Optical Bench Hub (model list ties patent JP2014-048488, Example03P, to \"Sigma 35mm F1.4 DG HSM Art\"); https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026. Corroborated structurally: our transcription of Numerical Example 3 has 13 elements in 11 air/cement-separated groups, matching Sigma's own published \"13 elements in 11 groups\" spec (sigmaphoto.com) exactly. Further corroborated: the patent's own near-focus test condition is tabulated at a \"300mm\" shooting distance, matching Sigma's published minimum focusing distance of 30cm almost exactly.",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2014-048488 A, Numerical Example 3 (\"\u6570\u5024\u5b9f\u65bd\u4f8b3\")",
+    "url": "https://patents.google.com/patent/JP2014048488A/en",
+    "assignee": "Sigma Corp",
+    "published": "3/13/2014",
+    "accessed": "9/28/2026",
+    "location": "[Surface data] / [\u9762\u30c7\u30fc\u30bf] and [Various data] / [\u5404\u7a2e\u30c7\u30fc\u30bf] tables under Numerical Example 3"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 51.6928,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.58913,
+      "vd": 61.25,
+      "sd": 34.1742,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": 1.65056e-06,
+        "A6": 1.96288e-09,
+        "A8": -3.8208e-12,
+        "A10": 7.44465e-15,
+        "A12": -5.09935e-18,
+        "convention": "patent prints K directly with K=0 meaning no added conic term, standard sag form z = c*h^2/(1+sqrt(1-(1+K)*c^2*h^2)) + A4*h^4 + A6*h^6 + ..., same convention as p50/p20"
+      },
+      "label": "L1 front (asph)"
+    },
+    {
+      "r": 23.1387,
+      "t": 13.8467,
+      "medium": "air",
+      "sd": 32.5498,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1 rear air gap"
+    },
+    {
+      "r": -108.959,
+      "t": 1.5,
+      "medium": "glass",
+      "nd": 1.437,
+      "vd": 95.1,
+      "sd": 29.7274,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2"
+    },
+    {
+      "r": 47.6787,
+      "t": 3.5755,
+      "medium": "air",
+      "sd": 29.6391,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 rear air gap"
+    },
+    {
+      "r": 196.1242,
+      "t": 4.5045,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.13,
+      "sd": 30.3079,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3"
+    },
+    {
+      "r": -94.0062,
+      "t": 3.8127,
+      "medium": "air",
+      "sd": 30.3808,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3 rear air gap"
+    },
+    {
+      "r": -37.6685,
+      "t": 1.3,
+      "medium": "glass",
+      "nd": 1.72825,
+      "vd": 28.32,
+      "sd": 29.2708,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4"
+    },
+    {
+      "r": 606.2428,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 29.4775,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4 rear air gap"
+    },
+    {
+      "r": 79.8753,
+      "t": 8.9087,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.62,
+      "sd": 29.524,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L5 (end of group G1)"
+    },
+    {
+      "r": -46.6701,
+      "t": 7.0345,
+      "medium": "air",
+      "sd": 30.0332,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap after G1 (d10)"
+    },
+    {
+      "r": 61.2667,
+      "t": 5.7369,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.13,
+      "sd": 27.9901,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 (start of group G2)"
+    },
+    {
+      "r": -336.7562,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 25.8463,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 rear air gap"
+    },
+    {
+      "r": 74.1753,
+      "t": 8.8511,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.62,
+      "sd": 25.7226,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7 (front of cemented doublet)"
+    },
+    {
+      "r": -45.397,
+      "t": 1.5,
+      "medium": "glass",
+      "nd": 1.60342,
+      "vd": 38.01,
+      "sd": 19.9981,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L7-L8 cemented interface; L8 rear glass (nd/vd this row)"
+    },
+    {
+      "r": 35.4664,
+      "t": 7.0624,
+      "medium": "air",
+      "sd": 19.0387,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap after G2 (d15), end of group G2"
+    },
+    {
+      "r": null,
+      "t": 5.5151,
+      "medium": "air",
+      "sd": 14.084,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "aperture stop S (start of group G3)"
+    },
+    {
+      "r": -30.0,
+      "t": 1.25,
+      "medium": "glass",
+      "nd": 1.80518,
+      "vd": 25.46,
+      "sd": 16.1197,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 (front of cemented doublet)"
+    },
+    {
+      "r": 119.7609,
+      "t": 4.996,
+      "medium": "glass",
+      "nd": 1.437,
+      "vd": 95.1,
+      "sd": 16.6749,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L9-L10 cemented interface; L10 rear glass (nd/vd this row)"
+    },
+    {
+      "r": -68.8075,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 19.6406,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 70.0035,
+      "t": 6.265,
+      "medium": "glass",
+      "nd": 1.56883,
+      "vd": 56.04,
+      "sd": 19.7498,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11"
+    },
+    {
+      "r": -57.8073,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 22.0173,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 86.6673,
+      "t": 1.1,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.44,
+      "sd": 22.07,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12"
+    },
+    {
+      "r": 41.4963,
+      "t": 1.6662,
+      "medium": "air",
+      "sd": 22.2379,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 83.8165,
+      "t": 5.2749,
+      "medium": "glass",
+      "nd": 1.7725,
+      "vd": 49.47,
+      "sd": 23.0514,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 front"
+    },
+    {
+      "r": -56.3959,
+      "t": 39.2,
+      "medium": "air",
+      "sd": 23.8722,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": 4.3716e-06,
+        "A6": -2.8629e-10,
+        "A8": -4.07099e-13,
+        "A10": 7.96087e-15,
+        "A12": -7.28754e-18,
+        "convention": "patent prints K directly with K=0 meaning no added conic term, same convention as surface 1"
+      },
+      "label": "L13 rear (asph); t = BF at infinity focus"
+    }
+  ],
+  "stated": {
+    "f": 34.0,
+    "fno": 1.45,
+    "halfFieldDeg": 32.745,
+    "imageHeight": 21.6,
+    "bf": 39.2,
+    "totalLength": 135.98
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 9,
+        "atInfinity": 7.0345,
+        "atClose": 1.0,
+        "closeObjectDistance": 300,
+        "note": "d10 in patent numbering (surface 10, 1-based) = gap at the end of lens unit/group G1; index 9 is 0-based into `surfaces`. Patent's [Variable interval data] column header is 'INF / 300mm shooting distance', reference plane not stated in the text (same ambiguity as p50/p20's closeObjectDistance)."
+      },
+      {
+        "surface": 14,
+        "atInfinity": 7.0624,
+        "atClose": 5.9204,
+        "closeObjectDistance": 300,
+        "note": "d15 in patent numbering (surface 15, 1-based) = gap at the end of lens unit/group G2, into the aperture stop."
+      },
+      {
+        "surface": 24,
+        "atInfinity": 39.2,
+        "atClose": 46.3765,
+        "closeObjectDistance": 300,
+        "note": "index 24 = patent surface 25 (last surface); this is the BF gap itself. G2 and G3 move together toward the object side on focusing closer (a floating design per the patent's own claim text), while G1 stays fixed and total lens length is held constant at 135.98 mm at both INF and the 300 mm test distance (unit-length focusing barrel with internal floating groups), so BF grows on close focus."
+      }
+    ],
+    "minFocusM": 0.3,
+    "minFocusSource": "spec - Sigma 35mm F1.4 DG HSM | Art spec page, https://www.sigmaphoto.com/35mm-f1-4-dg-hsm-a, accessed 9/28/2026 (\"Minimum Focusing Distance: 30cm / 11.8in\"). Matches the patent's own near-focus test condition (300 mm shooting distance) almost exactly."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Sigma 35mm F1.4 DG HSM | Art spec page, https://www.sigmaphoto.com/35mm-f1-4-dg-hsm-a, accessed 9/28/2026 (\"Number of Diaphragm Blades: 9 (rounded diaphragm)\")",
+    "ev": "spec"
+  },
+  "elements": 13,
+  "groups": 11,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is Sigma Corp JP2014-048488A, application JP2012-192055, filed 8/31/2012, published 3/13/2014 (accessed via patents.google.com/patent/JP2014048488A/en, which loaded directly at HTTP 200 this session; no rate-limiting encountered, so the r.jina.ai / patentimages.storage.googleapis.com fallbacks were not needed).",
+    "This application discloses 9 numerical examples (Examples 1-9), all variants of the same wide-angle double-Gauss-derivative family with a 3-group (G1 negative, G2 positive, G3 positive) construction, at f = 34.00-35.16mm (Examples 3 and 4 are both f~34-35mm/F1.45; the others range further). Example 3 (this file) was used because photonstophotos.net's Optical Bench Hub ties this specific example to 'Sigma 35mm F1.4 DG HSM Art', and because Example 3's own element/group breakdown, counted from its surface table (13 elements: 5 air-spaced singlets in G1, 1 singlet + 1 cemented doublet in G2, 1 cemented doublet + 3 singlets in G3 = 11 groups total), matches Sigma's own published '13 elements in 11 groups' spec exactly. Example 4 was checked and rejected: while it is also 13/11, photonstophotos's own tie is specifically to Example03P, not Example04P.",
+    "Digit-level cross-check: patents.google.com's rendered text for this document prints the Japanese original numerical-example tables followed immediately by an English machine-translation duplicate. All digits for Numerical Example 3's [Surface data], [Aspherical data], [Various data] and [Variable interval data] blocks agree between the two copies (no OCR/translation discrepancies found, unlike the p105 and p20 lenses in this project, which each had one caught digit-level mismatch between the JP original and the English MT).",
+    "No filter or cover-glass plate surface is listed after the last optical surface in this patent's table (unlike p20's design): surface 25 (L13 rear, aspheric) is immediately followed by 'BF' to the image plane, so the last surface's t (39.2000 mm at infinity) is the lens's actual back focus, not a plate-truncated gap; no back-focus trap here.",
+    "Semi-diameters are not given anywhere in the patent text (no 'effective diameter' column), so every surface uses sdSource 'estimated-from-marginal-ray'; see research/lenses-s35.md for the paraxial marginal-ray-plus-chief-ray method (same method and script family as research/lenses-normal.md, research/lenses-20.md), run via .local/s35/raytrace.py (a copy of .local/lens-wide/raytrace.py).",
+    "medium is 'glass' (not a catalog key) everywhere because the patent gives only nd/vd, never a named glass catalog product.",
+    "Surfaces 12-13 (L7-L8) and 16-17 (L9-L10) are cemented interfaces per patent convention (the second surface's row already carries the next glass's nd/vd with zero air gap between); both marked coated:false on the second (cemented-interface) surface, matching the p20.json convention for its own cemented interfaces.",
+    "closeObjectDistance (300mm) is transcribed as printed in the patent's [Variable interval data] table column header ('INF / 300mm'); the patent does not state in the text whether 300mm is measured from the object to the first lens surface or to the image plane, so it is recorded as-is with that caveat, matching how p50/p20/p24/p28 handle their own closeObjectDistance figures. Unlike p20 (959mm test distance vs. 276mm actual minimum focus, a large gap), this patent's 300mm test distance and Sigma's own published 300mm (30cm) minimum focusing distance are effectively identical, which is itself corroborating evidence for the tie.",
+    "halfFieldDeg (32.745) is derived (not directly the patent's own printed value): the patent states 'Full angle of view 2omega = 65.49 deg' (full angle, not the half angle omega our schema's halfFieldDeg field expects), so halfFieldDeg = 65.49/2 = 32.745 is a straightforward derived half.",
+    "Sigma's own published angle of view for the product (63.4 deg) differs slightly from the patent example's stated 65.49 deg (2omega) / 32.745 deg (omega, i.e. product angle of view is about 63.4 vs patent's 65.49 -- both describe full angle of view on 35mm full frame, a normal generic-example-vs-shipped-product gap per BRIEF.md's 'representative designs are schematic'); f=34.00mm raw patent example vs. the 35mm marketed class and Fno=1.45 vs the marketed f/1.4 are the same kind of gap."
+  ]
+}

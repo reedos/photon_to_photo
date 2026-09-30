@@ -1,0 +1,227 @@
+{
+  "dataset": "16-bin equal-width wavelength binning proposal for spectral ray tracing, 380-780 nm",
+  "ev": "derived",
+  "calc": "380-780 nm split into 16 EQUAL-width bins (25.0000 nm each), because equal width is the simplest scheme to explain on the page and to index from a wavelength in a shader (bin = floor((lambda-380)/width)), and it keeps every visible sub-range represented even though the eye's sensitivity is very uneven across it (the brief's own WACR 16-bin-minimum spec is a bin COUNT, not a weighting scheme). Center = arithmetic midpoint of the bin, for the same reason (a Y-weighted centroid would pull centers toward 555 nm and complicate the index math for a small accuracy gain). cmf_integral is the EXACT bin-integrated (x_bar,y_bar,z_bar) -- computed by linearly interpolating the 1 nm CIE 1931 table to 0.1 nm and Riemann-summing -- so a renderer that assigns one spectral radiance value L_i to bin i can reconstruct XYZ = sum_i L_i * cmf_integral_i exactly enough for display, without re-integrating CMFs per frame. luminance_share is cmf_integral.Y normalized to sum to 1 across all bins, i.e. how much each bin actually contributes to perceived brightness under a flat (equal-radiance) spectrum -- useful for deciding where noise will be most visible if bins are stochastically sampled rather than all traced every frame.",
+  "source": "Computed here from cie1931-2deg-cmf.json (CIE 018:2019 Table 6, CC BY-SA 4.0)",
+  "accessed": "9/28/2026",
+  "wavelength_unit": "nm",
+  "n_bins": 16,
+  "range_nm": [
+    380,
+    780
+  ],
+  "bin_width_nm": 25.0,
+  "edges_nm": [
+    380.0,
+    405.0,
+    430.0,
+    455.0,
+    480.0,
+    505.0,
+    530.0,
+    555.0,
+    580.0,
+    605.0,
+    630.0,
+    655.0,
+    680.0,
+    705.0,
+    730.0,
+    755.0,
+    780.0
+  ],
+  "bins": [
+    {
+      "index": 0,
+      "edge_low_nm": 380.0,
+      "edge_high_nm": 405.0,
+      "center_nm": 392.5,
+      "cmf_integral": {
+        "X": 0.19731579900000001,
+        "Y": 0.005508424509999999,
+        "Z": 0.9349741205500002
+      },
+      "luminance_share": 5.2e-05
+    },
+    {
+      "index": 1,
+      "edge_low_nm": 405.0,
+      "edge_high_nm": 430.0,
+      "center_nm": 417.5,
+      "cmf_integral": {
+        "X": 3.0883955299999992,
+        "Y": 0.10174297100000003,
+        "Z": 14.899529700000002
+      },
+      "luminance_share": 0.000952
+    },
+    {
+      "index": 2,
+      "edge_low_nm": 430.0,
+      "edge_high_nm": 455.0,
+      "center_nm": 442.5,
+      "cmf_integral": {
+        "X": 8.3420325,
+        "Y": 0.68289401,
+        "Z": 42.56792830000002
+      },
+      "luminance_share": 0.006391
+    },
+    {
+      "index": 3,
+      "edge_low_nm": 455.0,
+      "edge_high_nm": 480.0,
+      "center_nm": 467.5,
+      "cmf_integral": {
+        "X": 5.4519234,
+        "Y": 2.1435770499999993,
+        "Z": 34.14052794499998
+      },
+      "luminance_share": 0.02006
+    },
+    {
+      "index": 4,
+      "edge_low_nm": 480.0,
+      "edge_high_nm": 505.0,
+      "center_nm": 492.5,
+      "cmf_integral": {
+        "X": 0.7798736920000001,
+        "Y": 6.121858000000001,
+        "Z": 11.06274615499999
+      },
+      "luminance_share": 0.057291
+    },
+    {
+      "index": 5,
+      "edge_low_nm": 505.0,
+      "edge_high_nm": 530.0,
+      "center_nm": 517.5,
+      "cmf_integral": {
+        "X": 1.4452359800000003,
+        "Y": 16.234555,
+        "Z": 2.6547413899999985
+      },
+      "luminance_share": 0.151929
+    },
+    {
+      "index": 6,
+      "edge_low_nm": 530.0,
+      "edge_high_nm": 555.0,
+      "center_nm": 542.5,
+      "cmf_integral": {
+        "X": 8.214126244999997,
+        "Y": 23.89273610000001,
+        "Z": 0.47860615455000016
+      },
+      "luminance_share": 0.223597
+    },
+    {
+      "index": 7,
+      "edge_low_nm": 555.0,
+      "edge_high_nm": 580.0,
+      "center_nm": 567.5,
+      "cmf_integral": {
+        "X": 17.942999155,
+        "Y": 23.9064837,
+        "Z": 0.07058999889999999
+      },
+      "luminance_share": 0.223725
+    },
+    {
+      "index": 8,
+      "edge_low_nm": 580.0,
+      "edge_high_nm": 605.0,
+      "center_nm": 592.5,
+      "cmf_integral": {
+        "X": 25.556721800000002,
+        "Y": 18.108910000000005,
+        "Z": 0.027201500549999997
+      },
+      "luminance_share": 0.16947
+    },
+    {
+      "index": 9,
+      "edge_low_nm": 605.0,
+      "edge_high_nm": 630.0,
+      "center_nm": 617.5,
+      "cmf_integral": {
+        "X": 22.00477489999998,
+        "Y": 10.320779999999997,
+        "Z": 0.005918166655499998
+      },
+      "luminance_share": 0.096586
+    },
+    {
+      "index": 10,
+      "edge_low_nm": 630.0,
+      "edge_high_nm": 655.0,
+      "center_nm": 642.5,
+      "cmf_integral": {
+        "X": 10.325759999999987,
+        "Y": 4.049949449999995,
+        "Z": 0.00041649998049999855
+      },
+      "luminance_share": 0.037901
+    },
+    {
+      "index": 11,
+      "edge_low_nm": 655.0,
+      "edge_high_nm": 680.0,
+      "center_nm": 667.5,
+      "cmf_integral": {
+        "X": 2.8401617099999954,
+        "Y": 1.0466989799999997,
+        "Z": 0.0
+      },
+      "luminance_share": 0.009795
+    },
+    {
+      "index": 12,
+      "edge_low_nm": 680.0,
+      "edge_high_nm": 705.0,
+      "center_nm": 692.5,
+      "cmf_integral": {
+        "X": 0.5481955441999989,
+        "Y": 0.1984810119999995,
+        "Z": 0.0
+      },
+      "luminance_share": 0.001857
+    },
+    {
+      "index": 13,
+      "edge_low_nm": 705.0,
+      "edge_high_nm": 730.0,
+      "center_nm": 717.5,
+      "cmf_integral": {
+        "X": 0.0975647907499997,
+        "Y": 0.035232431399999965,
+        "Z": 0.0
+      },
+      "luminance_share": 0.00033
+    },
+    {
+      "index": 14,
+      "edge_low_nm": 730.0,
+      "edge_high_nm": 755.0,
+      "center_nm": 742.5,
+      "cmf_integral": {
+        "X": 0.01656519979499998,
+        "Y": 0.005981996769999986,
+        "Z": 0.0
+      },
+      "luminance_share": 5.6e-05
+    },
+    {
+      "index": 15,
+      "edge_low_nm": 755.0,
+      "edge_high_nm": 780.0,
+      "center_nm": 767.5,
+      "cmf_integral": {
+        "X": 0.002804778081999995,
+        "Y": 0.0010128566999999984,
+        "Z": 0.0
+      },
+      "luminance_share": 9e-06
+    }
+  ]
+}

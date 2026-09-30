@@ -1,0 +1,572 @@
+{
+  "lensId": "z35",
+  "sensorZEff": 102.50025000000002,
+  "afOffset": 0.024,
+  "closestFocusMm": 262.8248940973656,
+  "maxRealizedSd": 22.094892789548368,
+  "surfaces": [
+    {
+      "index": 0,
+      "kind": "refract",
+      "zEngine": 0,
+      "zWorld": -102.50025000000002,
+      "sdRealized": 20.318655691736627,
+      "c": 0.009613351021899214,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HIKARI:J-BK7A",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 1,
+      "kind": "refract",
+      "zEngine": 2.295,
+      "zWorld": -100.20525000000002,
+      "sdRealized": 16.2711222640589,
+      "c": 0.05059704513256426,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 2,
+      "kind": "refract",
+      "zEngine": 10.26,
+      "zWorld": -92.24025000000002,
+      "sdRealized": 16.143486743577103,
+      "c": 0.010911967700575604,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HIKARI:J-LASFH21",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 3,
+      "kind": "refract",
+      "zEngine": 16.064999999999998,
+      "zWorld": -86.43525000000002,
+      "sdRealized": 15.907373810384163,
+      "c": -0.021904605443294454,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "SCHOTT:F5",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 4,
+      "kind": "refract",
+      "zEngine": 17.932499999999997,
+      "zWorld": -84.56775000000002,
+      "sdRealized": 14.263428426043795,
+      "c": 0.013735226047482677,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 5,
+      "kind": "refract",
+      "zEngine": 23.805,
+      "zWorld": -78.69525000000002,
+      "sdRealized": 13.988991269462838,
+      "c": -0.03433329041672031,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HOYA:E-FD8",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 6,
+      "kind": "refract",
+      "zEngine": 27.675,
+      "zWorld": -74.82525000000003,
+      "sdRealized": 15.375145288536578,
+      "c": 0.02537217813806271,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "OHARA:S-LAH89",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 7,
+      "kind": "refract",
+      "zEngine": 35.0775,
+      "zWorld": -67.42275000000002,
+      "sdRealized": 15.53216957579078,
+      "c": -0.02537217813806271,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 8,
+      "kind": "refract",
+      "zEngine": 35.4825,
+      "zWorld": -67.01775000000002,
+      "sdRealized": 14.709914142030701,
+      "c": 0.03729499407941969,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HOYA:FCD1",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 9,
+      "kind": "refract",
+      "zEngine": 43.7625,
+      "zWorld": -58.73775000000002,
+      "sdRealized": 14.033092903594206,
+      "c": -0.012509695013635568,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 10,
+      "kind": "refract",
+      "zEngine": 43.965,
+      "zWorld": -58.53525000000002,
+      "sdRealized": 12.868370675378369,
+      "c": 0.010695072779970269,
+      "k": -4.9288,
+      "a": [
+        -0.000008412181069958848,
+        8.745333536554386e-8,
+        -1.5818900770630125e-10,
+        0,
+        0
+      ],
+      "mediumAfter": "HOYA:M-NBFD10",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 11,
+      "kind": "refract",
+      "zEngine": 45.2475,
+      "zWorld": -57.25275000000002,
+      "sdRealized": 12.195112521215453,
+      "c": 0.022405951020591067,
+      "k": -0.4693,
+      "a": [
+        -0.000007334979423868313,
+        9.865596369117173e-8,
+        -9.97844476934724e-11,
+        0,
+        0
+      ],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 12,
+      "kind": "stop",
+      "zEngine": 49.455,
+      "zWorld": -53.045250000000024,
+      "sdRealized": 11.462292427077314,
+      "c": 0,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": true,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 13,
+      "kind": "refract",
+      "zEngine": 61.019999999999996,
+      "zWorld": -41.48025000000003,
+      "sdRealized": 11.047517038529756,
+      "c": -0.04481642073655787,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HIKARI:J-F3",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 14,
+      "kind": "refract",
+      "zEngine": 62.415,
+      "zWorld": -40.08525000000002,
+      "sdRealized": 11.66195302593725,
+      "c": -0.007690680817519371,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 15,
+      "kind": "refract",
+      "zEngine": 62.685,
+      "zWorld": -39.81525000000002,
+      "sdRealized": 12.834840615009195,
+      "c": 0.020920939768614408,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HOYA:FCD505",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 16,
+      "kind": "refract",
+      "zEngine": 69.03,
+      "zWorld": -33.47025000000002,
+      "sdRealized": 13.249105511313108,
+      "c": -0.03193306828886654,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 17,
+      "kind": "refract",
+      "zEngine": 73.7325,
+      "zWorld": -28.76775000000002,
+      "sdRealized": 13.920879882086147,
+      "c": -0.005280256198030729,
+      "k": 15.3255,
+      "a": [
+        -0.00001811138545953361,
+        1.1948314112008672e-8,
+        0,
+        0,
+        0
+      ],
+      "mediumAfter": "HOYA:M-LAC130",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 18,
+      "kind": "refract",
+      "zEngine": 75.9375,
+      "zWorld": -26.562750000000023,
+      "sdRealized": 14.22404004164543,
+      "c": -0.015773865859044736,
+      "k": -0.9347,
+      "a": [
+        -2.1210425240054872e-7,
+        2.0081491642534167e-8,
+        6.792741495920213e-11,
+        -7.646026175967167e-14,
+        0
+      ],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 19,
+      "kind": "refract",
+      "zEngine": 81.09,
+      "zWorld": -21.41025000000002,
+      "sdRealized": 15.246086444358012,
+      "c": -0.023425101167155665,
+      "k": -0.1889,
+      "a": [
+        -0.000010034567901234567,
+        -2.686202983962472e-8,
+        0,
+        0,
+        0
+      ],
+      "mediumAfter": "HOYA:M-BACD12",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 20,
+      "kind": "refract",
+      "zEngine": 82.95750000000001,
+      "zWorld": -19.542750000000012,
+      "sdRealized": 16.511019304025613,
+      "c": -0.006408900681266142,
+      "k": 0,
+      "a": [
+        -0.000008216406035665296,
+        -3.2480685532354484e-8,
+        6.539255429002362e-11,
+        -8.78278051009326e-14,
+        0
+      ],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 21,
+      "kind": "refract",
+      "zEngine": 99.85500000000002,
+      "zWorld": -2.6452500000000043,
+      "sdRealized": 21.751240844024057,
+      "c": 0,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "HIKARI:J-BK7A",
+      "stop": false,
+      "doe": false,
+      "plate": "cover-glass",
+      "layer": null
+    },
+    {
+      "index": 22,
+      "kind": "refract",
+      "zEngine": 101.52000000000002,
+      "zWorld": -0.9802499999999981,
+      "sdRealized": 22.094892789548368,
+      "c": 0,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    },
+    {
+      "index": 23,
+      "kind": "image",
+      "zEngine": 102.50025000000002,
+      "zWorld": 0,
+      "sdRealized": null,
+      "c": 0,
+      "k": 0,
+      "a": [],
+      "mediumAfter": "air",
+      "stop": false,
+      "doe": false,
+      "plate": null,
+      "layer": null
+    }
+  ],
+  "elements": [
+    {
+      "index": 1,
+      "frontSurface": 0,
+      "backSurface": 1,
+      "zFrontWorld": -102.50025000000002,
+      "zBackWorld": -100.20525000000002,
+      "sdFront": 20.318655691736627,
+      "sdBack": 16.2711222640589,
+      "maxSd": 20.318655691736627
+    },
+    {
+      "index": 2,
+      "frontSurface": 2,
+      "backSurface": 3,
+      "zFrontWorld": -92.24025000000002,
+      "zBackWorld": -86.43525000000002,
+      "sdFront": 16.143486743577103,
+      "sdBack": 15.907373810384163,
+      "maxSd": 16.143486743577103
+    },
+    {
+      "index": 3,
+      "frontSurface": 3,
+      "backSurface": 4,
+      "zFrontWorld": -86.43525000000002,
+      "zBackWorld": -84.56775000000002,
+      "sdFront": 15.907373810384163,
+      "sdBack": 14.263428426043795,
+      "maxSd": 15.907373810384163
+    },
+    {
+      "index": 4,
+      "frontSurface": 5,
+      "backSurface": 6,
+      "zFrontWorld": -78.69525000000002,
+      "zBackWorld": -74.82525000000003,
+      "sdFront": 13.988991269462838,
+      "sdBack": 15.375145288536578,
+      "maxSd": 15.375145288536578
+    },
+    {
+      "index": 5,
+      "frontSurface": 6,
+      "backSurface": 7,
+      "zFrontWorld": -74.82525000000003,
+      "zBackWorld": -67.42275000000002,
+      "sdFront": 15.375145288536578,
+      "sdBack": 15.53216957579078,
+      "maxSd": 15.53216957579078
+    },
+    {
+      "index": 6,
+      "frontSurface": 8,
+      "backSurface": 9,
+      "zFrontWorld": -67.01775000000002,
+      "zBackWorld": -58.73775000000002,
+      "sdFront": 14.709914142030701,
+      "sdBack": 14.033092903594206,
+      "maxSd": 14.709914142030701
+    },
+    {
+      "index": 7,
+      "frontSurface": 10,
+      "backSurface": 11,
+      "zFrontWorld": -58.53525000000002,
+      "zBackWorld": -57.25275000000002,
+      "sdFront": 12.868370675378369,
+      "sdBack": 12.195112521215453,
+      "maxSd": 12.868370675378369
+    },
+    {
+      "index": 8,
+      "frontSurface": 13,
+      "backSurface": 14,
+      "zFrontWorld": -41.48025000000003,
+      "zBackWorld": -40.08525000000002,
+      "sdFront": 11.047517038529756,
+      "sdBack": 11.66195302593725,
+      "maxSd": 11.66195302593725
+    },
+    {
+      "index": 9,
+      "frontSurface": 15,
+      "backSurface": 16,
+      "zFrontWorld": -39.81525000000002,
+      "zBackWorld": -33.47025000000002,
+      "sdFront": 12.834840615009195,
+      "sdBack": 13.249105511313108,
+      "maxSd": 13.249105511313108
+    },
+    {
+      "index": 10,
+      "frontSurface": 17,
+      "backSurface": 18,
+      "zFrontWorld": -28.76775000000002,
+      "zBackWorld": -26.562750000000023,
+      "sdFront": 13.920879882086147,
+      "sdBack": 14.22404004164543,
+      "maxSd": 14.22404004164543
+    },
+    {
+      "index": 11,
+      "frontSurface": 19,
+      "backSurface": 20,
+      "zFrontWorld": -21.41025000000002,
+      "zBackWorld": -19.542750000000012,
+      "sdFront": 15.246086444358012,
+      "sdBack": 16.511019304025613,
+      "maxSd": 16.511019304025613
+    }
+  ],
+  "scaleMarks": [
+    {
+      "mm": null,
+      "angleRad": 0
+    },
+    {
+      "mm": 10000,
+      "angleRad": 0.023918137556799484
+    },
+    {
+      "mm": 5000,
+      "angleRad": 0.044024620746719346
+    },
+    {
+      "mm": 3000,
+      "angleRad": 0.07128918148097825
+    },
+    {
+      "mm": 2000,
+      "angleRad": 0.10612738155979691
+    },
+    {
+      "mm": 1500,
+      "angleRad": 0.14184104273850545
+    },
+    {
+      "mm": 1000,
+      "angleRad": 0.21605064930524184
+    },
+    {
+      "mm": 700,
+      "angleRad": 0.3173860826870785
+    },
+    {
+      "mm": 500,
+      "angleRad": 0.4642420770751658
+    },
+    {
+      "mm": 262.8248940973656,
+      "angleRad": 1.0471975511965976
+    }
+  ],
+  "focalLength": 35,
+  "maxFno": 1.85,
+  "markedFno": 1.8,
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Nikon USA product page, https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview, accessed 9/28/2026 (\"Diaphragm Blades: 9\"); \"rounded\" corroborated by B&H Photo's product listing (https://www.bhphotovideo.com/c/product/1431709-REG/nikon_20081_nikkor_z_35mm_f_1_8.html, accessed 9/28/2026: \"rounded nine-blade diaphragm\"), Nikon USA's own overview page does not use the word \"rounded\" itself",
+    "ev": "spec",
+    "stopRadius": 11.462292427077314
+  },
+  "elementCount": 11,
+  "groupCount": 9,
+  "representativeOf": "Nikon NIKKOR Z 35mm f/1.8 S"
+}

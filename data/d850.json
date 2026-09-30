@@ -1,0 +1,482 @@
+{
+  "meta": {
+    "project": "Photon to Photo",
+    "file": "data/d850.json",
+    "generatedBy": "d850 research agent",
+    "accessedDate": "09/28/2026",
+    "scope": "Sensor and body-geometry record for the Nikon D850, in the same shape as a data/sensors.json entry plus readNoise points (data/read-noise.json shape) plus body figures. The site's DSLR body uses the D850's sensor and mount geometry (body look stays generic/unbranded). See research/d850.md for prose, conflicts and reasoning.",
+    "evidenceKinds": ["spec", "vendor", "reported", "derived", "assumed"],
+    "readNoiseMethod": "Same method as data/read-noise.json: photonstophotos.net's RN_e.htm/PDR.htm/Sensor_Characteristics.htm write their per-camera series into a literal JS array in the page's inline <script> (Highcharts 4.0.4 config); this pass fetched the three pages with plain curl (confirmed byte-identical to the earlier Playwright captures already in .local/read-noise/, and reused here -- see .local/d850/captures/*.html) and extracted the 'Nikon D850_14' / 'Nikon D850(ES)_14' (RN_e.htm) and 'Nikon D850' (PDR.htm) series with a bracket-balanced scan + new Function() eval, same scripts pattern as .local/read-noise/*.cjs, copied/adapted at .local/d850/*.cjs. ISO = round(3.125 * 2^x); readNoiseE = 2^y.",
+    "dcgDetectionMethod": "Same slope-based method as data/read-noise.json: steepest negative slope of log2(read noise) vs log2(ISO) between adjacent, unmarked, in-normal-analog-range points. Reported as the bracketing ISO pair, derived not reported.",
+    "openProblems": [
+      "D850 full-sensor electronic-shutter readout/scan time (64 ms figure below) could not be independently re-verified: the horshack-dpreview RollingShutter combined-results table (the primary source used for the a7R IV/a6400/OM-1 in data/read-noise.json) does not carry a D850 row, and the two DPReview forum threads that discuss the D850's readout speed (including a Jim Kasson post) returned HTTP 403 to this session's fetch tool, same failure mode noted in research/sensor-sources.md for other cameras. The 64ms figure is recorded via this session's web-search-tool summary only, flagged low-confidence.",
+      "Nikon does not publish first-party shutter-curtain travel time; flash sync speed (1/250s) is used as the closest published proxy for mechanical-shutter speed, not a direct curtain-travel-time figure.",
+      "Chip identity: Nikon does not publicly name the D850's sensor supplier or part number. It is widely reported (DPReview, DxOMark, press coverage at launch) to be a Sony-fabricated BSI full-frame sensor closely related to the a7R III's (same 45.7MP-class BSI part family), but no vendor datasheet naming an exact Sony IMX part number for the D850 was found, unlike the a7R IV/IMX455 case in data/sensors.json. Not claimed as a specific chip here.",
+      "Two independent full-well figures are recorded (RN_e.htm 59,126 e- vs Sensor_Characteristics.htm/DxOMark-derived 60,912 e-) -- both kept, not averaged, consistent with this project's convention for the a7R IV/a6400/OM-1 records."
+    ]
+  },
+  "sensor": {
+    "id": "full-frame-d850",
+    "format": "full-frame",
+    "nominalMm": "36 x 24",
+    "cameraName": "Nikon D850",
+    "chipIdentity": {
+      "claimed": "Nikon does not publicly name the D850's sensor supplier/part number. Widely reported (DPReview, DxOMark, trade press at the 2017 launch) as a Sony-fabricated BSI full-frame CMOS sensor, generally discussed as being in the same 45.7MP-class BSI sensor family used in the Sony a7R III (announced the same year), but no vendor datasheet or teardown confirming an exact Sony IMX part number for the D850 was found in this pass.",
+      "ev": "reported",
+      "srcs": [
+        {
+          "src": "https://www.dpreview.com/news/4840194993/nikon-d850-offers-45-7mp-bsi-fx-format-sensor-7-fps-bursts-4k-video",
+          "loc": "headline/body: \"Nikon D850 offers 45.7MP BSI FX-format sensor\"",
+          "accessed": "09/28/2026"
+        }
+      ]
+    },
+    "activeArea": {
+      "widthMm": {
+        "v": 35.9,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, \"Sensor\" row: \"35.9 x 23.9 mm\"",
+        "accessed": "09/28/2026"
+      },
+      "heightMm": {
+        "v": 23.9,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, \"Sensor\" row",
+        "accessed": "09/28/2026"
+      }
+    },
+    "pixelCount": {
+      "effectiveMP": {
+        "v": 45.4,
+        "unit": "MP",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, \"Effective pixels\" row: 45.4 megapixels (8256 x 5504); matches DPReview's own specifications page. Nikon's own marketing commonly rounds this to \"45.7 million total pixels\" (total, not effective) -- both figures appear across sources, not resolved further here.",
+        "accessed": "09/28/2026"
+      },
+      "effectiveH": {
+        "v": 8256,
+        "unit": "px",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, \"Effective pixels\" row",
+        "accessed": "09/28/2026"
+      },
+      "effectiveV": {
+        "v": 5504,
+        "unit": "px",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, \"Effective pixels\" row",
+        "accessed": "09/28/2026"
+      }
+    },
+    "pixelPitchUm": {
+      "v": 4.35,
+      "unit": "um",
+      "ev": "reported",
+      "src": "https://apotelyt.com/camera-specs/nikon-d850-sensor-pixels",
+      "loc": "site's own stated pixel-pitch figure for the D850, 4.35 um",
+      "accessed": "09/28/2026",
+      "crossCheck": "derived = sqrt(35.9mm * 23.9mm / 45.4e6 px) = sqrt(858.01mm^2 / 45.4Mpx) = sqrt(18.90 um^2) = 4.347um, matching the reported 4.35um to within rounding."
+    },
+    "architecture": {
+      "v": "BSI (back-illuminated)",
+      "unit": "",
+      "ev": "reported",
+      "src": "https://www.dpreview.com/news/4840194993/nikon-d850-offers-45-7mp-bsi-fx-format-sensor-7-fps-bursts-4k-video",
+      "loc": "headline: \"Nikon D850 offers 45.7MP BSI FX-format sensor\" -- Nikon's first DSLR with a back-illuminated full-frame sensor",
+      "accessed": "09/28/2026"
+    },
+    "baseIso": {
+      "v": 64,
+      "unit": "ISO",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+      "loc": "infobox, \"ISO\" row: native ISO 64-25,600",
+      "accessed": "09/28/2026"
+    },
+    "isoRange": {
+      "nativeMin": 64,
+      "nativeMax": 25600,
+      "expandedMin": 32,
+      "expandedMax": 102400,
+      "unit": "ISO",
+      "ev": "reported",
+      "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+      "loc": "\"Native ISO: 64-25,600\", \"Boosted ISO: 32-102,400\"",
+      "accessed": "09/28/2026"
+    },
+    "adcBitDepthBits": {
+      "rawUncompressed": {
+        "v": 14,
+        "unit": "bit",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "\"ADC Bit Depth: 14-bit lossless raw (12-bit also available)\"; DPReview's own spec page: Raw (Nikon NEF, 12 or 14 bit)",
+        "accessed": "09/28/2026"
+      },
+      "rawLower": {
+        "v": 12,
+        "unit": "bit",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+        "loc": "\"Raw (Nikon NEF, 12 or 14 bit)\"",
+        "accessed": "09/28/2026"
+      }
+    },
+    "fullWellElectrons": {
+      "photonstophotosRN_e": {
+        "v": 59126,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Nikon D850_14', Highcharts series option `fwc` -- extracted via curl + bracket-balanced JS-literal parse, same method as data/read-noise.json",
+        "accessed": "09/28/2026",
+        "context": "mechanical-shutter series ('Nikon D850_14'); the electronic-shutter series 'Nikon D850(ES)_14' gives an almost identical fwc of 59,127 e-, recorded under electronicShutterES below."
+      },
+      "photonstophotosDxomarkDerived": {
+        "v": 60912,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+        "loc": "flat data array entry: `{ name: 'Nikon D850_14', unitygain: 233.0, fwc: 60912, qe: 44, readnoise: 0.9, adcnoise: 1.4, isoinvariantat: 683 }` -- a separate, DxOMark-score-derived dataset Claff publishes, distinct from the RN_e.htm chart measurement",
+        "accessed": "09/28/2026",
+        "note": "Close to but not identical to the RN_e.htm fwc (59,126 e-); both recorded, not averaged, per this project's convention (see data/read-noise.json for the same pattern on the other three cameras)."
+      }
+    },
+    "conversionGain": {
+      "unityGainIso": {
+        "v": 233,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Nikon D850_14', Highcharts series option `unityEv` (6.22), converted with the site's own formula ISO = round(3.125 * 2^unityEv); matches the Sensor_Characteristics.htm DxOMark-derived unitygain of 233.0 almost exactly",
+        "accessed": "09/28/2026"
+      },
+      "dcgSwitchIso": {
+        "fromIso": 318,
+        "toIso": 400,
+        "unit": "ISO",
+        "ev": "derived",
+        "calc": "Steepest adjacent-point drop in log2(read noise) vs log2(ISO) among plain (unmarked, in-normal-range) points of series 'Nikon D850_14': from ISO 318 (3.506 e-) to ISO 400 (1.485 e-), slope -3.76 stops of read-noise change per stop of ISO change -- a sharp cliff versus a near-flat curve either side. Same detection method as data/read-noise.json.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "accessed": "09/28/2026",
+        "crossCheck": "The electronic-shutter series ('Nikon D850(ES)_14') lands on the identical ISO 318 -> 400 step (3.364e- -> 1.404e-, slope -3.82 stops/stop) -- same physical conversion-gain switch regardless of shutter mode, as expected."
+      }
+    },
+    "readNoiseElectrons": {
+      "note": "Full per-ISO curve (electrons, base ISO through above the DCG switch) is in readNoise.points below, extracted directly from photonstophotos.net's RN_e.htm the same way as data/read-noise.json (not the JS-rendering gap the original sensor-sources.md pass hit for the three other cameras).",
+      "normalAnalogRangeIso": [63, 25600],
+      "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+      "loc": "series 'Nikon D850_14', Highcharts series options `loEv`/`hiEv` converted with the site's ISO formula"
+    },
+    "electronicShutterES": {
+      "note": "photonstophotos.net tracks the D850's electronic-shutter (silent live-view) mode as a separate series, 'Nikon D850(ES)_14', with near-identical fwc/unityGain/DCG-switch figures to the mechanical-shutter series. Read noise is very slightly lower in ES mode at most ISOs.",
+      "fwcElectrons": 59127,
+      "unityGainIso": 233,
+      "normalAnalogRangeIso": [63, 25600],
+      "dcgSwitchIso": { "fromIso": 318, "toIso": 400 },
+      "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+      "loc": "series 'Nikon D850(ES)_14'"
+    },
+    "dynamicRange": {
+      "dxomarkColorDepthBits": {
+        "v": 26.4,
+        "unit": "bit",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-d850-sensor-review-first-dslr-hit-100-points/",
+        "loc": "\"color depth of 26.4 bit at base ISO\"",
+        "accessed": "09/28/2026"
+      },
+      "dxomarkDynamicRangeEV": {
+        "v": 14.8,
+        "unit": "EV",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-d850-sensor-review-first-dslr-hit-100-points/",
+        "loc": "\"outstanding dynamic range of 14.8 EV ... at base ISO\"",
+        "accessed": "09/28/2026"
+      },
+      "dxomarkLowLightISO": {
+        "v": 2660,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-d850-sensor-review-first-dslr-hit-100-points/",
+        "loc": "\"Low-Light ISO (Sports): ISO 2660\"",
+        "accessed": "09/28/2026"
+      },
+      "dxomarkOverallScore": {
+        "v": 100,
+        "unit": "points",
+        "ev": "reported",
+        "src": "https://www.dxomark.com/nikon-d850-sensor-review-first-dslr-hit-100-points/",
+        "loc": "\"overall DxOMark score of 100 points\" -- first DSLR sensor to reach 100",
+        "accessed": "09/28/2026"
+      },
+      "photographicDynamicRangePDR": {
+        "note": "See readNoise.points below (pdrEv field) for the full PDR-vs-ISO curve from photonstophotos.net's PDR.htm, same source/method as data/read-noise.json.",
+        "pdrAtBaseIso64": 11.63,
+        "lowLightEv": 10.3629,
+        "src": "https://www.photonstophotos.net/Charts/PDR.htm",
+        "loc": "series 'Nikon D850', `lowLightEv` series option and the ISO-64 (xEv=4.33) data point"
+      }
+    },
+    "qe": {
+      "dxomarkDerivedPeakPercent": {
+        "v": 44,
+        "unit": "%",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+        "loc": "flat data array entry 'Nikon D850_14', field `qe: 44` -- Claff's DxOMark-derived QE estimate, not a Nikon-published figure",
+        "accessed": "09/28/2026"
+      },
+      "perChannel": {
+        "note": "Not obtained as numbers; not published in text-extractable form by any source checked."
+      }
+    },
+    "isoInvariantAtIso": {
+      "v": 683,
+      "unit": "ISO",
+      "ev": "reported",
+      "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+      "loc": "flat data array entry 'Nikon D850_14', field `isoinvariantat: 683` -- Claff's DxOMark-derived estimate of the ISO above which further analog gain buys nothing over a digital push",
+      "accessed": "09/28/2026"
+    },
+    "readout": {
+      "electronicFullFrameMs": {
+        "v": 64,
+        "unit": "ms",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/forums/thread/4494255",
+        "loc": "DPReview forum thread \"Optimum shutter speed range to avoid rolling shutter effect D850\" -- figure obtained via this session's web-search-tool summary, not a direct page load (the thread returned HTTP 403 to this session's fetch tool, the same failure mode research/sensor-sources.md and research/read-noise.md hit repeatedly on DPReview forum URLs). A companion Jim Kasson blog post, \"How fast is the Nikon 850 electronic shutter?\" (https://blog.kasson.com/d850/how-fast-is-the-nikon-850-electronic-shutter/), almost certainly has the primary number but also returned HTTP 403 in this pass and was not independently read.",
+        "accessed": "09/28/2026",
+        "confidence": "low -- not independently re-verified against a directly-loaded primary source; the horshack-dpreview RollingShutter combined-results table (used for the other three cameras in data/read-noise.json) does not carry a D850 row."
+      },
+      "mechanicalShutterRangeS": {
+        "v": "1/8000-30",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox / body: \"30 seconds - 1/8000 second, bulb mode\"",
+        "accessed": "09/28/2026"
+      },
+      "flashSyncSpeedS": {
+        "v": "1/250",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+        "loc": "\"Flash sync speed: 1/250 sec\"",
+        "accessed": "09/28/2026",
+        "note": "No first-party Nikon page stating raw shutter-curtain travel time was found; flash sync speed is the closest published proxy for mechanical curtain speed, not a direct curtain-travel-time figure -- see meta.openProblems."
+      }
+    },
+    "microlensFillFactor": {
+      "v": 0.97,
+      "unit": "fraction",
+      "ev": "assumed",
+      "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+      "loc": "\"the pixel fill factor approaches 100%\" for BSI sensors generally",
+      "accessed": "09/28/2026",
+      "note": "No D850-specific fill-factor number is published. Same assumption/reasoning as every BSI sensor in data/sensors.json."
+    },
+    "notes": [
+      "Full well: two non-averaged figures recorded (RN_e.htm 59,126 e-, Sensor_Characteristics.htm/DxOMark-derived 60,912 e-), consistent with this project's existing convention.",
+      "DCG-switch ISO (318 -> 400, i.e. essentially 320 -> 400) matches the pattern seen on the Sony a6300/a6400/a6500 family in data/read-noise.json almost exactly (same ISO 318 -> 400 step) -- both this Sony-family-suspected Nikon sensor and the confirmed-Sony a6x00 sensors land on the same conversion-gain transition point, worth noting for the engine team but not claimed here as evidence of shared silicon.",
+      "Electronic-shutter (ES) mode read noise/full well are nearly identical to mechanical-shutter mode on photonstophotos' own two D850 series -- the shutter mechanism itself doesn't materially change the photon-transfer characteristics, as expected."
+    ]
+  },
+  "readNoise": {
+    "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+    "pdrSrc": "https://www.photonstophotos.net/Charts/PDR.htm",
+    "seriesName": "Nikon D850_14",
+    "pdrSeriesName": "Nikon D850",
+    "accessed": "09/28/2026",
+    "ev": "reported",
+    "fwcElectrons": 59126,
+    "unityGainIso": 233,
+    "normalAnalogRangeIso": [63, 25600],
+    "dcgIso": { "fromIso": 318, "toIso": 400, "ev": "derived" },
+    "pdrLowLightEv": 10.3629,
+    "points": [
+      { "iso": 31, "readNoiseE": 4.5, "pdrEv": 11.63, "outsideNormalAnalogRange": true },
+      { "iso": 40, "readNoiseE": 4.627, "pdrEv": 11.62, "outsideNormalAnalogRange": true },
+      { "iso": 50, "readNoiseE": 4.532, "pdrEv": 11.61, "outsideNormalAnalogRange": true },
+      { "iso": 63, "readNoiseE": 4.595, "pdrEv": 11.63 },
+      { "iso": 80, "readNoiseE": 4.317, "pdrEv": 11.28 },
+      { "iso": 100, "readNoiseE": 4.112, "pdrEv": 11.08 },
+      { "iso": 126, "readNoiseE": 3.758, "pdrEv": 10.86 },
+      { "iso": 159, "readNoiseE": 3.655, "pdrEv": 10.62 },
+      { "iso": 200, "readNoiseE": 3.706, "pdrEv": 10.13 },
+      { "iso": 251, "readNoiseE": 3.458, "pdrEv": 9.9 },
+      { "iso": 318, "readNoiseE": 3.506, "pdrEv": 9.67 },
+      { "iso": 400, "readNoiseE": 1.485, "pdrEv": 9.81 },
+      { "iso": 503, "readNoiseE": 1.414, "pdrEv": 9.6 },
+      { "iso": 636, "readNoiseE": 1.366, "pdrEv": 9.1 },
+      { "iso": 800, "readNoiseE": 1.338, "pdrEv": 8.86 },
+      { "iso": 1006, "readNoiseE": 1.32, "pdrEv": 8.62 },
+      { "iso": 1273, "readNoiseE": 1.283, "pdrEv": 8.12 },
+      { "iso": 1600, "readNoiseE": 1.24, "pdrEv": 7.85 },
+      { "iso": 2011, "readNoiseE": 1.24, "pdrEv": 7.53 },
+      { "iso": 2546, "readNoiseE": 1.189, "pdrEv": 7.19 },
+      { "iso": 3200, "readNoiseE": 1.223, "pdrEv": 6.87 },
+      { "iso": 4022, "readNoiseE": 1.214, "pdrEv": 6.53 },
+      { "iso": 5091, "readNoiseE": 1.165, "pdrEv": 6.22 },
+      { "iso": 6400, "readNoiseE": 1.11, "pdrEv": 5.93 },
+      { "iso": 8045, "readNoiseE": 1.11, "pdrEv": 5.55, "digitalMarker": "triangle" },
+      { "iso": 10183, "readNoiseE": 1.028, "pdrEv": 5.21, "digitalMarker": "triangle" },
+      { "iso": 12800, "readNoiseE": 1.057, "pdrEv": 4.9, "digitalMarker": "triangle" },
+      { "iso": 16090, "readNoiseE": 1.014, "pdrEv": 4.57, "digitalMarker": "triangle" },
+      { "iso": 20366, "readNoiseE": 1.007, "pdrEv": 4.23, "digitalMarker": "triangle" },
+      { "iso": 25600, "readNoiseE": 1.035, "pdrEv": 3.89, "digitalMarker": "triangle" },
+      { "iso": 32180, "readNoiseE": 0.986, "pdrEv": 3.57, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
+      { "iso": 40731, "readNoiseE": 0.986, "pdrEv": 3.23, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
+      { "iso": 51200, "readNoiseE": 0.973, "pdrEv": 2.91, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
+      { "iso": 102400, "readNoiseE": 0.895, "pdrEv": 1.89, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" }
+    ],
+    "notes": [
+      "Marker semantics identical to data/read-noise.json: `outsideNormalAnalogRange` = open/white marker (extended-ISO digital push/pull), `digitalMarker: 'triangle'` = in-camera noise reduction or scaling applied at that ISO (this project's earlier read-noise.json used the more specific Highcharts symbol name 'triangle-down'; the D850/Z8 extraction in this pass recorded the symbol as plain 'triangle' as it appeared in the parsed marker object -- same meaning, not re-verified against the more granular up/down distinction).",
+      "DCG switch ISO 318->400 (~320->400) landed at the last low-gain point (318, 3.506e-) and first high-gain point (400, 1.485e-), a -3.76 stops/stop cliff -- narrower jump than the a7R IV/IMX455 (-3.21) and about the same steepness as the a6400 (-3.73)."
+    ]
+  },
+  "body": {
+    "cameraName": "Nikon D850",
+    "mount": {
+      "name": "Nikon F-mount",
+      "flangeFocalDistanceMm": {
+        "v": 46.5,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_F-mount",
+        "loc": "technical summary: \"a three-lug bayonet mount with a 44 mm throat and a flange to focal plane distance of 46.5 mm\"",
+        "accessed": "09/28/2026"
+      },
+      "throatDiameterMm": {
+        "v": 44,
+        "unit": "mm",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_F-mount",
+        "loc": "same technical summary, \"44 mm throat\"",
+        "accessed": "09/28/2026"
+      },
+      "mountType": {
+        "v": "three-lug bayonet",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_F-mount",
+        "loc": "technical summary",
+        "accessed": "09/28/2026"
+      },
+      "imagePlaneNote": "The image (sensor) plane sits at the flange focal distance from the mount face, i.e. 46.5mm behind the F-mount flange -- this is the same figure as flangeFocalDistanceMm; no separate \"image plane position\" number distinct from flange focal distance was found published by Nikon or any secondary source checked (see research/d850.md)."
+    },
+    "shutter": {
+      "mechanicalShutterRangeS": {
+        "v": "1/8000-30",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "\"30 seconds - 1/8000 second, bulb mode\"",
+        "accessed": "09/28/2026"
+      },
+      "flashSyncSpeedS": {
+        "v": "1/250",
+        "unit": "s",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+        "loc": "\"Flash sync speed: 1/250 sec\"",
+        "accessed": "09/28/2026"
+      },
+      "curtainSpeedNote": "Nikon does not publish a raw shutter-curtain travel-time figure for the D850 in any source checked; flash sync speed is recorded as the standard proxy photographers use for \"how fast the curtains cross the frame\", not a direct measurement."
+    },
+    "mirror": {
+      "type": {
+        "v": "mechanical reflex mirror, standard DSLR pentaprism path",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, mirror/viewfinder rows",
+        "accessed": "09/28/2026"
+      },
+      "mirrorLockupSilentLiveView": {
+        "note": "D850 supports mirror-up mode and a fully electronic \"Silent live view photography\" mode that raises the mirror and uses the electronic shutter for exposure -- this is the same 'Nikon D850(ES)_14' photonstophotos series recorded under sensor.electronicShutterES above.",
+        "src": "https://www.the-digital-picture.com/Reviews/Nikon-D850.aspx",
+        "ev": "reported"
+      }
+    },
+    "viewfinder": {
+      "type": {
+        "v": "optical pentaprism",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+        "loc": "\"Viewfinder type: Optical pentaprism\"",
+        "accessed": "09/28/2026"
+      },
+      "coveragePercent": {
+        "v": 100,
+        "unit": "%",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+        "loc": "\"Viewfinder coverage: 100%\"",
+        "accessed": "09/28/2026"
+      },
+      "magnification": {
+        "v": 0.75,
+        "unit": "x",
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+        "loc": "\"Viewfinder magnification: 0.75x\"; Nikon's own marketing calls this the highest viewfinder magnification of any Nikon DSLR",
+        "accessed": "09/28/2026"
+      }
+    },
+    "dimensionsMm": {
+      "width": 146,
+      "height": 124,
+      "depth": 78.5,
+      "unit": "mm",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+      "loc": "infobox, \"Dimensions\" row: 146 x 124 x 78.5 mm (5.75 x 4.88 x 3.09 in)",
+      "accessed": "09/28/2026"
+    },
+    "weightG": {
+      "bodyOnly": {
+        "v": 915,
+        "unit": "g",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, weight row (body only, 32 oz)",
+        "accessed": "09/28/2026"
+      },
+      "withBattery": {
+        "v": 1005,
+        "unit": "g",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+        "loc": "infobox, weight row (with battery, 2.216 lb)",
+        "accessed": "09/28/2026"
+      }
+    },
+    "imageProcessor": {
+      "v": "Nikon EXPEED 5",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+      "loc": "infobox, processor row",
+      "accessed": "09/28/2026"
+    },
+    "releaseDate": {
+      "v": "08/24/2017",
+      "ev": "reported",
+      "src": "https://en.wikipedia.org/wiki/Nikon_D850",
+      "loc": "infobox, release-date row",
+      "accessed": "09/28/2026"
+    },
+    "bodyMaterial": {
+      "v": "magnesium alloy, weather-sealed",
+      "ev": "reported",
+      "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
+      "loc": "\"Body material: Magnesium alloy\", \"Environmental sealing: Yes\"",
+      "accessed": "09/28/2026"
+    }
+  }
+}

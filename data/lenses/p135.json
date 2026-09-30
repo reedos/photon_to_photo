@@ -1,0 +1,327 @@
+{
+  "id": "p135",
+  "focalLength": 135,
+  "maxFno": 1.854,
+  "markedFno": 1.8,
+  "name": "135 mm f/1.8 (patent example, Sony telephoto with floating focus)",
+  "representativeOf": "Sony FE 135mm F1.8 GM (SEL135F18GM)",
+  "representativeSource": "photonstophotos.net Optical Bench Hub row \"WO2019-187633 Example01P Sony FE 135mm F1.8 GM\", https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026. Corroborated structurally: our transcription of Numerical Example 1 has 13 elements in 10 air-spaced groups, matching the DPReview specifications page's \"Elements: 13, Groups: 10\" for SEL135F18GM.",
+  "source": {
+    "kind": "patent",
+    "ref": "WO 2019/187633 A1, Table 1 / First Embodiment (\"第1の実施の形態\", 数値実施例1)",
+    "url": "https://patents.google.com/patent/WO2019187633A1/en",
+    "assignee": "Sony Corp",
+    "published": "10/3/2019",
+    "accessed": "9/28/2026",
+    "location": "Table 1 (surface data), Table 2 (asphere, surface 9), Table 3 (f/Fno/omega/Y/L), Table 4 (variable gaps) of the published PDF (patentimages.storage.googleapis.com/.../WO2019187633A1.pdf; the Google Patents HTML page renders these five tables as scanned images, not machine-readable text, so we transcribed from the PDF page images directly)"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 67.6359,
+      "t": 8.6799,
+      "medium": "glass",
+      "nd": 1.61997,
+      "vd": 63.88,
+      "sd": 61.47,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1"
+    },
+    {
+      "r": 181.1834,
+      "t": 0.4,
+      "medium": "air",
+      "sd": 57.57,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 54.6341,
+      "t": 11.4782,
+      "medium": "glass",
+      "nd": 1.437,
+      "vd": 95.1,
+      "sd": 57.35,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2"
+    },
+    {
+      "r": 233.0436,
+      "t": 1.8824,
+      "medium": "air",
+      "sd": 49.44,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 208.5222,
+      "t": 2.65,
+      "medium": "glass",
+      "nd": 1.72047,
+      "vd": 34.71,
+      "sd": 47.75,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3"
+    },
+    {
+      "r": 41.4576,
+      "t": 0.3,
+      "medium": "air",
+      "sd": 46.12,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 42.3083,
+      "t": 11.5,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.63,
+      "sd": 46.04,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4"
+    },
+    {
+      "r": 276.9603,
+      "t": 0.4,
+      "medium": "air",
+      "sd": 39.49,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 71.084,
+      "t": 5.5858,
+      "medium": "glass",
+      "nd": 1.58313,
+      "vd": 59.38,
+      "sd": 39.16,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -0.000001343732,
+        "A6": -3.875437e-10,
+        "A8": -7.218747e-14,
+        "A10": 1.266821e-16,
+        "convention": "patent prints kappa directly (kappa=0 here means no added conic term), and labels the polynomial terms A, B, C, D for the 4th/6th/8th/10th order coefficients in that order; mapped here to A4=A, A6=B, A8=C, A10=D"
+      },
+      "label": "L5 (asph, front focus group GR1 rear element)"
+    },
+    {
+      "r": 181.156,
+      "t": 3,
+      "medium": "air",
+      "sd": 35.13,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap d1 (GR1 to GR2)"
+    },
+    {
+      "r": 122.3523,
+      "t": 3.1014,
+      "medium": "glass",
+      "nd": 1.95906,
+      "vd": 17.47,
+      "sd": 32.04,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 (cemented)"
+    },
+    {
+      "r": 473.0091,
+      "t": 1.9,
+      "medium": "glass",
+      "nd": 1.7725,
+      "vd": 49.62,
+      "sd": 30.01,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7 (cemented)"
+    },
+    {
+      "r": 34.4892,
+      "t": 5.9178,
+      "medium": "air",
+      "sd": 28.65,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 294.4306,
+      "t": 1.6,
+      "medium": "glass",
+      "nd": 1.72916,
+      "vd": 54.67,
+      "sd": 24.94,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L8"
+    },
+    {
+      "r": 94.0758,
+      "t": 17.088,
+      "medium": "air",
+      "sd": 24.3,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap d2 (GR2 to stop)"
+    },
+    {
+      "r": null,
+      "t": 12.6914,
+      "medium": "air",
+      "sd": 15.74,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "aperture stop S; gap d3 (stop to GR3)"
+    },
+    {
+      "r": 79.1944,
+      "t": 1.25,
+      "medium": "glass",
+      "nd": 1.74077,
+      "vd": 27.76,
+      "sd": 18.79,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 (cemented)"
+    },
+    {
+      "r": 42.8515,
+      "t": 5.5,
+      "medium": "glass",
+      "nd": 1.61997,
+      "vd": 63.88,
+      "sd": 18.84,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10 (cemented)"
+    },
+    {
+      "r": -85.5729,
+      "t": 11.964,
+      "medium": "air",
+      "sd": 19.24,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap d4 (GR3 to GR4)"
+    },
+    {
+      "r": -692.7243,
+      "t": 9.1465,
+      "medium": "glass",
+      "nd": 1.8061,
+      "vd": 33.27,
+      "sd": 18.98,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 (cemented)"
+    },
+    {
+      "r": -38.95,
+      "t": 1.29,
+      "medium": "glass",
+      "nd": 1.51742,
+      "vd": 52.15,
+      "sd": 18.98,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 (cemented)"
+    },
+    {
+      "r": 278.8445,
+      "t": 5,
+      "medium": "air",
+      "sd": 18.86,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": -51.8751,
+      "t": 1.28,
+      "medium": "glass",
+      "nd": 1.8919,
+      "vd": 37.13,
+      "sd": 18.33,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13"
+    },
+    {
+      "r": -292.7369,
+      "t": 17.8946,
+      "medium": "air",
+      "sd": 18.47,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap to filter"
+    },
+    {
+      "r": null,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 64.2,
+      "sd": 21.22,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "filter FL front",
+      "plate": "filter"
+    },
+    {
+      "r": null,
+      "t": 1,
+      "medium": "air",
+      "sd": 21.48,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "filter FL rear; t = BF"
+    }
+  ],
+  "stated": {
+    "f": 130.95,
+    "fno": 1.854,
+    "halfFieldDeg": 9.38,
+    "imageHeight": 21.633,
+    "totalLength": 145,
+    "bf": 1
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 9,
+        "atInfinity": 3,
+        "atClose": 10.85,
+        "closeObjectDistance": 559.6264,
+        "note": "index 9 = patent surface 10 (d1, GR1-GR2 gap); GR2 is the first focus group, moving object-to-image side on focusing closer. closeObjectDistance is the patent's d0 at magnification -0.25 (its closest tabulated condition), measured from surface 1."
+      },
+      {
+        "surface": 14,
+        "atInfinity": 17.088,
+        "atClose": 9.2381,
+        "closeObjectDistance": 559.6264,
+        "note": "index 14 = patent surface 15 (d2, GR2-stop gap); moves with GR2."
+      },
+      {
+        "surface": 15,
+        "atInfinity": 12.6914,
+        "atClose": 5.9273,
+        "closeObjectDistance": 559.6264,
+        "note": "index 15 = patent surface 16, the stop itself (d3, stop-GR3 gap); GR3 is the second focus group, moving image-to-object side."
+      },
+      {
+        "surface": 18,
+        "atInfinity": 11.964,
+        "atClose": 18.7282,
+        "closeObjectDistance": 559.6264,
+        "note": "index 18 = patent surface 19 (d4, GR3-GR4 gap); moves with GR3. GR4 and the filter/image distance are fixed."
+      }
+    ],
+    "minFocusM": 0.7,
+    "minFocusSource": "DPReview specifications page for the Sony FE 135mm F1.8 GM, https://www.dpreview.com/products/sony/lenses/sony_fe_135_1p8_gm/specifications, accessed 9/28/2026 (\"Minimum focus: 0.7 m\"); sony.com/electronics.sony.com would not load for us, so we cite DPReview's reproduction of Sony's own published spec sheet rather than Sony's own page directly (see research notes)."
+  },
+  "iris": {
+    "blades": 11,
+    "rounded": true,
+    "source": "DPReview specifications page for the Sony FE 135mm F1.8 GM, https://www.dpreview.com/products/sony/lenses/sony_fe_135_1p8_gm/specifications, accessed 9/28/2026 (\"Number of diaphragm blades: 11\")",
+    "ev": "spec"
+  },
+  "elements": 13,
+  "groups": 10,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "This patent's HTML page on Google Patents renders Tables 1-27 (surface data, aspheric coefficients, overall specs, variable gaps, group focal lengths, x5 embodiments) as scanned page images (JPOXMLDOC01-appb-T0000xx.png), not OCR text, and the WO/PCT PDF itself has no text layer at all (confirmed: pypdf/pymupdf extract zero characters from all 90 pages). We transcribed Tables 1-4 for Numerical Example 1 directly from those table-image PNGs (fetched from patentimages.storage.googleapis.com, linked from the same Google Patents page) by reading the rendered image.",
+    "Filter FL (patent surfaces 25-26) is listed as two explicit surfaces per the schema convention, rather than folded into the last glass element's BF.",
+    "Single aspheric surface at patent surface 9 (rear-most element of the front group GR1); patent's own coefficient labels are A/B/C/D rather than A4/A6/A8/A10, mapped 1:1 in that order.",
+    "Patent gives no effective-diameter column; all `sd` values are our own paraxial-trace estimates.",
+    "stated.f = 130.950mm in the raw patent example vs. the 135mm marketed class; this generic-example vs shipped-product gap is normal for patent numerical examples and is called out per BRIEF.md's 'representative designs are schematic' guidance.",
+    "stated.bf (1.0000mm) is Table 1's own last-row thickness (filter rear to image), given as a plain number, not a symbolic 'BF'; Table 3 (overall specs) names no separate BF variable at all for this design. It is NOT the traditional full back focal distance, which would also include the 17.8946mm rear-element-to-filter air gap and the 2.5mm filter thickness (~21.39mm total); we check the self-check trace against the last surface's own tabulated 1.0000mm for consistency with how every other lens here is checked."
+  ]
+}

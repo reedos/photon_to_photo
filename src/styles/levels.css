@@ -1,0 +1,86 @@
+/* Levels 2-4 (the lens cutaway, focus and bokeh, the loupe): their own rules, owned by src/pieces/**. Shared tokens
+   and components come from tokens.css and base.css; keep one signature style (design/LOOK.md). Every rule here is
+   scoped to a level's own overlay (.piece-overlay[data-piece=...]) or its own classes, so level 1 is untouched. */
+
+/* ---------- a level's small control card over the view (the cone's traced point) ----------
+   The same hairline card as the camera's exposure readout (.rig-exposure): near-black glass, one amber mono
+   kicker, mono labels, tabular values. Bottom-left, one badge line above the scale badge. */
+.lv-ctl { position: absolute; left: var(--gutter); bottom: 46px; width: min(288px, calc(100% - 32px)); margin: 0;
+  padding: 11px 14px 8px; display: grid; gap: 4px; background: rgba(0,0,0,.66); border: 1px solid var(--line);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-width: 0; }
+.lv-ctl-k { margin: 0 0 2px; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.lv-ctl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0 12px; min-width: 0; cursor: pointer; }
+.lv-ctl-l { font: 500 11px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lv-ctl-row output { font: 500 13px/1.3 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lv-ctl-row input[type="range"] { grid-column: 1 / -1; height: 22px; }
+
+/* ---------- the loupe's way back: a breadcrumb like the camera's detail modes (.rig-crumb) ---------- */
+.lv-crumb { position: absolute; left: var(--gutter); top: 98px; display: flex; align-items: center; gap: 10px; margin: 0;
+  font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  text-shadow: 0 1px 6px #000, 0 0 2px #000; }
+.lv-crumb[hidden] { display: none; }
+.lv-crumb .lv-back { all: unset; cursor: pointer; color: var(--accent); padding: 8px 0; }
+.lv-crumb .lv-back:hover { color: var(--ink); }
+.lv-crumb .lv-back:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+.lv-crumb .lv-sep { color: var(--faint); }
+.lv-crumb .lv-here { color: var(--ink); white-space: nowrap; }
+
+/* ---------- the loupe's reading of its pixel: the numbers the dive ends on ---------- */
+.lv-read { position: absolute; right: 22px; bottom: 58px; width: 216px; margin: 0; padding: 11px 14px 10px; display: grid; gap: 6px;
+  background: rgba(0,0,0,.66); border: 1px solid var(--line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.lv-read[hidden] { display: none; }
+.lv-read .lv-ctl-k { margin: 0; }
+.lv-read-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.lv-read-row b { font: 500 13px/1.2 var(--mono); color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lv-read-well { height: 5px; background: var(--raise); border: 1px solid var(--line); }
+.lv-read-well i { display: block; height: 100%; width: 0; background: var(--charge); }
+
+/* ---------- the lens inset's scale bar: a round length on the image plane at the inset's own scale ---------- */
+.lv-scalebar { position: absolute; display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 4px; pointer-events: none;
+  font: 500 11px/1 var(--mono); letter-spacing: .06em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lv-scalebar[hidden] { display: none; }
+.lv-scalebar i { display: block; height: 5px; border: 1px solid var(--ink); border-top: 0; opacity: .8; }
+
+/* Levels 2-4 own the bottom-left corner's scale badge text; keep it on one line and clear of the backend chip. */
+.view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .scale-badge {
+  font-size: 11px; letter-spacing: .06em; }
+
+@media (max-width: 760px) {
+  /* phones: the two sliders side by side in one short card, so the cone keeps the middle of the view */
+  .lv-ctl { left: 12px; right: 12px; width: auto; bottom: 58px; padding: 8px 12px 4px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+  .lv-ctl-k { display: none; }
+  .lv-ctl-row input[type="range"] { height: 20px; }
+  .lv-crumb { top: 56px; left: 12px; right: 12px; font-size: 10.5px; gap: 4px 7px; flex-wrap: wrap; }
+  .lv-crumb .lv-here { white-space: normal; }
+  .lv-read { right: 12px; bottom: 58px; width: 176px; padding: 8px 10px 8px; gap: 4px; }
+  .lv-read-row { font-size: 11.5px; }
+  .lv-read .lv-read-extra { display: none; }
+  /* the readout keeps its heading on a phone so its evidence chip reads as the heading's, not as a stray tag (R2-08) */
+  .lv-read .lv-ctl-k { display: block; }
+  /* the inset captions carry their scale now ("Edge of frame · 200×"): a tighter tracking keeps them on one line
+     inside a phone-sized inset (R2-07) */
+  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame::after {
+    letter-spacing: .05em; }
+  /* The phone's bottom band: the scale badge gets its own row above the backend chip instead of running under
+     it (UI-07), wrapping if it has to, never clipped. */
+  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .hud.bl {
+    right: 12px; bottom: 12px; }
+  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .scale-badge {
+    padding-right: 96px; font-size: 11px; line-height: 1.35; }
+}
+
+/* The inset captions on levels 2-4 at the type scale's 11 px floor (UI-18). */
+.view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame::after {
+  font-size: 11px; white-space: nowrap; }
+
+/* ---------- an inset's footprint in the piece overlay, so pins and their labels keep off it (R2-06) ----------
+   Invisible itself; its one note line ("1 square = 1 pixel") sits on the inset's top edge, right-aligned. */
+.lv-inset-guard { position: absolute; pointer-events: none; }
+.lv-inset-guard[hidden] { display: none; }
+.lv-inset-note { position: absolute; right: 0; top: 0; font: 500 10.5px/1 var(--mono); letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lv-inset-note[hidden] { display: none; }
+
+/* ---------- the loupe readout's evidence: one chip for the whole reading (R2-08) ---------- */
+.lv-read-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.lv-read-h .chip { height: 17px; min-height: 17px; font-size: 10px; }

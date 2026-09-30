@@ -1,0 +1,344 @@
+{
+  "id": "p400",
+  "focalLength": 400,
+  "maxFno": 2.9,
+  "markedFno": 2.8,
+  "name": "400 mm f/2.9 image-stabilized telephoto (patent example)",
+  "source": {
+    "kind": "patent",
+    "ref": "US 6,115,188, Numerical Example 7",
+    "url": "https://patents.google.com/patent/US6115188A/en",
+    "assignee": "Canon Kabushiki Kaisha",
+    "published": "9/5/2000",
+    "accessed": "9/28/2026",
+    "location": "\"Numerical Example 7:\" table (description, same patent as p300.json / p500.json)"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 230.594,
+      "t": 19.5,
+      "medium": "glass",
+      "nd": 1.496999,
+      "vd": 81.6,
+      "sd": 116.592,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1a front",
+      "coated": true
+    },
+    {
+      "r": -485.236,
+      "t": 25,
+      "medium": "air",
+      "sd": 112.602,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1a rear"
+    },
+    {
+      "r": 116.456,
+      "t": 18.5,
+      "medium": "glass",
+      "nd": 1.496999,
+      "vd": 81.6,
+      "sd": 102.061,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1b front",
+      "coated": true
+    },
+    {
+      "r": 16559.44,
+      "t": 3.16,
+      "medium": "air",
+      "sd": 91.467,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1b rear"
+    },
+    {
+      "r": -598.951,
+      "t": 5,
+      "medium": "glass",
+      "nd": 1.834807,
+      "vd": 42.7,
+      "sd": 88.767,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1c front (negative element)",
+      "coated": true
+    },
+    {
+      "r": 180.809,
+      "t": 5,
+      "medium": "air",
+      "sd": 86.776,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1c rear"
+    },
+    {
+      "r": 101.603,
+      "t": 18,
+      "medium": "glass",
+      "nd": 1.43387,
+      "vd": 95.1,
+      "sd": 85.125,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1d front (fluorite-class, high-Abbe)",
+      "coated": true
+    },
+    {
+      "r": -1247.77,
+      "t": 0.3,
+      "medium": "air",
+      "sd": 76.418,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1d rear"
+    },
+    {
+      "r": 61.716,
+      "t": 8,
+      "medium": "glass",
+      "nd": 1.51633,
+      "vd": 64.2,
+      "sd": 76.202,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1e front",
+      "coated": true
+    },
+    {
+      "r": 49.261,
+      "t": 32.01,
+      "medium": "air",
+      "sd": 69.039,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1e rear"
+    },
+    {
+      "r": 554.747,
+      "t": 5.5,
+      "medium": "glass",
+      "nd": 1.805181,
+      "vd": 25.4,
+      "sd": 48.742,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 (inner-focus group) doublet front",
+      "coated": true
+    },
+    {
+      "r": -143.642,
+      "t": 3.2,
+      "medium": "glass",
+      "nd": 1.882997,
+      "vd": 40.8,
+      "sd": 46.595,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 doublet cemented interface / rear"
+    },
+    {
+      "r": 113.429,
+      "t": 80.43,
+      "medium": "air",
+      "sd": 45.44,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap, L2 to aperture stop"
+    },
+    {
+      "r": null,
+      "t": 3,
+      "medium": "air",
+      "stop": true,
+      "sd": 19.232,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "aperture stop (printed \"R14 = Stop\" in the patent)"
+    },
+    {
+      "r": 147.302,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.846658,
+      "vd": 23.9,
+      "sd": 19.416,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3a doublet front",
+      "coated": true
+    },
+    {
+      "r": 48.444,
+      "t": 7.5,
+      "medium": "glass",
+      "nd": 1.772499,
+      "vd": 49.6,
+      "sd": 19.362,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3a doublet cemented interface / rear"
+    },
+    {
+      "r": -261.799,
+      "t": 2.5,
+      "medium": "air",
+      "sd": 19.276,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 94.352,
+      "t": 4.8,
+      "medium": "glass",
+      "nd": 1.846659,
+      "vd": 23.8,
+      "sd": 19.083,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3b doublet front (image-stabilizer subgroup)",
+      "coated": true
+    },
+    {
+      "r": -180.338,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.696797,
+      "vd": 55.5,
+      "sd": 18.437,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3b doublet cemented interface / rear"
+    },
+    {
+      "r": 37.593,
+      "t": 7,
+      "medium": "air",
+      "sd": 18.126,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": -125.641,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.772499,
+      "vd": 49.6,
+      "sd": 18.631,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3c single negative element",
+      "coated": true
+    },
+    {
+      "r": 90.522,
+      "t": 3,
+      "medium": "air",
+      "sd": 18.841,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 71.238,
+      "t": 7,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.2,
+      "sd": 19.884,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3d doublet front",
+      "coated": true
+    },
+    {
+      "r": -100,
+      "t": 0.3,
+      "medium": "air",
+      "sd": 20.879,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap (NOT cemented here, unlike the equivalent surface in p300/p500 -- see notes)"
+    },
+    {
+      "r": 56.853,
+      "t": 5.5,
+      "medium": "glass",
+      "nd": 1.804,
+      "vd": 46.6,
+      "sd": 20.911,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3e front",
+      "coated": true
+    },
+    {
+      "r": 2177.114,
+      "t": 0.98,
+      "medium": "air",
+      "sd": 20.344,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": -288.865,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.882997,
+      "vd": 40.8,
+      "sd": 20.169,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3f single element (last power surface)",
+      "coated": true
+    },
+    {
+      "r": 127.69,
+      "t": 10,
+      "medium": "air",
+      "sd": 20.014,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap, last lens to fixed stop HP"
+    },
+    {
+      "r": null,
+      "t": 10,
+      "medium": "air",
+      "sd": 20.228,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "\"fixed stop HP\" (patent text a-14: a baffle/field stop, not the aperture iris) -- flat, zero power, no glass"
+    },
+    {
+      "r": null,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.51633,
+      "vd": 64.2,
+      "sd": 20.443,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "drop-in filter / phase plate (flat glass block, patent's own description)",
+      "plate": "drop-in-filter"
+    },
+    {
+      "r": null,
+      "t": 52.91,
+      "medium": "air",
+      "sd": 20.471,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "filter rear to image plane; t is DERIVED (paraxial trace), not patent-stated -- patent prints D31=0.000 here (table-terminator convention, see p300.json notes)"
+    }
+  ],
+  "stated": {
+    "f": 392.63,
+    "fno": 2.9,
+    "halfFieldDeg": 3.15
+  },
+  "focus": {
+    "method": "inner",
+    "minFocusM": 3,
+    "minFocusSource": "Not tied to this patent example by any public source. Typical/assumed value taken from the Wikipedia spec table for the Canon EF 400mm f/2.8L IS USM (the first-generation IS super-telephoto Canon released in September 1999, the era this patent family matches), https://en.wikipedia.org/wiki/Canon_EF_400mm_lens, accessed 9/28/2026: closest focusing distance 3.0 m."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Assumed typical for this class. Taken from the Wikipedia spec table for the Canon EF 400mm f/2.8L IS USM, https://en.wikipedia.org/wiki/Canon_EF_400mm_lens, accessed 9/28/2026 (9 diaphragm blades). Not tied to this patent by any public source.",
+    "ev": "assumed"
+  },
+  "elements": 15,
+  "groups": 12,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is the SAME patent as p300.json: US 6,115,188 (\"Optical system and optical apparatus having the same\", Canon Kabushiki Kaisha; priority 10/16/1997, filed 10/14/1998, published 9/5/2000). Numerical Example 7 (f=392.63, Fno=2.9, 2w=6.3deg) is used here for the 400 mm slot; see p300.json's notes for the shared patent's full bibliographic detail and the 16-example structure.",
+    "Same 'D(last)=0.000 is a table-terminator, not the real Bf' finding as p300.json and p500.json: this patent gives no separate 'Bf=' label anywhere in its text. The terminal surface's t (65.02 mm) is DERIVED from our own paraxial trace, not patent-stated; stated.bf is intentionally omitted from PatentStated.",
+    "Aperture stop printed explicitly as 'R14 = Stop' (same row number as Example 1's, by coincidence of this patent's table layout), transcribed at surface index 13 (0-based) as a flat, zero-power reference surface.",
+    "Structural difference from Examples 1 and 10 (p300/p500): this example's rear group has a SEPARATE flat 'fixed stop HP' surface between the last real lens (index 27) and the drop-in filter (index 29-30) -- the patent's own text (paragraph a-14): 'A fixed stop HP is better positioned in the air space between the rearmost lens surface and the image plane.' Examples 1 and 10 do not print this extra flat row; each numerical example is transcribed exactly as printed, with no forced structural consistency across examples.",
+    "Also unlike Example 1 (p300.json), surfaces at index 22-23 here (R23=71.238/R24=-100.000, the analogous position to Example 1's L3d doublet) are NOT cemented -- there is a genuine air gap (D24=0.30, air, no glass) between what would otherwise be a doublet in the other two examples. Each element in that region (index22-23 and index24-25) is therefore a separate singlet here, not a doublet; transcribed exactly as printed, not forced to match the other examples' grouping.",
+    "Focus: same inner-focus description in the shared patent body ('the second lens unit L2... moves... for focusing'). This numerical example likewise gives only the infinity-focus D values -- no close-focus variable gap is printed, so no VariableGap entries are recorded (would require inventing a number).",
+    "Elements/groups counted directly from the cemented-interface pattern: front L1 = 5 singlets (5 groups, 5 elements); L2 = 1 cemented doublet (1 group, 2 elements, inner-focus group); rear L3 = 2 doublets (L3a, L3b) + 4 singlets (L3c, L3d, L3e, L3f) = 6 groups, 8 elements; plus the filter block (1 group, 1 element). Total: elements = 5+2+8+1 = 16; groups = 5+1+6+1 = 13. (The 'fixed stop HP' flat surface has no glass and is not counted as an element or group.)",
+    "No effective/clear diameters are printed anywhere in this patent, so every sd is sdSource='estimated-from-marginal-ray' via .local/lens-tele/paraxial.py (same method as p300.json: entrance-beam semi-diameter at surface 1 = EFL/(2*Fno), traced forward, plus the paraxial chief ray at the patent's own printed half field 2w=6.3deg/2=3.15deg). Placeholder sd=1 values below were overwritten by running that script (see research/lenses-tele.md for the printed self-check numbers) -- if this file is ever hand-edited, re-run the script rather than trusting any sd left at exactly 1.",
+    "representativeOf intentionally left unset: no public source ties US 6,115,188 to a specific commercial product, despite the strong circumstantial match to Canon's original EF 400mm f/2.8L IS USM (Sept. 1999) in focal length, Fno class and filing-to-release timing.",
+    "Lead 9/28/2026: elements/groups (15/12, was 16/13) count lens elements only; the drop-in filter plate is marked plate: \"drop-in-filter\" and is not an element or a group."
+  ]
+}

@@ -1,0 +1,410 @@
+{
+  "id": "n500",
+  "system": "dslr",
+  "focalLength": 500,
+  "maxFno": 5.75019,
+  "markedFno": 5.6,
+  "name": "500 mm f/5.75 phase-Fresnel telephoto (patent example)",
+  "representativeOf": "Nikon AF-S NIKKOR 500mm f/5.6E PF ED VR",
+  "representativeSource": "Nikon's own product spec page (https://www.nikonusa.com/p/af-s-nikkor-500mm-f56e-pf-ed-vr/20082/overview, accessed 9/28/2026) states the shipping lens is 19 elements in 11 groups, with 1 Phase Fresnel (PF) element and 3 ED-glass elements. This patent example (JP 2018-017857 A, Second Example / optical system OL2) counts to exactly 19 elements in 11 groups by the same convention used elsewhere in this project (each cemented sub-assembly = 1 group; the DOE's two-material multilayer stack formed on lens L14 counts as that one lens element, not extra elements) -- see notes for the element-by-element count -- has a single diffractive optical element (surface m=8, marked with the patent's own '*') sitting inside a positive first group exactly where the PF element sits in the real lens, has 3 lens surfaces printed with nd=1.487490/vd=70.31 (an ED-class fluorite-type glass, appearing 3 times: L11, L12, L16), and its stated half field of view (omega=2.51062 deg, i.e. full angle ~5.02 deg) matches the product's specified FX angle of view of 5 deg 00'. The patent's own stated Fno (5.75019) is consistent with the product's f/5.6 class marking (patents commonly state a slightly-looser-than-marketed Fno; see markedFno). No public source states outright 'this patent IS the 500mm f/5.6E PF', so this tie is drawn the same way as the project's other 'representativeOf' ties: from the matching element/group/PF/ED/FOV signature, not from a citing source that names the patent.",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2018-017857 A, Second Example (optical system OL2)",
+    "url": "https://patents.google.com/patent/JP2018017857A/en",
+    "assignee": "Nikon Corporation",
+    "published": "2/1/2018",
+    "accessed": "9/28/2026",
+    "location": "Table 5 (lens data / overall specifications), Table 6 (diffractive optical surface data), Table 7 (variable interval data), Table 8 (fpf and conditional-expression values)"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 170.0946,
+      "t": 12.8,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.31,
+      "sd": 65.239,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 front (fluorite-class ED glass)",
+      "coated": true
+    },
+    {
+      "r": -624.7082,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 63.253,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 rear"
+    },
+    {
+      "r": 122.1897,
+      "t": 14.2,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.31,
+      "sd": 63.225,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 front (fluorite-class ED glass)",
+      "coated": true
+    },
+    {
+      "r": -397.5861,
+      "t": 4.2,
+      "medium": "glass",
+      "nd": 1.61266,
+      "vd": 44.46,
+      "sd": 58.142,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12/L13 cemented interface (L13, negative element)"
+    },
+    {
+      "r": 168.6766,
+      "t": 3,
+      "medium": "air",
+      "sd": 56.803,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 rear"
+    },
+    {
+      "r": 87.189,
+      "t": 8.4,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 64.13,
+      "sd": 55.88,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 front (DOE carrier lens, base glass)",
+      "coated": true
+    },
+    {
+      "r": 159.3794,
+      "t": 0.2,
+      "medium": "glass",
+      "nd": 1.5278,
+      "vd": 33.41,
+      "sd": 52.341,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 base-glass-to-DOE-layer-1 interface (first of the two close-contact multilayer materials)",
+      "layer": "resin"
+    },
+    {
+      "r": 159.3794,
+      "t": 0.3,
+      "medium": "glass",
+      "nd": 1.5571,
+      "vd": 49.74,
+      "sd": 52.257,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "diffractive optical surface (patent's '*' mark, m=8): boundary between the DOE's two close-contact multilayer materials, where the diffractive relief grating sits",
+      "coated": true,
+      "doe": {
+        "convention": "Patent's own equation (c), verbatim: psi(h,n) = (2*pi/(n*lambda0)) * (C2*h^2 + C4*h^4), where h = height perpendicular to the optical axis (mm), n = order of the diffracted light, lambda0 = design wavelength, Ci = phase coefficients (i=2,4). Paraxial power at any wavelength/order, patent's own equation (d), verbatim: phiD(lambda,n) = -2*C2*n*(lambda/lambda0). Convention check: at lambda=lambda0=587.6 nm, order n=1, phiD = -2*C2 = 8.50608e-05 /mm -> fpf = 1/phiD = 11756.30 mm, matching the patent's own directly-stated Table 8 value fpf=11756.3 to 4 significant figures.",
+        "lambda0Nm": 587.6,
+        "order": 1,
+        "coeffs": {
+          "C2": -0.0000425304,
+          "C4": 3e-10
+        },
+        "note": "Table 6 ('diffractive optical surface data'), row m=8: lambda0=587.6, n=1.0, C2=-4.25304E-05, C4=3.00000E-10, transcribed exactly as printed. This is Nikon's 'close-contact multilayer type' (密着複層型) diffractive optical element: the patent states the grating sits at the interface between 'two different materials' laminated directly onto lens L14's concave rear surface, but does NOT name those two materials (no resin/glass trade names or nd/vd given for them beyond the two ordinary nd/vd rows already recorded on surfaces m=7 and m=8 above, which the patent treats as ordinary refractive media for the surrounding refraction and layers on which the phase term is superimposed). The engine cannot yet trace a diffractive surface (see PLAN.md); the python paraxial self-check in research/lenses-n500.md adds this surface's paraxial power via equation (d) on top of ordinary refraction to reproduce the patent's stated f and Bf -- a plain refractive-only trace of these three surfaces is off by about +10% in EFL, confirming the diffractive term is load-bearing, not optional."
+      },
+      "layer": "resin"
+    },
+    {
+      "r": 159.3794,
+      "t": 25.8964,
+      "medium": "air",
+      "sd": 52.13,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 rear (second DOE layer material to air)"
+    },
+    {
+      "r": 82.0499,
+      "t": 4.0475,
+      "medium": "glass",
+      "nd": 1.883,
+      "vd": 40.66,
+      "sd": 39.843,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L15 front",
+      "coated": true
+    },
+    {
+      "r": 44.0296,
+      "t": 9.9231,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.31,
+      "sd": 37.902,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L15/L16 cemented interface (L16, fluorite-class ED glass)"
+    },
+    {
+      "r": 159.8899,
+      "t": 22.24696,
+      "medium": "air",
+      "sd": 34.148,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L16 rear, end of first lens group G1 (D1, variable with focus -- see focus.gaps)"
+    },
+    {
+      "r": 213.6406,
+      "t": 3.5,
+      "medium": "glass",
+      "nd": 1.64769,
+      "vd": 33.73,
+      "sd": 23.943,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L21 front, start of second lens group G2 (the focusing group Gf)",
+      "coated": true
+    },
+    {
+      "r": -289.8235,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.71999,
+      "vd": 50.27,
+      "sd": 22.815,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L21/L22 cemented interface (L22)"
+    },
+    {
+      "r": 81.1056,
+      "t": 32.25305,
+      "medium": "air",
+      "sd": 22.204,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L22 rear, end of G2 (D2, variable with focus -- see focus.gaps)"
+    },
+    {
+      "r": null,
+      "t": 4.6833,
+      "medium": "air",
+      "stop": true,
+      "sd": 11.61,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "aperture stop S, start of third lens group G3"
+    },
+    {
+      "r": -96.9087,
+      "t": 3,
+      "medium": "glass",
+      "nd": 1.816,
+      "vd": 46.59,
+      "sd": 11.578,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L31 front",
+      "coated": true
+    },
+    {
+      "r": 54.5734,
+      "t": 4.5,
+      "medium": "glass",
+      "nd": 1.51823,
+      "vd": 58.82,
+      "sd": 11.728,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L31/L32 cemented interface (L32)"
+    },
+    {
+      "r": -47.3825,
+      "t": 4.5,
+      "medium": "air",
+      "sd": 12.186,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L32 rear"
+    },
+    {
+      "r": null,
+      "t": 0.5,
+      "medium": "air",
+      "sd": 12.282,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "flat air-spaced reference surface (r=0.0000 printed in the patent's table; not marked as a stop)"
+    },
+    {
+      "r": 63.6526,
+      "t": 3.8251,
+      "medium": "glass",
+      "nd": 1.62004,
+      "vd": 36.4,
+      "sd": 12.293,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L33 front (part of the VR/image-stabilizer sub-group per patent text)",
+      "coated": true
+    },
+    {
+      "r": -67.1997,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.57,
+      "sd": 12.061,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L33/L34 cemented interface (L34)"
+    },
+    {
+      "r": 38.711,
+      "t": 3,
+      "medium": "air",
+      "sd": 11.964,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L34 rear"
+    },
+    {
+      "r": -104.6546,
+      "t": 1.5,
+      "medium": "glass",
+      "nd": 1.59319,
+      "vd": 67.9,
+      "sd": 12.065,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L35, single element (part of the VR/image-stabilizer sub-group per patent text)",
+      "coated": true
+    },
+    {
+      "r": 57.0672,
+      "t": 5,
+      "medium": "air",
+      "sd": 12.161,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L35 rear"
+    },
+    {
+      "r": 36.2961,
+      "t": 8.4742,
+      "medium": "glass",
+      "nd": 1.57501,
+      "vd": 41.51,
+      "sd": 13.303,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L36 front, cemented positive lens CL31",
+      "coated": true
+    },
+    {
+      "r": -29.7475,
+      "t": 4,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.57,
+      "sd": 13.397,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L36/L37 cemented interface (L37)"
+    },
+    {
+      "r": -944.5222,
+      "t": 9.8861,
+      "medium": "air",
+      "sd": 13.351,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L37 rear"
+    },
+    {
+      "r": -43.9902,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.816,
+      "vd": 46.59,
+      "sd": 13.112,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L38 front, cemented negative lens CL32",
+      "coated": true
+    },
+    {
+      "r": 36.4672,
+      "t": 4.946,
+      "medium": "glass",
+      "nd": 1.61266,
+      "vd": 44.46,
+      "sd": 13.353,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L38/L39 cemented interface (L39)"
+    },
+    {
+      "r": -108.4507,
+      "t": 0.5,
+      "medium": "air",
+      "sd": 14.254,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L39 rear"
+    },
+    {
+      "r": 69.7069,
+      "t": 8.3459,
+      "medium": "glass",
+      "nd": 1.58144,
+      "vd": 40.98,
+      "sd": 14.36,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L310 front, cemented positive lens CL33",
+      "coated": true
+    },
+    {
+      "r": -27.7792,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.80809,
+      "vd": 22.74,
+      "sd": 14.852,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L310/L311 cemented interface (L311)"
+    },
+    {
+      "r": -105.8102,
+      "t": 64.39657,
+      "medium": "air",
+      "sd": 15.089,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L311 rear, back focal distance (BF) to the image plane; patent's own printed Bf label, Table 7, infinity-focus state"
+    }
+  ],
+  "stated": {
+    "f": 489.70405,
+    "fno": 5.75019,
+    "halfFieldDeg": 2.51062,
+    "bf": 64.39657,
+    "totalLength": 279.32422
+  },
+  "focus": {
+    "method": "inner",
+    "gaps": [
+      {
+        "surface": 11,
+        "atInfinity": 22.24696,
+        "atClose": 39.16215,
+        "closeObjectDistance": 2720,
+        "note": "Patent's D1 (Table 7): axial air gap between the first lens group G1 and the second lens group G2 (the sole moving focus group Gf). D0 (object distance from the front vertex) = 2720.0000 mm at this close-focus condition, magnification beta = -0.18012."
+      },
+      {
+        "surface": 14,
+        "atInfinity": 32.25305,
+        "atClose": 15.39786,
+        "closeObjectDistance": 2720,
+        "note": "Patent's D2 (Table 7): axial air gap between the second lens group G2 (focus group) and the third lens group G3 / aperture stop, same close-focus condition as the D1 gap above."
+      }
+    ],
+    "minFocusM": 3,
+    "minFocusSource": "Nikon AF-S NIKKOR 500mm f/5.6E PF ED VR official spec page, https://www.nikonusa.com/p/af-s-nikkor-500mm-f56e-pf-ed-vr/20082/overview, accessed 9/28/2026: 'Minimum Focus Distance: 9.8 ft. (3.0 m) from focal plane'. Note the patent's own Table 7 near-focus condition (D0=2720 mm object distance from the first lens vertex) is a different, non-comparable datum from the product's minimum focus distance (measured from the focal plane); both are genuine, neither is invented, and they are not expected to match exactly."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Blade count (9) is Nikon's own spec page, https://www.nikonusa.com/p/af-s-nikkor-500mm-f56e-pf-ed-vr/20082/overview, accessed 9/28/2026 ('Diaphragm Blades: 9'). The rounded-blade shape is NOT stated on that page (checked directly, 9/28/2026: no 'rounded diaphragm' language found) -- it is assumed typical of modern AF-S Nikkor primes of this era, not confirmed by this source.",
+    "ev": "spec"
+  },
+  "elements": 19,
+  "groups": 11,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source: JP 2018-017857 A ('Optical system, optical instrument, and optical system manufacturing method'), Nikon Corporation, filed 7/27/2016, published (kokai) 2/1/2018 (later granted as JP 6870230 B2, 5/12/2021). Five numerical examples (OL1-OL5) are given, spanning roughly 392/490/490/490/588 mm; this file uses the Second Example (OL2, f=489.70405, FNo=5.75019), the closest to the class this project slots at 500 mm and the one this project's tie to the AF-S NIKKOR 500mm f/5.6E PF ED VR rests on (see representativeSource).",
+    "Elements/groups counted directly from the patent's own text description of OL2 (which independently matches the 19/11 the real product's spec page states): G1 = L11, {L12+L13 cemented}, L14 (DOE carrier lens, its close-contact multilayer DOE counted as part of L14, not as separate elements), {L15+L16 cemented} = 6 elements in 4 groups. G2 = {L21+L22 cemented} = 2 elements in 1 group (this is the sole focus group Gf). G3 = {L31+L32}, {L33+L34}, L35, {L36+L37=CL31}, {L38+L39=CL32}, {L310+L311=CL33} = 11 elements in 6 groups. Total: 6+2+11 = 19 elements; 4+1+6 = 11 groups.",
+    "The diffractive optical surface is m=8 (0-based surface index 7 in this file's `surfaces` array), marked with the patent's own '*'. It sits inside lens L14, between the two close-contact multilayer materials the patent describes but does not name. See that surface's own `doe` field for the patent's verbatim phase formula (equation c) and paraxial-power formula (equation d), and research/lenses-n500.md for the python paraxial self-check that adds this surface's power via equation (d) to reproduce the patent's stated f and Bf.",
+    "No effective/clear diameter is printed anywhere in this patent (same situation as p200/p300/p400/p500 in this project), so every sd is sdSource='estimated-from-marginal-ray', via .local/n500/paraxial_n500.py (same marginal+chief method as .local/lens-tele/paraxial.py, extended to add the DOE's paraxial power per equation (d) at surface m=8).",
+    "Unlike p300/p400/p500 (which share a patent with no printed Bf and only a 'D(last)=0.000' table-terminator), this patent DOES print a genuine, separate Bf value in Table 7 (64.39657 mm at infinity focus) -- the same situation as p200. stated.bf is therefore patent-stated, not derived, and the last surface's t is set to that printed value directly.",
+    "VariableGap close-focus data (D1, D2) is printed by the patent (Table 7) and transcribed directly -- unlike the p300/p400/p500 family, this patent DOES give a near-focus condition for this numerical example. Table 7 also shows BF itself varies very slightly across the three focus states (64.39657 / 64.40466 / 64.43514 mm); this is real (floating/inner-focus designs typically show a small residual BF shift) but is not recorded as its own VariableGap entry since the schema's convention (see p200.json, p105.json) is to use the gaps array only for internal element-group air spaces, with the single infinity-focus Bf carried as the last surface's t and stated.bf.",
+    "representativeOf is set (unlike every other lens in this project's tele/normal/wide sets, all of which left it unset) because the element/group count, ED-glass count, single-PF-element structure, and stated half field of view all independently match the real product's own published spec sheet -- see representativeSource for the full reasoning. This is still not a source that names the patent directly; it is the same kind of structural-signature match the project's other files describe as 'strong circumstantial' but here the signature match is exact on every countable figure, which is why it crosses the line into 'tied'.",
+    "elements=19 matches Nikon's own published spec and this project's element-counting convention (count physical lens pieces, cemented interfaces don't add an element) applied to the DOE carrier lens L14 as a single physical lens. NOTE for whoever adds DOE tracing to the engine: src/engine/lens.ts's buildElementsAndGroups counts one element per surface whose own medium is non-air, i.e. one per glass SEGMENT; for L14's three glass segments (base glass + 2 DOE layers, surface indices 5-7 here) that rule would count 3 elements instead of 1, so once this file loads without the catalog error below, the automatic element count will read 21, not 19, until the engine gets an equivalent of the existing `plate` exclusion for a DOE sub-layer that isn't its own lens element. See research/lenses-n500.md for the independent check that reproduced this.",
+    "The engine (src/engine/*) cannot yet trace a diffractive surface -- this is called out in docs/PLAN.md's 'In progress' modules. This file's `doe` field on surface index 7 is data only; the paraxial self-check in research/lenses-n500.md is a standalone python verification, not an engine code path. `npx vitest run src/engine/lenses.test.ts src/engine/realize.test.ts` is expected to either skip this file's DOE surface or fail specifically because the DOE contributes no traced power in whatever generic surface-loading path exists today -- see research/lenses-n500.md for the actual test run and result.",
+    "Half field of view: patent states omega=2.51062 deg (full 2*omega implied ~5.02 deg), matching the product spec's stated FX angle of view of 5 deg 00' (5.0 deg) closely (0.02 deg / about 0.4% difference, well within the rounding the product spec page's 'deg-minutes' display implies)."
+  ]
+}

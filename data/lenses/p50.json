@@ -1,0 +1,299 @@
+{
+  "id": "p50",
+  "focalLength": 50,
+  "maxFno": 1.46,
+  "markedFno": 1.4,
+  "name": "50 mm f/1.4 (patent example, Sigma double-Gauss derivative)",
+  "representativeOf": "Sigma 50mm F1.4 DG HSM | Art",
+  "representativeSource": "photonstophotos.net Optical Bench Hub (model list ties patent JP2015-114366, Example 1P, to \"Sigma 50mm F1.4 DG HSM Art\"); https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026. Corroborated structurally: our transcription of Numerical Example 1 has 13 elements in 8 air-spaced groups, matching Sigma's own published \"13 elements in 8 groups\" spec.",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2015-114366 A, Numerical Example 1 (\"実施例1\")",
+    "url": "https://patents.google.com/patent/JP2015114366A/en",
+    "assignee": "Sigma Corp",
+    "published": "6/22/2015",
+    "accessed": "9/28/2026",
+    "location": "[Surface data] / [面データ] and [Various data] tables under Numerical Example 1"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 59.9687,
+      "t": 7.5464,
+      "medium": "glass",
+      "nd": 1.91082,
+      "vd": 35.25,
+      "sd": 41.71,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1"
+    },
+    {
+      "r": 178.4018,
+      "t": 0.6242,
+      "medium": "air",
+      "sd": 37.49,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1 rear air gap"
+    },
+    {
+      "r": 192.0154,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.62588,
+      "vd": 35.74,
+      "sd": 36.94,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2"
+    },
+    {
+      "r": 28.7552,
+      "t": 16.1562,
+      "medium": "air",
+      "sd": 35.71,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 rear air gap"
+    },
+    {
+      "r": -67.9622,
+      "t": 10.7338,
+      "medium": "glass",
+      "nd": 1.497,
+      "vd": 81.61,
+      "sd": 32.12,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3 (front of cemented triplet)"
+    },
+    {
+      "r": -26.2761,
+      "t": 1.5,
+      "medium": "glass",
+      "nd": 1.54814,
+      "vd": 45.82,
+      "sd": 32.21,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4 (cemented)"
+    },
+    {
+      "r": 43.9346,
+      "t": 10.7524,
+      "medium": "glass",
+      "nd": 1.883,
+      "vd": 40.81,
+      "sd": 32.28,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L5 (cemented, rear of triplet)"
+    },
+    {
+      "r": -94.4447,
+      "t": 0,
+      "medium": "air",
+      "sd": 31.31,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "contact gap to flare-cut stop"
+    },
+    {
+      "r": null,
+      "t": 9.9796,
+      "medium": "air",
+      "sd": 31.31,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "flare-cut aperture (fixed, not the iris)"
+    },
+    {
+      "r": 49.8944,
+      "t": 3.9121,
+      "medium": "glass",
+      "nd": 1.92286,
+      "vd": 20.88,
+      "sd": 26.69,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6"
+    },
+    {
+      "r": 108.4891,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 24.74,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 rear air gap"
+    },
+    {
+      "r": 47.6761,
+      "t": 8.0538,
+      "medium": "glass",
+      "nd": 1.72916,
+      "vd": 54.67,
+      "sd": 24.63,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7 (cemented)"
+    },
+    {
+      "r": -69.2432,
+      "t": 0.95,
+      "medium": "glass",
+      "nd": 1.72825,
+      "vd": 28.32,
+      "sd": 19.4,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L8 (cemented)"
+    },
+    {
+      "r": 31.4317,
+      "t": 6.0186,
+      "medium": "air",
+      "sd": 18.78,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "focus gap to iris"
+    },
+    {
+      "r": null,
+      "t": 4.6436,
+      "medium": "air",
+      "sd": 14.64,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "aperture stop S"
+    },
+    {
+      "r": -31.6556,
+      "t": 0.95,
+      "medium": "glass",
+      "nd": 1.62588,
+      "vd": 35.74,
+      "sd": 16.15,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 (cemented)"
+    },
+    {
+      "r": 71.6171,
+      "t": 4.661,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.62,
+      "sd": 16.52,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10 (cemented)"
+    },
+    {
+      "r": -96.5972,
+      "t": 0.15,
+      "medium": "air",
+      "sd": 18.43,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 85.5221,
+      "t": 6.6571,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.62,
+      "sd": 18.51,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 (cemented)"
+    },
+    {
+      "r": -40.3262,
+      "t": 0.95,
+      "medium": "glass",
+      "nd": 1.51742,
+      "vd": 52.15,
+      "sd": 20.23,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 (cemented)"
+    },
+    {
+      "r": 57.5543,
+      "t": 0.9291,
+      "medium": "air",
+      "sd": 20.46,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 77.4702,
+      "t": 5.8822,
+      "medium": "glass",
+      "nd": 1.7725,
+      "vd": 49.47,
+      "sd": 20.98,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -9.93095e-7,
+        "A6": 1.24366e-9,
+        "A8": -7.51084e-13,
+        "A10": 0,
+        "convention": "patent prints kappa (K) directly with K=0 meaning no added conic term, same convention as k here (k=0 baseline, deviation carried by A4.. terms)"
+      },
+      "label": "L13 front (asph)"
+    },
+    {
+      "r": -47.5092,
+      "t": 38.7999,
+      "medium": "air",
+      "sd": 22.13,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": 0.00000317495,
+        "A6": -1.01711e-10,
+        "A8": 2.0025e-12,
+        "A10": -1.26705e-15,
+        "convention": "patent prints kappa (K) directly with K=0 meaning no added conic term, same convention as k here"
+      },
+      "label": "L13 rear (asph); t = BF at infinity focus"
+    }
+  ],
+  "stated": {
+    "f": 49.58,
+    "fno": 1.46,
+    "halfFieldDeg": 23.595,
+    "imageHeight": 21.63,
+    "bf": 38.7999,
+    "totalLength": 142
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 8,
+        "atInfinity": 9.9796,
+        "atClose": 1.2,
+        "closeObjectDistance": 400,
+        "note": "patent's near-focus condition is tabulated at a 400 mm 'shooting distance', not stated from which reference plane; index 8 is the flare-cut aperture (patent surface 9), 0-based into `surfaces`."
+      },
+      {
+        "surface": 13,
+        "atInfinity": 6.0186,
+        "atClose": 5.8989,
+        "closeObjectDistance": 400,
+        "note": "index 13 = patent surface 14, the gap into the iris; moves with G2A per the floating-focus description."
+      },
+      {
+        "surface": 22,
+        "atInfinity": 38.7999,
+        "atClose": 47.6991,
+        "closeObjectDistance": 400,
+        "note": "index 22 = patent surface 23 (last surface); this is the BF gap itself, which grows on focusing closer because total lens length is held fixed (unit focusing barrel) while the internal groups float forward."
+      }
+    ],
+    "minFocusM": 0.4,
+    "minFocusSource": "Sigma 50mm F1.4 DG HSM | Art spec page, https://www.sigma-global.com/en/lenses/a014_50_14/, accessed 9/28/2026 (\"Minimum Focusing Distance: 40cm / 15.7in.\")"
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Sigma 50mm F1.4 DG HSM | Art spec page, https://www.sigma-global.com/en/lenses/a014_50_14/, accessed 9/28/2026 (\"Number of Diaphragm Blades: 9 (Rounded diaphragm)\")",
+    "ev": "spec"
+  },
+  "elements": 13,
+  "groups": 8,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Patent gives no effective-diameter column; all `sd` values are our own paraxial-trace estimates (see research/lenses-normal.md and .local/lens-normal/selfcheck.py), not patent-stated.",
+    "Two aspheric surfaces (patent 22, 23) share the last element (L13); both use K, A4, A6, A8, A10 with A12+ terms absent/zero in the patent text.",
+    "Focus is a floating design (G2A and G2B move independently, per the JP description); we model it as three coupled variable gaps rather than a single moving group.",
+    "'Various data' table gives total lens length 142.00 mm at both INF and 400 mm (unit-length focusing barrel); used as an extra self-check beyond f and BF."
+  ]
+}

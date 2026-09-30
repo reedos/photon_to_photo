@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-*/
+*.log
+shots/
+recordings/
+.claude/
+.vite/
+.local/
+design/reference/
+design/if-style/*.png
+review/
+blender/__pycache__/
+renders/

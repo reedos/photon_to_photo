@@ -1,0 +1,238 @@
+{
+  "id": "p35",
+  "focalLength": 35,
+  "maxFno": 1.45,
+  "markedFno": 1.4,
+  "name": "35 mm f/1.45 large-aperture wide-angle (patent numerical example)",
+  "source": {
+    "kind": "patent",
+    "ref": "US 7,663,816 B2, Example 1 (Numerical Example 1)",
+    "url": "https://patents.google.com/patent/US7663816B2/en",
+    "assignee": "Nikon Corp",
+    "published": "2/16/2010",
+    "accessed": "9/28/2026",
+    "location": "Table 1 [Lens Data] and [Specifications]/[Variable Distances] blocks, Example 1"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 115.1525,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.816,
+      "vd": 46.62,
+      "sd": 31.678,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G1 L1 front"
+    },
+    {
+      "r": 31.1674,
+      "t": 9,
+      "medium": "air",
+      "sd": 30.755,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G1 L1 rear"
+    },
+    {
+      "r": -215.844,
+      "t": 15.85,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 64.12,
+      "sd": 30.46,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G1 L2 front (cemented doublet L2-L3 front)"
+    },
+    {
+      "r": 38.1486,
+      "t": 10.5,
+      "medium": "glass",
+      "nd": 1.816,
+      "vd": 46.62,
+      "sd": 30.879,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "G1 L2-L3 cemented interface"
+    },
+    {
+      "r": -101.0097,
+      "t": 7.40434,
+      "medium": "air",
+      "sd": 29.711,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G1 L3 rear / variable air gap to G2F"
+    },
+    {
+      "r": 39.4576,
+      "t": 10.3,
+      "medium": "glass",
+      "nd": 1.882997,
+      "vd": 40.76,
+      "sd": 26.437,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2F L4 front (cemented doublet L4-L5 front)"
+    },
+    {
+      "r": -52.1142,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.71736,
+      "vd": 29.52,
+      "sd": 20.783,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "G2F L4-L5 cemented interface"
+    },
+    {
+      "r": 42.9666,
+      "t": 7.75179,
+      "medium": "air",
+      "sd": 19.502,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2F L5 rear / variable air gap to stop"
+    },
+    {
+      "r": null,
+      "t": 5,
+      "medium": "air",
+      "sd": 13.501,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "Aperture Stop S (flat)"
+    },
+    {
+      "r": -28.2121,
+      "t": 2.3,
+      "medium": "glass",
+      "nd": 1.72825,
+      "vd": 28.46,
+      "sd": 15.272,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2R L6 front"
+    },
+    {
+      "r": 233.7456,
+      "t": 1.6,
+      "medium": "air",
+      "sd": 16.267,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2R L6 rear"
+    },
+    {
+      "r": -224.2964,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.7433,
+      "vd": 49.32,
+      "sd": 17.546,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 195,
+        "A4": -0.000012426,
+        "A6": 2.7998e-9,
+        "A8": -5.1736e-11,
+        "A10": 1.7973e-13,
+        "A12": -8.9748e-17,
+        "convention": "patent lists K = 195.0000 with an A3 term (-0.20873E-06) as well; A3 is an odd-order sag term not representable by this engine's even-order polynomial, so it is recorded here in notes rather than dropped silently. K is the conic constant added directly to the standard sag formula (not a kappa=K+1 convention) per the patent's own equation."
+      },
+      "label": "G2R L7 front (cemented doublet L7-L8 front, aspheric)"
+    },
+    {
+      "r": -1000,
+      "t": 5.5,
+      "medium": "glass",
+      "nd": 1.6968,
+      "vd": 55.52,
+      "sd": 18.775,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "G2R L7-L8 cemented interface"
+    },
+    {
+      "r": -38.4371,
+      "t": 0.1,
+      "medium": "air",
+      "sd": 21.55,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2R L8 rear"
+    },
+    {
+      "r": 309.0744,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.57501,
+      "vd": 41.49,
+      "sd": 21.597,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2R L9 front (cemented doublet L9-L10 front)"
+    },
+    {
+      "r": 53.875,
+      "t": 9.5,
+      "medium": "glass",
+      "nd": 1.603001,
+      "vd": 65.44,
+      "sd": 22.083,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "G2R L9-L10 cemented interface"
+    },
+    {
+      "r": -30.9322,
+      "t": 38.02909,
+      "medium": "air",
+      "sd": 24.536,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G2R L10 rear / last surface, t = Bf"
+    }
+  ],
+  "stated": {
+    "f": 36,
+    "fno": 1.45,
+    "halfFieldDeg": 31.53,
+    "imageHeight": 21.6,
+    "bf": 38.02909,
+    "totalLength": 131.135
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 4,
+        "atInfinity": 7.40434,
+        "atClose": 1.1551,
+        "closeObjectDistance": 168.8648,
+        "note": "d5 in the patent's own numbering (surface 5, 1-based); the patent lists an intermediate 'Close Range 1' state too (d5=6.32841 at object distance 1062.6389 mm) which is not stored here, only infinity and the nearest close range; object distance is the patent's own d0 column, reference point (front surface vs. subject) not stated in the excerpted text"
+      },
+      {
+        "surface": 7,
+        "atInfinity": 7.75179,
+        "atClose": 6.62693,
+        "closeObjectDistance": 168.8648,
+        "note": "d8 in patent numbering (surface 8, 1-based)"
+      }
+    ],
+    "minFocusM": 0.3,
+    "minFocusSource": "assumed - typical minimum focus for a fast 35 mm f/1.4-class full-frame prime, order-of-magnitude comparison only, NOT this patent example. Nikon AF-S NIKKOR 35mm f/1.4G spec page (https://www.nikonusa.com/p/af-s-nikkor-35mm-f14g/2198/overview, fetched 9/28/2026) states minimum focus '0.98 ft.' = 0.30 m and '9' diaphragm blades. This patent example's filing (priority 9/28/2007, granted 2/16/2010) is close in time to that lens's 2/2010 announcement, which is a real coincidence worth noting, but no public source confirms this exact 17-surface/10-element prescription is that product's actual design, so the tie is NOT recorded as representativeOf"
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "assumed - typical rounded-blade count for a fast 35 mm-class prime of this era; not tied to this specific patent example",
+    "ev": "assumed"
+  },
+  "elements": 10,
+  "groups": 6,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is Nikon US 7,663,816 B2 'Wide-angle lens and imaging apparatus' (priority JP 2007-254903, filed 9/28/2007; US application filed 8/5/2008; granted 2/16/2010). Text read directly from the Google Patents description section (English original, not a translation).",
+    "The patent's own nominal marketed class for this design family is described in the spec as a 'wide-angle lens' around f=36 mm at Fno 1.45; focalLength here is recorded as 35 (the requested class) while stated.f keeps the patent's own raw value 36.000, per the schema's distinction between marketed class and patent-stated f. Examples 2-4 in the same patent are f=35.863 mm (closer to nominal 35) but add a zero-thickness 'Flare Stopper' surface (r=infinity, d=0 between the front and middle groups) that Example 1 does not have; Example 1 was used for simplicity and because it was the one fully self-checked.",
+    "Surface 12 (first surface of the rear aspheric cemented doublet) has a patent-listed A3 term (-0.20873E-06) in addition to K, A4, A6, A8, A10, A12. This engine's Asphere type only supports even orders (A4, A6, ...); the A3 term is recorded here in the surface's asph.convention note rather than silently dropped, and the self-check (which is paraxial/first-order only) is unaffected since neither A3 nor any other aspheric term enters a paraxial trace.",
+    "K=195.0000 on surface 12: the patent's own text states this uses the sag equation x = c*h^2/(1+sqrt(1-(1+K)*c^2*h^2)) + A4 h^4 + ... i.e. the SAME convention as lens-types.ts (K=0 is a sphere), not a kappa=K+1 convention. Recorded as k:195.0 directly.",
+    "Surfaces 3-4, 6-7, 12-13 and 15-16 are cemented doublets (shared vertex, second glass on the same table row) per patent convention; those interfaces marked coated:false.",
+    "The patent gives THREE focus states (Infinity, Close Range 1, Close Range 2); only Infinity and Close Range 2 (the nearest) are stored in focus.gaps per the LensDesign schema's two-state VariableGap; Close Range 1 (object distance 1062.6389 mm, d5=6.32841, d8=7.55812) is noted here in prose instead: it sits between the two stored states and is available in the patent if the engine ever wants a third state.",
+    "No effective/clear-diameter table anywhere in the patent text; all surfaces use sdSource 'estimated-from-marginal-ray' via the two-ray paraxial method in .local/lens-wide/raytrace.py, scaled to the patent's own stated Fno=1.45 and half field 31.53 deg.",
+    "medium is 'glass' everywhere (no named glass catalog in the patent, only nd/vd).",
+    "No public source ties this patent example to a specific shipped Nikon product; representativeOf is intentionally omitted (see minFocusSource note for the circumstantial timing only, which is not a citation of identity)."
+  ]
+}

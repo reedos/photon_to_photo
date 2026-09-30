@@ -1,0 +1,188 @@
+{
+  "$note": "Mount geometry for Photon to Photo. Agent: mounts. Accessed date for every web source below: 9/28/2026. See research/mounts.md for the prose version, conflicts and full reasoning.",
+  "mounts": {
+    "sonyE": {
+      "name": "Sony E-mount (full-frame / FE)",
+      "flangeMm": 18.0,
+      "throatMm": 46.1,
+      "lugs": 3,
+      "contacts": 10,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Sony E-mount\"", "loc": "infobox / specifications section: \"Flange focal distance: 18 mm\"" },
+        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Sony E-mount\"", "loc": "infobox: \"Inner diameter: 46.1 mm\"" },
+        "lugs": { "ev": "reported", "src": "web search aggregating Camera-wiki.org \"Sony NEX\" and general E-mount technical summaries", "loc": "\"the Sony E-mount has 3 tabs\"" },
+        "contacts": { "ev": "reported", "src": "Camera-wiki.org, \"Sony NEX\"", "loc": "mount description: \"a set of 10 electrical contacts along the bottom\"; note one other source seen in the same search says 8 (conflict recorded in research/mounts.md)" }
+      }
+    },
+    "canonRF": {
+      "name": "Canon RF mount",
+      "flangeMm": 20.0,
+      "throatMm": 54.0,
+      "lugs": 3,
+      "contacts": 12,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Canon RF lens mount\"", "loc": "infobox: \"Flange focal distance: 20 mm\"" },
+        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Canon RF lens mount\"", "loc": "infobox: \"Inner diameter: 54 mm\"" },
+        "lugs": { "ev": "spec", "src": "Wikipedia, \"Canon RF lens mount\"", "loc": "infobox: bayonet tabs \"3\"" },
+        "contacts": { "ev": "spec", "src": "Wikipedia, \"Canon RF lens mount\"", "loc": "infobox: \"12 electrical pins\"" }
+      }
+    },
+    "nikonZ": {
+      "name": "Nikon Z-mount (full-frame)",
+      "flangeMm": 16.0,
+      "throatMm": 55.0,
+      "lugs": 4,
+      "contacts": 11,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "infobox: \"Flange focal distance: 16 mm\"" },
+        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "infobox: \"Inner diameter: 55 mm\", described as the largest full-frame lens mount" },
+        "lugs": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "body text: tabs increased \"from three (on the F-mount) to four\"" },
+        "contacts": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "body text: pins increased \"from eight (on the F-mount) to eleven (on the Z-mount)\"" }
+      }
+    },
+    "canonEF": {
+      "name": "Canon EF mount",
+      "flangeMm": 44.0,
+      "throatMm": 54.0,
+      "lugs": 3,
+      "contacts": 8,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Canon EF lens mount\"", "loc": "infobox: \"Flange: 44 mm\"" },
+        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Canon EF lens mount\"", "loc": "infobox: \"Inner diameter: 54 mm\" (external diameter 65 mm)" },
+        "lugs": { "ev": "derived", "src": "Wikipedia, \"Canon EF lens mount\"", "loc": "article states EF reversed the FD mount's \"three-eared bayonet\" logic (bayonet moved to the lens, receptacle to the body) without renumbering the lug count; 3 lugs is the standard SLR bayonet count carried over and is the figure widely reported for EF (e.g. aliexpress.com wiki summary), so it is recorded here as derived rather than spec" },
+        "contacts": { "ev": "spec", "src": "Wikipedia, \"Canon EF lens mount\"", "loc": "infobox: \"8 electrical pins\"" }
+      }
+    },
+    "nikonF": {
+      "name": "Nikon F-mount",
+      "flangeMm": 46.5,
+      "throatMm": 44.0,
+      "lugs": 3,
+      "contacts": 8,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Nikon F-mount\"", "loc": "infobox: \"flange to focal plane distance of 46.5 mm\"" },
+        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Nikon F-mount\"", "loc": "infobox: \"three-lug bayonet mount with a 44 mm throat\"" },
+        "lugs": { "ev": "spec", "src": "Wikipedia, \"Nikon F-mount\"", "loc": "infobox: \"three-lug bayonet mount\"" },
+        "contacts": { "ev": "reported", "src": "Wikipedia, \"Nikon F-mount\", connector table, cross-checked against the Nikon Z-mount article's \"eight (on the F-mount)\" figure", "loc": "F-mount connector table lists 5/6/7/8/10-pin variants across generations; 8-pin (\"AF-S G/E\", \"extra ground, commonly used on newer lenses\") is used here as the modern-lens figure because it matches the Z-mount article's own \"eight (on the F-mount)\" baseline used for its own 11-pin comparison" }
+      }
+    },
+    "sigmaSA": {
+      "name": "Sigma SA-mount",
+      "flangeMm": 44.0,
+      "throatMm": 45.0,
+      "lugs": 3,
+      "contacts": 8,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Sigma SA-mount\"", "loc": "\"a flange focal distance of 44.00 mm, identical to that of the Canon EF-mount\"" },
+        "throatMm": { "ev": "assumed", "src": "Wikipedia, \"Sigma SA-mount\" (\"mechanically similar to the Pentax K-mount... with this reduced flange distance compared to Pentax's 45.5 mm\") plus Pentax K-mount throat figures from a web search (45 mm / 45.46 mm reported)", "loc": "no throat diameter is published for SA-mount itself; assumed equal to the Pentax K-mount family throat (~45 mm) that the source says SA is mechanically modeled on, rounded to 45.0 mm" },
+        "lugs": { "ev": "assumed", "src": "Wikipedia, \"Sigma SA-mount\", same mechanical-similarity statement", "loc": "assumed 3-lug bayonet, the standard SLR-era count shared by Pentax K, Canon EF and Nikon F, none of which SA departs from in the source description" },
+        "contacts": { "ev": "derived", "src": "Wikipedia, \"Sigma SA-mount\"", "loc": "\"uses the same signalling lines and protocol as the EF-mount\"; contact count derived as equal to EF's spec figure of 8" }
+      }
+    },
+    "leicaL": {
+      "name": "Leica L-mount (L-Mount Alliance)",
+      "flangeMm": 20.0,
+      "throatMm": 51.6,
+      "lugs": 4,
+      "contacts": 10,
+      "figs": {
+        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Leica L-Mount\"", "loc": "infobox: \"Flange focal distance: 20.0 mm\"" },
+        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Leica L-Mount\"", "loc": "infobox: \"Inner diameter: 51.6 mm\"" },
+        "lugs": { "ev": "spec", "src": "Wikipedia, \"Leica L-Mount\"", "loc": "infobox: \"4 tabs\"" },
+        "contacts": { "ev": "spec", "src": "Wikipedia, \"Leica L-Mount\"", "loc": "infobox: \"10 electrical pins\"" }
+      }
+    }
+  },
+  "genericBody": {
+    "flangeMm": 16.0,
+    "throatMm": 55.0,
+    "ev": "assumed",
+    "reasoning": "Reed's 09/28/2026 decision: the body is a generic, unbranded full-frame mirrorless design, exact where physics depends on it. Its flange distance must be no longer than any native mirrorless mount among our lenses so every lens mounts through an adapter of zero or positive length: the native mirrorless mounts actually used by our lens set (see lenses{} below and research/mounts.md Task B) are Sony E (18.0 mm, on p135) and Canon RF (20.0 mm, on p24 and p28); the SLR mounts used (Canon EF 44.0 mm, Nikon F 46.5 mm) are far longer and never constrain the minimum. Setting the generic flange at 16.0 mm keeps it strictly below the shortest of those (Sony E's 18.0 mm), so every lens including the mirrorless-native ones gets a strictly positive adapter length rather than a zero-length special case, while the number itself is not invented: 16.0 mm is the real, sourced Nikon Z flange distance (see mounts.nikonZ above), the shortest published full-frame mirrorless flange we found, so the assumption borrows a real, physically demonstrated value rather than picking an arbitrary smaller number. Throat is set to 55.0 mm, matching the largest sourced throat among the mounts above (Nikon Z), which clears every rear element and every adapter tube in this set: the widest adapter-limited throat any lens needs is Canon EF/RF's 54.0 mm, so 55.0 mm leaves a 1 mm margin all around."
+  },
+  "lenses": {
+    "p20": {
+      "mount": "canonEF",
+      "ev": "derived",
+      "reasoning": "representativeOf is the Sigma 20mm F1.4 DG HSM | Art (data/lenses/p20.json source block + research/lenses-20.md). The \"DG HSM\" naming (Hyper Sonic Motor, an in-lens SLR autofocus motor) ties this product to Sigma's DSLR-era mount options: Canon EF, Nikon F and Sigma SA (Sigma never released a \"DG DN\" mirrorless version of this specific lens). The computed back focus (38.951 mm, from the sum of surface t after the last non-filter lens glass surface through the filter/cover-glass to the image plane; see data file surfaces[25..28]) is well over the ~35 mm mirror-box threshold and is consistent with any of the three SLR mounts. Canon EF is picked as the single mount to assign (task requires one) because it is the mount Sigma's own Optical Bench Hub tie (research/lenses-20.md) and most third-party reviews default to when a mount is not otherwise specified, and because EF's 44.0 mm flange is the shortest of the three SLR candidates (EF 44.0 vs Sigma SA 44.0 vs Nikon F 46.5), so it gives the tightest, most conservative adapter-length check against the generic body.",
+      "backFocusMm": 38.951,
+      "adapterMm": 28.0
+    },
+    "p24": {
+      "mount": "canonRF",
+      "ev": "derived",
+      "reasoning": "No representativeOf; JP 2021-018277 A is assigned to Canon Inc. and filed 2/15/2021 (data/lenses/p24.json source block). Canon ended new EF-mount lens development around 2018-2019 in favor of RF (see Wikipedia \"Canon EF lens mount\" / \"Canon RF lens mount\" history sections), so a Canon optical patent filed in 2021 is overwhelmingly likely to be an RF-mount design. This is confirmed by the computed back focus of 15.000 mm (sum of t from the last non-filter lens glass surface, index 29, through the image plane; data file surfaces[29..30]), which is far short of the ~35 mm an SLR mirror box needs and consistent with RF's short 20.0 mm flange plus internal working distance for the rear group.",
+      "backFocusMm": 15.0,
+      "adapterMm": 4.0
+    },
+    "p28": {
+      "mount": "canonRF",
+      "ev": "derived",
+      "reasoning": "Same patent family as p24 (JP 2021-018277 A, Numerical Example 3, Canon Inc., filed 2/15/2021; data/lenses/p28.json). Same reasoning as p24: a 2021 Canon design with a short computed back focus (15.850 mm, from surfaces[27..28]) is consistent with RF and inconsistent with any SLR mount.",
+      "backFocusMm": 15.85,
+      "adapterMm": 4.0
+    },
+    "p35": {
+      "mount": "nikonF",
+      "ev": "derived",
+      "reasoning": "No representativeOf; US 7,663,816 B2 is assigned to Nikon Corp and filed 2/16/2010 (data/lenses/p35.json). Nikon's mirrorless Z-mount did not exist until 2018 (Wikipedia, \"Nikon Z-mount\": announced 8/23/2018), so any Nikon lens patent from 2010 is an F-mount SLR design. This is confirmed by the computed back focus (38.029 mm, sum of t from the last lens glass surface through the image plane; data file surfaces[15..16]), which is over the ~35 mm mirror-box threshold and consistent with F-mount's 46.5 mm flange.",
+      "backFocusMm": 38.029,
+      "adapterMm": 30.5
+    },
+    "p50": {
+      "mount": "canonEF",
+      "ev": "derived",
+      "reasoning": "representativeOf is the Sigma 50mm F1.4 DG HSM | Art (data/lenses/p50.json + research/lenses-normal.md). Same \"DG HSM\" SLR-motor naming logic as p20: this product shipped in Canon EF, Nikon F and Sigma SA, never as a mirrorless DG DN version. Computed back focus is 38.800 mm (surfaces[21..22]), well over the mirror-box threshold, consistent with any of the three. Canon EF is assigned for the same reason as p20: it is the Optical Bench Hub tie in research/lenses-normal.md and the shortest-flange (most conservative) of the three SLR candidates.",
+      "backFocusMm": 38.8,
+      "adapterMm": 28.0
+    },
+    "p85": {
+      "mount": "canonEF",
+      "ev": "derived",
+      "reasoning": "representativeOf is the Sigma 85mm F1.4 EX DG HSM (data/lenses/p85.json + research/lenses-normal.md, tied via camera-wiki.org \"Lens patents\" and corroborated by photonstophotos.net). \"EX DG HSM\" is Sigma's older SLR-era line (pre-Art), sold in Canon EF, Nikon F and Sigma SA mounts only. Computed back focus 39.870 mm (surfaces[18..19]) is well over the mirror-box threshold. Canon EF assigned for the same conservative-shortest-SLR-flange reasoning as p20 and p50.",
+      "backFocusMm": 39.87,
+      "adapterMm": 28.0
+    },
+    "p105": {
+      "mount": "nikonF",
+      "ev": "spec",
+      "reasoning": "representativeOf is the Nikon AF-S NIKKOR 105mm f/1.4E ED (data/lenses/p105.json + research/lenses-normal.md, tied via photonstophotos.net Optical Bench Hub). This is a Nikon-branded product sold in exactly one mount, Nikon F, so the tie is direct (labeled \"spec\" rather than \"derived\"). Computed back focus 39.632 mm (surfaces[22..23], the patent's own stated \"BF at infinity focus\") confirms an SLR-length back focus consistent with F-mount's 46.5 mm flange.",
+      "backFocusMm": 39.632,
+      "adapterMm": 30.5
+    },
+    "p135": {
+      "mount": "sonyE",
+      "ev": "spec",
+      "reasoning": "representativeOf is the Sony FE 135mm F1.8 GM / SEL135F18GM (data/lenses/p135.json + research/lenses-normal.md, tied via photonstophotos.net Optical Bench Hub). \"FE\" denotes Sony's full-frame E-mount line specifically, sold in only one mount, so the tie is direct (\"spec\"). Computed back focus 21.395 mm (sum of t from the last non-filter lens glass surface, index 22, through the filter block to the image plane; data file surfaces[23..25]) is short, well under the ~35 mm SLR threshold, consistent with E-mount's 18.0 mm flange plus a few mm of filter-stack working distance.",
+      "backFocusMm": 21.395,
+      "adapterMm": 2.0
+    },
+    "p200": {
+      "mount": "nikonF",
+      "ev": "derived",
+      "reasoning": "No representativeOf; US 5,490,014 is assigned to Nikon Corporation, Embodiment 1, filed 2/6/1996 (data/lenses/p200.json). Nikon made only F-mount SLR lenses in 1996 (Z-mount did not exist until 2018). Computed back focus is 78.986 mm (surfaces[20..21], including the patent's own stated terminal-flat \"Bf\" value), far over the mirror-box threshold, which is typical for long telephotos whose internal focus groups sit well forward of a long mechanical back focus, and is consistent with F-mount.",
+      "backFocusMm": 78.986,
+      "adapterMm": 30.5
+    },
+    "p300": {
+      "mount": "canonEF",
+      "ev": "derived",
+      "reasoning": "No representativeOf; US 6,115,188 is assigned to Canon Kabushiki Kaisha, Numerical Example 1, filed 9/5/2000 (data/lenses/p300.json). Canon's RF mount did not exist until 2018, so a Canon telephoto patent from 2000 is an EF-mount design (Canon's only full-frame SLR mount family at the time; EF-mount super-telephotos of this era are well documented, e.g. the EF 300mm f/2.8L). Computed back focus is 69.320 mm (surfaces[26..28], including the derived filter-to-image gap noted in the data file as not patent-stated), consistent with an EF-mount long telephoto's long back focus.",
+      "backFocusMm": 69.32,
+      "adapterMm": 28.0
+    },
+    "p400": {
+      "mount": "canonEF",
+      "ev": "derived",
+      "reasoning": "Same patent family as p300 (US 6,115,188, Numerical Example 7, Canon Kabushiki Kaisha, filed 9/5/2000; data/lenses/p400.json). Same reasoning as p300: pre-RF Canon telephoto, EF-mount. Computed back focus 74.910 mm (surfaces[27..30]).",
+      "backFocusMm": 74.91,
+      "adapterMm": 28.0
+    },
+    "p500": {
+      "mount": "canonEF",
+      "ev": "derived",
+      "reasoning": "Same patent family as p300/p400 (US 6,115,188, Numerical Example 10, Canon Kabushiki Kaisha, filed 9/5/2000; data/lenses/p500.json). Same reasoning: pre-RF Canon super-telephoto, EF-mount. Computed back focus 128.570 mm (surfaces[25..28]), the longest in the set, typical of a 500 mm SLR super-tele where the rear element sits far from the image plane.",
+      "backFocusMm": 128.57,
+      "adapterMm": 28.0
+    }
+  }
+}

@@ -1,0 +1,924 @@
+{
+  "meta": {
+    "project": "Photon to Photo",
+    "file": "data/sensors.json",
+    "generatedBy": "sensor research agent",
+    "accessedDate": "09/28/2026",
+    "scope": "Three representative camera sensors (full frame, APS-C, Micro Four Thirds) with cited, evidence-labeled parameters, plus generic sensor-physics facts. See research/sensor-sources.md for prose notes, conflicts and the reasoning behind each sensor pick.",
+    "evidenceKinds": [
+      "spec",
+      "vendor",
+      "reported",
+      "derived",
+      "assumed"
+    ],
+    "openProblems": [
+      "Per-ISO read noise in electrons (base ISO and above the DCG switch) could not be extracted for any of the three chosen camera sensors: photonstophotos.net's RN_e.htm/PDR.htm charts are JS-rendered and returned no numeric text to this session's WebFetch tool, and several DPReview forum threads that discuss/quote that data returned HTTP 403. Chart/thread URLs are recorded as pointers in each record. Whoever can load photonstophotos.net interactively (or has a DPReview-authenticated fetch path) should fill these in directly rather than via a second-hand search summary.",
+      "The MFT record (OM-1 / E-M1 III) leans on web-search-summarized numbers for its full-well and DCG-switch-ISO figures more than the other two records, for the same reason above. Flagged low-confidence in that record.",
+      "Chip identity is confirmed by primary Sony datasheet + strong community consensus only for the full-frame pick (a7R IV / IMX455), and even there one conflicting \"IMX451\" mention was found and not resolved. APS-C and MFT records explicitly do NOT claim their vendor pixel-level figures (IMX571, IMX294) are the exact chips in the named cameras -- they are same-format Sony sensors used as documented stand-ins, clearly labeled throughout.",
+      "Per-channel (R/G/B) QE curves were not obtained as numbers for any of the three sensors; every vendor/maker source publishes these only as graph images, which this pass could not read (per the task's instruction to say so and move on rather than guess).",
+      "Dark current at realistic in-camera operating temperature is only directly measured (by vendors) for the cooled astro-camera implementations at 0C/-20C; the Tj=60C in-camera estimate for the full-frame record is explicitly a derived extrapolation, not a measurement."
+    ]
+  },
+  "sensors": [
+    {
+      "id": "full-frame-a7r4-imx455",
+      "format": "full-frame",
+      "nominalMm": "36 x 24",
+      "cameraName": "Sony a7R IV (ILCE-7RM4)",
+      "chipIdentity": {
+        "claimed": "Sony IMX455 (AQK consumer color variant)",
+        "ev": "reported",
+        "note": "Sony does not publicly state which camera uses IMX455. The identification is a widely repeated community finding (multiple outlets, and a Sony-Semiconductor datasheet whose pixel count/pitch/diagonal match the a7R IV exactly: 9576x6388 effective pixels, 3.76um pitch, 43.3mm diagonal). One search result surfaced a conflicting teardown label \"IMX451AQL\" for the a7R IV; that discrepancy is unresolved here and flagged for the lead. Where a figure below comes from the Sony IMX455 datasheet or a ZWO/QHY product using that same chip, it describes the silicon family, not a Sony statement about the a7R IV specifically.",
+        "srcs": [
+          {
+            "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+            "loc": "Device Structure table: 9576(H)x6388(V) effective pixels, 3.76um unit cell, 43.3mm diagonal",
+            "accessed": "09/28/2026"
+          },
+          {
+            "src": "https://www.dpreview.com/forums/threads/imx455-datasheet-a7riv-published.4427798/",
+            "loc": "thread title and discussion, \"IMX455 datasheet (A7RIV) published\"",
+            "accessed": "09/28/2026"
+          }
+        ]
+      },
+      "activeArea": {
+        "widthMm": {
+          "v": 35.7,
+          "unit": "mm",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17R_IV",
+          "loc": "infobox, \"Sensor\" row, 35.7 x 23.8mm",
+          "accessed": "09/28/2026"
+        },
+        "heightMm": {
+          "v": 23.8,
+          "unit": "mm",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17R_IV",
+          "loc": "infobox, \"Sensor\" row, 35.7 x 23.8mm",
+          "accessed": "09/28/2026"
+        },
+        "note": "Sony's own IMX455 datasheet gives active-pixel array 9568(H)x6380(V) x 3.76um = 35.96 x 23.99mm, consistent with the nominal 36x24mm full-frame format and with the a7R IV's reported 35.7x23.8mm to within rounding/crop."
+      },
+      "pixelCount": {
+        "effectiveMP": {
+          "v": 61,
+          "unit": "MP",
+          "ev": "spec",
+          "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+          "loc": "Device Structure: \"Number of effective pixels 9576(H) x 6388(V) approx. 61.17 M pixels\"",
+          "accessed": "09/28/2026"
+        },
+        "effectiveH": {
+          "v": 9576,
+          "unit": "px",
+          "ev": "spec",
+          "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+          "loc": "Device Structure, \"Number of effective pixels\"",
+          "accessed": "09/28/2026"
+        },
+        "effectiveV": {
+          "v": 6388,
+          "unit": "px",
+          "ev": "spec",
+          "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+          "loc": "Device Structure, \"Number of effective pixels\"",
+          "accessed": "09/28/2026"
+        }
+      },
+      "pixelPitchUm": {
+        "v": 3.76,
+        "unit": "um",
+        "ev": "spec",
+        "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+        "loc": "Device Structure: \"Unit cell size 3.76um (H) x 3.76um (V)\"",
+        "accessed": "09/28/2026"
+      },
+      "fullWellElectrons": {
+        "inCameraBaseISO": {
+          "v": 37000,
+          "unit": "e-",
+          "ev": "reported",
+          "src": "https://blog.kasson.com/a7riv/sony-a7riv-fwc-pdr-and-input-referred-read-noise/",
+          "loc": "post body: \"the base ISO full well capacity (FWC) of the a7RIV is about 37000 electrons\", from Jim Kasson's photon-transfer-curve analysis of a7R IV raw files (data pipeline shared with/cross-checked against photonstophotos.net)",
+          "accessed": "09/28/2026",
+          "context": "measured in-camera at ISO 100 from raw-file photon transfer analysis; this is the pixel's usable signal swing as the camera actually clips it, not the bare-silicon saturation charge."
+        },
+        "rawChipVendor": {
+          "v": 51400,
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi6200/",
+          "loc": "product page spec list: \"Full Well Capacity 51.4Ke\"",
+          "accessed": "09/28/2026",
+          "context": "ZWO's published full well for the IMX455 chip used raw in the ASI6200MM Pro astrophotography camera (extended-well readout mode), not the in-camera photographic figure above. Different measurement context; both are recorded per the brief's \"record both, don't average\" rule."
+        }
+      },
+      "readNoiseElectrons": {
+        "dcgSwitchISO": {
+          "v": 320,
+          "unit": "ISO",
+          "ev": "reported",
+          "src": "https://blog.kasson.com/a7riv/speculating-on-the-sony-a7riv-photographic-dynamic-range/",
+          "loc": "post body: \"the transition from ISO 250 to ISO 320, at which point the camera switches into high-conversion-gain mode\"",
+          "accessed": "09/28/2026"
+        },
+        "baseISO": null,
+        "aboveDCG": null,
+        "rawChipVendorAllGain": {
+          "v": 0.86,
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi6200/",
+          "loc": "product page spec list: \"Read Noise 0.86e\" (stated \"across all gain settings\" for the current ASI6200 hardware revision)",
+          "accessed": "09/28/2026"
+        },
+        "note": "Per-ISO in-camera read noise in electrons for the a7R IV could not be extracted: photonstophotos.net's RN_e.htm chart (the standard reference, see src) is rendered client-side by JavaScript and returned no numeric text to this session's fetch tool, and the DPReview forum threads that quote it returned HTTP 403. The DCG-switch ISO and base-ISO full well above are solid (Kasson); the electron-noise curve itself is an open item — see research/sensor-sources.md.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "interactive chart, camera \"Sony a7R IV\" — not machine-readable by this session's tools"
+      },
+      "conversionGain": {
+        "note": "Not independently obtained for the a7R IV/IMX455. See the generic.dualConversionGainWorkedExample (Sony a7S, a related but different Sony full-frame DR-Pix sensor) for a fully-numeric illustration of the same LCG/HCG mechanism Sony uses across this sensor family."
+      },
+      "adcBitDepthBits": {
+        "v": 16,
+        "unit": "bit",
+        "ev": "spec",
+        "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+        "loc": "Features: \"Built-in 11-bit/12-bit/14-bit/16-bit A/D converter\"; Basic Drive Mode table, \"Readout mode 0-a\" row lists 16-bit at the slowest/highest-quality full-resolution readout",
+        "accessed": "09/28/2026",
+        "note": "This is the raw sensor ADC. The a7R IV's own raw file is commonly reported as 14-bit (uncompressed) / 12-bit (compressed, high-speed modes); see rawFile below."
+      },
+      "rawFileBitDepth": {
+        "uncompressed": {
+          "v": 14,
+          "unit": "bit",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17R_IV",
+          "loc": "infobox continuous-shooting note \"HI 8fps Uncompressed RAW\"; 14-bit uncompressed is the commonly reported a7R IV raw depth (not itself stated as a bit count on this page — flagged as reported, not spec, pending a first-party Sony citation)",
+          "accessed": "09/28/2026"
+        },
+        "compressed": {
+          "v": 12,
+          "unit": "bit",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17R_IV",
+          "loc": "inferred from \"HI+ 10 fps in Compressed RAW\" mode; Sony compressed-RAW modes on this camera generation are widely reported as 12-bit — not independently verified against a Sony spec page in this pass",
+          "accessed": "09/28/2026"
+        }
+      },
+      "qe": {
+        "peakPercent": {
+          "v": 80,
+          "unit": "%",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi6200/",
+          "loc": "product page spec list: \"QE Peak ... Color version 80%\"",
+          "accessed": "09/28/2026",
+          "note": "Mono (IMX455ALK) version peak QE is stated as 91% on the same page; the a7R IV uses the Bayer-CFA color part (AQK), so 80% is the relevant figure."
+        },
+        "perChannel": {
+          "note": "Not obtained as numbers. Sony/ZWO/QHY publish per-channel (R/G/B) QE only as a graph image on their sites; no text-extractable table was found. Flagged: say-so-and-move-on per task instructions."
+        }
+      },
+      "dynamicRange": {
+        "engineeringNote": "Not obtained in electrons/stops for the a7R IV specifically (see readNoiseElectrons note above — same missing-chart problem). Full well (37,000e, in-camera) is solid; read noise is not, so EDR = log2(FWC/RN) could not be safely computed without inventing the read-noise input.",
+        "photographicNote": "Claff's Photographic Dynamic Range (PDR) methodology, as described by Kasson (who cross-checks photonstophotos): \"full scale divided by the mean signal level that, when referenced to a 1600-pixel-high print, gives a signal-to-noise ratio of 10.\" No a7R IV PDR number in EV was extracted as text.",
+        "src": "https://blog.kasson.com/a7riv/speculating-on-the-sony-a7riv-photographic-dynamic-range/",
+        "loc": "post body, definition of PDR"
+      },
+      "readout": {
+        "electronicFullFrameMs": {
+          "v": 100.3,
+          "unit": "ms",
+          "ev": "reported",
+          "src": "https://horshack-dpreview.github.io/RollingShutter/",
+          "loc": "combined-results table, row \"Sony A7R IV\", \"Photo mode\" column: \"100.30 ms\"",
+          "accessed": "09/28/2026",
+          "method": "Measured with a 500 Hz strobed LED and a raw-file column-timing analysis (horshack-dpreview/RollingShutter project); this is the full-sensor rolling-shutter scan time in the camera's electronic-shutter photo mode."
+        },
+        "mechanicalShutterRangeS": {
+          "v": "1/8000-30",
+          "unit": "s",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B17R_IV",
+          "loc": "infobox, \"Shutter\" row: \"1/8000 s to 30 s, BULB\"",
+          "accessed": "09/28/2026"
+        }
+      },
+      "darkCurrent": {
+        "rawChipVendor0C": {
+          "v": 0.0017,
+          "unit": "e-/s/pix",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi6200/",
+          "loc": "product page spec list: \"Dark Current 0.0017e/s/pix\" (stated at 0C cooled sensor temperature)",
+          "accessed": "09/28/2026"
+        },
+        "derivedAtTj60C": {
+          "v": 1.02,
+          "unit": "e-/s/pix",
+          "ev": "derived",
+          "src": "https://www.zwoastro.com/product/asi6200/",
+          "loc": "derived from the 0C vendor figure using the generic doubling-temperature relation (see generic.darkCurrent), extrapolated to Tj=60C, the junction temperature Sony's own IMX455 datasheet uses as its characteristic-spec reference condition",
+          "accessed": "09/28/2026",
+          "calc": "v(Tj) = v(0C) * 2^((Tj-0)/Tdouble), Tdouble = 6.5C (midpoint of the 5-8C generic range) => 0.0017 * 2^(60/6.5) = 0.0017 * ~601 = ~1.02 e-/s/pix. This is a rough order-of-magnitude estimate, not a measured in-camera figure: an uncooled mirrorless body's actual sensor operating temperature varies with ambient, session length and stabilization/video load.",
+          "inputs": [
+            "zwoASI6200 dark current at 0C",
+            "generic dark-current doubling temperature",
+            "Sony IMX455AQK datasheet Tj=60C reference condition"
+          ]
+        }
+      },
+      "architecture": {
+        "v": "BSI (back-illuminated)",
+        "unit": "",
+        "ev": "spec",
+        "src": "https://www.sony-semicon.com/files/62/pdf/p-13_IMX455AQK_BQK_ALK_Flyer.pdf",
+        "loc": "Features list: \"Back-illuminated type\"",
+        "accessed": "09/28/2026"
+      },
+      "microlensFillFactor": {
+        "v": 0.97,
+        "unit": "fraction",
+        "ev": "assumed",
+        "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+        "loc": "\"the pixel fill factor approaches 100%\" for BSI sensors generally",
+        "accessed": "09/28/2026",
+        "note": "No IMX455-specific fill-factor number is published. Assumed ~95-100% (0.97 used as a representative point value) because BSI removes the front-side metal-routing obstruction that limits FSI fill factor; see generic.fillFactorBSIvsFSI."
+      },
+      "notes": [
+        "Chip identity (a7R IV = IMX455) is a community identification, not a Sony camera-division statement; see chipIdentity above for the one conflicting \"IMX451\" mention found.",
+        "Two different, non-averaged full-well figures are recorded: 37,000e in-camera (Kasson/photon-transfer) and 51,400e for the bare chip in its astro-camera extended-well mode (ZWO). They describe different operating conditions of what is very likely the same silicon.",
+        "Per-ISO read noise in electrons is the main open gap for this sensor; see research/sensor-sources.md."
+      ]
+    },
+    {
+      "id": "apsc-a6x00-family",
+      "format": "APS-C",
+      "nominalMm": "about 23.5 x 15.6",
+      "cameraName": "Sony a6300 / a6400 / a6500 (shared sensor generation)",
+      "chipIdentity": {
+        "claimed": "Sony 24.2MP APS-C Exmor (BSI) CMOS; exact IMX part number not publicly confirmed",
+        "ev": "reported",
+        "note": "Multiple sources agree the a6300, a6400 and a6500 share essentially the same 24.2MP BSI sensor (a6400 pairs it with a newer Bionz X processor). No Sony datasheet naming the exact part was found. The Sony IMX571 (26MP APS-C BSI, used raw in ZWO ASI2600 / QHY268 astro cameras) is NOT claimed to be this part -- it is a different pixel count (26MP vs 24.2MP) -- but is recorded alongside as the best-documented same-format Sony sensor, for pixel-level figures (full well, QE, dark current, ADC) that are not published for the exact a6x00 chip.",
+        "srcs": [
+          {
+            "src": "https://www.dpreview.com/forums/post/57210417",
+            "loc": "forum post, \"SONY A6300 24MP CMOS APS-C sensor with Copper Wiring\"",
+            "accessed": "09/28/2026"
+          },
+          {
+            "src": "https://blog.kasson.com/the-last-word/sony-a6300-read-noise-modeling/",
+            "loc": "post body, sensor/camera modeling discussion",
+            "accessed": "09/28/2026"
+          }
+        ]
+      },
+      "activeArea": {
+        "widthMm": {
+          "v": 23.5,
+          "unit": "mm",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B16400",
+          "loc": "infobox, \"Sensor\" row: \"23.5 x 15.6 mm (APS-C type)\"",
+          "accessed": "09/28/2026"
+        },
+        "heightMm": {
+          "v": 15.6,
+          "unit": "mm",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B16400",
+          "loc": "infobox, \"Sensor\" row",
+          "accessed": "09/28/2026"
+        }
+      },
+      "pixelCount": {
+        "effectiveMP": {
+          "v": 24.2,
+          "unit": "MP",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B16400",
+          "loc": "infobox, \"Effective pixels\" row",
+          "accessed": "09/28/2026"
+        }
+      },
+      "pixelPitchUm": {
+        "v": 3.9,
+        "unit": "um",
+        "ev": "derived",
+        "src": null,
+        "loc": null,
+        "accessed": "09/28/2026",
+        "calc": "sqrt((23.5mm * 15.6mm) / 24.2e6 px), i.e. active-area / effective-pixel-count, assuming a square pixel and the active area and pixel count above => sqrt(366.6mm^2 / 24.2Mpx) = sqrt(15.15 um^2) = 3.89um, rounded to 3.9um.",
+        "inputs": [
+          "apsc.activeArea",
+          "apsc.pixelCount.effectiveMP"
+        ]
+      },
+      "fullWellElectrons": {
+        "inCameraBaseISO": {
+          "v": 45000,
+          "unit": "e-",
+          "ev": "reported",
+          "src": "https://blog.kasson.com/the-last-word/sony-a6300-read-noise-modeling/",
+          "loc": "post body, full-well-capacity discussion for the a6300 (photon-transfer-curve analysis)",
+          "accessed": "09/28/2026",
+          "context": "a6300, in-camera, ISO 100, low-conversion-gain regime; a6400/a6500 are reported to share this sensor generation."
+        },
+        "relatedChipVendorIMX571": {
+          "v": 73000,
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "product page spec list: \"Full Well Capacity 73Ke\"",
+          "accessed": "09/28/2026",
+          "context": "Sony IMX571 (26MP APS-C, NOT confirmed to be the a6x00 part -- see chipIdentity), bare chip in the ASI2600 astro camera."
+        }
+      },
+      "readNoiseElectrons": {
+        "dcgSwitchISO": {
+          "v": 400,
+          "unit": "ISO",
+          "ev": "reported",
+          "src": "https://cuchara.photography/2019/06/iso-invariance-and-the-sony-a6500/",
+          "loc": "post body: \"the charts for the a6300 (and a6400) indicate the dual gain ISO kicks in at ISO 400\"",
+          "accessed": "09/28/2026",
+          "note": "The same post separately measured the a6500's own switch at ISO 400 too, and flags that this differs from an earlier photonstophotos-attributed figure of ISO 320 the author had seen cited elsewhere -- recorded here as the ISO 400 figure; the ISO 320 alternative is noted as an unresolved conflict, not averaged in."
+        },
+        "conversionGainMultiplier": {
+          "v": 4,
+          "unit": "x",
+          "ev": "reported",
+          "src": "https://blog.kasson.com/the-last-word/sony-a6300-read-noise-modeling/",
+          "loc": "post body: \"the a6300 has a conversion gain multiplier of 4, since the change in conversion gain first takes effect at ISO 400\" (ratio of low-ISO to high-ISO analog conversion gain, base ISO 100)",
+          "accessed": "09/28/2026"
+        },
+        "baseISO": null,
+        "aboveDCG": null,
+        "relatedChipVendorIMX571": {
+          "v": "1.0-3.3",
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "product page spec list: \"Read Noise 1.0e-3.3e\" across the chip's gain settings (not ISO-referenced; astro-camera context, IMX571)",
+          "accessed": "09/28/2026"
+        },
+        "note": "As with the full-frame record, in-camera per-ISO read noise in electrons for the a6300/a6400/a6500 could not be extracted from photonstophotos.net's JS-rendered chart or from blocked DPReview forum pages. Open item.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "interactive chart, camera \"Sony a6300\"/\"a6400\"/\"a6500\" -- not machine-readable by this session's tools"
+      },
+      "adcBitDepthBits": {
+        "rawUncompressed": {
+          "v": 14,
+          "unit": "bit",
+          "ev": "reported",
+          "src": "https://helpguide.sony.net/ilc/1810/v1/en/contents/TP0002279217.html",
+          "loc": "Sony a6400 Help Guide, \"File Format (still image)\" page: RAW images are recorded at 14 bits per pixel, dropping to 12-bit in certain (e.g. continuous burst / silent shutter) modes",
+          "accessed": "09/28/2026"
+        },
+        "rawCompressedModes": {
+          "v": 12,
+          "unit": "bit",
+          "ev": "reported",
+          "src": "https://helpguide.sony.net/ilc/1810/v1/en/contents/TP0002279217.html",
+          "loc": "same Help Guide page, note on modes with reduced bit depth",
+          "accessed": "09/28/2026"
+        },
+        "relatedChipVendorIMX571": {
+          "v": 16,
+          "unit": "bit",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "product page spec list: \"ADC 16bit\" for the IMX571 chip in its astro-camera implementation (not the a6x00 in-camera pipeline)",
+          "accessed": "09/28/2026"
+        }
+      },
+      "qe": {
+        "relatedChipPeakPercentIMX571": {
+          "v": 80,
+          "unit": "%",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "product page spec list: \"QE Peak ... 80%\" (color/Bayer IMX571BQR variant; mono IMX571 variant is stated as 91% on the same page)",
+          "accessed": "09/28/2026",
+          "note": "Not the confirmed a6x00 chip -- see chipIdentity."
+        },
+        "perChannel": {
+          "note": "Not obtained; published only as a graph image where available. Say-so-and-move-on per task instructions."
+        }
+      },
+      "dynamicRange": {
+        "dxoColorDepthBits": {
+          "v": 24.1,
+          "unit": "bit",
+          "ev": "reported",
+          "src": "https://www.dxomark.com/sony-a6400-sensor-review/",
+          "loc": "\"Color Depth (Portrait)\" score, \"24.1 bits\" at base ISO",
+          "accessed": "09/28/2026",
+          "camera": "a6400 specifically"
+        },
+        "dxoDynamicRangeEV": {
+          "v": 13.6,
+          "unit": "EV",
+          "ev": "reported",
+          "src": "https://www.dxomark.com/sony-a6400-sensor-review/",
+          "loc": "\"Dynamic Range (Landscape)\" score, quoted at \"13.6 EV at base (ISO 100)\" in one part of the page and \"13.7 EV at 100 ISO\" in another (DxOMark's own page is internally inconsistent by 0.1 EV; both recorded, not averaged)",
+          "accessed": "09/28/2026",
+          "conflict": "13.6 EV vs 13.7 EV, same page, same metric"
+        },
+        "dxoLowLightISO": {
+          "v": 1431,
+          "unit": "ISO",
+          "ev": "reported",
+          "src": "https://www.dxomark.com/sony-a6400-sensor-review/",
+          "loc": "\"Low-Light ISO (Sports)\" score: \"1431 ISO\"",
+          "accessed": "09/28/2026"
+        },
+        "methodologyNote": "DxOMark's Dynamic Range (Print) metric uses its own normalization and is a different quantity from photonstophotos' EDR or PDR; do not treat these as directly comparable without conversion."
+      },
+      "readout": {
+        "electronicFullFrameMs": {
+          "v": 46.13,
+          "unit": "ms",
+          "ev": "reported",
+          "src": "https://horshack-dpreview.github.io/RollingShutter/",
+          "loc": "combined-results table, row \"Sony A6400\", \"Photo mode\" column: \"46.13 ms\"",
+          "accessed": "09/28/2026",
+          "method": "horshack-dpreview/RollingShutter LED-strobe measurement, full-sensor electronic-shutter photo mode."
+        },
+        "mechanicalShutterRangeS": {
+          "v": "1/4000-30",
+          "unit": "s",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/Sony_%CE%B16400",
+          "loc": "infobox, \"Shutter\" row: \"1/4000 s to 30 s\"",
+          "accessed": "09/28/2026"
+        }
+      },
+      "darkCurrent": {
+        "relatedChipVendorIMX571_0C": {
+          "v": 0.0022,
+          "unit": "e-/s/pix",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "product page spec list: \"Dark Current 0.0022e-/s/pix\" at 0C",
+          "accessed": "09/28/2026"
+        },
+        "relatedChipVendorIMX571_neg20C": {
+          "v": 0.00012,
+          "unit": "e-/s/pix",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "product page spec list: dark current \"0.00012e-/s/pix\" at -20C",
+          "accessed": "09/28/2026"
+        },
+        "impliedDoublingTempC": {
+          "v": 4.8,
+          "unit": "C",
+          "ev": "derived",
+          "src": "https://www.zwoastro.com/product/new-asi2600mm-mc-pro/",
+          "loc": "derived from the two IMX571 vendor dark-current figures above",
+          "accessed": "09/28/2026",
+          "calc": "ratio = 0.0022/0.00012 = 18.33; deltaT = 0 - (-20) = 20C; doublingTemp = deltaT / log2(ratio) = 20 / log2(18.33) = 20 / 4.196 = 4.77C, rounded to 4.8C.",
+          "inputs": [
+            "apsc.darkCurrent.relatedChipVendorIMX571_0C",
+            "apsc.darkCurrent.relatedChipVendorIMX571_neg20C"
+          ],
+          "note": "Close to the commonly cited generic 5-8C doubling range (see generic.darkCurrent) -- a useful cross-check even though this chip is not confirmed to be the a6x00 part."
+        }
+      },
+      "architecture": {
+        "v": "BSI (back-illuminated)",
+        "unit": "",
+        "ev": "reported",
+        "src": "https://www.bhphotovideo.com/c/product/1453768-REG/sony_ilce_6400_b_alpha_a6400_mirrorless_digital.html",
+        "loc": "product listing describing the a6400's \"24.2 effective megapixel APS-C Exmor (back-illuminated) CMOS sensor\"",
+        "accessed": "09/28/2026"
+      },
+      "microlensFillFactor": {
+        "v": 0.97,
+        "unit": "fraction",
+        "ev": "assumed",
+        "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+        "loc": "\"the pixel fill factor approaches 100%\" for BSI sensors generally",
+        "accessed": "09/28/2026",
+        "note": "Same reasoning as the full-frame record; no a6x00-specific number is published."
+      },
+      "notes": [
+        "Chip identity for the a6x00 family sensor is not confirmed to a specific Sony part number; the IMX571 figures recorded here are a same-format (APS-C, Bayer, BSI, Sony) stand-in with excellent public datasheet-grade documentation, clearly not claimed to be the exact part.",
+        "DCG-switch ISO has a recorded conflict (400 vs an alternate 320 seen cited elsewhere) -- both noted, not averaged.",
+        "Per-ISO read noise in electrons is an open gap, same as the full-frame record."
+      ]
+    },
+    {
+      "id": "mft-om1-and-em1iii",
+      "format": "Micro Four Thirds",
+      "nominalMm": "17.3 x 13",
+      "cameraName": "OM System OM-1 (primary); Olympus OM-D E-M1 Mark III (full-well cross-reference)",
+      "chipIdentity": {
+        "claimed": "20.4MP stacked BSI \"Live MOS\" sensor (OM-1); supplier/part number not publicly disclosed by OM Digital Solutions",
+        "ev": "reported",
+        "note": "OM Digital Solutions/OM System has not named the OM-1 sensor's silicon supplier or part number in public materials found here. Sony IMX294 (used raw in ZWO ASI294, same 4/3\" sensor format) is recorded alongside for pixel-level figures, explicitly NOT claimed to be the OM-1's chip -- it is a different (non-stacked) design and a much lower pixel count in its native mode.",
+        "srcs": [
+          {
+            "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+            "loc": "infobox / body: \"Stacked BSI CMOS (branded Live MOS)\"",
+            "accessed": "09/28/2026"
+          }
+        ]
+      },
+      "activeArea": {
+        "widthMm": {
+          "v": 17.3,
+          "unit": "mm",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+          "loc": "infobox, \"Sensor\" row: \"17.3x13mm (Four Thirds type)\"",
+          "accessed": "09/28/2026"
+        },
+        "heightMm": {
+          "v": 13,
+          "unit": "mm",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+          "loc": "infobox, \"Sensor\" row",
+          "accessed": "09/28/2026"
+        }
+      },
+      "pixelCount": {
+        "effectiveMP": {
+          "v": 20.4,
+          "unit": "MP",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+          "loc": "infobox, \"Effective pixels\" row: \"5184x3888 (20.4 megapixels)\"",
+          "accessed": "09/28/2026"
+        },
+        "effectiveH": {
+          "v": 5184,
+          "unit": "px",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+          "loc": "infobox, \"Effective pixels\" row",
+          "accessed": "09/28/2026"
+        },
+        "effectiveV": {
+          "v": 3888,
+          "unit": "px",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+          "loc": "infobox, \"Effective pixels\" row",
+          "accessed": "09/28/2026"
+        }
+      },
+      "pixelPitchUm": {
+        "v": 3.33,
+        "unit": "um",
+        "ev": "derived",
+        "src": null,
+        "loc": null,
+        "accessed": "09/28/2026",
+        "calc": "sqrt((17.3mm * 13.0mm) / 20.4e6 px) = sqrt(224.9mm^2 / 20.4Mpx) = sqrt(11.02um^2) = 3.32um, rounded to 3.33um.",
+        "inputs": [
+          "mft.activeArea",
+          "mft.pixelCount.effectiveMP"
+        ]
+      },
+      "fullWellElectrons": {
+        "inCameraBaseISO_EM1III": {
+          "v": 21320,
+          "unit": "e-",
+          "ev": "reported",
+          "src": "https://www.dpreview.com/forums/threads/olympus-om-d-e-m1-mark-iii-sensor-measurements-at-photonstophotos.4471289/",
+          "loc": "DPReview forum thread discussing photonstophotos.net's E-M1 III sensor measurements page; figure obtained via this session's web-search tool summarizing that discussion, NOT by directly loading photonstophotos.net or the forum page (both returned no machine-readable text / HTTP 403 to this session). Flagged low-confidence pending direct verification by the lead or another research pass.",
+          "accessed": "09/28/2026",
+          "context": "Olympus OM-D E-M1 Mark III, in-camera, base ISO 200.",
+          "confidence": "low -- not independently re-verified against the primary chart"
+        },
+        "om1RelationToEM1III": {
+          "note": "A DPReview forum discussion of photonstophotos' OM-1 measurements states the OM-1's dynamic-range curve is \"exactly the same as on the E-M1III\" except that the OM-1 gains a dual-conversion-gain step around ISO 1000 that the E-M1 III does not have in the same place. On that basis the E-M1 III full-well figure above is used as a stand-in for the OM-1's base-ISO full well, not independently confirmed for the OM-1 itself.",
+          "src": "https://www.43rumors.com/om-1-dynamic-range-results-by-bill-claff/",
+          "loc": "43rumors.com summary of Bill Claff's OM-1 results; same low-confidence caveat as above (page fetch returned no numeric content, summary via search)",
+          "ev": "reported"
+        },
+        "relatedChipVendorIMX294mono": {
+          "v": 14400,
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MM Pro (mono, 2.3um Bin1 native mode): \"Full well capacity 14.4 Ke\"",
+          "accessed": "09/28/2026",
+          "context": "Sony IMX294, NOT confirmed to be the OM-1/E-M1 III chip -- different, non-stacked Sony part, recorded for its excellent public documentation of a same-format sensor."
+        },
+        "relatedChipVendorIMX294color": {
+          "v": 63700,
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MC Pro (color, 4.63um quad-Bayer-binned mode): \"Full well capacity 63.7 Ke\"",
+          "accessed": "09/28/2026"
+        }
+      },
+      "readNoiseElectrons": {
+        "dcgSwitchISO_OM1": {
+          "v": 1000,
+          "unit": "ISO",
+          "ev": "reported",
+          "src": "https://www.dpreview.com/forums/threads/olympus-system-om-1-sensor-measurements-at-photonstophotos.4633822/",
+          "loc": "DPReview forum thread body (via this session's web-search summary, not a direct page load -- see confidence note): \"the OM-1 sensor shows some advantage due to the dual-gain at ISO1000\"",
+          "accessed": "09/28/2026",
+          "confidence": "low -- not independently re-verified against the primary chart"
+        },
+        "baseISO": null,
+        "aboveDCG": null,
+        "relatedChipVendorIMX294mono": {
+          "v": "1.3-2.6",
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MM Pro: \"Read noise 1.3-2.6e\" across gain settings",
+          "accessed": "09/28/2026"
+        },
+        "relatedChipVendorIMX294color": {
+          "v": 1.2,
+          "unit": "e-",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MC Pro: \"Read noise 1.2e\"",
+          "accessed": "09/28/2026"
+        },
+        "note": "Same open gap as the other two formats: no in-camera per-ISO read noise in electrons for OM-1 or E-M1 III could be extracted from accessible text sources.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "interactive chart, cameras \"OM System OM-1\" / \"Olympus E-M1 III\" -- not machine-readable by this session's tools"
+      },
+      "adcBitDepthBits": {
+        "om1RawFile": {
+          "v": 12,
+          "unit": "bit",
+          "ev": "reported",
+          "src": "https://mirrorlesscomparison.com/om-system/om-1-vs-olympus-omd-em1-iii/",
+          "loc": "site summary of OM-1 file formats: \"JPEG, 12-bit lossless compressed RAW (.ORF), or RAW + JPEG\"",
+          "accessed": "09/28/2026"
+        },
+        "relatedChipVendorIMX294": {
+          "v": 14,
+          "unit": "bit",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list: \"ADC bit depth 14 bit\" (both ASI294 variants)",
+          "accessed": "09/28/2026"
+        }
+      },
+      "qe": {
+        "relatedChipPeakPercentIMX294mono": {
+          "v": 90,
+          "unit": "%",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MM Pro: \"QE peak =90%\"",
+          "accessed": "09/28/2026"
+        },
+        "relatedChipPeakPercentIMX294color": {
+          "v": 75,
+          "unit": "%",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MC Pro: \"QE peak 75%\"",
+          "accessed": "09/28/2026"
+        },
+        "perChannel": {
+          "note": "Not obtained; graph-only where published. Say-so-and-move-on per task instructions."
+        }
+      },
+      "dynamicRange": {
+        "note": "No numeric EV/stops figure for OM-1 or E-M1 III dynamic range was extracted from accessible text sources (photonstophotos chart is JS-rendered; DxOMark has not tested either camera in the pages checked). The qualitative photonstophotos-derived claim (\"OM-1 matches E-M1 III except from about ISO 1000 up\") is recorded above under fullWellElectrons.om1RelationToEM1III with its confidence caveat."
+      },
+      "readout": {
+        "electronicFullFrameMs": {
+          "v": 7.98,
+          "unit": "ms",
+          "ev": "reported",
+          "src": "https://horshack-dpreview.github.io/RollingShutter/",
+          "loc": "combined-results table, row \"OMS OM-1\", \"Photo mode\" column: \"7.98 ms\"",
+          "accessed": "09/28/2026",
+          "method": "horshack-dpreview/RollingShutter LED-strobe measurement.",
+          "crossCheck": "DPReview's own OM-1 review independently states \"We've measured the rate at around 1/125th seconds\" (=8.0ms), matching this figure closely."
+        },
+        "readoutCrossCheck": {
+          "v": 8,
+          "unit": "ms",
+          "ev": "reported",
+          "src": "https://www.dpreview.com/reviews/1501374854/om-system-om-1-review/2",
+          "loc": "review page 2, \"Rolling shutter\" discussion: \"We've measured the rate at around 1/125th seconds, which is twice as fast as that of its predecessor\" (1/125s = 8.0ms, computed)",
+          "accessed": "09/28/2026"
+        },
+        "mechanicalShutterRangeS": {
+          "v": "1/8000-60",
+          "unit": "s",
+          "ev": "reported",
+          "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+          "loc": "infobox, \"Shutter\" row: \"1/8000s-60s\"",
+          "accessed": "09/28/2026"
+        },
+        "electronicShutterShortestS": {
+          "v": "1/8000",
+          "unit": "s",
+          "ev": "reported",
+          "src": "https://www.dpreview.com/reviews/1501374854/om-system-om-1-review/2",
+          "loc": "review page 2: \"Shortest exposure time: 1/8000 sec\" (electronic)",
+          "accessed": "09/28/2026",
+          "note": "Several other OM-1 discussions elsewhere commonly cite a 1/32000s electronic-shutter top speed; that number was not confirmed against an accessible primary source in this pass and is not recorded as a value here -- flagged for the lead."
+        }
+      },
+      "darkCurrent": {
+        "relatedChipVendorIMX294mono_neg20C": {
+          "v": 0.0022,
+          "unit": "e-/s/pix",
+          "ev": "vendor",
+          "src": "https://www.zwoastro.com/product/asi294/",
+          "loc": "product page spec list, ASI294MM Pro: \"Dark Current 0.0022e/s/pix\" at -20C",
+          "accessed": "09/28/2026"
+        }
+      },
+      "architecture": {
+        "v": "stacked BSI (\"Live MOS\")",
+        "unit": "",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/OM_System_OM-1",
+        "loc": "infobox/body: \"Stacked BSI CMOS (branded Live MOS)\"",
+        "accessed": "09/28/2026"
+      },
+      "microlensFillFactor": {
+        "v": 0.97,
+        "unit": "fraction",
+        "ev": "assumed",
+        "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+        "loc": "\"the pixel fill factor approaches 100%\" for BSI sensors generally",
+        "accessed": "09/28/2026",
+        "note": "Same reasoning as the other two records; no OM-1/E-M1 III-specific number is published. The OM-1's \"quad-pixel AF\" design (20 million microlenses over 80 million photodiodes per DPReview) may complicate a simple fill-factor figure -- see notes."
+      },
+      "notes": [
+        "This record leans more heavily on web-search-summarized (not directly page-verified) figures than the other two formats, because the two most relevant DPReview forum threads (E-M1 III and OM-1 photonstophotos-measurement discussions) both returned HTTP 403 to this session's fetch tool. The full-well (21,320e) and DCG-switch-ISO (1000) figures are flagged low-confidence for that reason and should be re-verified directly against photonstophotos.net by whoever can load its interactive charts.",
+        "DPReview's OM-1 review notes a \"20MP quad-pixel AF Stacked CMOS sensor\" with \"20 million microlenses\" over \"80 million individual photodiodes\" -- i.e. each microlens sits over a 2x2 group of four photodiodes used for phase-detect AF as well as imaging. This is architecturally different from a conventional one-microlens-per-pixel BSI sensor and may be worth the engine team's attention when modeling fill factor/microlens optics for this format.",
+        "No confirmed silicon supplier/part number for the OM-1 sensor was found in this pass."
+      ]
+    }
+  ],
+  "generic": {
+    "prnu": {
+      "typicalPercent": {
+        "v": 1.5,
+        "unit": "% RMS",
+        "ev": "reported",
+        "src": "https://www.onsemi.com/pdf/datasheet/noii4sm6600a-d.pdf",
+        "loc": "onsemi NOII4SM6600A datasheet, PRNU spec row (one named commercial CMOS sensor, cited as a representative example, not a universal constant)",
+        "accessed": "09/28/2026",
+        "note": "PRNU varies by sensor design; this is one concretely cited data point in the commonly reported ~1-2% RMS range for consumer/industrial CMOS sensors. No PRNU figure specific to any of the three chosen camera sensors was found."
+      }
+    },
+    "darkCurrent": {
+      "doublingTemperatureC": {
+        "v": 6.5,
+        "unit": "C",
+        "ev": "reported",
+        "src": "https://www.teledynevisionsolutions.com/learn/learning-center/imaging-fundamentals/dark-current/",
+        "loc": "Teledyne Vision Solutions \"Dark Current\" learning-center page: dark current \"effects halved for every 6-7C of cooling\" (equivalently, doubles every 6-7C); other sources place the process-dependent range at 5-10C",
+        "accessed": "09/28/2026",
+        "note": "A self-consistent check against one of this project's own sources: the IMX571 vendor dark-current figures recorded under apsc.darkCurrent (0.0022 e-/s/pix at 0C, 0.00012 e-/s/pix at -20C) imply a doubling temperature of ~4.8C for that specific chip -- within the commonly cited range, on the fast-doubling end of it."
+      },
+      "typicalRoomTempExample": {
+        "v": 17,
+        "unit": "e-/pix/s",
+        "ev": "reported",
+        "src": null,
+        "loc": "a consumer-grade CMOS sensor (CIS115) measured at room temperature, per a PDXScholar/academic dark-current-measurement paper surfaced by this session's web-search tool",
+        "accessed": "09/28/2026",
+        "note": "Not independently re-verified by directly loading the paper (its PDF could not be rendered to text by this session's tools -- poppler/pdftoppm unavailable for that file size). Recorded as reported with reduced confidence; flagged for re-verification. This is much higher than the cooled-astro-camera figures recorded per-sensor above (those are measured at 0C/-20C in a cooled housing, not at an uncooled camera's room-temperature operating point) so the two should not be directly compared.",
+        "confidence": "low -- not independently re-verified"
+      }
+    },
+    "isoDefinitions": {
+      "saturationBased": {
+        "v": 78,
+        "unit": "constant",
+        "ev": "spec",
+        "src": "https://en.wikipedia.org/wiki/Film_speed",
+        "loc": "\"Digital still cameras\" section: \"The factor 78 is chosen such that exposure settings based on a standard light meter and an 18-percent reflective surface will result in an image with a grey level of 18%/sqrt(2) = 12.7% of saturation.\" (summarizing ISO 12232's saturation-based speed definition)",
+        "accessed": "09/28/2026",
+        "standardSrc": "https://www.iso.org/standard/73758.html",
+        "standardLoc": "ISO 12232:2019, \"Photography — Digital still cameras — Determination of exposure index, ISO speed ratings, standard output sensitivity, and recommended exposure index\" (title page/scope only; full text is paywalled by ISO and was not read in this pass)"
+      },
+      "standardOutputSensitivitySOS": {
+        "v": 0.461,
+        "unit": "fraction of full scale (18% gray)",
+        "ev": "spec",
+        "src": "https://en.wikipedia.org/wiki/Film_speed",
+        "loc": "\"Digital still cameras\" section, SOS definition; also separately summarized by a search result as \"SOS specifies the focal plane exposure which will produce an output of 0.461 of full scale for an 18% average reflectance mid-gray subject\" -- the Wikipedia page instead frames it via \"118 in 8-bit pixels ... 18 percent of saturation,\" which is the same definition (118/256 = 0.461) expressed differently",
+        "accessed": "09/28/2026",
+        "note": "Two equivalent phrasings of the same ISO 12232 SOS constant were found in different sources; recorded together rather than picking one arbitrarily."
+      },
+      "recommendedExposureIndexREI": {
+        "note": "\"REI is the only technique available under the standard for output formats that are not in the sRGB color space\" and lets a manufacturer \"specify a camera model's EI choices arbitrarily\" based on its own judgment of a well-exposed image -- i.e. REI carries no fixed formula, unlike saturation-based speed or SOS.",
+        "src": "https://en.wikipedia.org/wiki/Film_speed",
+        "loc": "\"Digital still cameras\" section, REI paragraph",
+        "ev": "spec"
+      }
+    },
+    "isoInvarianceMeasurement": {
+      "procedure": "Shoot the same scene twice at the same aperture and shutter speed: once at a high ISO (correctly exposed in-camera), once at a low ISO (deliberately underexposed by the same number of stops the ISO was raised). Push the low-ISO raw file's exposure in post-processing by that same stop count so both frames match in brightness, then compare shadow noise and detail. A sensor is \"ISO-invariant\" over a given range when the two results are visually indistinguishable -- i.e. raising in-camera analog gain (ISO) buys nothing over digital exposure push once the signal is past the sensor's DCG-switch/read-noise floor.",
+      "src": "https://expertphotography.com/iso-invariance",
+      "loc": "article body, numbered test procedure (\"take a picture with ISO 100... bump up your ISO to 800... bump up the exposure to match\")",
+      "ev": "reported"
+    },
+    "fillFactorBSIvsFSI": {
+      "bsi": {
+        "v": "approaches 100%",
+        "unit": "fraction",
+        "ev": "reported",
+        "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+        "loc": "\"the pixel fill factor approaches 100%\"",
+        "accessed": "09/28/2026"
+      },
+      "fsi": {
+        "v": "50-60",
+        "unit": "%",
+        "ev": "reported",
+        "src": "https://www.tucsen.com/learning/demystifying-specifications-sensor-model/",
+        "loc": "search-summarized from a related highspeed-camera vendor article (phantomhighspeed.com, blocked from direct fetch by this session -- HTTP 403): \"a typical FSI sensor has a fill factor between 50 and 60%, partially compensated for by a micro-lens\"",
+        "accessed": "09/28/2026",
+        "confidence": "medium -- the BSI figure was directly quoted from a page this session loaded; the FSI 50-60% figure is from a search-engine summary of a page this session could not itself load"
+      }
+    },
+    "dualConversionGainWorkedExample": {
+      "camera": "Sony a7S (original, 2014) -- a different, older full-frame Sony sensor than any of the three records above; included only as a fully-numeric, directly-sourced illustration of how Sony's LCG/HCG dual-conversion-gain mechanism works, since equivalent numbers for the three chosen sensors were not extractable (see each record's readNoiseElectrons.note).",
+      "lcgRangeISO": {
+        "v": "125-1600",
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "\"The normal conversion gain range is from ISO 125 up to and including ISO 1600\"",
+        "accessed": "09/28/2026"
+      },
+      "hcgRangeISO": {
+        "v": "2000-25600",
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "\"The second conversion gain range is from ISO 2000 up to and including ISO 25600\"",
+        "accessed": "09/28/2026"
+      },
+      "conversionGainRatio": {
+        "v": 16,
+        "unit": "x",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "page body: HCG conversion gain is stated as 16x the LCG conversion gain (LCG gain = 1, HCG gain = 16)",
+        "accessed": "09/28/2026"
+      },
+      "pixelInputNoiseElectrons": {
+        "v": 0.92,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "\"The input noise at the pixel is 0.920e-\"",
+        "accessed": "09/28/2026"
+      },
+      "conversionNoiseElectrons": {
+        "v": 3.441,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "\"the conversion noise at the pixel is 3.441e-\"",
+        "accessed": "09/28/2026"
+      },
+      "lcgPixelOutputNoiseElectrons": {
+        "v": 3.562,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "page body, LCG \"Pixel output noise: 3.562e-\"",
+        "accessed": "09/28/2026"
+      },
+      "hcgPixelOutputNoiseElectrons": {
+        "v": 15.117,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "page body, HCG \"Pixel output noise: 15.117e-\"",
+        "accessed": "09/28/2026",
+        "note": "This is pixel-referred (post-conversion-gain) noise, not input-referred; signal in HCG is 16x LCG but this output noise is a little under 4x LCG's, which is why input-referred (electron-equivalent) noise drops sharply at the HCG switch even though this raw number rises."
+      },
+      "outputNoiseFormula": {
+        "v": "output_noise = sqrt((input_noise * conversion_gain)^2 + conversion_noise^2)",
+        "unit": "formula",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/GeneralTopics/Sensors_&_Raw/Sony_A7S_DR-Pix_Read_Noise.htm",
+        "loc": "page body, stated model formula",
+        "accessed": "09/28/2026"
+      }
+    }
+  }
+}

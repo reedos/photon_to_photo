@@ -1,0 +1,304 @@
+/* Photon to Photo-specific rules that do not belong in the ported base.css (src/styles/base.css already carries
+   everything shared with The Intelligence Factory). New elements here still sit inside that family (design/LOOK.md,
+   "One signature style"): square hairline cards, mono uppercase captions, amber only on chrome. */
+
+.note { margin: 0; color: var(--faint); font-size: 12.5px; }
+
+/* ---------- the level strip: level 1 is the product, levels 2-4 its deep dives (docs/PANE.md) ---------- */
+.steps { grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr)); }
+.step .tag { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-left: auto; padding-left: 8px; white-space: nowrap; }
+.step.deep .t { font-size: 17px; color: var(--muted); }
+.step.deep[aria-current="step"] .t, .step.deep:hover .t { color: var(--ink); }
+.step .meta .sub { overflow: hidden; text-overflow: ellipsis; }
+.step .t-short { display: none; }
+
+/* ---------- scenario: body and lens as two groups that fit a phone ---------- */
+.sc-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sc-kit { grid-column: 1 / -1; }
+.sc-kit-row { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: end; }
+.sc-sub { display: grid; gap: 12px; min-width: 0; }
+.sc-grow { flex: 1 1 320px; }
+.sc-seg.sc-lens { flex-wrap: nowrap; }
+.sc-seg.sc-lens button { flex: 1 1 0; min-width: 0; }
+#sc-body button { min-width: 112px; }
+.sc-format .sc-seg { max-width: 720px; }
+@media (max-width: 1000px) { .sc-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .sc-controls { grid-template-columns: minmax(0, 1fr); }
+  .sc-kit-row { display: grid; grid-template-columns: minmax(0, 1fr); }
+  #sc-body button { min-width: 0; }
+  .sc-seg.sc-lens button { padding-inline: 4px; }
+}
+
+/* ---------- the view's chrome: one column top right, nothing on top of anything ---------- */
+.hud.tr { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+.hud.tr > * { pointer-events: auto; }
+.hud.tr > .hint { pointer-events: none; }
+.hud-row { display: flex; gap: 8px; align-items: stretch; }
+.hud-slot { display: contents; }
+.hud-slot .mode button { min-height: 40px; }
+.layer-chip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px;
+  font: 600 12px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: rgba(0,0,0,.72);
+  border: 1px solid var(--line-2); backdrop-filter: blur(6px); }
+.layer-chip i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--c); }
+.layer-chip[aria-pressed="true"] { color: var(--ink); }
+.layer-chip[aria-pressed="true"] i { background: var(--c); box-shadow: 0 0 8px var(--c); }
+.layer-chip:hover { border-color: var(--ink); }
+.layer-chip:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.hud-btns .btn { min-height: 38px; padding: 0 14px; background: rgba(0,0,0,.72); backdrop-filter: blur(6px); font-size: 11px; }
+.hud-btns .btn:hover { background: var(--ink); color: #000; }
+.hud-btns-phone:empty { display: none; }
+
+/* a piece's own small controls over the 3D view (pieces/types.ts PieceContext.overlay) */
+.piece-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.piece-overlay > * { pointer-events: auto; }
+.hud-label { z-index: 3; }
+
+/* ---------- loading and empty states ---------- */
+.veil { z-index: 6; }
+.veil-in { display: grid; gap: 14px; justify-items: center; }
+.veil-bar { display: block; width: 180px; height: 2px; background: var(--line); overflow: hidden; }
+.veil-bar b { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s ease; }
+.veil.err { color: var(--vendor); pointer-events: auto; }
+.veil.err .veil-bar { display: none; }
+.veil-in > span { display: block; max-width: 32ch; padding: 0 16px; text-align: center; line-height: 1.5; }
+.veil-reload { display: none; }
+.veil.err .veil-reload { display: inline-flex; min-height: 40px; padding: 0 18px; font-size: 11px; }
+.pins.held { visibility: hidden; }
+
+/* ---------- pins: 22 px to see, 44 px to hit; labels placed so none overlap ---------- */
+.pin { width: 22px; height: 22px; transform: translate(-11px, -11px); }
+.pin::before { content: ""; position: absolute; inset: -11px; }
+/* a small dark backing, like the teach tags, so a label stays legible over the white rays or the barrel (R2-03) */
+.pin .lbl { position: absolute; top: 50%; left: 25px; transform: translateY(calc(-50% + var(--ly, 0px))); pointer-events: none; padding: 4px 5px;
+  background: rgba(11,16,21,.8); text-shadow: none; }
+.pin.at-left .lbl { left: auto; right: 25px; }
+.pin.at-above .lbl { top: auto; bottom: 28px; left: 50%; transform: translateX(-50%); }
+.pin.at-below .lbl { top: 28px; left: 50%; transform: translateX(-50%); }
+.pin.no-lbl .lbl { display: none; }
+/* a long name that fits nowhere on one line wraps to two at a space */
+.pin.two-line .lbl { white-space: normal; width: calc(var(--lw) + 10px); box-sizing: border-box; }
+.pin.dim { opacity: .32; }
+.pin.dim .lbl { display: none; }
+.pin .num { font-size: 11px; white-space: nowrap; }
+.pin.merged { width: auto; transform: translate(-50%, -11px); }
+.pin.merged .num { width: auto; min-width: 22px; padding: 0 7px; border-radius: 11px; letter-spacing: .02em; }
+/* the first-visit marks own the view for their few seconds (R1-09) */
+.pins .pin { transition: opacity .3s ease; }
+body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
+
+/* frames over the scissored inset viewports (pieces/types.ts Inset): the square, hairline card language */
+.inset-frame { position: absolute; border: 1px solid var(--line-2); pointer-events: none; z-index: 3; }
+.inset-frame::after { content: attr(data-label); position: absolute; left: 8px; top: 7px; font: 500 11px/1 var(--mono);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-shadow: 0 1px 6px #000; }
+
+/* ---------- the final image, docked live in the view (UI-05) ----------
+   On a wide screen it sits in the left rail under the exposure panel, off the subject (R1-02); on a phone it is a small
+   card in the view's lower right, and the camera is framed above it. */
+.hud.rail { left: var(--gutter); top: 136px; width: 312px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 4; }
+.hud.rail > * { pointer-events: auto; }
+.hud.rail:not(:has(> :not([hidden]))) { display: none; }
+.hud.br { flex-direction: column; align-items: flex-end; flex-wrap: nowrap; }
+.fi-dock { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 178px; background: rgba(11,16,21,.92); border: 1px solid var(--line-2); }
+.fi-dock[hidden] { display: none !important; }
+.fi-dock-img { position: relative; display: block; }
+.view .fi-dock canvas { position: static; inset: auto; display: block; width: 176px; height: 117px; background: #000; }
+.fi-dock-txt { display: grid; gap: 4px; padding: 6px 8px 7px; border-top: 1px solid var(--line); min-width: 0; }
+.fi-dock-k { display: none; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.fi-dock-cap { display: block; font: 500 11px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi-dock-cap { text-transform: none; letter-spacing: .04em; }
+.fi-dock-go { display: none; font: 400 11px/1.35 var(--mono); color: var(--faint); }
+.fi-dock-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 8px; text-align: center; font: 500 10.5px/1.35 var(--mono);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink); background: rgba(0,0,0,.45); }
+.fi-dock-empty[hidden] { display: none; }
+.fi-dock:hover { border-color: var(--ink); }
+.fi-dock:hover .fi-dock-cap { color: var(--ink); }
+.fi-dock:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.fi-dock.rendering canvas { opacity: .5; transition: opacity .18s; }
+.fi-dock.rendering .fi-dock-k::after { content: " · rendering"; color: var(--faint); }
+/* in the rail: a row, the thumbnail beside its caption */
+.hud.rail .fi-dock { width: 100%; display: grid; grid-template-columns: 150px minmax(0, 1fr); background: rgba(11,16,21,.97); }
+.hud.rail .fi-dock canvas { width: 150px; height: 100px; }
+.hud.rail .fi-dock-txt { border-top: 0; border-left: 1px solid var(--line); align-content: center; padding: 10px 12px; gap: 7px; }
+.hud.rail .fi-dock-k, .hud.rail .fi-dock-go { display: block; }
+.hud.rail .fi-dock-cap { color: var(--ink); }
+
+/* ---------- the final-image section: shown at 1:1, the scale first (UI-25) ---------- */
+#finalimg-canvas { width: 100%; height: 100%; image-rendering: auto; }
+.finalimg-card { grid-template-columns: minmax(0, 600px) minmax(0, 380px); max-width: 1000px; }
+.finalimg-empty { color: var(--ink); }
+.finalimg-canvas-wrap { border-right: 1px solid var(--line); }
+.finalimg-side { display: grid; align-content: start; gap: 12px; padding: 18px 20px; }
+.finalimg-scale { margin: 0; white-space: pre-line; font: 500 11px/1.7 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.finalimg-card .finalimg-cap { padding: 0; border-top: 0; font-size: 14px; max-width: 52ch; }
+@media (max-width: 900px) {
+  .finalimg-card { grid-template-columns: minmax(0, 1fr); }
+  .finalimg-canvas-wrap { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+/* ---------- the part list and its card (UI-03) ---------- */
+.btn-quiet { min-height: 34px; padding: 0 12px; font-size: 11px; border-color: var(--line); color: var(--muted); }
+.btn-quiet:hover { color: var(--ink); }
+.parts.collapsed li:not(.sel) { display: none; }
+.card { position: relative; }
+.card h3 { font-size: 30px; line-height: .95; }
+.card-sub { font: 400 11px/1.45 var(--mono); letter-spacing: .06em; color: var(--faint); margin-top: -4px; }
+.card-grab { display: none; }
+.card-x { display: none; }
+.specs dt, .specs dd { min-width: 0; }
+
+/* ---------- the camera's exposure panel (src/scene/rig-exposure.ts) ---------- */
+.rig-exposure { position: absolute; left: var(--gutter); top: 136px; width: 312px; padding: 12px 14px 12px;
+  background: rgba(11,16,21,.92); border: 1px solid var(--line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: grid; gap: 7px; }
+.hud.rail .rig-exposure { position: static; width: auto; background: rgba(11,16,21,.97); }
+/* the panel's display: grid must not beat the hidden attribute (R1-01): a deep dive shows no exposure strip */
+.rig-exposure[hidden] { display: none !important; }
+.rig-exposure .nw { white-space: nowrap; }
+.rig-exposure .rx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rig-exposure .rx-k { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.rig-exposure .rx-fire { min-height: 36px; padding: 0 16px; font-size: 11px; border-color: var(--accent); color: var(--accent); }
+.rig-exposure .rx-fire:hover:not(:disabled) { background: var(--accent); color: #000; }
+.rig-exposure .rx-fire[data-armed="true"] { opacity: 1; background: var(--accent); color: #000; cursor: default; }
+/* off (the view failed to load): plainly off, never the lit "firing" look */
+.rig-exposure .rx-fire:disabled:not([data-armed="true"]) { opacity: .4; background: transparent; color: var(--accent); cursor: not-allowed; }
+.rig-exposure .rx-fire kbd { font: 500 10.5px/1 var(--mono); padding: 2px 4px; border: 1px solid currentColor; opacity: .65; }
+@media (pointer: coarse), (max-width: 760px) { .rig-exposure .rx-fire kbd { display: none; } }
+.kpi .kd { font: 400 11px/1.35 var(--mono); color: var(--faint); }
+.kpis .kv { min-height: 0; }
+.rig-exposure .rx-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.rig-exposure .rx-row small { font: 400 11px/1 var(--mono); color: var(--faint); margin-left: 4px; }
+.rig-exposure .rx-row b { font: 500 13px/1.2 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.rig-exposure .rx-row[data-held="true"] b { color: var(--accent); }
+.rig-exposure .rx-well { height: 5px; background: var(--raise); border: 1px solid var(--line); }
+.rig-exposure .rx-well i { display: block; height: 100%; width: 0; background: var(--accent); }
+.rig-exposure .rx-sub { font: 400 11px/1.3 var(--mono); color: var(--faint); }
+.rig-exposure .rx-cap { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
+.rig-exposure .rx-cap[hidden] { display: none; }
+/* the firing timeline: the segments at their played lengths, and a playhead */
+.rx-tl { position: relative; display: flex; height: 22px; border: 1px solid var(--line); }
+.rx-tl[hidden] { display: none; }
+.rx-tl span { position: relative; flex: 1 1 0; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-left: 1px solid var(--line);
+  font: 500 10.5px/1 var(--mono); letter-spacing: .03em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+.rx-tl span:first-child { border-left: 0; }
+.rx-tl span.on { color: var(--ink); background: var(--raise); }
+.rx-tl i { position: absolute; top: -3px; bottom: -3px; width: 2px; left: 0; background: var(--accent); }
+/* equal exposure: one stop of aperture for one stop of shutter */
+.rx-eq { display: grid; gap: 7px; padding-top: 9px; border-top: 1px solid var(--line); }
+.rx-eq-k { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rx-eq-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.rx-eq-btns .btn { min-height: 40px; padding: 0 6px; justify-content: center; white-space: nowrap; font: 500 11px/1.15 var(--mono); letter-spacing: .02em; text-transform: none; text-align: center; }
+.rx-eq-btns .btn:hover:not(:disabled) { background: var(--ink); color: #000; }
+.rx-eq-note { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.rx-eq-note b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.rx-eq-note[hidden] { display: none; }
+
+.rig-tip { position: absolute; z-index: 5; pointer-events: none; padding: 5px 8px; font: 500 11px/1.2 var(--mono);
+  letter-spacing: .08em; text-transform: uppercase; color: #000; background: var(--accent); white-space: nowrap; }
+
+/* first-visit marks on the model's own controls (UI-04) */
+.rig-teach { position: absolute; z-index: 4; pointer-events: none; transform: translate(-50%, -50%); transition: opacity .5s ease; }
+.rig-teach.gone { opacity: 0; }
+.rig-teach i { display: block; width: 46px; height: 46px; border: 1.5px solid var(--accent); border-radius: 50%; box-shadow: 0 0 0 4px rgba(230,186,130,.14);
+  animation: teach 1.6s ease-in-out infinite; }
+.rig-teach span { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); padding: 4px 7px; font: 600 11px/1 var(--mono);
+  letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; color: #000; background: var(--accent); }
+.rig-teach.up span { top: auto; bottom: calc(100% + 6px); }
+.rig-teach.shared i { visibility: hidden; }
+.rig-teach.left span { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.rig-teach.right span { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.rig-teach i { width: 40px; height: 40px; }
+@keyframes teach { 50% { transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .rig-teach i { animation: none; } }
+
+/* the camera's detail-mode breadcrumb: Camera / the part; Esc or the arrow goes back (src/scene/camera-rig.ts) */
+.rig-crumb { position: absolute; left: var(--gutter); top: 88px; z-index: 4; display: flex; align-items: center; gap: 10px;
+  font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rig-crumb[hidden] { display: none; }
+.rig-crumb .rc-back { all: unset; cursor: pointer; color: var(--accent); padding: 12px 4px 12px 0; }
+.rig-crumb .rc-back:hover { color: var(--ink); }
+.rig-crumb .rc-sep { color: var(--faint); }
+.rig-crumb .rc-here { color: var(--ink); }
+.rig-crumb .rc-link { min-height: 36px; padding: 0 12px; font-size: 11px; margin-left: 6px; border-color: var(--accent); color: var(--accent); background: rgba(0,0,0,.6); }
+.rig-crumb .rc-link:hover { background: var(--accent); color: #000; }
+body.rig-detail .rig-exposure { top: 136px; }
+.kpi .kl { flex-wrap: nowrap; white-space: nowrap; }
+body.rig-detail .hud.tr .hint { visibility: hidden; }
+/* a picked part owns the view: the other pins step out (the list still reaches them) */
+body.rig-detail .pins .pin.dim { display: none; }
+/* In a detail mode the zoomed, ghosted camera runs past the free rectangle: a scrim behind the rail and the title band
+   takes it back to the stage's black there, so no ghost geometry or ray sits under panel text (R2-02). */
+@media (min-width: 761px) {
+  body.rig-detail .view::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      linear-gradient(90deg, #000 0, rgba(0,0,0,.94) calc(var(--gutter) + 312px), rgba(0,0,0,0) calc(var(--gutter) + 312px + 140px)),
+      linear-gradient(180deg, rgba(0,0,0,.9) 0, rgba(0,0,0,.75) 100px, rgba(0,0,0,0) 170px); }
+}
+
+/* the lineup's "no 3D model" note */
+.rig-note { position: absolute; left: 50%; top: 45%; transform: translateX(-50%); margin: 0; max-width: 34ch; text-align: center;
+  font: 500 11px/1.5 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* The loupe's own Back control sits under the title band, not on it (art-director finding "header-overlap"). */
+.piece-overlay[data-piece="loupe"] .btn { top: 90px; }
+
+/* ---------- phones ---------- */
+@media (max-width: 760px) {
+  .steps { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)); }
+  .step { padding: 10px 6px 9px; justify-items: center; min-height: 52px; align-content: center; }
+  .step .t-long { display: none; }
+  .step .t-short { display: inline; }
+  .step .tag { display: none; }
+  .step.deep .t { font-size: 13px; }
+  .hud.tr { top: 10px; right: 10px; left: 10px; }
+  .hud.tr .hint, .hud.tr .hud-btns { display: none; }
+  .hud-switches { width: 100%; justify-content: flex-end; }
+  .layer-chip { min-height: 44px; padding: 0 12px; font-size: 11px; }
+  .hud-slot .mode button { min-height: 44px; padding: 0 12px; font-size: 11px; }
+  .hud-btns-phone .hud-btns { display: block; border-top: 1px solid var(--line); }
+  .hud-btns-phone .hud-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+  .hud-btns-phone .btn { min-height: 46px; padding: 0 4px; justify-content: center; border: 0; border-left: 1px solid var(--line); background: var(--ground);
+    backdrop-filter: none; font-size: 11px; }
+  .hud-btns-phone .btn:first-child { border-left: 0; }
+  .hud-btns-phone .hint { display: block; max-width: none; padding: 8px 12px 0; text-align: center; color: var(--faint); }
+  .hud.br { right: 10px; bottom: 10px; flex-direction: row; align-items: flex-end; gap: 8px; }
+  .hud.bl { left: 10px; bottom: 10px; max-width: calc(100% - 150px); }
+  .fi-dock { width: 122px; }
+  .view .fi-dock canvas { width: 120px; height: 80px; }
+  .fi-dock-txt { padding: 5px 6px; }
+  .fi-dock-cap { font-size: 10.5px; letter-spacing: .06em; }
+  .fi-dock-empty { font-size: 10px; letter-spacing: .04em; }
+  /* a part is open: the sheet and the part own the screen, the thumbnail steps aside (R1-02) */
+  body.rig-detail .fi-dock { display: none; }
+  .veil-in > span { font-size: 11.5px; }
+  .backend-chip { height: 24px; }
+  /* While a shot plays, its time-scale badge takes the whole strip left of the thumbnail and the renderer chip steps
+     out, so the badge never runs under it; the badge breaks only at its dots (R2-01). */
+  .view:not(:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden]))):has(#scale-badge:not([hidden])) .backend-chip { display: none; }
+  .pin .lbl { display: none; }
+  .pin.on .lbl { display: inline; }
+
+  /* the exposure panel leaves the view and becomes a strip under it */
+  .view-strip:empty { display: none; }
+  .view-strip { border-top: 1px solid var(--line); }
+  .view-strip .rig-exposure { position: static; width: auto; padding: 10px 12px 12px; border: 0; background: var(--surface); backdrop-filter: none; gap: 8px; }
+  .view-strip .rx-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .view-strip .rx-fire { min-height: 44px; min-width: 76px; justify-content: center; }
+  .view-strip .rx-total, .view-strip .rx-row small { display: none; }
+  .view-strip .rx-row { font-size: 13px; }
+  .view-strip .rx-eq-btns .btn { min-height: 44px; }
+
+  .rig-crumb { top: 62px; left: 10px; gap: 6px; font-size: 11px; flex-wrap: wrap; max-width: calc(100% - 20px); }
+  .rig-crumb .rc-link { min-height: 40px; }
+
+  /* the part card opens as a sheet over the page's lower half, the camera stays in view above it */
+  #card:not([hidden]) { position: fixed; z-index: 70; left: 0; right: 0; bottom: 0; max-height: 48svh; overflow-y: auto; border: 0;
+    border-top: 2px solid var(--accent); padding: 12px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -18px 48px rgba(0,0,0,.7); }
+  #card .card-grab { display: block; justify-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line-2); }
+  #card .card-x { all: unset; display: grid; place-items: center; position: absolute; top: 6px; right: 8px; width: 44px; height: 44px; cursor: pointer;
+    font: 400 26px/1 var(--sans); color: var(--muted); }
+  #card .card-x:hover { color: var(--ink); }
+  #card h3 { font-size: 26px; padding-right: 40px; }
+
+  .piece-overlay[data-piece="loupe"] .btn { top: 62px; }
+}

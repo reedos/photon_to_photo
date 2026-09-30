@@ -1,0 +1,62 @@
+{
+  "$note": "Key facts about the two scripted Blender camera-body models (blender/build_dslr.py, blender/build_mirrorless.py) for the app and tests to check the .glb exports against, without re-deriving them from the Blender scene. Frame: millimeters, sensor plane at z = 0, lens axis along -z, y up, x to the camera's right as seen from behind (docs/PANE.md). See blender/common.py's module docstring for the Blender-Z-up -> glTF-Y-up axis mapping used at export time.",
+  "$textures": "Surface finish ships beside the GLBs in models/textures/, not inside them (an embedded texture makes three's GLTFLoader throw under node, which the GLB tests hit). Each finished material carries glTF extras {normalMap: a path relative to models/, normalScale, uvTileMm}, and its meshes carry box-projected UVs (TEXCOORD_0), one texture tile per uvTileMm millimeters. The app loads the PNG as that material's normalMap (RepeatWrapping, flipY false, NoColorSpace) with normalScale from the extras.",
+  "dslr": {
+    "sourceFiles": ["blender/common.py", "blender/silhouette.py", "blender/bodykit.py", "blender/dslr_v2.py"],
+    "glb": "public/models/dslr.glb",
+    "mount": {
+      "type": "Nikon F geometry",
+      "flangeMm": 46.5,
+      "mountFaceZ": -46.5,
+      "throatMm": 44.0,
+      "lugCount": 3,
+      "contactCount": 8
+    },
+    "sensor": {
+      "planeZ": 0.0,
+      "activeAreaWidthMm": 35.9,
+      "activeAreaHeightMm": 23.9,
+      "filterStackThicknessMm": 2.0
+    },
+    "envelopeMm": { "width": 146.0, "height": 124.0, "depth": 78.5 },
+    "mirror": { "widthMm": 36, "heightMm": 34, "restAngleDeg": 45, "hingeEdge": "top" },
+    "shutter": { "type": "vertical-travel two-curtain focal-plane", "travelDistanceMm": 24 },
+    "namedComponents": [
+      "body", "grip", "mount", "mountLugs", "contacts", "mirror", "subMirror", "focusingScreen",
+      "prism", "prismHousing", "shutter", "shutterCurtainFront", "shutterCurtainRear",
+      "sensorPackage", "sensorDie", "pixelArray", "filterStack", "bondWires", "rearScreen",
+      "topDials", "releaseModeDial", "commandDialFront", "commandDialRear", "shutterButton",
+      "lensReleaseButton", "afModeLever", "strapLug", "portDoor", "hotShoe", "shellClosed",
+      "shellCut", "mirrorBox"
+    ]
+  },
+  "mirrorless": {
+    "sourceFiles": ["blender/common.py", "blender/silhouette.py", "blender/bodykit.py", "blender/mirrorless_v2.py"],
+    "glb": "public/models/mirrorless.glb",
+    "mount": {
+      "type": "Nikon Z geometry",
+      "flangeMm": 16.0,
+      "mountFaceZ": -16.0,
+      "throatMm": 55.0,
+      "lugCount": 4,
+      "contactCount": 11
+    },
+    "sensor": {
+      "planeZ": 0.0,
+      "activeAreaWidthMm": 35.9,
+      "activeAreaHeightMm": 23.9,
+      "filterStackThicknessMm": 2.0
+    },
+    "envelopeMm": { "width": 144.0, "height": 118.5, "depth": 83.0 },
+    "shutter": { "type": "none (electronic only)", "note": "Z8 has no mechanical shutter" },
+    "evf": { "magnification": 0.8 },
+    "ibis": { "travelMm": 2, "axes": 5 },
+    "namedComponents": [
+      "body", "grip", "mount", "mountLugs", "contacts", "sensorPackage", "sensorDie",
+      "pixelArray", "filterStack", "bondWires", "ibisPlate", "evf", "evfHousing", "evfEyecup",
+      "evfPanel", "rearScreen", "topDials", "buttonCluster", "commandDialFront",
+      "commandDialRear", "shutterButton", "lensReleaseButton", "afModeLever", "strapLug",
+      "portDoor", "hotShoe", "shellClosed", "shellCut"
+    ]
+  }
+}

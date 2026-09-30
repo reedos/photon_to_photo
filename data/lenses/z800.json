@@ -1,0 +1,469 @@
+{
+  "id": "z800",
+  "system": "mirrorless",
+  "focalLength": 800,
+  "maxFno": 6.41999,
+  "markedFno": 6.3,
+  "name": "780 mm f/6.42 Phase Fresnel super-telephoto (patent example)",
+  "representativeOf": "Nikon NIKKOR Z 800mm f/6.3 VR S",
+  "representativeSource": "Two independent lens-patent trackers (cameragossip.github.io/nikon-lens-patents.html and asobinet.com/info-patent-nikon-pf-super-tere-lens/, both accessed 9/28/2026) tie this patent family (JP 2023-023323 A, granted as JP 7695611 B2) to Nikon's shipped PF super-telephoto primes; the family's own numerical-example classes (~585 mm F5.71, ~1000 mm F8.16, ~780 mm F6.42) were verified directly against the patent text (see source.location) rather than taken from the trackers' word alone. This file transcribes Example 6 (OL6) of that patent, the ~780 mm F6.42 example, and ties it to the NIKKOR Z 800mm f/6.3 VR S on the strength of an exact, non-circumstantial match: Nikon's own published spec for that lens (nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview, accessed 9/28/2026: '22 elements in 14 groups... 3 ED, 1 SR, 1 PF') matches this file's own mechanical element/group count from the patent's surface table -- 22 elements in 14 groups, exactly, counted by this project's own convention (every glass segment is an element, a run of cemented/close-contact segments with no air gap is a group, the PF assembly's host lens plus its two close-contact multilayer resin layers merge into a single element per Nikon's own counting, same rule as n500.json/m500.json). The patent's own Fno (6.41999) sits slightly above the marketed f/6.3 class in exactly the same direction and magnitude as every other Nikon PF lens transcribed in this project (n500: patent 5.75 vs marked 5.6; m500/Example 1: patent 5.71 vs a 600mm f/5.6 class that was never shipped) -- consistent internal evidence, not proof by itself. No source states outright that this numerical example IS the shipped 800mm f/6.3 VR S; this is the same strength of tie n500.json draws (exact element/group signature match plus a patent-Fno-vs-marked-Fno gap consistent with the rest of the family), not a company confirmation.",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2023-023323 A (ニコン, 「光学系、光学機器」 / \"Optical system, optical equipment\"), Sixth Example (第６実施例, optical system OL6), granted as JP 7695611 B2",
+    "url": "https://patents.google.com/patent/JP7695611B2/en",
+    "assignee": "Nikon Corporation",
+    "published": "2/16/2023 (kokai JP2023-023323A); granted JP 7695611 B2",
+    "accessed": "9/28/2026",
+    "location": "Table 16 (全体諾元 / overall specifications and lens data, 第６実施例), Table 17 (回折光学面データ / diffractive optical surface data), Table 18 (可変間隔データ / variable interval data)",
+    "note": "Fetched via the r.jina.ai reader proxy (https://r.jina.ai/https://patents.google.com/patent/JP7695611B2/en) after repeated direct-fetch HTTP 503s from patents.google.com, same as n500.json/m500.json. Unlike m500.json's Example 1, Example 6's own variable-gap table (Table 18) required NO reconstruction: d1(infinity)=6.00000 and d2(infinity)=62.50000 both plug directly into a paraxial y-nu trace (with the DOE's own paraxial power added at surface 7 per Table 17's equation) and reproduce the patent's stated f and Bf to within 0.002% and 0.003 mm respectively -- see research/lenses-z800.md for the full self-check output. The whole numerical-data table (Tables 16-18) was independently re-read via a second r.jina.ai fetch of the same URL and matched digit-for-digit both times."
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 488.6452,
+      "t": 7.9,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.32,
+      "sd": 101.586,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 front",
+      "coated": true
+    },
+    {
+      "r": -1584.8559,
+      "t": 0.2,
+      "medium": "air",
+      "sd": 100.902,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 rear"
+    },
+    {
+      "r": 136.473,
+      "t": 13.4,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.32,
+      "sd": 100.871,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 front",
+      "coated": true
+    },
+    {
+      "r": 465.0973,
+      "t": 89.1101,
+      "medium": "air",
+      "sd": 96.186,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 rear"
+    },
+    {
+      "r": 114.2433,
+      "t": 7.0,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 64.13,
+      "sd": 58.833,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 front (PF assembly host element, patent's L13)",
+      "coated": true
+    },
+    {
+      "r": 154.1141,
+      "t": 0.1,
+      "medium": "glass",
+      "nd": 1.5295,
+      "vd": 36.27,
+      "sd": 55.67,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "PF assembly, diffractive-layer material A (close-contact multilayer material 1, cemented to host element L13)",
+      "layer": "resin"
+    },
+    {
+      "r": 154.1141,
+      "t": 0.25,
+      "medium": "glass",
+      "nd": 1.5498,
+      "vd": 50.91,
+      "sd": 55.625,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "PF assembly, diffractive-layer material B -- the diffractive optical surface (patent's surface 7, marked '#', PF element Epf on this surface, per the patent's own text) is this surface's FRONT face, the material-A/material-B joint",
+      "coated": false,
+      "doe": {
+        "convention": "Patent's own phase-difference formula, verbatim as machine-translated, identical in form to m500.json's Example 1 (same patent, JP 2023-023323 A / granted JP 7695611 B2), Table 17: psi(h,n) = (2*pi/(n*lambda0)) * (C2*h^2 + C4*h^4) -- h is height above the axis (mm), n is the diffraction order, lambda0 the design wavelength (nm). Paraxial refractive power at wavelength lambda and order n, also given verbatim by the patent: phiD(lambda,n) = -2*C2*n*lambda/lambda0. At the design condition (lambda=lambda0, n=1) this reduces to phiD = -2*C2. Convention check: phiD = -2*(-4.02091e-05) = 8.04182e-05 /mm -> fpf = 1/phiD = 12434.996 mm, matching the patent's own directly-stated Table 26 value for the Sixth Example, fpf=12434.996, to 8 significant figures.",
+        "lambda0Nm": 587.6,
+        "order": 1,
+        "coeffs": {
+          "C2": -0.0000402091,
+          "C4": -2.29061e-10
+        },
+        "note": "Table 17 ('diffractive optical surface data'), row m=7 (Sixth Example): lambda0=587.6, n=1.0, C2=-4.02091E-05, C4=-2.29061E-10, transcribed exactly as printed/machine-translated and independently re-fetched twice with identical digits both times. This is the same close-contact multilayer ('密着複層型') diffractive construction as n500.json and m500.json: the grating relief sits at the bonded interface between two different optical materials (nd=1.5295/vd=36.27 and nd=1.5498/vd=50.91 here -- the SAME two nd/vd pairs m500.json's Example 1 uses, from the same patent family, consistent with Nikon reusing the same pair of close-contact multilayer materials across numerical examples in one filing), cemented to a third, ordinary host lens element (nd=1.5168/vd=64.13, the same host-glass nd/vd m500.json's Example 1 also uses). The engine traces this DOE surface via src/engine/surface.ts's diffract()/doeGradPhi() (see docs/engine/doe.md); the python/node paraxial self-check in research/lenses-z800.md independently adds this surface's paraxial power via equation phiD above on top of ordinary refraction and reproduces the patent's stated f and Bf to within 0.0012% / 0.003 mm."
+      }
+    },
+    {
+      "r": 154.1141,
+      "t": 5.0,
+      "medium": "air",
+      "sd": 55.512,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "PF assembly rear (to air)",
+      "layer": "resin"
+    },
+    {
+      "r": 94.801,
+      "t": 8.9096,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.32,
+      "sd": 52.994,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 front",
+      "coated": true
+    },
+    {
+      "r": -2064.0654,
+      "t": 2.3,
+      "medium": "glass",
+      "nd": 1.90366,
+      "vd": 31.27,
+      "sd": 48.345,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14/L15 cemented interface (L15)"
+    },
+    {
+      "r": 65.716,
+      "t": 2.5,
+      "medium": "air",
+      "sd": 47.419,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L15 rear"
+    },
+    {
+      "r": 66.174,
+      "t": 9.5854,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.57,
+      "sd": 47.133,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L16 front",
+      "coated": true
+    },
+    {
+      "r": 2165.2785,
+      "t": 0.0,
+      "medium": "air",
+      "sd": 44.132,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L16 rear, immediately followed by the patent's own virtual reference plane (patent surface 14, t=0 here) -- see next surface"
+    },
+    {
+      "r": null,
+      "t": 17.5002,
+      "medium": "air",
+      "sd": 44.132,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "virtual reference plane (patent's own surface 14; the patent states this surface is virtual and not shown in its own figure), real air gap to the G1 rear cemented pair -- same device m500.json uses for its own flat air-spaced reference surface"
+    },
+    {
+      "r": -277.4112,
+      "t": 2.0,
+      "medium": "glass",
+      "nd": 1.66755,
+      "vd": 41.87,
+      "sd": 36.103,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L17 front, G1 rear cemented pair (negative)",
+      "coated": true
+    },
+    {
+      "r": 70.4454,
+      "t": 7.5446,
+      "medium": "glass",
+      "nd": 1.66382,
+      "vd": 27.35,
+      "sd": 35.656,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L17/L18 cemented interface (L18, positive), end of lens group G1's fixed elements"
+    },
+    {
+      "r": -263.5468,
+      "t": 6.0,
+      "medium": "air",
+      "sd": 33.979,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L18 rear, end of lens group G1 (d1, variable with focus -- see focus.gaps)"
+    },
+    {
+      "r": 523.4497,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.48749,
+      "vd": 70.32,
+      "sd": 31.245,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L21, lens group G2 (single element, the sole focus group -- moves for AF, per patent text)",
+      "coated": true
+    },
+    {
+      "r": 94.5055,
+      "t": 62.5,
+      "medium": "air",
+      "sd": 30.854,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L21 rear, end of G2 (d2, variable with focus -- see focus.gaps)"
+    },
+    {
+      "r": null,
+      "t": 6.7123,
+      "medium": "air",
+      "stop": true,
+      "sd": 10.506,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "aperture stop S, start of lens group G3"
+    },
+    {
+      "r": -393.7363,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 2.001,
+      "vd": 29.12,
+      "sd": 10.439,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L31 front, cemented negative lens",
+      "coated": true
+    },
+    {
+      "r": 43.8736,
+      "t": 2.987,
+      "medium": "glass",
+      "nd": 1.730371,
+      "vd": 32.23,
+      "sd": 10.449,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L31/L32 cemented interface (L32)"
+    },
+    {
+      "r": -94.2293,
+      "t": 3.3713,
+      "medium": "air",
+      "sd": 10.589,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L32 rear"
+    },
+    {
+      "r": -288.4503,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.7725,
+      "vd": 49.62,
+      "sd": 10.586,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L33, single negative element",
+      "coated": true
+    },
+    {
+      "r": 45.6878,
+      "t": 3.0157,
+      "medium": "air",
+      "sd": 10.605,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L33 rear"
+    },
+    {
+      "r": -164.6808,
+      "t": 1.2,
+      "medium": "glass",
+      "nd": 1.627496,
+      "vd": 59.24,
+      "sd": 11.228,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L34 front, cemented negative lens",
+      "coated": true
+    },
+    {
+      "r": 35.6904,
+      "t": 3.4759,
+      "medium": "glass",
+      "nd": 1.79504,
+      "vd": 28.69,
+      "sd": 11.412,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L34/L35 cemented interface (L35, positive meniscus)"
+    },
+    {
+      "r": 248.6215,
+      "t": 3.4478,
+      "medium": "air",
+      "sd": 11.791,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L35 rear"
+    },
+    {
+      "r": 33.075,
+      "t": 7.7564,
+      "medium": "glass",
+      "nd": 1.61266,
+      "vd": 44.46,
+      "sd": 12.597,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L36 front, cemented positive lens",
+      "coated": true
+    },
+    {
+      "r": -36.1356,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.59319,
+      "vd": 67.9,
+      "sd": 12.598,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L36/L37 cemented interface (L37)"
+    },
+    {
+      "r": 720.1003,
+      "t": 3.0,
+      "medium": "air",
+      "sd": 12.591,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L37 rear"
+    },
+    {
+      "r": -89.4524,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.95375,
+      "vd": 32.33,
+      "sd": 12.602,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L38 front, cemented negative lens",
+      "coated": true
+    },
+    {
+      "r": 33.3333,
+      "t": 6.2498,
+      "medium": "glass",
+      "nd": 1.61293,
+      "vd": 36.94,
+      "sd": 12.73,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L38/L39 cemented interface (L39)"
+    },
+    {
+      "r": -55.1763,
+      "t": 4.5,
+      "medium": "air",
+      "sd": 13.77,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L39 rear"
+    },
+    {
+      "r": 59.9212,
+      "t": 6.8358,
+      "medium": "glass",
+      "nd": 1.730371,
+      "vd": 32.23,
+      "sd": 14.289,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L310 front, cemented positive lens",
+      "coated": true
+    },
+    {
+      "r": -36.3245,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.7725,
+      "vd": 49.62,
+      "sd": 14.057,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L310/L311 cemented interface (L311)"
+    },
+    {
+      "r": 33.3333,
+      "t": 3.0,
+      "medium": "air",
+      "sd": 14.014,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L311 rear"
+    },
+    {
+      "r": 39.9579,
+      "t": 10.7333,
+      "medium": "glass",
+      "nd": 1.85,
+      "vd": 27.03,
+      "sd": 14.861,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L312 front, cemented positive lens",
+      "coated": true
+    },
+    {
+      "r": -35.6438,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.945944,
+      "vd": 17.98,
+      "sd": 14.665,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L312/L313 cemented interface (L313)"
+    },
+    {
+      "r": 166.95,
+      "t": 74.56937,
+      "medium": "air",
+      "sd": 14.67,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L313 rear, back focal distance (BF) to the image plane; patent's own printed Bf label, Table 16, infinity-focus state"
+    }
+  ],
+  "stated": {
+    "f": 779.99933,
+    "fno": 6.41999,
+    "halfFieldDeg": 1.56363,
+    "imageHeight": 21.6,
+    "bf": 74.56937,
+    "totalLength": 393.4547
+  },
+  "focus": {
+    "method": "inner",
+    "gaps": [
+      {
+        "surface": 16,
+        "atInfinity": 6.0,
+        "atClose": 29.75122,
+        "closeObjectDistance": 4606.5453,
+        "note": "Patent's own printed d1 (Table 18): axial air gap between lens group G1 and lens group G2 (the sole moving focus group), at the patent's own close-focus condition (magnification beta=-0.16674, object distance d0=4606.5453 mm from the first lens vertex). Read directly from the patent text with no reconstruction needed (unlike m500.json's Example 1, whose own d2 value required a diagnosed correction) -- confirmed by the self-check in research/lenses-z800.md reproducing the patent's stated f and Bf using this value as printed."
+      },
+      {
+        "surface": 18,
+        "atInfinity": 62.5,
+        "atClose": 38.74878,
+        "closeObjectDistance": 4606.5453,
+        "note": "Patent's own printed d2 (Table 18): axial air gap between lens group G2 (focus group) and the aperture stop S / lens group G3, same close-focus condition as the d1 gap above. Also read directly from the patent text with no reconstruction needed."
+      }
+    ],
+    "minFocusM": 5,
+    "minFocusSource": "Nikon USA official spec page for the NIKKOR Z 800mm f/6.3 VR S, https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview, accessed 9/28/2026: 'Closest Focus: 5m / 16.4 ft.'. The patent's own close-focus condition (d0=4606.5453 mm from the first lens vertex, magnification beta=-0.16674) is a different, non-comparable datum (measured from the front vertex, not the sensor/focal plane); both are genuine, neither is invented, and they are not expected to match exactly -- same convention as n500.json."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Not stated on Nikon's own USA spec page for the NIKKOR Z 800mm f/6.3 VR S (checked directly, 9/28/2026: no diaphragm-blade-count field found on that page). Assumed typical of Nikon's current S-Line super-telephoto primes (n500.json's AF-S 500mm f/5.6E PF ED VR and this project's own m500.json both use 9 rounded blades from their own Nikon spec pages), not confirmed for this specific lens by any source found in this session.",
+    "ev": "assumed"
+  },
+  "elements": 22,
+  "groups": 14,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source: JP 2023-023323 A (Nikon Corporation, 'Optical system, optical equipment'), filed with priority date within the family covering examples OL1-OL8 (four focal-length-class pairs: ~585 mm F5.71 x2, ~1000 mm F8.16 x2 [not yet checked closely], ~780 mm F6.42 x2 [this file uses the second of the pair, OL6], and a fourth pair likely a shorter class not examined by this workstream), published (kokai) 2/16/2023, later granted as JP 7695611 B2. This file transcribes the Sixth Example (第６実施例, optical system OL6) -- NOT the same example as data/lenses/m500.json, which transcribes the First Example (OL1) of the SAME patent family (a different, ~585 mm F5.71 design that this project's own m500.md notes flag as untied to any shipped product).",
+    "This file supersedes an earlier, abandoned attempt (research/lenses-m500.md's predecessor search, and an initial working file for a hypothetical 'z600.json' slot) to tie a numerical example of this same patent to the NIKKOR Z 600mm f/6.3 VR S: extensive search (Google Patents full-text search via the r.jina.ai proxy, cameragossip.github.io's Nikon lens-patent tracker, asobinet.com, digicame-info.com, nikonrumors.com, and the photonstophotos.net Optical Bench Hub) found NO patent example, tracker entry, or published source tying any numerical example to the Z 600mm f/6.3 VR S (21 elements / 14 groups per Nikon's own spec) -- every example in this patent family's ~585 mm class (OL1, OL2) is described by digicame-info.com's own contemporaneous coverage as a '600mm f/5.6' class design (a lens Nikon never shipped), and cameragossip.github.io / asobinet.com's Nikon patent trackers tie this family instead to the ALREADY-SHIPPED 800mm f/6.3 VR S. The coordinator redirected this workstream to the 800mm f/6.3 VR S (this file) on that basis, once the element/group match below confirmed it.",
+    "Elements/groups counted directly from the patent's own text description of OL6 (which independently matches Nikon's own published '22 elements in 14 groups' for the NIKKOR Z 800mm f/6.3 VR S exactly): G1 = L11, L12, L13 (PF host, its close-contact multilayer DOE counted as part of L13, not as separate elements, same convention as n500.json/m500.json), {L14+L15 cemented}, L16, {L17+L18 cemented} = 8 elements in 6 groups. G2 = L21 (single, the sole focus group) = 1 element in 1 group. G3 = {L31+L32}, L33, {L34+L35}, {L36+L37}, {L38+L39}, {L310+L311}, {L312+L313} = 13 elements in 7 groups. Total: 8+1+13 = 22 elements; 6+1+7 = 14 groups -- an EXACT match to Nikon's own published spec (nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview, accessed 9/28/2026), independently confirming this example's own text is transcribed correctly (both the element list itself, quoted verbatim in the patent, and this project's mechanical surface-by-surface count agree with each other and with the real product).",
+    "The diffractive optical surface is patent surface 7 (0-based surface index 6 in this file's `surfaces` array), marked with the patent's own '#'. It sits inside the PF assembly built on host lens L13, between the two close-contact multilayer materials the patent names by nd/vd but not by trade name -- same construction, and the same two materials' nd/vd, as data/lenses/m500.json's own DOE surface (a different numerical example of the same patent family). See that surface's own `doe` field for the patent's verbatim phase formula and paraxial-power formula, and research/lenses-z800.md for the paraxial self-check.",
+    "Surface index 12 (patent surface 13, r=2165.2785) has t=0.0 in the patent's own table, immediately followed by surface index 13 (patent surface 14, r=0.0000/flat, t=17.5002) which the patent's own text explicitly states is a 'virtual surface... not shown in Fig. 11'. This is the same device m500.json's own transcription uses for its flat air-spaced reference surface; it is not a real physical lens face, just a bookkeeping split of one continuous air gap into two rows in the patent's own printed table (t=0 then t=17.5002, summing to the real 17.5002 mm gap).",
+    "No effective/clear diameter is printed anywhere in this patent (same situation as n500.json, m500.json, and every telephoto file in this project's set), so every sd is sdSource='estimated-from-marginal-ray', computed by this workstream's own node.js paraxial self-check script (research/lenses-z800.md links it; same marginal-ray-at-full-aperture-plus-paraxial-chief-ray method as n500.json/m500.json's own python scripts) -- see that research note for why the computed front-element semi-diameters run larger than the real product's filter-thread radius would suggest (an accepted, documented characteristic of this method across every telephoto file in this project, not specific to this transcription).",
+    "Unlike m500.json's Example 1 (whose own d2(infinity) value required a diagnosed reconstruction after every OCR/proxy read returned a value inconsistent with the patent's own other stated numbers), this file's own d1/d2 variable-gap values (Table 18) plug directly into the self-check and reproduce the patent's stated f (779.99933 mm, error +0.0012%) and Bf (74.56937 mm, diff +0.0025 mm) with NO correction needed -- both comfortably inside the required 0.5%/1%-or-0.2mm tolerances. The full numerical table (Tables 16-18) was independently re-fetched via r.jina.ai a second time and matched digit-for-digit both times, and the DOE's own stated fpf (Table 26, 'Sixth Example', 12434.996) matches this file's own C2-derived fpf (1/(-2*C2) = 12434.996) to 8 significant figures -- both checks the same kind of independent corroboration n500.json's own notes rely on.",
+    "Overall length: computed sum(t) across every surface including the patent's own printed BF = 393.4546 mm against the patent's own stated TL=393.4547 mm (diff -0.0001 mm, rounding only) -- confirming every t value in this file's `surfaces` array, including the two variable gaps at their infinity-focus values, is transcribed correctly and self-consistent with the patent's own stated total length.",
+    "representativeOf is set on the same strength of evidence n500.json uses: an exact element/group/PF/DOE-construction signature match to the real product's own published spec, corroborated by two independent third-party patent trackers tying the same patent FAMILY (not this specific example) to this product, plus the patent-Fno-vs-marked-Fno gap direction/magnitude matching every other Nikon PF lens in this project. No source states outright that this numerical example IS the shipped lens.",
+    "Half field of view: patent states omega=1.56363 deg (implied full 2*omega ~3.13 deg); a naive atan(Y/f) = atan(21.6/779.99933) = 1.586 deg is close but not identical, the same small, expected gap (pupil/distortion effects, not a transcription error) seen in n500.json's own half-field cross-check."
+  ]
+}

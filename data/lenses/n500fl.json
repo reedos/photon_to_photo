@@ -1,0 +1,353 @@
+{
+  "id": "n500fl",
+  "focalLength": 500,
+  "maxFno": 4.122,
+  "markedFno": 4,
+  "name": "500 mm f/4 fluorite telephoto (patent example, tied to a product)",
+  "representativeOf": "Nikon AF-S NIKKOR 500mm f/4E FL ED VR",
+  "representativeSource": "Photons to Photos hub lens-construction-data table (modeldata.tsv, row \"JP2015-215560  Example02P  Nikon AF-S Nikkor 500mm f/4D IF-ED II\" is a DIFFERENT, older lens; the row used here is \"JP2015-215560  Example01P  Nikon AF-S Nikkor 500mm f/4E FL ED VR\"), https://www.photonstophotos.net/ , local copy at .local/lens-normal/modeldata.tsv, accessed 9/28/2026. Corroborated independently: Example 1's element/group count from the patent's own cementing pattern (16 elements in 12 groups, filter plate excluded) matches Nikon's own published \"Lens Construction: 16 elements in 12 groups\" spec exactly, and Example 1's two nd=1.43385/vd=95.25 elements (L11, L12) match Nikon's marketed \"2 fluorite elements\" for this lens (Nikon press release, https://www.nikon.com/company/news/2015/0702_lens_01/ , 7/2/2015, accessed 9/28/2026).",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2015-215560 A, Example 1 (\"first embodiment\" / 第１実施例, Table 1)",
+    "url": "https://patents.google.com/patent/JP2015215560A/en",
+    "assignee": "Nikon Corporation",
+    "published": "12/3/2015",
+    "accessed": "9/28/2026",
+    "location": "表１第１実施例 (\"Table 1, First Example\") surface-data and various-data tables. Application JP2014-099625, filed 5/13/2014 (priority date); granted as JP6344044B2 on 6/20/2018. Machine-translated English text and raw Japanese table both read via https://r.jina.ai/https://patents.google.com/patent/JP2015215560A/en (Google Patents itself returned HTTP 503 on direct fetch)."
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 1200.3702,
+      "t": 5.0,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 63.88,
+      "sd": 94.409,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "protective filter glass FLG, front",
+      "plate": "filter",
+      "coated": true
+    },
+    {
+      "r": 1199.7895,
+      "t": 1.0,
+      "medium": "air",
+      "sd": 94.13,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "protective filter glass FLG, rear"
+    },
+    {
+      "r": 199.1542,
+      "t": 13.2,
+      "medium": "glass",
+      "nd": 1.43385,
+      "vd": 95.25,
+      "sd": 94.086,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 front, plano-convex positive (fluorite-class, high-Abbe, G1 start)",
+      "coated": true
+    },
+    {
+      "r": null,
+      "t": 80.9,
+      "medium": "air",
+      "sd": 91.794,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 rear (flat)"
+    },
+    {
+      "r": 121.5321,
+      "t": 15.5,
+      "medium": "glass",
+      "nd": 1.43385,
+      "vd": 95.25,
+      "sd": 71.647,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 front, biconvex positive (fluorite-class, high-Abbe)",
+      "coated": true
+    },
+    {
+      "r": -467.2393,
+      "t": 2.0,
+      "medium": "air",
+      "sd": 66.19,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 rear"
+    },
+    {
+      "r": -468.0783,
+      "t": 5.2,
+      "medium": "glass",
+      "nd": 1.61266,
+      "vd": 44.46,
+      "sd": 65.058,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 front, biconcave negative",
+      "coated": true
+    },
+    {
+      "r": 374.4208,
+      "t": 56.52,
+      "medium": "air",
+      "sd": 63.506,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L13 rear"
+    },
+    {
+      "r": 78.9162,
+      "t": 3.5,
+      "medium": "glass",
+      "nd": 1.6968,
+      "vd": 55.52,
+      "sd": 42.187,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14 front, negative meniscus (front of L14/L15 cemented doublet)",
+      "coated": true
+    },
+    {
+      "r": 45.502,
+      "t": 11.0,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.57,
+      "sd": 40.641,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L14/L15 cemented interface; L15 positive meniscus rear (ED-class glass, matches nd/vd at surfaces 19 and 24 too -- see notes; G1 end)"
+    },
+    {
+      "r": 253.2743,
+      "t": 14.505,
+      "medium": "air",
+      "sd": 36.44,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap, G1 to G2 (focus group gap d11; patent gives 14.505 at infinity, 17.427 at intermediate, 28.403 at close focus -- see notes, no VariableGap entry recorded because the patent states magnification, not object distance, at the close-focus condition)"
+    },
+    {
+      "r": null,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.834,
+      "vd": 37.18,
+      "sd": 29.183,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L21 front, plano-concave negative (G2 start, inner-focus group)",
+      "coated": true
+    },
+    {
+      "r": 82.2217,
+      "t": 3.94,
+      "medium": "air",
+      "sd": 28.501,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L21 rear / air gap within G2"
+    },
+    {
+      "r": -408.7548,
+      "t": 3.9,
+      "medium": "glass",
+      "nd": 1.80809,
+      "vd": 22.74,
+      "sd": 27.669,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L22 front, positive meniscus (front of L22/L23 cemented doublet)",
+      "coated": true
+    },
+    {
+      "r": -94.719,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.55298,
+      "vd": 55.07,
+      "sd": 27.331,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L22/L23 cemented interface; L23 plano-concave negative rear (G2 end)"
+    },
+    {
+      "r": null,
+      "t": 36.105,
+      "medium": "air",
+      "sd": 26.96,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap, G2 to aperture stop (focus group gap d16; patent gives 36.105 at infinity, 33.183 at intermediate, 22.207 at close focus -- see notes)"
+    },
+    {
+      "r": null,
+      "t": 25.55,
+      "medium": "air",
+      "stop": true,
+      "sd": 18.651,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "aperture stop S (patent's own surface 17, between G2 and G3)"
+    },
+    {
+      "r": 96.5675,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.80809,
+      "vd": 22.74,
+      "sd": 19.93,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L31 front, negative meniscus (G3a start, front of L31/L32 cemented doublet)",
+      "coated": true
+    },
+    {
+      "r": 47.002,
+      "t": 5.5,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.57,
+      "sd": 19.814,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L31/L32 cemented interface; L32 biconvex positive rear (ED-class glass; G3a end)"
+    },
+    {
+      "r": -244.3862,
+      "t": 4.5,
+      "medium": "air",
+      "sd": 19.866,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap, G3a to G3b"
+    },
+    {
+      "r": -634.042,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.62299,
+      "vd": 58.12,
+      "sd": 19.747,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L33 front, biconcave negative (G3b start, single element; image-stabilizer subgroup)",
+      "coated": true
+    },
+    {
+      "r": 142.8386,
+      "t": 1.65,
+      "medium": "air",
+      "sd": 19.739,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L33 rear / air gap"
+    },
+    {
+      "r": -256.019,
+      "t": 4.7,
+      "medium": "glass",
+      "nd": 1.61266,
+      "vd": 44.46,
+      "sd": 19.87,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L34 front, positive meniscus (front of L34/L35 cemented doublet, image-stabilizer subgroup)",
+      "coated": true
+    },
+    {
+      "r": -42.182,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.57,
+      "sd": 20.239,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L34/L35 cemented interface; L35 biconcave negative rear (ED-class glass; G3b end)"
+    },
+    {
+      "r": 69.591,
+      "t": 4.5,
+      "medium": "air",
+      "sd": 20.325,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap, G3b to G3c"
+    },
+    {
+      "r": 45.6956,
+      "t": 6.7,
+      "medium": "glass",
+      "nd": 1.61266,
+      "vd": 44.46,
+      "sd": 21.301,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L36 front, biconvex positive (G3c start, single element)",
+      "coated": true
+    },
+    {
+      "r": -114.2817,
+      "t": 12.908,
+      "medium": "air",
+      "sd": 21.016,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L36 rear / air gap"
+    },
+    {
+      "r": -62.3322,
+      "t": 1.8,
+      "medium": "glass",
+      "nd": 1.83481,
+      "vd": 42.73,
+      "sd": 18.676,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L37, biconcave negative (single element)",
+      "coated": true
+    },
+    {
+      "r": 50.3097,
+      "t": 1.654,
+      "medium": "air",
+      "sd": 18.743,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L37 rear / air gap"
+    },
+    {
+      "r": 63.8316,
+      "t": 4.9,
+      "medium": "glass",
+      "nd": 1.801,
+      "vd": 34.92,
+      "sd": 19.372,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L38 front, biconvex positive (last power element, G3c end)",
+      "coated": true
+    },
+    {
+      "r": -136.0401,
+      "t": 87.772,
+      "medium": "air",
+      "sd": 19.744,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L38 rear; t is the patent's own stated Bf (directly printed \"バ＝87.772\" in the various-data table, not a table-terminator placeholder)"
+    }
+  ],
+  "stated": {
+    "f": 490.0,
+    "fno": 4.122,
+    "halfFieldDeg": 2.5175,
+    "imageHeight": 21.63,
+    "bf": 87.772,
+    "totalLength": 424.803
+  },
+  "focus": {
+    "method": "inner",
+    "minFocusM": 3.6,
+    "minFocusSource": "Nikon USA product page, https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview , accessed 9/28/2026: \"Minimum Focus Distance: 11.9 ft. (3.6m)\" from the focal plane. This is the tied product's own spec (evidence 'spec'), not the patent's close-focus condition (the patent's Example 1 gives only a close-focus magnification, β = -0.153, not an object distance -- see notes)."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Nikon USA product page, https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview , accessed 9/28/2026: \"Diaphragm Blades: 9\". Rounded diaphragm confirmed by Nikon's own 7/2/2015 press release, https://www.nikon.com/company/news/2015/0702_lens_01/ , accessed 9/28/2026 (\"rounded diaphragm opening\"). This is the tied product's own spec, not stated by the patent.",
+    "ev": "spec"
+  },
+  "elements": 16,
+  "groups": 12,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Tie: Photons to Photos' hub lens-construction-data table (.local/lens-normal/modeldata.tsv, row \"JP2015-215560\tExample01P\t\tNikon AF-S Nikkor 500mm f/4E FL ED VR\") ties this patent's Example 1 to the Nikon AF-S NIKKOR 500mm f/4E FL ED VR (announced 7/2/2015, https://www.nikon.com/company/news/2015/0702_lens_01/). A second row in the same file ties the SAME patent number's Example02P to a different, older lens (AF-S 500mm f/4D IF-ED II) -- that mapping is almost certainly a data-entry slip in the hub table (JP2015-215560 has only 3 examples in the patent itself, at f=490/392/588mm, none obviously an 'Example 2' match for a 1996-era AF-D lens); not used here, and not investigated further since Example 1 is the one this task needs.",
+    "Independent corroboration of the tie (not just trusting the hub table): elements/groups counted from Example 1's own cementing pattern (front FLG excluded as a plate) are 16 elements in 12 groups, EXACTLY matching Nikon's published 'Lens Construction: 16 elements in 12 groups' for this product (https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview). Two elements (L11, L12) share nd=1.43385/vd=95.25, the dispersion of a fluorite-class (CaF2) glass, matching Nikon's marketed '2 fluorite elements' (source: Nikon 7/2/2015 press release, and the '500mm f/4E FL' name itself, FL = fluorite). This element/group match is a strong, independent check beyond the hub table's own identification.",
+    "Open item, ED-glass count: Nikon markets this lens with 2 ED elements, but THREE elements in this patent example share the same nd=1.49782/vd=82.57 (surfaces 10, 19 and 24 -- L15, L32 and L35, each the rear/cemented element of a different doublet). The patent gives no glass names, only nd/vd/theta_gf, so which two (if any) of these three correspond to Nikon's marketed 'ED' elements cannot be determined from the patent text alone; recorded as an open question rather than guessed.",
+    "Elements/groups counted the same way as p500.json: the front protective filter glass (surfaces 1-2, plate: \"filter\") is a plane-parallel element with no optical power and is excluded from both the elements and groups counts, matching how Nikon's own spec (16/12) evidently also excludes it (16 power elements: L11,L12,L13,L14,L15,L21,L22,L23,L31,L32,L33,L34,L35,L36,L37,L38; 12 groups by cementing: G1 = L11 | L12 | L13 | (L14+L15) = 4 groups; G2 = L21 | (L22+L23) = 2 groups; G3a = (L31+L32) = 1 group; G3b = L33 | (L34+L35) = 2 groups; G3c = L36 | L37 | L38 = 3 groups; total 4+2+1+2+3 = 12).",
+    "No aspheric surfaces are printed in Example 1's table (checked the patent text for an aspheric-coefficient section; none present for this example), consistent with an all-spherical telephoto design.",
+    "Focus: patent explicitly labels this an inner-focus design, G2 moving toward the image side for near focus (text: '第2レンズ群G2を光軸に沿って像側へ移動させることにより、無限遠物体から近距離物体への合焦を行う'), with the aperture stop fixed. Two variable air gaps are printed, d11 (surface 11, G1-to-G2 gap; this file's surface index 10) and d16 (surface 16, G2-to-stop gap; this file's surface index 15), at three focus states (infinity / intermediate / close). No VariableGap entries are recorded in `focus.gaps` because the patent's close-focus row gives only a magnification (β = -0.153 at close, -0.033 at intermediate), not an object distance in mm, and computing an equivalent object distance from β would require re-deriving the close-focus system's principal-plane shift (the whole prescription's spacings change between focus states) -- doable in principle but not attempted here to avoid a number that looks patent-stated but is actually a multi-step derivation; the raw d11/d16 values themselves are recorded verbatim in each gap surface's own label instead.",
+    "Image stabilization: the patent's G3b (this file's L33, L34, L35, surfaces 20-24 / indices 19-23) is the shift (VR) group, moving perpendicular to the optical axis for stabilization; not a focus group. Not modeled as a VariableGap since it does not change t values, only lateral position.",
+    "Every semi-diameter is sdSource='estimated-from-marginal-ray', run via .local/n500fl/paraxial.py (a copy of .local/lens-tele/paraxial.py, same method: marginal ray sized from the stated Fno at surface 1, plus a paraxial chief ray at the stated half field 2ω/2 = 2.5175°, summed) -- the patent prints no effective/clear diameters for any surface, same situation as p200/p300/p400/p500.",
+    "halfFieldDeg = 2.5175 is derived by halving the patent's own printed 2ω = 5.035° (not independently stated by the patent as a half-angle).",
+    "stated.totalLength = 424.803 mm is the patent's own printed TL (first surface to image plane at infinity focus); not used by the self-check (which reproduces f and Bf from the surface data) but recorded since it is patent-stated.",
+    "Patent JP2015-215560A (application JP2014-099625, filed 5/13/2014; published 12/3/2015; granted as JP6344044B2 on 6/20/2018) contains three numerical examples in one family: Example 1 (f=490.00, used here for the 500 mm f/4E FL slot), Example 2 (f=392.00, close to a 400 mm class), and Example 3 (f=588.00, close to a 600 mm class -- plausibly the sibling AF-S NIKKOR 600mm f/4E FL ED VR announced the same day, 7/2/2015, though that tie was not investigated here since it is out of scope for this task)."
+  ]
+}

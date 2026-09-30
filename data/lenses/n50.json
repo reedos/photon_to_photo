@@ -1,0 +1,86 @@
+{
+  "id": "n50",
+  "system": "dslr",
+  "focalLength": 50,
+  "maxFno": 1.86,
+  "markedFno": 1.8,
+  "name": "50 mm f/1.8 (patent example, Nikon standard lens)",
+  "representativeOf": "Nikon AF-S NIKKOR 50mm f/1.8G",
+  "representativeSource": "Not in photonstophotos.net's Optical Bench Hub (checked directly against .local/lens-normal/modeldata.tsv: no row ties any patent to the AF-S NIKKOR 50mm f/1.8G; the only Nikon 50mm rows there are the f/1.4G, the older manual-focus AI 50mm f/1.8 and f/1.8S, and the Z-mount f/1.8 S). Tied here instead from three independent lines of evidence: (1) filing date 2/25/2010, published 9/8/2011 (JP2010039675A), which brackets the lens's 4/27/2011 announcement exactly as expected for an 18-month-delayed Japanese kokai publication of a design finished before the product launch; (2) our transcription of Example 7 (of 8) has 7 elements in 6 groups with exactly 1 aspherical element, matching Nikon's own published spec for the AF-S NIKKOR 50mm f/1.8G verbatim (nikonusa.com, dpreview.com specifications page) -- none of the other 7 examples in the same patent share that exact element/group/aspheric count; (3) independently spotted by a Japanese-language optics-enthusiast teardown (lensreview.xyz, \"NIKON AF-S NIKKOR 50mm F1.8G\" analysis) citing the same patent JP2011-175123 as the design's likely source (that analysis guessed a different example number; ours was chosen by matching the element/group count against Nikon's own spec, not by trusting the blog's example pick).",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2011-175123 A, Example 7 (第7実施例 / Seventh Embodiment), Table 7",
+    "url": "https://patents.google.com/patent/JP2011175123A/en",
+    "assignee": "Nikon Corp",
+    "published": "9/8/2011",
+    "accessed": "9/28/2026",
+    "location": "表７ [全体諸元] (overall specifications) / [レンズデータ] (lens data) / [非球面データ] (aspheric data) / [可変間隔データ] (variable interval data)"
+  },
+  "scale": 1,
+  "surfaces": [
+    { "r": 40.0000, "t": 4.7000, "medium": "glass", "nd": 1.83481, "vd": 42.73, "sd": 21.76, "sdSource": "estimated-from-marginal-ray", "label": "L11" },
+    { "r": 320.2167, "t": 0.3000, "medium": "air", "sd": 19.50, "sdSource": "estimated-from-marginal-ray", "label": "L11 rear air gap" },
+    { "r": 24.1500, "t": 2.9000, "medium": "glass", "nd": 1.80400, "vd": 46.60, "sd": 19.25, "sdSource": "estimated-from-marginal-ray", "label": "L12" },
+    { "r": 33.0000, "t": 1.5000, "medium": "air", "sd": 16.89, "sdSource": "estimated-from-marginal-ray", "label": "L12 rear air gap" },
+    { "r": 75.2087, "t": 1.4000, "medium": "glass", "nd": 1.67270, "vd": 32.19, "sd": 15.30, "sdSource": "estimated-from-marginal-ray", "label": "L13" },
+    { "r": 18.4804, "t": 5.9000, "medium": "air", "sd": 14.30, "sdSource": "estimated-from-marginal-ray", "label": "gap to aperture stop" },
+    { "r": null, "t": 5.30, "medium": "air", "stop": true, "sd": 10.32, "sdSource": "estimated-from-marginal-ray", "label": "aperture stop S" },
+    { "r": -21.4080, "t": 1.1000, "medium": "glass", "nd": 1.69895, "vd": 30.13, "sd": 12.81, "sdSource": "estimated-from-marginal-ray", "label": "L21a (cemented, front of doublet)" },
+    { "r": 32.9830, "t": 3.2000, "medium": "glass", "nd": 1.80400, "vd": 46.60, "sd": 13.39, "sdSource": "estimated-from-marginal-ray", "label": "L21b (cemented, rear of doublet)" },
+    { "r": -154.0000, "t": 2.0000, "medium": "air", "sd": 14.88, "sdSource": "estimated-from-marginal-ray", "label": "air gap" },
+    {
+      "r": -125.0000, "t": 3.6000, "medium": "glass", "nd": 1.85135, "vd": 40.04, "sd": 16.42, "sdSource": "estimated-from-marginal-ray",
+      "asph": { "k": -1, "A4": -3.6998e-6, "A6": -1.7387e-9, "convention": "Finding P1: the patent's own equation (JP2011175123A [0038], equation (a), original PDF p. 7) writes the base term as (y^2/r)/(1+sqrt(1-kappa*y^2/r^2)), i.e. it uses kappa where this engine's sag formula (surface.ts) uses (1+k) -- NOT the same convention as previously claimed here. kappa=0 (Table 7's own value) therefore maps to k = kappa - 1 = -1, not k=0. See .local/astra-review/repro/patent-n50-conic.mjs and n50.test.ts's finite-height sag regression." },
+      "label": "L22 front (asph)"
+    },
+    { "r": -37.8007, "t": 0.1000, "medium": "air", "sd": 18.13, "sdSource": "estimated-from-marginal-ray", "label": "air gap" },
+    { "r": 1843.2441, "t": 4.0000, "medium": "glass", "nd": 1.80400, "vd": 46.60, "sd": 18.18, "sdSource": "estimated-from-marginal-ray", "label": "L23" },
+    { "r": -39.1647, "t": 40.16471, "medium": "air", "sd": 19.20, "sdSource": "estimated-from-marginal-ray", "label": "L23 rear; t = BF at infinity focus" }
+  ],
+  "stated": {
+    "f": 51.60,
+    "fno": 1.86,
+    "halfFieldDeg": 23.06,
+    "bf": 40.16471,
+    "totalLength": 70.86471
+  },
+  "focus": {
+    "method": "rear",
+    "gaps": [
+      {
+        "surface": 6,
+        "atInfinity": 5.30,
+        "atClose": 5.70,
+        "closeObjectDistance": 1700,
+        "note": "patent's R is defined as the object-to-image-plane distance in meters (not object-to-first-surface, and not the usual 'from the sensor' convention used elsewhere in this dataset); R=1.70m at this close-focus condition (magnification beta=-1/30). Index 6 = patent surface 7 (the stop itself, r=0/flat); this is the gap from the stop into the rear group G2 (surfaces 8-14)."
+      },
+      {
+        "surface": 13,
+        "atInfinity": 40.16471,
+        "atClose": 41.86010,
+        "closeObjectDistance": 1700,
+        "note": "same R=1.70m close-focus condition as the gap above; this is the Bf gap itself, which also grows on close focus (delta +1.69539mm, larger than the +0.40mm change in the stop-to-G2 gap above -- the rear group's motion and the whole system's approach to the sensor are not the same 0.4mm, see notes on the totalLength discrepancy). Index 13 = patent surface 14, the last surface."
+      }
+    ],
+    "minFocusM": 0.45,
+    "minFocusSource": "Nikon AF-S NIKKOR 50mm f/1.8G official specifications, https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview, accessed 9/28/2026 (\"Minimum Focus Distance: 1.48 ft. (0.45m)\")",
+    "extrapolate": { "ev": "assumed", "note": "JP 2011-175123 A Example 7 tabulates the focusing gaps only at R = 1.70 m (object to image). The product focuses to 0.45 m, so closer distances continue the same two-gap motion linearly (t > 1): at 0.45 m that is about t = 5, the stop-to-rear-group gap 5.3 -> ~7.3 mm and the back focus 40.2 -> ~48.6 mm. The real mechanism may differ; no source for it was found (09/29/2026)." }
+  },
+  "iris": {
+    "blades": 7,
+    "rounded": true,
+    "source": "Nikon AF-S NIKKOR 50mm f/1.8G official specifications, https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview, accessed 9/28/2026 (\"Diaphragm Blades: 7\"); rounded-blade description corroborated by dpreview.com's specifications page (https://www.dpreview.com/products/nikon/lenses/nikon_50_1p8_g/specifications, \"Aperture notes: rounded blades\") and multiple independent reviews (kenrockwell.com, phillipreeve.net), since nikonusa.com's own spec table states the blade count but not explicitly 'rounded'.",
+    "ev": "spec"
+  },
+  "elements": 7,
+  "groups": 6,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Element/group tie corroboration: G1 (patent surfaces 1-6) is three air-spaced positive/positive/negative meniscus singlets L11/L12/L13 (3 elements, 3 groups); G2 (patent surfaces 8-14) is a cemented negative doublet L21a+L21b (2 elements, 1 group), a single aspherical positive meniscus L22 (1 element, 1 group), and a single positive L23 (1 element, 1 group) -- 7 elements in 6 groups total, with the sole aspherical surface on L22's front face (patent surface 11), matching Nikon's '7 elements in 6 groups, 1 aspherical element' spec for the AF-S NIKKOR 50mm f/1.8G exactly. This structural match, not the patent's own generic 'G1/G2' labels (which mean 'the block before the stop' and 'the block after the stop', not Nikon's marketed element/group convention), is what identifies Example 7 among the patent's 8 examples.",
+    "Patent gives no effective-diameter column; all `sd` values are our own paraxial-trace estimates (see research/lenses-n50.md and .local/n50/selfcheck_n50.py), not patent-stated.",
+    "Focus mechanism: only the stop-to-G2 gap (patent d7, surface 7's t) and the back focus (surface 14's t) are listed as variable across the patent's two focus conditions; every other internal gap in G1 and G2 is fixed. This is consistent with a rear-focus design (G2 moves as a rigid group) but the numbers don't reduce to simple rigid-body translation: d7 grows by 0.40mm while Bf grows by 1.69539mm on close focus, so G2's motion and the lens-to-sensor extension are not the same 0.4mm (see focus.gaps notes). We record both patent-given numbers as-is rather than resolving the mechanism further.",
+    "Patent's own stated totalLength (70.86471mm at infinity) does not equal the sum of every surface's t in this table (76.16471mm); the discrepancy is exactly 5.30mm, i.e. exactly the stop-to-G2 gap (patent d7) at infinity focus -- confirmed algebraically at both focus conditions (the same exact-match holds at close focus using d7=5.70mm). We do not know why the patent's own TL figure appears to omit this one gap; recorded as an open problem rather than silently adjusted. This does not affect the required self-check, which only grades EFL and BF (both pass comfortably), not totalLength.",
+    "No image height (Y) is given in this patent's [Overall specifications] table (unlike p50/p105, which both state Y directly); `stated.imageHeight` is left unset rather than derived, per the schema's own definition of `stated` as what the patent text itself states.",
+    "The paraxial self-check's 'Fno recovered at stop' diagnostic (in selfcheck_n50.py, inherited unmodified from .local/lens-normal/selfcheck.py) does not reproduce fno_stated for this lens (recovers ~2.50 against a stated 1.86); this is a property of where in the script that diagnostic samples the marginal ray (at the stop, after front-group refraction, rather than at the front surface where the construction is exact by definition) and not a transcription problem -- EFL and BF, the two figures that are actually required to check within tolerance, both pass to well under 0.01%."
+  ]
+}

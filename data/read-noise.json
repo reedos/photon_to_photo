@@ -1,0 +1,1207 @@
+{
+  "meta": {
+    "project": "Photon to Photo",
+    "file": "data/read-noise.json",
+    "generatedBy": "read-noise research agent",
+    "accessedDate": "09/28/2026",
+    "scope": "Per-ISO input-referred read noise (electrons) and Photographic Dynamic Range (PDR, EV) for the three camera sensors picked in data/sensors.json, sourced from Bill Claff's photonstophotos.net. See research/read-noise.md for method, exact URLs and a per-camera prose table.",
+    "method": "photonstophotos.net's RN_e.htm and PDR.htm render their charts with Highcharts 4.0.4 from a `series` array written directly into an inline <script> tag on page load (not fetched from a separate JSON/XHR endpoint — there is no separate data file; the numbers are literal JS in the HTML). A plain text-only fetch that strips <script> content (as an earlier pass's WebFetch tool did) sees none of it. This pass used Playwright (headless Chromium, from this project's own node_modules) to load each page, then read the page's own HTML (which already contains the full, evaluated series array for every camera the site tracks) and parsed the `series: [ ... ]` array as JavaScript data with a bracket-balanced extraction + `new Function('return ' + text)()` (safe here: the extracted text is a plain data literal with marker objects only, no executable logic). This is a direct read of the exact numbers Highcharts plots, not a screen-read of chart pixels.",
+    "isoConversion": "Both charts place ISO on a log2 x-axis in 1/3-stop steps; the site's own xAxis label formatter is `ISO = round(3.125 * 2^x)`, applied here identically. RN_e.htm's y-axis is `log2(read noise in electrons)` (its own yAxis title says so); this file reports `readNoiseE = round(2^y, 3 decimals)`. PDR.htm's y-axis is PDR directly in EV, used as-is.",
+    "markerSemantics": "Per RN_e.htm's own on-page notes: an open/white-filled point marks a value outside the camera's 'normal analog range' (an extended low or high ISO reached by a digital push/pull rather than a real analog-gain step) — carried here as `outsideNormalAnalogRange: true`. A 'triangle-down' marker means in-camera noise reduction is being applied at that ISO; 'triangle-up' means additional digital scaling; both carried here as `digitalMarker`. Plain (un-marked) points are the vanilla, analog-gain-only measurements.",
+    "dcgDetectionMethod": "dcgIso is not published by the site as a single field on this chart; it is this session's read of the curve, found programmatically as the ISO step with the steepest negative slope in log2(read noise) vs log2(ISO) between two consecutive, unmarked, in-normal-range points (excluding the extended-ISO digital-pull region and the noise-reduction/scaling region at the top, which are not conversion-gain effects). The candidate is reported as the bracketing ISO pair (fromIso -> toIso), which is how Jim Kasson describes it too (e.g. 'the transition from ISO 250 to ISO 320'). This is a derived reading of Claff's own measured curve, not a number the site states directly in text.",
+    "unityGainAndFwc": "unityGainIso and fwcElectrons come from two independent places on the same site and are recorded separately, not averaged, when they differ: (1) each RN_e.htm series carries `unityEv`/`fwc` fields in its own Highcharts config (used to compute the chart's own legend-click tooltip, e.g. 'Unity ISO ...' and a per-ISO 'Saturation (e-)' column) -- this is Claff's own primary-chart data. (2) Sensor_Characteristics.htm ('DxOMark Derived Sensor Characteristics', a different, DxOMark-score-derived dataset Claff separately publishes) gives its own `unitygain`/`fwc`/`readnoise`/`isoinvariantat` per camera, recorded under `dxomarkDerived` where the camera appears in that table. The two datasets are close but not identical, as expected from two different derivations.",
+    "evidenceKind": "reported — all figures below are Bill Claff's own published measurements/derivations (photonstophotos.net), read directly from the chart's underlying data, not independently re-measured by this session.",
+    "openProblems": [
+      "dcgIso is this session's own slope-based reading of the published curve, described above; it is not a value the site states as a single labeled number on these two charts, so treat it as `derived` from `reported` data, not itself `reported`.",
+      "Sensor_Characteristics.htm ('DxOMark Derived') has no OM-1 or E-M1 Mark III row -- DxOMark has not tested either camera -- so `dxomarkDerived` is only populated for the full-frame and APS-C picks.",
+      "The a7R IV's own RN_e.htm/PDR.htm/Sensor_Characteristics.htm series are all keyed 'Sony ILCE-7RM4', i.e. full-frame (36x24mm) readout; the same RN_e.htm page also carries a separate 'Sony ILCE-7RM4(APS-C)' series (the camera's in-camera APS-C crop mode), not used here since data/sensors.json's full-frame pick is the native full-frame mode.",
+      "photonstophotos.net's per-camera bit-depth suffix ('_12' vs '_14') on RN_e.htm reflects the raw file's bit depth for that model on that chart, not a claim this project makes about ADC bit depth; data/sensors.json's own adcBitDepthBits fields are the citations for that."
+    ]
+  },
+  "cameras": {
+    "Sony a7R IV (ILCE-7RM4)": {
+      "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+      "loc": "Highcharts `series` array embedded in the page's inline <script> (Highcharts 4.0.4, chart \"Input-referred Read Noise versus ISO Setting\"), object with name 'Sony ILCE-7RM4_14' — extracted by loading the page with Playwright/headless Chromium and reading the chart's own JS data literal (not a screen-read of the plotted pixels). x is stored as log2(ISO/3.125) in 1/3-stop steps (site's own xAxis label formatter: ISO = round(3.125 * 2^x)); y is log2(read noise in electrons) (site's own yAxis title). This session converted both back to plain ISO and electrons.",
+      "accessed": "09/28/2026",
+      "ev": "reported",
+      "fwcElectrons": {
+        "v": 34452,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Sony ILCE-7RM4_14', Highcharts series option `fwc` (used by the chart's own legend-click tooltip to compute a per-ISO Saturation(e-) column)",
+        "accessed": "09/28/2026"
+      },
+      "unityGainIso": {
+        "v": 217,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Sony ILCE-7RM4_14', Highcharts series option `unityEv`, converted with the site's own ISO formula (ISO = round(3.125 * 2^unityEv)); the chart's own legend-click popup shows this same value as 'Unity ISO ...'",
+        "accessed": "09/28/2026"
+      },
+      "normalAnalogRangeIso": {
+        "v": [
+          100,
+          12800
+        ],
+        "unit": "ISO [lo, hi]",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Sony ILCE-7RM4_14', Highcharts series options `loEv`/`hiEv`, converted with the site's ISO formula; points inside this range are Claff's plain analog-gain measurements, points outside are open/white-marker digital push/pull",
+        "accessed": "09/28/2026"
+      },
+      "dcgIso": {
+        "fromIso": 251,
+        "toIso": 318,
+        "ev": "derived",
+        "calc": "Steepest adjacent-point drop in log2(read noise) vs log2(ISO) among plain (unmarked, in-normal-range) points of series 'Sony ILCE-7RM4_14': from ISO 251 (2.77 e-) to ISO 318 (1.301 e-), a slope of -3.21 stops of read-noise change per stop of ISO change (flat/gentle everywhere else on the curve). See meta.dcgDetectionMethod.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "accessed": "09/28/2026"
+      },
+      "pdrLowLightEv": {
+        "v": 10.5681,
+        "unit": "EV (log2 ISO-ratio x-position)",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/PDR.htm",
+        "loc": "series 'Sony ILCE-7RM4', Highcharts series option `lowLightEv` (the chart's own marker for where it considers the camera to enter its 'low light' regime on this plot)",
+        "accessed": "09/28/2026"
+      },
+      "points": [
+        {
+          "iso": 50,
+          "readNoiseE": 3.095,
+          "pdrEv": 11.61,
+          "outsideNormalAnalogRange": true
+        },
+        {
+          "iso": 63,
+          "readNoiseE": 3.605,
+          "pdrEv": 11.16,
+          "outsideNormalAnalogRange": true
+        },
+        {
+          "iso": 80,
+          "readNoiseE": 4.691,
+          "pdrEv": 10.77,
+          "outsideNormalAnalogRange": true
+        },
+        {
+          "iso": 100,
+          "readNoiseE": 2.908,
+          "pdrEv": 11.62
+        },
+        {
+          "iso": 126,
+          "readNoiseE": 2.969,
+          "pdrEv": 11.23
+        },
+        {
+          "iso": 159,
+          "readNoiseE": 2.928,
+          "pdrEv": 10.79
+        },
+        {
+          "iso": 200,
+          "readNoiseE": 2.868,
+          "pdrEv": 10.41
+        },
+        {
+          "iso": 251,
+          "readNoiseE": 2.77,
+          "pdrEv": 10.12
+        },
+        {
+          "iso": 318,
+          "readNoiseE": 1.301,
+          "pdrEv": 10.27
+        },
+        {
+          "iso": 400,
+          "readNoiseE": 1.248,
+          "pdrEv": 9.99
+        },
+        {
+          "iso": 503,
+          "readNoiseE": 1.266,
+          "pdrEv": 9.67
+        },
+        {
+          "iso": 636,
+          "readNoiseE": 1.231,
+          "pdrEv": 9.36
+        },
+        {
+          "iso": 800,
+          "readNoiseE": 1.214,
+          "pdrEv": 9.07
+        },
+        {
+          "iso": 1006,
+          "readNoiseE": 1.223,
+          "pdrEv": 8.72
+        },
+        {
+          "iso": 1273,
+          "readNoiseE": 1.173,
+          "pdrEv": 8.34
+        },
+        {
+          "iso": 1600,
+          "readNoiseE": 1.173,
+          "pdrEv": 8.02
+        },
+        {
+          "iso": 2011,
+          "readNoiseE": 1.197,
+          "pdrEv": 7.7
+        },
+        {
+          "iso": 2546,
+          "readNoiseE": 1.133,
+          "pdrEv": 7.42
+        },
+        {
+          "iso": 3200,
+          "readNoiseE": 1.133,
+          "pdrEv": 7.08
+        },
+        {
+          "iso": 4022,
+          "readNoiseE": 1.149,
+          "pdrEv": 6.7
+        },
+        {
+          "iso": 5091,
+          "readNoiseE": 1.141,
+          "pdrEv": 6.42
+        },
+        {
+          "iso": 6400,
+          "readNoiseE": 1.133,
+          "pdrEv": 6.08
+        },
+        {
+          "iso": 8045,
+          "readNoiseE": 1.141,
+          "pdrEv": 5.78
+        },
+        {
+          "iso": 10183,
+          "readNoiseE": 1.141,
+          "pdrEv": 5.44
+        },
+        {
+          "iso": 12800,
+          "readNoiseE": 1.087,
+          "pdrEv": 5.14
+        },
+        {
+          "iso": 16090,
+          "readNoiseE": 0.758,
+          "pdrEv": 5.16,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 20366,
+          "readNoiseE": 0.742,
+          "pdrEv": 4.86,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 25600,
+          "readNoiseE": 0.717,
+          "pdrEv": 4.53,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 32180,
+          "readNoiseE": 0.693,
+          "pdrEv": 4.2,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 40731,
+          "readNoiseE": 0.674,
+          "pdrEv": 3.87,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 51200,
+          "readNoiseE": 0.655,
+          "pdrEv": 3.57,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 64359,
+          "readNoiseE": 0.664,
+          "pdrEv": 3.2,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 81463,
+          "readNoiseE": 0.655,
+          "pdrEv": 2.89,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 102400,
+          "readNoiseE": 0.642,
+          "pdrEv": 2.54,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        }
+      ],
+      "dxomarkDerived": {
+        "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+        "loc": "flat data array entry `{ name: 'Sony ILCE-7RM4_14', unitygain, fwc, qe, readnoise, adcnoise, isoinvariantat }` on the 'DxOMark Derived Sensor Characteristics' page — a separate dataset Claff derives from DxOMark's published measurements, distinct from his own RN_e.htm/PDR.htm charts",
+        "accessed": "09/28/2026",
+        "ev": "reported",
+        "unityGainIso": 217.1,
+        "fwcElectrons": 35520,
+        "qePercent": 58,
+        "readNoiseFloorE": 1.1,
+        "adcNoiseE": 1.5,
+        "isoInvariantAtIso": 553,
+        "note": "Full well here (35,520 e-) is close to but not identical to the RN_e.htm chart's own fwc (34,452 e-) -- two different derivations of the same camera by the same site; recorded separately, not averaged. Both are well below the existing data/sensors.json in-camera figure (37,000 e-, Kasson blog) and further below the bare-chip ZWO ASI6200 figure (51,400 e-); all four numbers describe different measurement methods/contexts of what is very likely the same IMX455 silicon."
+      },
+      "notes": [
+        "DCG-switch candidate (ISO 251 -> ISO 318, i.e. essentially ISO 250 -> 320) matches Jim Kasson's blog post already cited in data/sensors.json/research/sensor-sources.md verbatim ('the transition from ISO 250 to ISO 320, at which point the camera switches into high-conversion-gain mode') -- independent cross-check between this session's own curve-slope reading of Claff's chart and Kasson's prose description of the same chart.",
+        "Unity-gain ISO from this chart (217) matches the Sensor_Characteristics.htm DxOMark-derived figure (217.1) almost exactly -- strong internal consistency between the two photonstophotos datasets.",
+        "This RN_e.htm page also lists a separate 'Sony ILCE-7RM4(APS-C)' series for the camera's in-camera APS-C crop mode; not used, since the full-frame pick uses the native full-frame readout."
+      ],
+      "pdrSrc": "https://www.photonstophotos.net/Charts/PDR.htm",
+      "pdrLoc": "Highcharts `series` array embedded in the page's inline <script> (chart \"Photographic Dynamic Range versus ISO Setting\"), object with name 'Sony ILCE-7RM4' — same extraction method as RN_e.htm. y is PDR directly in EV (site's own yAxis, 0-13.5 range), x on the same ISO grid as RN_e.htm."
+    },
+    "Sony a6400 (ILCE-6400)": {
+      "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+      "loc": "Highcharts `series` array embedded in the page's inline <script> (Highcharts 4.0.4, chart \"Input-referred Read Noise versus ISO Setting\"), object with name 'Sony ILCE-6400_14' — extracted by loading the page with Playwright/headless Chromium and reading the chart's own JS data literal (not a screen-read of the plotted pixels). x is stored as log2(ISO/3.125) in 1/3-stop steps (site's own xAxis label formatter: ISO = round(3.125 * 2^x)); y is log2(read noise in electrons) (site's own yAxis title). This session converted both back to plain ISO and electrons.",
+      "accessed": "09/28/2026",
+      "ev": "reported",
+      "fwcElectrons": {
+        "v": 36443,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Sony ILCE-6400_14', Highcharts series option `fwc` (used by the chart's own legend-click tooltip to compute a per-ISO Saturation(e-) column)",
+        "accessed": "09/28/2026"
+      },
+      "unityGainIso": {
+        "v": 230,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Sony ILCE-6400_14', Highcharts series option `unityEv`, converted with the site's own ISO formula (ISO = round(3.125 * 2^unityEv)); the chart's own legend-click popup shows this same value as 'Unity ISO ...'",
+        "accessed": "09/28/2026"
+      },
+      "normalAnalogRangeIso": {
+        "v": [
+          100,
+          25600
+        ],
+        "unit": "ISO [lo, hi]",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Sony ILCE-6400_14', Highcharts series options `loEv`/`hiEv`, converted with the site's ISO formula; points inside this range are Claff's plain analog-gain measurements, points outside are open/white-marker digital push/pull",
+        "accessed": "09/28/2026"
+      },
+      "dcgIso": {
+        "fromIso": 318,
+        "toIso": 400,
+        "ev": "derived",
+        "calc": "Steepest adjacent-point drop in log2(read noise) vs log2(ISO) among plain (unmarked, in-normal-range) points of series 'Sony ILCE-6400_14': from ISO 318 (2.751 e-) to ISO 400 (1.173 e-), a slope of -3.73 stops of read-noise change per stop of ISO change (flat/gentle everywhere else on the curve). See meta.dcgDetectionMethod.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "accessed": "09/28/2026"
+      },
+      "pdrLowLightEv": {
+        "v": 9.6262,
+        "unit": "EV (log2 ISO-ratio x-position)",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/PDR.htm",
+        "loc": "series 'Sony ILCE-6400', Highcharts series option `lowLightEv` (the chart's own marker for where it considers the camera to enter its 'low light' regime on this plot)",
+        "accessed": "09/28/2026"
+      },
+      "points": [
+        {
+          "iso": 100,
+          "readNoiseE": 3.249,
+          "pdrEv": 10.51
+        },
+        {
+          "iso": 126,
+          "readNoiseE": 3.053,
+          "pdrEv": 10.28
+        },
+        {
+          "iso": 159,
+          "readNoiseE": 2.928,
+          "pdrEv": 10.04
+        },
+        {
+          "iso": 200,
+          "readNoiseE": 2.908,
+          "pdrEv": 9.79
+        },
+        {
+          "iso": 251,
+          "readNoiseE": 2.77,
+          "pdrEv": 9.49
+        },
+        {
+          "iso": 318,
+          "readNoiseE": 2.751,
+          "pdrEv": 9.16
+        },
+        {
+          "iso": 400,
+          "readNoiseE": 1.173,
+          "pdrEv": 9.25
+        },
+        {
+          "iso": 503,
+          "readNoiseE": 1.117,
+          "pdrEv": 8.76
+        },
+        {
+          "iso": 636,
+          "readNoiseE": 1.094,
+          "pdrEv": 8.48
+        },
+        {
+          "iso": 800,
+          "readNoiseE": 1.087,
+          "pdrEv": 8.17
+        },
+        {
+          "iso": 1006,
+          "readNoiseE": 1.087,
+          "pdrEv": 7.79
+        },
+        {
+          "iso": 1273,
+          "readNoiseE": 1.064,
+          "pdrEv": 7.53
+        },
+        {
+          "iso": 1600,
+          "readNoiseE": 1.05,
+          "pdrEv": 7.21
+        },
+        {
+          "iso": 2011,
+          "readNoiseE": 1.042,
+          "pdrEv": 6.88
+        },
+        {
+          "iso": 2546,
+          "readNoiseE": 1.014,
+          "pdrEv": 6.45
+        },
+        {
+          "iso": 3200,
+          "readNoiseE": 1.028,
+          "pdrEv": 6.17
+        },
+        {
+          "iso": 4022,
+          "readNoiseE": 1.007,
+          "pdrEv": 5.87
+        },
+        {
+          "iso": 5091,
+          "readNoiseE": 0.986,
+          "pdrEv": 5.37
+        },
+        {
+          "iso": 6400,
+          "readNoiseE": 0.779,
+          "pdrEv": 5.03
+        },
+        {
+          "iso": 8045,
+          "readNoiseE": 0.768,
+          "pdrEv": 4.9
+        },
+        {
+          "iso": 10183,
+          "readNoiseE": 0.732,
+          "pdrEv": 4.58
+        },
+        {
+          "iso": 12800,
+          "readNoiseE": 0.747,
+          "pdrEv": 3.94
+        },
+        {
+          "iso": 16090,
+          "readNoiseE": 0.753,
+          "pdrEv": 3.85
+        },
+        {
+          "iso": 20366,
+          "readNoiseE": 0.722,
+          "pdrEv": 3.52
+        },
+        {
+          "iso": 25600,
+          "readNoiseE": 0.722,
+          "pdrEv": 3.21
+        },
+        {
+          "iso": 32180,
+          "readNoiseE": 0.57,
+          "pdrEv": 3.47,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 40731,
+          "readNoiseE": 0.559,
+          "pdrEv": 3.03,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 51200,
+          "readNoiseE": 0.547,
+          "pdrEv": 2.74,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 64359,
+          "readNoiseE": 0.536,
+          "pdrEv": 2.28,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 81463,
+          "readNoiseE": 0.525,
+          "pdrEv": 1.98,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 102400,
+          "readNoiseE": 0.529,
+          "pdrEv": 1.68,
+          "outsideNormalAnalogRange": true,
+          "digitalMarker": "triangle-down"
+        }
+      ],
+      "dxomarkDerived": {
+        "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+        "loc": "flat data array entry `{ name: 'Sony ILCE-6400_14', ... }` on the 'DxOMark Derived Sensor Characteristics' page",
+        "accessed": "09/28/2026",
+        "ev": "reported",
+        "unityGainIso": 229.6,
+        "fwcElectrons": 37104,
+        "qePercent": 57,
+        "readNoiseFloorE": 1.2,
+        "adcNoiseE": 2.4,
+        "isoInvariantAtIso": 896
+      },
+      "familyCrossCheck": {
+        "note": "data/sensors.json treats the a6300/a6400/a6500 as sharing the same 24.2MP BSI sensor generation. photonstophotos.net tracks all three as separate RN_e.htm series; both siblings are extracted here as a same-family consistency check on the a6400 pick, not as this project's chosen camera.",
+        "Sony a6300 (ILCE-6300)": {
+          "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+          "loc": "Highcharts `series` array embedded in the page's inline <script> (Highcharts 4.0.4, chart \"Input-referred Read Noise versus ISO Setting\"), object with name 'Sony ILCE-6300_14' — extracted by loading the page with Playwright/headless Chromium and reading the chart's own JS data literal (not a screen-read of the plotted pixels). x is stored as log2(ISO/3.125) in 1/3-stop steps (site's own xAxis label formatter: ISO = round(3.125 * 2^x)); y is log2(read noise in electrons) (site's own yAxis title). This session converted both back to plain ISO and electrons.",
+          "accessed": "09/28/2026",
+          "ev": "reported",
+          "fwcElectrons": 38355,
+          "unityGainIso": 241,
+          "normalAnalogRangeIso": [
+            100,
+            5091
+          ],
+          "dcgIso": {
+            "fromIso": 318,
+            "toIso": 400,
+            "ev": "derived",
+            "calc": "slope -3.42 stops/stop, see meta.dcgDetectionMethod"
+          },
+          "dxomarkDerived": {
+            "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+            "unityGainIso": 241.7,
+            "fwcElectrons": 37907,
+            "qePercent": 58,
+            "readNoiseFloorE": 1.2,
+            "adcNoiseE": 2.7,
+            "isoInvariantAtIso": 1026
+          },
+          "points": [
+            {
+              "iso": 100,
+              "readNoiseE": 3.891
+            },
+            {
+              "iso": 126,
+              "readNoiseE": 3.63
+            },
+            {
+              "iso": 159,
+              "readNoiseE": 3.458
+            },
+            {
+              "iso": 200,
+              "readNoiseE": 3.34
+            },
+            {
+              "iso": 251,
+              "readNoiseE": 3.16
+            },
+            {
+              "iso": 318,
+              "readNoiseE": 3.01
+            },
+            {
+              "iso": 400,
+              "readNoiseE": 1.376
+            },
+            {
+              "iso": 503,
+              "readNoiseE": 1.283
+            },
+            {
+              "iso": 636,
+              "readNoiseE": 1.24
+            },
+            {
+              "iso": 800,
+              "readNoiseE": 1.197
+            },
+            {
+              "iso": 1006,
+              "readNoiseE": 1.157
+            },
+            {
+              "iso": 1273,
+              "readNoiseE": 1.141
+            },
+            {
+              "iso": 1600,
+              "readNoiseE": 1.102
+            },
+            {
+              "iso": 2011,
+              "readNoiseE": 1.094
+            },
+            {
+              "iso": 2546,
+              "readNoiseE": 1.064
+            },
+            {
+              "iso": 3200,
+              "readNoiseE": 1.05
+            },
+            {
+              "iso": 4022,
+              "readNoiseE": 1.035
+            },
+            {
+              "iso": 5091,
+              "readNoiseE": 0.993
+            },
+            {
+              "iso": 6400,
+              "readNoiseE": 0.801,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 8045,
+              "readNoiseE": 0.841,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 10183,
+              "readNoiseE": 0.796,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 12800,
+              "readNoiseE": 0.547,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 16090,
+              "readNoiseE": 0.547,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 20366,
+              "readNoiseE": 0.532,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 25600,
+              "readNoiseE": 0.54,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 32180,
+              "readNoiseE": 0.543,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 40731,
+              "readNoiseE": 0.547,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 51200,
+              "readNoiseE": 0.536,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            }
+          ]
+        },
+        "Sony a6500 (ILCE-6500)": {
+          "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+          "loc": "Highcharts `series` array embedded in the page's inline <script> (Highcharts 4.0.4, chart \"Input-referred Read Noise versus ISO Setting\"), object with name 'Sony ILCE-6500_14' — extracted by loading the page with Playwright/headless Chromium and reading the chart's own JS data literal (not a screen-read of the plotted pixels). x is stored as log2(ISO/3.125) in 1/3-stop steps (site's own xAxis label formatter: ISO = round(3.125 * 2^x)); y is log2(read noise in electrons) (site's own yAxis title). This session converted both back to plain ISO and electrons.",
+          "accessed": "09/28/2026",
+          "ev": "reported",
+          "fwcElectrons": 38207,
+          "unityGainIso": 241,
+          "normalAnalogRangeIso": [
+            100,
+            5091
+          ],
+          "dcgIso": {
+            "fromIso": 318,
+            "toIso": 400,
+            "ev": "derived",
+            "calc": "slope -3.45 stops/stop, see meta.dcgDetectionMethod"
+          },
+          "dxomarkDerived": {
+            "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
+            "unityGainIso": 240.7,
+            "fwcElectrons": 38172,
+            "qePercent": 57,
+            "readNoiseFloorE": 1.3,
+            "adcNoiseE": 2.3,
+            "isoInvariantAtIso": 859
+          },
+          "points": [
+            {
+              "iso": 100,
+              "readNoiseE": 3.706
+            },
+            {
+              "iso": 126,
+              "readNoiseE": 3.58
+            },
+            {
+              "iso": 159,
+              "readNoiseE": 3.34
+            },
+            {
+              "iso": 200,
+              "readNoiseE": 3.204
+            },
+            {
+              "iso": 251,
+              "readNoiseE": 3.095
+            },
+            {
+              "iso": 318,
+              "readNoiseE": 2.928
+            },
+            {
+              "iso": 400,
+              "readNoiseE": 1.329
+            },
+            {
+              "iso": 503,
+              "readNoiseE": 1.257
+            },
+            {
+              "iso": 636,
+              "readNoiseE": 1.214
+            },
+            {
+              "iso": 800,
+              "readNoiseE": 1.197
+            },
+            {
+              "iso": 1006,
+              "readNoiseE": 1.149
+            },
+            {
+              "iso": 1273,
+              "readNoiseE": 1.173
+            },
+            {
+              "iso": 1600,
+              "readNoiseE": 1.149
+            },
+            {
+              "iso": 2011,
+              "readNoiseE": 1.11
+            },
+            {
+              "iso": 2546,
+              "readNoiseE": 1.094
+            },
+            {
+              "iso": 3200,
+              "readNoiseE": 1.079
+            },
+            {
+              "iso": 4022,
+              "readNoiseE": 1.064
+            },
+            {
+              "iso": 5091,
+              "readNoiseE": 1.057
+            },
+            {
+              "iso": 6400,
+              "readNoiseE": 0.847,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 8045,
+              "readNoiseE": 0.807,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 10183,
+              "readNoiseE": 0.835,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 12800,
+              "readNoiseE": 0.678,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 16090,
+              "readNoiseE": 0.651,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 20366,
+              "readNoiseE": 0.646,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 25600,
+              "readNoiseE": 0.62,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 32180,
+              "readNoiseE": 0.616,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 40731,
+              "readNoiseE": 0.607,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            },
+            {
+              "iso": 51200,
+              "readNoiseE": 0.586,
+              "outsideNormalAnalogRange": true,
+              "digitalMarker": "triangle-down"
+            }
+          ]
+        }
+      },
+      "notes": [
+        "DCG-switch candidate for the a6400 itself is ISO 318 -> 400 (essentially ISO 320 -> 400). This directly resolves the open conflict flagged in the existing research/sensor-sources.md ('the charts... indicate the dual gain ISO kicks in at ISO 400' vs 'an alternate 320 figure seen cited elsewhere'): the new-gain step is measured here as taking effect arriving AT ISO 400 (320 is the last low-gain point, 400 the first high-gain point) -- both cited figures were describing the same transition from opposite sides of it.",
+        "The a6300 and a6500 same-family cross-checks land on the identical ISO 318 -> 400 transition (with slightly different absolute read-noise values), consistent with data/sensors.json's premise that all three share one sensor generation.",
+        "Full well varies a little across the three siblings on this chart (a6400 36,443 e-, a6300 38,355 e-, a6500 38,207 e-) -- within normal unit-to-unit/measurement variation for what is reported to be the same silicon, not a evidence of a different chip."
+      ],
+      "pdrSrc": "https://www.photonstophotos.net/Charts/PDR.htm",
+      "pdrLoc": "Highcharts `series` array embedded in the page's inline <script> (chart \"Photographic Dynamic Range versus ISO Setting\"), object with name 'Sony ILCE-6400' — same extraction method as RN_e.htm. y is PDR directly in EV (site's own yAxis, 0-13.5 range), x on the same ISO grid as RN_e.htm."
+    },
+    "OM System OM-1": {
+      "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+      "loc": "Highcharts `series` array embedded in the page's inline <script> (Highcharts 4.0.4, chart \"Input-referred Read Noise versus ISO Setting\"), object with name 'Olympus System OM-1_12' — extracted by loading the page with Playwright/headless Chromium and reading the chart's own JS data literal (not a screen-read of the plotted pixels). x is stored as log2(ISO/3.125) in 1/3-stop steps (site's own xAxis label formatter: ISO = round(3.125 * 2^x)); y is log2(read noise in electrons) (site's own yAxis title). This session converted both back to plain ISO and electrons.",
+      "accessed": "09/28/2026",
+      "ev": "reported",
+      "fwcElectrons": {
+        "v": 19491,
+        "unit": "e-",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Olympus System OM-1_12', Highcharts series option `fwc` (used by the chart's own legend-click tooltip to compute a per-ISO Saturation(e-) column)",
+        "accessed": "09/28/2026"
+      },
+      "unityGainIso": {
+        "v": 1013,
+        "unit": "ISO",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Olympus System OM-1_12', Highcharts series option `unityEv`, converted with the site's own ISO formula (ISO = round(3.125 * 2^unityEv)); the chart's own legend-click popup shows this same value as 'Unity ISO ...'",
+        "accessed": "09/28/2026"
+      },
+      "normalAnalogRangeIso": {
+        "v": [
+          200,
+          102400
+        ],
+        "unit": "ISO [lo, hi]",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "loc": "series 'Olympus System OM-1_12', Highcharts series options `loEv`/`hiEv`, converted with the site's ISO formula; points inside this range are Claff's plain analog-gain measurements, points outside are open/white-marker digital push/pull",
+        "accessed": "09/28/2026"
+      },
+      "dcgIso": {
+        "fromIso": 800,
+        "toIso": 1006,
+        "ev": "derived",
+        "calc": "Steepest adjacent-point drop in log2(read noise) vs log2(ISO) among plain (unmarked, in-normal-range) points of series 'Olympus System OM-1_12': from ISO 800 (2.657 e-) to ISO 1006 (1.705 e-), a slope of -1.94 stops of read-noise change per stop of ISO change (flat/gentle everywhere else on the curve). See meta.dcgDetectionMethod.",
+        "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+        "accessed": "09/28/2026"
+      },
+      "pdrLowLightEv": {
+        "v": 9.592,
+        "unit": "EV (log2 ISO-ratio x-position)",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/PDR.htm",
+        "loc": "series 'Olympus System OM-1', Highcharts series option `lowLightEv` (the chart's own marker for where it considers the camera to enter its 'low light' regime on this plot)",
+        "accessed": "09/28/2026"
+      },
+      "points": [
+        {
+          "iso": 80,
+          "readNoiseE": 4.959,
+          "pdrEv": 9.44,
+          "outsideNormalAnalogRange": true
+        },
+        {
+          "iso": 100,
+          "readNoiseE": 4.17,
+          "pdrEv": 9.41,
+          "outsideNormalAnalogRange": true
+        },
+        {
+          "iso": 200,
+          "readNoiseE": 3.972,
+          "pdrEv": 9.54
+        },
+        {
+          "iso": 251,
+          "readNoiseE": 3.531,
+          "pdrEv": 9.27
+        },
+        {
+          "iso": 318,
+          "readNoiseE": 3.294,
+          "pdrEv": 9.02
+        },
+        {
+          "iso": 400,
+          "readNoiseE": 3.138,
+          "pdrEv": 8.69
+        },
+        {
+          "iso": 503,
+          "readNoiseE": 2.949,
+          "pdrEv": 8.45
+        },
+        {
+          "iso": 636,
+          "readNoiseE": 2.732,
+          "pdrEv": 8.14
+        },
+        {
+          "iso": 800,
+          "readNoiseE": 2.657,
+          "pdrEv": 7.83
+        },
+        {
+          "iso": 1006,
+          "readNoiseE": 1.705,
+          "pdrEv": 7.73
+        },
+        {
+          "iso": 1273,
+          "readNoiseE": 1.659,
+          "pdrEv": 7.39
+        },
+        {
+          "iso": 1600,
+          "readNoiseE": 1.602,
+          "pdrEv": 7.06
+        },
+        {
+          "iso": 2011,
+          "readNoiseE": 1.526,
+          "pdrEv": 6.74
+        },
+        {
+          "iso": 2546,
+          "readNoiseE": 1.464,
+          "pdrEv": 6.43
+        },
+        {
+          "iso": 3200,
+          "readNoiseE": 1.444,
+          "pdrEv": 6.11
+        },
+        {
+          "iso": 4022,
+          "readNoiseE": 1.395,
+          "pdrEv": 5.79
+        },
+        {
+          "iso": 5091,
+          "readNoiseE": 1.329,
+          "pdrEv": 5.43
+        },
+        {
+          "iso": 6400,
+          "readNoiseE": 1.31,
+          "pdrEv": 5.12
+        },
+        {
+          "iso": 8045,
+          "readNoiseE": 1.31,
+          "pdrEv": 4.78
+        },
+        {
+          "iso": 10183,
+          "readNoiseE": 1.266,
+          "pdrEv": 4.48
+        },
+        {
+          "iso": 12800,
+          "readNoiseE": 1.283,
+          "pdrEv": 4.13
+        },
+        {
+          "iso": 16090,
+          "readNoiseE": 0.993,
+          "pdrEv": 3.84,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 20366,
+          "readNoiseE": 0.959,
+          "pdrEv": 3.48,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 25600,
+          "readNoiseE": 0.979,
+          "pdrEv": 3.16,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 32180,
+          "readNoiseE": 0.973,
+          "pdrEv": 2.83,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 40731,
+          "readNoiseE": 0.946,
+          "pdrEv": 2.47,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 51200,
+          "readNoiseE": 0.979,
+          "pdrEv": 2.21,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 64359,
+          "readNoiseE": 0.953,
+          "pdrEv": 1.86,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 81463,
+          "readNoiseE": 0.92,
+          "pdrEv": 1.5,
+          "digitalMarker": "triangle-down"
+        },
+        {
+          "iso": 102400,
+          "readNoiseE": 0.973,
+          "pdrEv": 1.18,
+          "digitalMarker": "triangle-down"
+        }
+      ],
+      "crossCheck_emIII": {
+        "note": "data/sensors.json's existing OM-1 record leaned on a blocked-page search summary (low confidence) for its full-well and DCG-switch figures, using the E-M1 Mark III as a stand-in. This pass loaded photonstophotos.net directly and found the OM-1 itself as its own RN_e.htm/PDR.htm series ('Olympus System OM-1_12') -- see the top-level entry above, which is now a direct reading, not a stand-in. The E-M1 III figures below are kept only as an explicit same-lineage comparison, confirming the two curves really are close except where the OM-1 gains its extra dual-conversion-gain step, matching the DPReview-forum claim data/sensors.json already recorded (low-confidence there; now visually/numerically corroborated here).",
+        "Olympus OM-D E-M1 Mark III": {
+          "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
+          "loc": "Highcharts `series` array embedded in the page's inline <script> (Highcharts 4.0.4, chart \"Input-referred Read Noise versus ISO Setting\"), object with name 'Olympus OM-D E-M1 Mark III_12' — extracted by loading the page with Playwright/headless Chromium and reading the chart's own JS data literal (not a screen-read of the plotted pixels). x is stored as log2(ISO/3.125) in 1/3-stop steps (site's own xAxis label formatter: ISO = round(3.125 * 2^x)); y is log2(read noise in electrons) (site's own yAxis title). This session converted both back to plain ISO and electrons.",
+          "accessed": "09/28/2026",
+          "ev": "reported",
+          "fwcElectrons": 21320,
+          "unityGainIso": 1108,
+          "normalAnalogRangeIso": [
+            200,
+            25600
+          ],
+          "pdrLowLightEv": 9.6275,
+          "dcgIsoCandidate": {
+            "fromIso": 1600,
+            "toIso": 2011,
+            "ev": "derived",
+            "calc": "slope -1.27 stops/stop -- markedly gentler than the OM-1's own -1.94 stops/stop step, i.e. the E-M1 III's curve has no comparably sharp cliff; this candidate is a soft knee, not read as a real second conversion-gain region. See meta.dcgDetectionMethod."
+          },
+          "points": [
+            {
+              "iso": 63,
+              "readNoiseE": 4.724,
+              "pdrEv": 9.74,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 100,
+              "readNoiseE": 4.377,
+              "pdrEv": 9.53,
+              "outsideNormalAnalogRange": true
+            },
+            {
+              "iso": 200,
+              "readNoiseE": 4.141,
+              "pdrEv": 9.74
+            },
+            {
+              "iso": 251,
+              "readNoiseE": 3.864,
+              "pdrEv": 9.45
+            },
+            {
+              "iso": 318,
+              "readNoiseE": 3.434,
+              "pdrEv": 9.2
+            },
+            {
+              "iso": 400,
+              "readNoiseE": 3.249,
+              "pdrEv": 8.77
+            },
+            {
+              "iso": 503,
+              "readNoiseE": 3.074,
+              "pdrEv": 8.47
+            },
+            {
+              "iso": 636,
+              "readNoiseE": 2.828,
+              "pdrEv": 8.2
+            },
+            {
+              "iso": 800,
+              "readNoiseE": 2.713,
+              "pdrEv": 7.76
+            },
+            {
+              "iso": 1006,
+              "readNoiseE": 2.567,
+              "pdrEv": 7.54
+            },
+            {
+              "iso": 1273,
+              "readNoiseE": 2.445,
+              "pdrEv": 7.22
+            },
+            {
+              "iso": 1600,
+              "readNoiseE": 2.378,
+              "pdrEv": 6.91
+            },
+            {
+              "iso": 2011,
+              "readNoiseE": 1.778,
+              "pdrEv": 6.73
+            },
+            {
+              "iso": 2546,
+              "readNoiseE": 1.682,
+              "pdrEv": 6.47
+            },
+            {
+              "iso": 3200,
+              "readNoiseE": 1.636,
+              "pdrEv": 6.16
+            },
+            {
+              "iso": 4022,
+              "readNoiseE": 1.602,
+              "pdrEv": 5.82
+            },
+            {
+              "iso": 5091,
+              "readNoiseE": 1.516,
+              "pdrEv": 5.56
+            },
+            {
+              "iso": 6400,
+              "readNoiseE": 1.526,
+              "pdrEv": 5.22
+            },
+            {
+              "iso": 8045,
+              "readNoiseE": 1.537,
+              "pdrEv": 4.91
+            },
+            {
+              "iso": 10183,
+              "readNoiseE": 1.526,
+              "pdrEv": 4.57
+            },
+            {
+              "iso": 12800,
+              "readNoiseE": 1.516,
+              "pdrEv": 4.22
+            },
+            {
+              "iso": 16090,
+              "readNoiseE": 1.516,
+              "pdrEv": 3.89
+            },
+            {
+              "iso": 20366,
+              "readNoiseE": 1.516,
+              "pdrEv": 3.59
+            },
+            {
+              "iso": 25600,
+              "readNoiseE": 1.537,
+              "pdrEv": 3.23
+            }
+          ]
+        }
+      },
+      "notes": [
+        "OM-1 full well (19,491 e-) is somewhat lower than the E-M1 III's (21,320 e-, the figure data/sensors.json currently uses as an OM-1 stand-in) -- now that the OM-1 has its own direct chart reading, its own number should replace the stand-in in data/sensors.json.",
+        "DCG-switch candidate ISO 800 -> 1006 (essentially ISO 800 -> 1000) matches the existing low-confidence DPReview-forum-derived claim in research/sensor-sources.md ('the OM-1 sensor shows some advantage due to the dual-gain at ISO1000') -- now confirmed directly from the primary chart rather than a blocked-page search summary.",
+        "The E-M1 III's own curve (cross-check above) has no comparably sharp cliff anywhere in its normal analog range -- consistent with the existing research note that the OM-1's dual-conversion-gain step is a difference from its predecessor, not a shared feature.",
+        "No Sensor_Characteristics.htm (DxOMark-derived) row exists for either the OM-1 or the E-M1 III -- DxOMark has not tested either camera -- so no dxomarkDerived cross-check is available for this pick, unlike the full-frame and APS-C ones."
+      ],
+      "pdrSrc": "https://www.photonstophotos.net/Charts/PDR.htm",
+      "pdrLoc": "Highcharts `series` array embedded in the page's inline <script> (chart \"Photographic Dynamic Range versus ISO Setting\"), object with name 'Olympus System OM-1' — same extraction method as RN_e.htm. y is PDR directly in EV (site's own yAxis, 0-13.5 range), x on the same ISO grid as RN_e.htm."
+    }
+  }
+}

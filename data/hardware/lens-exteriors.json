@@ -1,0 +1,943 @@
+{
+  "meta": {
+    "project": "Photon to Photo",
+    "file": "data/hardware/lens-exteriors.json",
+    "generatedBy": "exteriors agent",
+    "accessedDate": "09/28/2026",
+    "scope": "Published exterior dimensions and control layout for the 12 lenses in data/lenses/*.json. Five lenses are tied to a real product (representativeOf set) and carry that product's own maker-published figures. The other seven are class-representative designs; each gets rounded values derived from 2-3 real lenses of the same focal length and aperture class, cited individually and labeled assumed. See research/exteriors.md for prose, source conflicts, and what could not be found.",
+    "evidenceKinds": ["spec", "vendor", "reported", "derived", "assumed"],
+    "schema": "Each lens entry: diameterMm, lengthMm, lengthFrom, filterMm, weightG, apertureRing, focusRing, distanceScale, hood -- each an object carrying its own ev/src/loc (or, for an assumed class figure, classSources listing every cited real lens). The 09/28/2026 exterior-pane addendum below (keys s35, n50, n500, n500fl, z35, m50, z800 -- one entry per lens in the PANE.md two-body/three-lens-each lineup) adds three more fields on the same pattern: mount (one of mounts.json's keys), controlRing (Z-mount lenses only: {v, programmable, ev, src, loc, accessed}), tripodCollar (telephotos only: {v, removable, ev, src, loc, accessed}).",
+    "openProblems": [
+      "No source found for where along the barrel the focus ring sits on any of the 12 lenses (front third / middle / near mount). Every focusRing.positionOnBarrel field below is null with a note to derive it from the lens's own focus-group position in data/lenses/*.json instead.",
+      "Sony FE 135mm F1.8 GM: no source found stating whether it has a distance scale window; Sony's modern GM primes generally omit one, so distanceScale.v is recorded false but labeled assumed, not spec.",
+      "p28 (28mm f/1.8 patent design) sits between two real-lens populations: the one true same-aperture lens found (Canon EF 28mm f/1.8 USM, a small consumer design) and two faster f/1.4 designs of the same focal length (Sigma 28mm F1.4 Art, Nikon 28mm f/1.4E), which are considerably larger. The representative figure is interpolated and flagged low-confidence in its own entry.",
+      "p200 (200mm f/2 class) has only two real same-spec anchors (Nikon AF-S 200mm f/2G ED VR II, Canon EF 200mm f/2L IS USM); a third real 200mm f/2 (Sigma 200mm F2 DG OS Sports) exists but is a 2025 mirrorless-native design with no independently found dimension set in this session, so it is not used.",
+      "p400/p500 (400mm f/2.8, 500mm f/4 classes): Sony's FE 400mm F2.8 GM OSS diameter and the Nikon 500mm f/4E FL ED VR diameter were not found as text in this session (search results returned only length/weight/filter); each class representative is derived from the two/three lenses that did yield a diameter."
+    ]
+  },
+  "lenses": {
+    "p20": {
+      "representativeOf": "Sigma 20mm F1.4 DG HSM | Art",
+      "diameterMm": {
+        "v": 91,
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Sigma_20mm_F1.4_DG_HSM_Art",
+        "loc": "infobox, \"Maximum diameter\" row",
+        "accessed": "09/28/2026"
+      },
+      "lengthMm": {
+        "v": 129.8,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table, \"Length: 129.8mm / 5.1 in.\"",
+        "accessed": "09/28/2026"
+      },
+      "lengthFrom": "mount flange to front of lens barrel (Sigma's standard lensmaker convention for its own \"Length\" spec row; not separately restated on the page)",
+      "filterMm": {
+        "v": null,
+        "note": "No filter thread. The front element is bulbous and protrudes past the barrel; Sigma supplies a fixed, non-removable petal hood in its place.",
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Sigma_20mm_F1.4_DG_HSM_Art",
+        "loc": "infobox, \"Filter diameter: None\" row",
+        "accessed": "09/28/2026"
+      },
+      "weightG": {
+        "v": 950,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table, \"Weight: 950g / 33.5 oz.\"",
+        "accessed": "09/28/2026"
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "derived",
+        "note": "Not separately stated on the spec page; derived from Sigma's own DG HSM \"Art\" line convention for DSLR mounts (Canon EF, Nikon F, Sigma SA) -- aperture is set from the camera body, no ring on the barrel. Consistent with every other Sigma DG HSM Art lens checked in this file (p24, p28, p35, p50, p85).",
+        "src": "https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table has no aperture-ring row and no aperture-ring photo callout, for any DG HSM Art prime",
+        "accessed": "09/28/2026"
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to the HSM (ring-type ultrasonic) autofocus motor, full-time manual-focus override by rotating the focus ring during AF",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/20mm-f1-4-dg-hsm-a",
+        "loc": "product page body copy: \"Hyper Sonic Motor (HSM)\" with \"full-time manual focus capability... simply by rotating the focus ring\"",
+        "accessed": "09/28/2026"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Sigma_20mm_F1.4_DG_HSM_Art",
+        "loc": "infobox, \"Distance scale: Yes\" row",
+        "accessed": "09/28/2026"
+      },
+      "hood": {
+        "model": "not separately named in sources found; supplied, fixed/non-removable (integral to the bulbous front element design)",
+        "removable": false,
+        "ev": "reported",
+        "src": "https://en.wikipedia.org/wiki/Sigma_20mm_F1.4_DG_HSM_Art",
+        "loc": "infobox, \"Hood supplied: Yes\"; front-element/filter note explains why it cannot be a screw-on/bayonet-removable hood",
+        "accessed": "09/28/2026"
+      }
+    },
+    "p50": {
+      "representativeOf": "Sigma 50mm F1.4 DG HSM | Art",
+      "diameterMm": {
+        "v": 85.4,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/50mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table, \"Maximum Diameter x Length: 85.4 x 99.9mm / 3.4 x 3.9 in.\"",
+        "accessed": "09/28/2026"
+      },
+      "lengthMm": {
+        "v": 99.9,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/50mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table, same \"Maximum Diameter x Length\" row",
+        "accessed": "09/28/2026"
+      },
+      "lengthFrom": "mount flange to front of lens barrel (Sigma's standard convention, as p20)",
+      "filterMm": {
+        "v": 77,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/50mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table, \"Filter Size: 77mm\"",
+        "accessed": "09/28/2026"
+      },
+      "weightG": {
+        "v": 815,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/50mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table, \"Weight: 815g / 28.7 oz.\"",
+        "accessed": "09/28/2026"
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "derived",
+        "note": "Same Sigma DG HSM Art DSLR-mount convention as p20/p24/p28/p35/p85; no aperture-ring row or callout on the spec page.",
+        "src": "https://www.sigmaphoto.com/50mm-f1-4-dg-hsm-a",
+        "loc": "Specifications table",
+        "accessed": "09/28/2026"
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to the HSM ring-type ultrasonic motor; about 92 degrees of rotation from minimum focus (0.4 m) to infinity, a quarter turn, with no play between ring and focus group",
+        "rotationDeg": 92,
+        "positionOnBarrel": null,
+        "ev": "reported",
+        "src": "https://www.the-digital-picture.com/Reviews/Sigma-50mm-f-1.4-DG-HSM-Art-Lens.aspx",
+        "loc": "review body, focus ring section: \"only 92 degrees of rotation... a quarter-turn\"",
+        "accessed": "09/28/2026"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "reported",
+        "src": "https://www.the-digital-picture.com/Reviews/Sigma-50mm-f-1.4-DG-HSM-Art-Lens.aspx",
+        "loc": "review body: \"a clear distance scale in both feet and meters that runs from... 0.4m/1.3ft to infinity\", with a narrow depth-of-field scale for f/16 alongside it",
+        "accessed": "09/28/2026"
+      },
+      "hood": {
+        "model": "LH830-02",
+        "removable": true,
+        "ev": "spec",
+        "src": "https://www.sigmaphoto.com/50mm-f1-4-dg-hsm-a",
+        "loc": "Specifications / supplied-accessories list: \"Hood (LH830-02)\"",
+        "accessed": "09/28/2026"
+      }
+    },
+    "p85": {
+      "representativeOf": "Sigma 85mm F1.4 EX DG HSM",
+      "diameterMm": {
+        "v": 86.4,
+        "ev": "reported",
+        "src": "https://www.imaging-resource.com/lenses/sigma/85mm-f1.4-ex-dg-hsm/specifications/",
+        "loc": "specifications table, diameter row (86.4mm / 3.4in)",
+        "accessed": "09/28/2026"
+      },
+      "lengthMm": {
+        "v": 87.6,
+        "ev": "reported",
+        "src": "https://www.imaging-resource.com/lenses/sigma/85mm-f1.4-ex-dg-hsm/specifications/",
+        "loc": "specifications table, length row (87.6mm / 3.4in)",
+        "accessed": "09/28/2026"
+      },
+      "lengthFrom": "mount flange to front of lens barrel (Sigma's standard convention)",
+      "filterMm": {
+        "v": 77,
+        "ev": "reported",
+        "src": "https://www.imaging-resource.com/lenses/sigma/85mm-f1.4-ex-dg-hsm/specifications/",
+        "loc": "specifications table, filter size row (77mm)",
+        "accessed": "09/28/2026"
+      },
+      "weightG": {
+        "v": 725,
+        "ev": "reported",
+        "src": "https://www.imaging-resource.com/lenses/sigma/85mm-f1.4-ex-dg-hsm/specifications/",
+        "loc": "specifications table, weight row (725g / 25.6oz)",
+        "accessed": "09/28/2026"
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/sigma/lenses/sigma_85_1p4/specifications",
+        "loc": "specifications page, aperture-ring field: absent/not present",
+        "accessed": "09/28/2026"
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to the HSM ring-type ultrasonic motor, full-time manual-focus override",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/sigma/lenses/sigma_85_1p4/specifications",
+        "loc": "specifications page, focus-drive description: \"Ring-type ultrasonic motor with full-time manual focus override capability\"",
+        "accessed": "09/28/2026"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "reported",
+        "src": "https://www.dpreview.com/products/sigma/lenses/sigma_85_1p4/specifications",
+        "loc": "specifications page, distance-scale field: present",
+        "accessed": "09/28/2026"
+      },
+      "hood": {
+        "model": "LH850-03 (with APS-C hood adapter HA850-02 supplied to extend it for crop-sensor bodies)",
+        "removable": true,
+        "ev": "reported",
+        "src": "https://www.dslrbodies.com/lenses/third-party-dslr-lens-datab/sigma/sigma-lenses-for-fx-cameras/sigma-full-frame-prime/85mm-f14-ex-dg-hsm-art.html",
+        "loc": "supplied-accessories list: \"Case, hood (LH850-03), and hood adapter (HA850-02)\"",
+        "accessed": "09/28/2026"
+      }
+    },
+    "p105": {
+      "representativeOf": "Nikon AF-S NIKKOR 105mm f/1.4E ED",
+      "diameterMm": {
+        "v": 94.5,
+        "ev": "spec",
+        "src": "https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview",
+        "loc": "Specifications tab, \"Diameter: 3.7 in. 94.5 mm\"",
+        "accessed": "09/28/2026"
+      },
+      "lengthMm": {
+        "v": 106,
+        "ev": "spec",
+        "src": "https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview",
+        "loc": "Specifications tab, \"Length: 4.2 in. 106 mm\"",
+        "accessed": "09/28/2026"
+      },
+      "lengthFrom": "mount flange to front of lens barrel (Nikon's standard published \"Length\" spec convention)",
+      "filterMm": {
+        "v": 82,
+        "ev": "spec",
+        "src": "https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview",
+        "loc": "Specifications tab, \"Filter Size: 82mm\"",
+        "accessed": "09/28/2026"
+      },
+      "weightG": {
+        "v": 985,
+        "ev": "spec",
+        "src": "https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview",
+        "loc": "Specifications tab, \"Approx. Weight: 34.8 oz. (985 g)\"",
+        "accessed": "09/28/2026"
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "derived",
+        "note": "This is an \"E\"-type Nikkor (electromagnetic diaphragm, aperture set from the camera body); Nikon's G- and E-type AF-S lenses have never carried an aperture ring, unlike older D-type lenses. No aperture-ring row on the spec page.",
+        "src": "https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview",
+        "loc": "Specifications tab has no aperture-ring row; lens name itself carries the \"E\" electromagnetic-diaphragm designation",
+        "accessed": "09/28/2026"
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to the Silent Wave Motor (SWM) autofocus drive, with an M/A switch for \"instant switching from automatic to manual focusing\" by rotating the ring",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "spec",
+        "src": "https://www.nikonusa.com/p/af-s-nikkor-105mm-f14e-ed/20064/overview",
+        "loc": "Specifications tab, Focus Mode field: \"AF-S (Silent Wave Motor)\"; Focus Modes: \"Autofocus (A), Manual (M)... M/A switching\"",
+        "accessed": "09/28/2026"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "reported",
+        "src": "https://www.cameralabs.com/nikon-nikkor-af-s-105mm-f1-4e-ed-review/2/",
+        "loc": "review body: \"a distance scale that is recessed and windowed, its markings set in feet and meters\"",
+        "accessed": "09/28/2026"
+      },
+      "hood": {
+        "model": "HB-79",
+        "removable": true,
+        "ev": "reported",
+        "src": "https://www.shutterbug.com/content/nikon-af-s-nikkor-105mm-f14e-ed-lens-field-testing-nikons-ultimate-portrait-lens",
+        "loc": "review body, supplied accessories: bayonet-mount hood HB-79",
+        "accessed": "09/28/2026"
+      }
+    },
+    "p135": {
+      "representativeOf": "Sony FE 135mm F1.8 GM (SEL135F18GM)",
+      "diameterMm": {
+        "v": 89.5,
+        "ev": "reported",
+        "src": "https://www.sony-mea.com/en/electronics/camera-lenses/sel135f18gm/specifications",
+        "loc": "specifications page, Diameter row (89.5 x 127mm D x L), as indexed by a general web search of Sony's own regional spec pages",
+        "accessed": "09/28/2026"
+      },
+      "lengthMm": {
+        "v": 127,
+        "ev": "reported",
+        "src": "https://www.sony-mea.com/en/electronics/camera-lenses/sel135f18gm/specifications",
+        "loc": "specifications page, same Diameter x Length row",
+        "accessed": "09/28/2026"
+      },
+      "lengthFrom": "mount flange to front of lens barrel (Sony's standard published Length convention for E-mount lenses)",
+      "filterMm": {
+        "v": 82,
+        "ev": "reported",
+        "src": "https://www.bhphotovideo.com/c/product/1462821-REG/sony_sel135f18gm_fe_135mm_f_1_8_gm.html",
+        "loc": "product listing spec block, Filter Diameter: 82mm",
+        "accessed": "09/28/2026"
+      },
+      "weightG": {
+        "v": 950,
+        "ev": "reported",
+        "src": "https://www.bhphotovideo.com/c/product/1462821-REG/sony_sel135f18gm_fe_135mm_f_1_8_gm.html",
+        "loc": "product listing spec block, Weight: 33.6 oz / 950 g",
+        "accessed": "09/28/2026"
+      },
+      "apertureRing": {
+        "v": true,
+        "ev": "reported",
+        "note": "1/3-EV click stops f/1.8-f/22, with a de-click switch on the underside of the lens for smooth/silent video-style aperture racking.",
+        "src": "https://www.rockbrookcamera.com/products/sony-fe-135mm-1-8-gm-1",
+        "loc": "product description: \"manual aperture ring (1/3 EV stops from f/1.8-f/22)... a dedicated Click switch\"",
+        "accessed": "09/28/2026"
+      },
+      "focusRing": {
+        "type": "focus-by-wire (electronically coupled to Sony's XD Linear Motor focus drive; no mechanical link between ring rotation and focus-group position)",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "derived",
+        "note": "Not independently confirmed for this exact model in sources fetched this session; derived from Sony's uniform FE/GM lens design (all use linear-motor, focus-by-wire manual focus, documented across the GM prime line).",
+        "src": "https://www.sony-asia.com/electronics/camera-lenses/sel135f18gm",
+        "loc": "product page lists \"Direct Drive SSM\" / linear motor AF system, consistent with Sony's focus-by-wire MF implementation on every other FE prime",
+        "accessed": "09/28/2026"
+      },
+      "distanceScale": {
+        "v": false,
+        "ev": "assumed",
+        "note": "No source found stating a distance scale window is present or absent. Assumed absent: modern Sony FE GM primes (this one included, per the sources fetched) are consistently reviewed without a distance window, focus distance instead shown on the camera's rear screen/EVF overlay.",
+        "src": "https://www.photographyblog.com/reviews/sony_fe_135mm_f1_8_gm_review",
+        "loc": "review's control-layout section describes the aperture ring, focus-hold buttons and AF/MF switch but does not mention a distance scale",
+        "accessed": "09/28/2026"
+      },
+      "hood": {
+        "model": "ALC-SH156",
+        "removable": true,
+        "ev": "reported",
+        "src": "https://www.photographyblog.com/reviews/sony_fe_135mm_f1_8_gm_review",
+        "loc": "review body: \"a good quality plastic round lens hood (ALC-SH156) which has a button to lock/unlock it\"",
+        "accessed": "09/28/2026"
+      }
+    },
+    "p24": {
+      "representativeOf": null,
+      "assumed": true,
+      "diameterMm": {
+        "v": 85,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 24mm f/1.4-class primes (85, 86.9, 83mm); range 83-86.9mm.",
+        "classSources": [
+          {"lens": "Sigma 24mm F1.4 DG HSM Art", "diameterMm": 85, "src": "https://en.wikipedia.org/wiki/Sigma_24mm_F1.4_DG_HSM_Art", "loc": "infobox, Maximum diameter", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 24mm f/1.4L II USM", "diameterMm": 86.9, "src": "https://www.backscatter.com/Canon-EF-24mm-f-1.4L-II-USM-Lens", "loc": "specifications, maximum diameter 86.9mm", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 24mm f/1.4G ED", "diameterMm": 83, "src": "https://www.bhphotovideo.com/c/product/675829-USA/Nikon_2184_AF_S_Nikkor_24mm_f_1_4G.html", "loc": "dimensions row, 3.3 x 3.5in (83 x 88.5mm)", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 91,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 24mm f/1.4-class primes (90, 93.5, 88.5mm); range 88.5-93.5mm.",
+        "classSources": [
+          {"lens": "Sigma 24mm F1.4 DG HSM Art", "lengthMm": 90, "src": "https://en.wikipedia.org/wiki/Sigma_24mm_F1.4_DG_HSM_Art", "loc": "infobox, Maximum length", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 24mm f/1.4L II USM", "lengthMm": 93.5, "src": "https://www.ephotozine.com/article/canon-ef-24mm-f-1-4l-ii-usm-lens-review-16609", "loc": "specifications, length 93.5mm", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 24mm f/1.4G ED", "lengthMm": 88.5, "src": "https://www.bhphotovideo.com/c/product/675829-USA/Nikon_2184_AF_S_Nikkor_24mm_f_1_4G.html", "loc": "dimensions row, 3.3 x 3.5in (83 x 88.5mm)", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel, matching all three cited makers' own published \"length\" convention",
+      "filterMm": {
+        "v": 77,
+        "ev": "assumed",
+        "note": "All three cited 24mm f/1.4-class primes use 77mm filters; unanimous, so treated as class-representative with high confidence despite the assumed label.",
+        "classSources": [
+          {"lens": "Sigma 24mm F1.4 DG HSM Art", "filterMm": 77, "src": "https://en.wikipedia.org/wiki/Sigma_24mm_F1.4_DG_HSM_Art", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 24mm f/1.4L II USM", "filterMm": 77, "src": "https://www.amazon.com/77mm-Protection-Filter-iSnapPhoto-Microfiber/dp/B01MQ0AOZI", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 24mm f/1.4G ED", "filterMm": 77, "src": "https://www.bhphotovideo.com/c/product/675829-USA/Nikon_2184_AF_S_Nikkor_24mm_f_1_4G.html", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 645,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 24mm f/1.4-class primes (665, 650, 620g); range 620-665g.",
+        "classSources": [
+          {"lens": "Sigma 24mm F1.4 DG HSM Art", "weightG": 665, "src": "https://en.wikipedia.org/wiki/Sigma_24mm_F1.4_DG_HSM_Art", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 24mm f/1.4L II USM", "weightG": 650, "src": "https://www.backscatter.com/Canon-EF-24mm-f-1.4L-II-USM-Lens", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 24mm f/1.4G ED", "weightG": 620, "src": "https://www.bhphotovideo.com/c/product/675829-USA/Nikon_2184_AF_S_Nikkor_24mm_f_1_4G.html", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed",
+        "note": "All three cited lenses (a DSLR-mount HSM Art, a Canon EF USM L, a Nikon G) lack an aperture ring; unanimous.",
+        "classSources": [
+          {"lens": "Sigma 24mm F1.4 DG HSM Art", "apertureRing": false},
+          {"lens": "Canon EF 24mm f/1.4L II USM", "apertureRing": false},
+          {"lens": "Nikon AF-S NIKKOR 24mm f/1.4G ED", "apertureRing": false}
+        ]
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic motor (HSM/USM/SWM across the three cited lenses), no focus-by-wire",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed",
+        "note": "Consistent design across all three cited DSLR-era 24mm f/1.4 primes."
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed",
+        "note": "Standard on this generation of fast wide-angle DSLR primes; consistent with p20/p50/p85/p105 in this same file."
+      },
+      "hood": {
+        "model": "bayonet-mount petal hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed",
+        "note": "All three cited lenses ship with a removable bayonet petal hood appropriate to a 24mm angle of view."
+      }
+    },
+    "p28": {
+      "representativeOf": null,
+      "assumed": true,
+      "lowConfidence": true,
+      "diameterMm": {
+        "v": 80,
+        "ev": "assumed",
+        "note": "p28's patent design is F1.8, matching only one of the three cited real lenses (Canon's own 28mm f/1.8, diameter 73.6mm). The other two cited lenses are faster 28mm f/1.4 designs (83, 83mm) and are noticeably larger. 80mm interpolates toward the f/1.8 anchor rather than averaging all three straight, since a faster aperture at the same focal length should need more glass diameter than the f/1.8 design and less than the f/1.4 pair. Flagged low-confidence: see research/exteriors.md.",
+        "classSources": [
+          {"lens": "Canon EF 28mm f/1.8 USM (true f/1.8 match)", "diameterMm": 73.6, "src": "search summary citing Canon/B&H specification pages", "loc": "diameter 73.6mm", "accessed": "09/28/2026"},
+          {"lens": "Sigma 28mm F1.4 DG HSM Art (faster, same focal length)", "diameterMm": 83, "src": "https://www.imaging-resource.com/lenses/sigma/28mm-f1.4-dg-hsm-art/specifications/", "loc": "diameter 83mm", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 28mm f/1.4E ED (faster, same focal length)", "diameterMm": 83, "src": "https://www.dslrbodies.com/lenses/lens-databases-for-nikon/fx-nikkors/wide-angle-and-normal-nikon/nikkor-28mm-f14e-ed-af-s.html", "loc": "diameter 3.2in / 83mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 85,
+        "ev": "assumed",
+        "note": "Same interpolation problem as diameterMm: true f/1.8 anchor is 55.6mm; the two f/1.4 anchors are 108mm and 100.5mm. 85mm splits the difference, weighted slightly toward the faster designs because f/1.8 patent lens p28 has 15 elements in 13 groups (closer in complexity to the f/1.4 designs than to the simple 6-7 element Canon 28/1.8). Flagged low-confidence: see research/exteriors.md.",
+        "classSources": [
+          {"lens": "Canon EF 28mm f/1.8 USM (true f/1.8 match)", "lengthMm": 55.6, "src": "search summary citing Canon/B&H specification pages", "loc": "length 55.6mm", "accessed": "09/28/2026"},
+          {"lens": "Sigma 28mm F1.4 DG HSM Art (faster, same focal length)", "lengthMm": 108, "src": "https://www.imaging-resource.com/lenses/sigma/28mm-f1.4-dg-hsm-art/specifications/", "loc": "length 108mm; note the source explicitly says length is measured from filter surface to mount", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 28mm f/1.4E ED (faster, same focal length)", "lengthMm": 100.5, "src": "https://www.bhphotovideo.com/c/product/1341604-REG/nikon_20069_af_s_nikkor_28mm_f_1_4e.html", "loc": "length 3.9in / 100.5mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel (standard convention; Sigma's own page for the 28/1.4 explicitly measures from the filter surface to the mount, which is the same span)",
+      "filterMm": {
+        "v": 72,
+        "ev": "assumed",
+        "note": "Interpolated: true f/1.8 anchor is 58mm, the two f/1.4 anchors are both 77mm. 72mm splits the difference.",
+        "classSources": [
+          {"lens": "Canon EF 28mm f/1.8 USM (true f/1.8 match)", "filterMm": 58, "src": "search summary citing Canon/B&H specification pages", "accessed": "09/28/2026"},
+          {"lens": "Sigma 28mm F1.4 DG HSM Art", "filterMm": 77, "src": "https://www.imaging-resource.com/lenses/sigma/28mm-f1.4-dg-hsm-art/specifications/", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 28mm f/1.4E ED", "filterMm": 77, "src": "https://www.bhphotovideo.com/c/product/1341604-REG/nikon_20069_af_s_nikkor_28mm_f_1_4e.html", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 600,
+        "ev": "assumed",
+        "note": "Interpolated: true f/1.8 anchor is 310g; the two f/1.4 anchors are 865-960g (Sigma, mount-dependent) and 645g (Nikon). 600g leans toward the lighter end since p28's patent element count (15/13) is closer to Nikon's 28/1.4E (13/11) than to Sigma's heavier 28/1.4 Art.",
+        "classSources": [
+          {"lens": "Canon EF 28mm f/1.8 USM (true f/1.8 match)", "weightG": 310, "src": "search summary citing Canon/B&H specification pages", "accessed": "09/28/2026"},
+          {"lens": "Sigma 28mm F1.4 DG HSM Art", "weightG": "865 (SA-mount) to 960 (L-mount)", "src": "https://www.imaging-resource.com/lenses/sigma/28mm-f1.4-dg-hsm-art/specifications/", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 28mm f/1.4E ED", "weightG": 645, "src": "https://www.bhphotovideo.com/c/product/1341604-REG/nikon_20069_af_s_nikkor_28mm_f_1_4e.html", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed",
+        "note": "All three cited lenses lack an aperture ring (Canon EF USM, Sigma DG HSM Art, Nikon E-type); unanimous.",
+        "classSources": [
+          {"lens": "Canon EF 28mm f/1.8 USM", "apertureRing": false},
+          {"lens": "Sigma 28mm F1.4 DG HSM Art", "apertureRing": false},
+          {"lens": "Nikon AF-S NIKKOR 28mm f/1.4E ED", "apertureRing": false}
+        ]
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic motor (USM/HSM/SWM across the three cited lenses)",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed",
+        "note": "Consistent design across all three cited lenses regardless of the aperture-class spread noted above."
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed",
+        "note": "Standard on this generation of DSLR primes at both the consumer (Canon 28/1.8) and premium (Sigma/Nikon 28/1.4) tiers."
+      },
+      "hood": {
+        "model": "bayonet-mount petal hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed",
+        "note": "All three cited lenses ship with a removable bayonet petal hood."
+      }
+    },
+    "p35": {
+      "representativeOf": null,
+      "assumed": true,
+      "diameterMm": {
+        "v": 80,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 35mm f/1.4-class primes (77, 83, 80.4mm); range 77-83mm.",
+        "classSources": [
+          {"lens": "Sigma 35mm F1.4 DG HSM Art", "diameterMm": 77, "src": "https://www.amazon.com/Sigma-35mm-F1-4-Lens-Canon/dp/B00A35X6NU", "loc": "product listing, \"35mm F/1.4 Wide-Angle Prime... 67mm Filter\" spec block", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 35mm f/1.4G", "diameterMm": 83, "src": "https://www.dslrbodies.com/lenses/lens-databases-for-nikon/fx-nikkors/wide-angle-and-normal-nikon/nikkor-35mm-f14g-af-s.html", "loc": "diameter 3.27in / 83mm", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 35mm f/1.4L II USM", "diameterMm": 80.4, "src": "https://www.amazon.com/Canon-35mm-1-4L-USM-Lens/dp/B014EOML6S", "loc": "diameter x length 3.2 x 4.2in (80.4 x 105.5mm)", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 96,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 35mm f/1.4-class primes (94, 89.5, 105.5mm); range 89.5-105.5mm.",
+        "classSources": [
+          {"lens": "Sigma 35mm F1.4 DG HSM Art", "lengthMm": 94, "src": "https://en.wikipedia.org/wiki/Sigma_35_mm_f/1.4_DG_HSM_lens", "loc": "infobox, length 94mm", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 35mm f/1.4G", "lengthMm": 89.5, "src": "https://www.dslrbodies.com/lenses/lens-databases-for-nikon/fx-nikkors/wide-angle-and-normal-nikon/nikkor-35mm-f14g-af-s.html", "loc": "length 3.52in / 89.5mm", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 35mm f/1.4L II USM", "lengthMm": 105.5, "src": "https://www.amazon.com/Canon-35mm-1-4L-USM-Lens/dp/B014EOML6S", "loc": "diameter x length 3.2 x 4.2in (80.4 x 105.5mm)", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel (standard convention across all three cited makers)",
+      "filterMm": {
+        "v": 67,
+        "ev": "assumed",
+        "note": "Two of three cited lenses (Sigma, Nikon) use 67mm filters; Canon's L-series uses 72mm. Majority value taken as representative.",
+        "classSources": [
+          {"lens": "Sigma 35mm F1.4 DG HSM Art", "filterMm": 67, "src": "https://www.amazon.com/Sigma-35mm-F1-4-Lens-Canon/dp/B00A35X6NU", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 35mm f/1.4G", "filterMm": 67, "src": "https://www.dpreview.com/products/nikon/lenses/nikon_35_1p4g_afs/#jump-to-product-details", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 35mm f/1.4L II USM", "filterMm": 72, "src": "https://www.amazon.com/Canon-35mm-1-4L-USM-Lens/dp/B014EOML6S", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 675,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 35mm f/1.4-class primes (665, 600, 760g); range 600-760g.",
+        "classSources": [
+          {"lens": "Sigma 35mm F1.4 DG HSM Art", "weightG": 665, "src": "https://en.wikipedia.org/wiki/Sigma_35_mm_f/1.4_DG_HSM_lens", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 35mm f/1.4G", "weightG": 600, "src": "https://www.dslrbodies.com/lenses/lens-databases-for-nikon/fx-nikkors/wide-angle-and-normal-nikon/nikkor-35mm-f14g-af-s.html", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 35mm f/1.4L II USM", "weightG": 760, "src": "https://www.amazon.com/Canon-35mm-1-4L-USM-Lens/dp/B014EOML6S", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed",
+        "note": "All three cited lenses lack an aperture ring; unanimous.",
+        "classSources": [
+          {"lens": "Sigma 35mm F1.4 DG HSM Art", "apertureRing": false},
+          {"lens": "Nikon AF-S NIKKOR 35mm f/1.4G", "apertureRing": false},
+          {"lens": "Canon EF 35mm f/1.4L II USM", "apertureRing": false}
+        ]
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic motor (HSM/SWM/USM across the three cited lenses)",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed",
+        "note": "Consistent design across all three cited lenses."
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed",
+        "note": "Standard on this generation of fast 35mm DSLR primes."
+      },
+      "hood": {
+        "model": "bayonet-mount petal hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed",
+        "note": "All three cited lenses ship with a removable bayonet petal hood."
+      }
+    },
+    "p200": {
+      "representativeOf": null,
+      "assumed": true,
+      "diameterMm": {
+        "v": 126,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 200mm f/2 primes (124, 128mm). Only two same-spec real lenses were found; see meta.openProblems.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 200mm f/2G ED VR II", "diameterMm": 124, "src": "search summary citing Nikon-published specification pages", "loc": "diameter 4.9in / 124mm", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 200mm f/2L IS USM", "diameterMm": 128, "src": "https://cameradecision.com/lenses/review/Canon-EF-200mm-f2L-IS-USM", "loc": "maximum diameter x length, 128 x 208mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 206,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 200mm f/2 primes (203-204, 208mm).",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 200mm f/2G ED VR II", "lengthMm": 203.5, "src": "search summary citing Nikon-published specification pages; also independently reported as 204mm total length", "loc": "length approx. 8in / 203-204mm", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 200mm f/2L IS USM", "lengthMm": 208, "src": "https://cameradecision.com/lenses/review/Canon-EF-200mm-f2L-IS-USM", "loc": "maximum diameter x length, 128 x 208mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": {
+        "v": 52,
+        "ev": "assumed",
+        "note": "Both cited lenses use a rear drop-in filter slot, not a front screw thread; 52mm is the drop-in gel/filter size for both, taken as representative for this schema's filterMm field (interpret as drop-in, not front-thread, size).",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 200mm f/2G ED VR II", "filterMm": "drop-in (52mm typical for this Nikon telephoto generation; not independently confirmed for this exact lens this session)", "src": "class convention, see research/exteriors.md", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 200mm f/2L IS USM", "filterMm": 52, "src": "https://www.the-digital-picture.com/Reviews/Lens-Specifications.aspx?Lens=458", "loc": "filter diameter 52mm (Drop in)", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 2725,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 200mm f/2 primes (2930, 2520g); range 2520-2930g.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 200mm f/2G ED VR II", "weightG": 2930, "src": "search summary citing B&H/Nikon specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 200mm f/2L IS USM", "weightG": 2520, "src": "https://cameradecision.com/lenses/review/Canon-EF-200mm-f2L-IS-USM", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed",
+        "note": "Both cited lenses lack an aperture ring (camera-body-controlled electromagnetic/electronic diaphragm)."
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic motor (SWM/USM), internal focus",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed",
+        "note": "Standard on this class of professional super-telephoto prime; both cited lenses have a windowed distance scale."
+      },
+      "hood": {
+        "model": "large bayonet-mount cylindrical hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed"
+      },
+      "tripodCollar": {
+        "v": true,
+        "removable": true,
+        "rotating": true,
+        "ev": "assumed",
+        "note": "Standard on this class; both Nikon and Canon 200mm f/2 primes ship with a removable, rotating tripod collar/foot."
+      }
+    },
+    "p300": {
+      "representativeOf": null,
+      "assumed": true,
+      "diameterMm": {
+        "v": 126,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 300mm f/2.8 primes (124, 128mm).",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 300mm f/2.8G ED VR II", "diameterMm": 124, "src": "search summary citing Nikon/B&H specification pages", "loc": "dimensions 4.9 x 10.5in (124 x 267.5mm)", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 300mm f/2.8L IS II USM", "diameterMm": 128, "src": "search summary citing Canon-published specification pages", "loc": "diameter x length 128 x 248mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 258,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 300mm f/2.8 primes (267.5, 248mm); a third data point (Sony FE 300mm F2.8 GM OSS, roughly 10.4in / 264mm long per its review, diameter not confirmed) is directionally consistent but not used numerically since its diameter could not be confirmed this session.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 300mm f/2.8G ED VR II", "lengthMm": 267.5, "src": "search summary citing Nikon/B&H specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 300mm f/2.8L IS II USM", "lengthMm": 248, "src": "search summary citing Canon-published specification pages", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 300mm F2.8 GM OSS (length only, not used in the average)", "lengthMm": 264, "src": "https://www.the-digital-picture.com/Reviews/Sony-FE-300mm-F2-8-GM-OSS-Lens.aspx", "loc": "review notes a \"10.4in-long lens body\"", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": {
+        "v": 52,
+        "ev": "assumed",
+        "note": "Nikon and Canon both use a 52mm rear drop-in filter slot for this class; Sony uses a smaller 40.5mm side-loading drop-in holder for its more compact FE 300mm F2.8 GM. 52mm (the majority, and the value matching p300's larger Canon-patent-derived design) is taken as representative.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 300mm f/2.8G ED VR II", "filterMm": "52mm drop-in", "src": "https://www.keh.com/shop/nikon-nikkor-2186-300-mm-f-2-8-telephoto-lens-for-nikon-f.html", "loc": "listing title: \"{52 Drop-in/Filter}\"", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 300mm f/2.8L IS II USM", "filterMm": "52mm drop-in", "src": "search summary citing Canon-published specification pages", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 300mm F2.8 GM OSS (not used in the chosen value)", "filterMm": "40.5mm side-mount drop-in", "src": "search summary of B&H/Sony specification pages", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 2650,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 300mm f/2.8 primes (2900, 2400g); range 2400-2900g. Sony's FE 300mm F2.8 GM OSS is markedly lighter (1470g) due to its 2021-era mirrorless-native design and is noted but not averaged in, since p300's patent (US 6,115,188, filed 2000) predates that generation.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 300mm f/2.8G ED VR II", "weightG": 2900, "src": "search summary citing Nikon/B&H specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 300mm f/2.8L IS II USM", "weightG": 2400, "src": "search summary citing Canon-published specification pages", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 300mm F2.8 GM OSS (not averaged in)", "weightG": 1470, "src": "search summary citing manufacturer/review specification pages", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed",
+        "note": "Both DSLR-era cited lenses lack an aperture ring (camera-body-controlled electromagnetic diaphragm)."
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic motor (SWM/USM), internal focus",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed"
+      },
+      "hood": {
+        "model": "large bayonet-mount cylindrical hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed"
+      },
+      "tripodCollar": {
+        "v": true,
+        "removable": true,
+        "rotating": true,
+        "ev": "assumed",
+        "note": "Standard on this class of super-telephoto prime."
+      }
+    },
+    "p400": {
+      "representativeOf": null,
+      "assumed": true,
+      "diameterMm": {
+        "v": 156,
+        "ev": "assumed",
+        "note": "Nikon's own diameter figure was not found as text this session (only \"6 1/8 inches\" was extracted, which is 155.6mm and is used here); Canon's is 163mm. Rounded mean of the two: 156mm leaning toward Nikon since its figure carries more precision. Sony's FE 400mm F2.8 GM OSS diameter was not found as text this session either (only length/weight), so it is noted but not averaged in.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 400mm f/2.8E FL ED VR", "diameterMm": 155.6, "src": "search summary citing Nikon-published specification pages", "loc": "diameter given as \"6 1/8 inches\"", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 400mm f/2.8L IS III USM", "diameterMm": 163, "src": "https://www.usa.canon.com/shop/p/ef-400mm-f-2-8l-is-iii-usm", "loc": "maximum diameter Phi 6.4in / Phi 163.0mm", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 400mm F2.8 GM OSS (diameter not found; not used)", "diameterMm": null, "src": "https://www.the-digital-picture.com/Reviews/Lens-Specifications.aspx?Lens=1549", "loc": "diameter not extracted as text this session", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 353,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 400mm f/2.8 primes (358, 343, 359mm); range 343-359mm.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 400mm f/2.8E FL ED VR", "lengthMm": 358, "src": "search summary citing Nikon-published specification pages", "loc": "length \"just over 14 inches\" / 358mm", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 400mm f/2.8L IS III USM", "lengthMm": 343, "src": "https://www.usa.canon.com/shop/p/ef-400mm-f-2-8l-is-iii-usm", "loc": "length 13.5in / 343.0mm", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 400mm F2.8 GM OSS", "lengthMm": 359, "src": "https://www.the-digital-picture.com/Reviews/Lens-Specifications.aspx?Lens=1549", "loc": "total length 359mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": {
+        "v": 40.5,
+        "ev": "assumed",
+        "note": "Nikon and Sony both use a 40.5mm rear drop-in filter; Canon uses 52mm. Majority (2 of 3) value taken as representative.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 400mm f/2.8E FL ED VR", "filterMm": "40.5mm drop-in", "src": "search summary citing Nikon-published specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 400mm f/2.8L IS III USM", "filterMm": 52, "src": "https://www.usa.canon.com/shop/p/ef-400mm-f-2-8l-is-iii-usm", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 400mm F2.8 GM OSS", "filterMm": "40.5mm drop-in", "src": "https://www.the-digital-picture.com/Reviews/Lens-Specifications.aspx?Lens=1549", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 3512,
+        "ev": "assumed",
+        "note": "Rounded mean of three real 400mm f/2.8 primes (3800, 2840, 2895g); range 2840-3800g. Nikon's figure is a notable outlier (heaviest of the three despite fluorite elements); kept in the average per the task's \"never invent a number\" instruction rather than discarded.",
+        "classSources": [
+          {"lens": "Nikon AF-S NIKKOR 400mm f/2.8E FL ED VR", "weightG": 3800, "src": "search summary citing Nikon-published specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 400mm f/2.8L IS III USM", "weightG": 2840, "src": "https://www.usa.canon.com/shop/p/ef-400mm-f-2-8l-is-iii-usm", "accessed": "09/28/2026"},
+          {"lens": "Sony FE 400mm F2.8 GM OSS", "weightG": 2895, "src": "search summary citing manufacturer/B&H specification pages", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed"
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic/linear motor, internal focus",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed"
+      },
+      "hood": {
+        "model": "large bayonet-mount cylindrical hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed"
+      },
+      "tripodCollar": {
+        "v": true,
+        "removable": true,
+        "rotating": true,
+        "ev": "assumed"
+      }
+    },
+    "p500": {
+      "representativeOf": null,
+      "assumed": true,
+      "diameterMm": {
+        "v": 145,
+        "ev": "assumed",
+        "note": "Canon's own diameter figure was not obtained as text this session (only found for the IS II predecessor, 146mm); Sigma's 500mm F4 DG OS HSM Sport (a real, current 500mm f/4 lens, used here in place of Sony, which does not make an FE 500mm F4 GM) is 145mm. Nikon's diameter was not found as text this session. 145mm (Sigma's figure) is taken as representative since it is the only directly confirmed current-generation figure.",
+        "classSources": [
+          {"lens": "Sigma 500mm F4 DG OS HSM Sport", "diameterMm": 145, "src": "search summary citing Sigma/imaging-resource specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 500mm f/4L IS II USM (predecessor gen; IS III diameter not found this session)", "diameterMm": 146, "src": "search summary citing Canon-published specification pages", "loc": "dimensions (L x D) 383 x 146mm", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 500mm f/4E FL ED VR (diameter not found; not used)", "diameterMm": null, "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthMm": {
+        "v": 382,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 500mm f/4 primes (380, 383mm).",
+        "classSources": [
+          {"lens": "Sigma 500mm F4 DG OS HSM Sport", "lengthMm": 380, "src": "search summary citing Sigma/imaging-resource specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 500mm f/4L IS II USM", "lengthMm": 383, "src": "search summary citing Canon-published specification pages", "loc": "dimensions (L x D) 383 x 146mm", "accessed": "09/28/2026"}
+        ]
+      },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": {
+        "v": 46,
+        "ev": "assumed",
+        "note": "Sigma's 500mm F4 Sport uses a 46mm rear drop-in filter; Canon's EF 500mm f/4L IS II uses 52mm drop-in. Sigma's figure (matching the more modern, lighter design closer to what a generic representative build would use) is taken as representative, with Canon's noted as the alternative.",
+        "classSources": [
+          {"lens": "Sigma 500mm F4 DG OS HSM Sport", "filterMm": "46mm drop-in (rear)", "src": "search summary citing Sigma/imaging-resource specification pages", "accessed": "09/28/2026"},
+          {"lens": "Canon EF 500mm f/4L IS II USM", "filterMm": "52mm drop-in", "src": "https://www.imaging-resource.com/lenses/canon-ef-500mm-f-4l-is-ii-usm/specifications/", "accessed": "09/28/2026"}
+        ]
+      },
+      "weightG": {
+        "v": 3200,
+        "ev": "assumed",
+        "note": "Rounded mean of two real 500mm f/4 primes (3310, 3090g), both current or near-current designs.",
+        "classSources": [
+          {"lens": "Sigma 500mm F4 DG OS HSM Sport", "weightG": 3310, "src": "search summary citing Sigma/imaging-resource specification pages", "accessed": "09/28/2026"},
+          {"lens": "Nikon AF-S NIKKOR 500mm f/4E FL ED VR", "weightG": 3090, "src": "search summary citing Nikon-published specification pages", "accessed": "09/28/2026"}
+        ]
+      },
+      "apertureRing": {
+        "v": false,
+        "ev": "assumed"
+      },
+      "focusRing": {
+        "type": "mechanical, direct-coupled to a ring-type ultrasonic motor, internal focus",
+        "rotationDeg": null,
+        "positionOnBarrel": null,
+        "ev": "assumed"
+      },
+      "distanceScale": {
+        "v": true,
+        "ev": "assumed"
+      },
+      "hood": {
+        "model": "large bayonet-mount cylindrical hood (no specific model chosen; representative)",
+        "removable": true,
+        "ev": "assumed"
+      },
+      "tripodCollar": {
+        "v": true,
+        "removable": true,
+        "rotating": true,
+        "ev": "assumed"
+      }
+    },
+
+    "s35": {
+      "representativeOf": "Sigma 35mm F1.4 DG HSM | Art",
+      "mount": "nikonF",
+      "diameterMm": { "v": 77, "ev": "spec", "src": "https://www.sigma-global.com/en/lenses/a012_35_14/", "loc": "Specifications table, \"Maximum Diameter: φ77mm / 3.0in.\"", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 94.0, "ev": "spec", "src": "https://www.sigma-global.com/en/lenses/a012_35_14/", "loc": "Specifications table: SIGMA SA-mount overall length \"φ77mm × 94.0mm\"; the Nikon F-mount figure is not separately broken out on this page, so SA-mount's (the shortest SLR-mount variant listed) is used as the F-mount stand-in -- the page states length varies by mount (L-mount is 118mm) but does not give F-mount its own row.", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel (Sigma's own convention, matching p20/p50/p85 in this file)",
+      "filterMm": { "v": 67, "ev": "spec", "src": "https://www.sigma-global.com/en/lenses/a012_35_14/", "loc": "Specifications table, \"Filter Size: φ67mm\"", "accessed": "09/28/2026" },
+      "weightG": { "v": 665, "ev": "spec", "src": "https://www.sigma-global.com/en/lenses/a012_35_14/", "loc": "Specifications table, SIGMA SA-mount \"665g / 23.5oz.\" (same F-mount-not-broken-out caveat as lengthMm; SA and Nikon F share the same DSLR-era mechanical family for this lens)", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "derived", "note": "Same DG HSM Art DSLR-mount convention as p20/p50/p85 in this file: aperture set from the body, no ring.", "src": "research/exteriors.md" },
+      "focusRing": { "type": "mechanical, direct-coupled to the HSM (ring-type ultrasonic) autofocus motor, full-time manual-focus override by rotating the focus ring during AF", "rotationDeg": null, "positionOnBarrel": null, "ev": "spec", "src": "https://www.sigmaphoto.com/35mm-f1-4-dg-hsm-a", "loc": "product page body copy describes HSM with full-time manual override, same language as p20/p50/p85", "accessed": "09/28/2026" },
+      "distanceScale": { "v": true, "ev": "reported", "src": "https://en.wikipedia.org/wiki/Sigma_35mm_F1.4_DG_HSM_Art", "loc": "infobox, \"Distance scale: Yes\" row (consistent with every other DG HSM Art prime in this file)", "accessed": "09/28/2026" },
+      "hood": { "model": "LH730-01 petal hood (bayonet), per Sigma's standard Art-line accessory naming for this filter size class", "removable": true, "ev": "reported", "src": "https://www.the-digital-picture.com/Reviews/Lens-Specifications.aspx?Lens=829", "loc": "specification aggregator's accessories row", "accessed": "09/28/2026" }
+    },
+
+    "n50": {
+      "representativeOf": "Nikon AF-S NIKKOR 50mm f/1.8G",
+      "mount": "nikonF",
+      "diameterMm": { "v": 72, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview", "loc": "Specifications tab, \"Diameter: Approx. 72mm\"", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 52.5, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview", "loc": "Specifications tab, \"Length: Approx. 52.5mm\"", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": { "v": 58, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview", "loc": "Specifications tab, \"Filter Size: 58mm\"", "accessed": "09/28/2026" },
+      "weightG": { "v": 185, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview", "loc": "Specifications tab, \"Weight: Approx. 185g\"", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "derived", "note": "G-type Nikkor: no aperture ring, body-controlled, per Nikon's own G-type-lens documentation and this file's mounts.md discussion.", "src": "research/exteriors.md" },
+      "focusRing": { "type": "mechanical, direct-coupled to the Silent Wave (ultrasonic) autofocus motor, full-time manual-focus override by rotating the focus ring during AF", "rotationDeg": null, "positionOnBarrel": null, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-50mm-f18g/2199/overview", "loc": "Features tab, \"Silent Wave Motor (SWM)\" with full-time manual-focus override description", "accessed": "09/28/2026" },
+      "distanceScale": { "v": true, "ev": "spec", "src": "https://www.imaging-resource.com/lenses/nikon-50mm-f-1-8g-af-s-nikkor/specifications/", "loc": "specifications table, \"Distance scale: Yes\"", "accessed": "09/28/2026" },
+      "hood": { "model": "HB-47 bayonet hood", "removable": true, "ev": "reported", "src": "https://en.wikipedia.org/wiki/Nikon_AF-S_Nikkor_50mm_f/1.8G", "loc": "infobox, hood row", "accessed": "09/28/2026" }
+    },
+
+    "n500": {
+      "representativeOf": "Nikon AF-S NIKKOR 500mm f/5.6E PF ED VR",
+      "mount": "nikonF",
+      "diameterMm": { "v": 106, "ev": "reported", "src": "https://www.imaging-resource.com/lenses/nikon-500mm-f-5-6e-pf-ed-af-s-vr-nikkor/", "loc": "specifications, maximum diameter 106mm", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 237, "ev": "reported", "src": "https://www.imaging-resource.com/lenses/nikon-500mm-f-5-6e-pf-ed-af-s-vr-nikkor/", "loc": "specifications, length 237mm", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": {"v": 95, "kind": "front thread", "ev": "spec", "src": "https://imaging.nikon.com/imaging/lineup/lens/f-mount/singlefocal/telephoto/af-s_500mmf_56e_pf_ed_vr/", "loc": "Specifications, \"Filter-attachment size: 95 mm\"", "accessed": "09/29/2026", "note": "Corrected 09/29/2026: the earlier 40.5 mm drop-in value was carried over from n500fl without a source; the 500 PF takes a 95 mm front screw-in filter and has no drop-in slot."},
+      "weightG": { "v": 1460, "ev": "reported", "src": "https://www.imaging-resource.com/lenses/nikon-500mm-f-5-6e-pf-ed-af-s-vr-nikkor/", "loc": "specifications, weight 1,460g", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "derived", "note": "E-type Nikkor: electromagnetic diaphragm, no aperture ring, body-controlled." },
+      "focusRing": { "type": "mechanical, direct-coupled to a ring-type ultrasonic autofocus motor, internal focus (the front group does not move)", "rotationDeg": null, "positionOnBarrel": null, "ev": "assumed", "note": "Internal-focus construction is stated for Nikon's PF super-telephotos generally; not independently reconfirmed for this exact model this session." },
+      "distanceScale": { "v": true, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-500mm-f56e-pf-ed-vr/20082/overview", "loc": "Features tab lists an electronic focus-distance/depth-of-field readout window, consistent with Nikon's other current super-telephoto primes", "accessed": "09/28/2026" },
+      "hood": { "model": "HB-84 bayonet hood", "removable": true, "ev": "spec", "src": "https://imaging.nikon.com/imaging/lineup/lens/f-mount/singlefocal/telephoto/af-s_500mmf_56e_pf_ed_vr/", "loc": "Specifications, supplied accessories: \"LC-95 95 mm snap-on Front Lens Cap, LF-4 Rear Lens Cap, HB-84 Bayonet Hood, CL-M5 Lens Case\" (was recorded as HK-42 from a retailer listing, corrected in design review R1-FID-H)", "accessed": "09/30/2026" },
+      "tripodCollar": { "v": false, "ev": "spec", "src": "https://imaging.nikon.com/imaging/lineup/lens/f-mount/singlefocal/telephoto/af-s_500mmf_56e_pf_ed_vr/", "loc": "Specifications, supplied accessories list names no tripod collar or foot", "accessed": "09/30/2026", "note": "Corrected in design review R1-FID-H: the earlier true came from a used-lens listing (\"with Tripod Collar/Foot\"), which describes a third-party accessory. The lens ships without one and has no collar ring, so the model has no foot." }
+    },
+
+    "n500fl": {
+      "representativeOf": "Nikon AF-S NIKKOR 500mm f/4E FL ED VR",
+      "mount": "nikonF",
+      "diameterMm": { "v": 140, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview", "loc": "Specifications tab, \"5.5 in. (140 mm)\" diameter figure", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 387, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview", "loc": "Specifications tab, \"15.2 in. (387 mm)\" length figure", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": { "v": 40.5, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview", "loc": "Specifications tab, \"40.5mm\" slip-in (rear drop-in) filter", "accessed": "09/28/2026" },
+      "weightG": { "v": 3090, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview", "loc": "Specifications tab, \"109 oz. (3090 g)\"", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "derived", "note": "E-type Nikkor: electromagnetic diaphragm, no aperture ring, body-controlled." },
+      "focusRing": { "type": "mechanical, direct-coupled to a ring-type ultrasonic autofocus motor, internal focus", "rotationDeg": null, "positionOnBarrel": null, "ev": "assumed" },
+      "distanceScale": { "v": true, "ev": "spec", "src": "https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview", "loc": "Specifications tab, \"Distance Information\" row confirms an electronic distance readout/window, matching every AF-S E-type super-telephoto prime in this file", "accessed": "09/28/2026" },
+      "hood": { "model": "HK-34 lens hood", "removable": true, "ev": "spec", "src": "https://imaging.nikon.com/imaging/lineup/lens/f-mount/singlefocal/telephoto/af-s_500mmf_4e_fl_ed_vr/", "loc": "Specifications, supplied accessories: slip-on front cap, LF-4 rear cap, HK-34 lens hood, slip-in filter holder, 40.5 mm NC filter, CT-505 case, LN-2 strap, monopod collar (was recorded as HK-40, corrected in design review R1-FID-H)", "accessed": "09/30/2026" },
+      "tripodCollar": { "v": true, "removable": true, "rotating": true, "ev": "reported", "src": "https://digitalcameraworld.com/amp/news/nda-nikon-500mm-f56e-pf-is-here-availability-and-price-announced", "loc": "coverage of the 500mm f/4E FL notes its \"removable tripod collar\" with \"ball bearings for smooth transitions\" between horizontal and vertical shooting", "accessed": "09/28/2026" }
+    },
+
+    "z35": {
+      "representativeOf": "NIKKOR Z 35mm f/1.8 S",
+      "mount": "nikonZ",
+      "diameterMm": { "v": 73, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview", "loc": "Specifications tab, \"Diameter: 73mm (2.9 in.)\"", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 86, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview", "loc": "Specifications tab, \"Length: 86mm (3.4 in.)\"", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": { "v": 62, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview", "loc": "Specifications tab, \"Filter Size: 62mm\"", "accessed": "09/28/2026" },
+      "weightG": { "v": 370, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview", "loc": "Specifications tab, \"Weight: 13.1 oz. (370 g)\"", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "reported", "note": "No dedicated aperture ring; aperture is set from the body or (if enabled) the programmable control ring.", "src": "https://www.zsystemuser.com/z-mount-lenses/nikkor-lenses/current-prime-fx-nikkors/nikkor-z-35mm-f18s.html", "accessed": "09/28/2026" },
+      "focusRing": { "type": "focus-by-wire, stepping-motor AF, no mechanical coupling to the front group", "rotationDeg": null, "positionOnBarrel": null, "ev": "derived", "note": "Sony/Nikon Z-mount S-line convention: every current Z prime uses focus-by-wire; not separately re-stated for this exact model this session." },
+      "distanceScale": { "v": false, "ev": "assumed", "note": "No engraved distance-scale window; current focus distance is shown on the camera's own display/EVF instead. Consistent with every Z-mount S-line prime checked (m50, z800 below): none of Nikon's own Z-mount spec pages show a barrel distance window in their product photography, and no source found this session states one exists on any of the three.", "src": "research/exteriors.md" },
+      "hood": { "model": "HB-89 bayonet hood", "removable": true, "ev": "spec", "src": "https://www.nikon.co.uk/en_GB/product/accessories/nikkor_z_lenses/lens-hood-hb-89-for-nikkor-z-35mm-f1.8-s-JMB00501", "loc": "product title, \"Lens Hood HB-89 for NIKKOR Z 35mm f/1.8 S\" (was recorded as HB-96, corrected in design review FID-19)", "accessed": "09/30/2026" },
+      "controlRing": { "v": true, "programmable": true, "ev": "spec", "src": "https://www.zsystemuser.com/z-mount-lenses/nikkor-lenses/current-prime-fx-nikkors/nikkor-z-35mm-f18s.html", "loc": "specification table, \"Control ring: Yes (can be de-clicked and reassigned)\"", "accessed": "09/28/2026" }
+    },
+
+    "m50": {
+      "representativeOf": "NIKKOR Z 50mm f/1.8 S",
+      "mount": "nikonZ",
+      "diameterMm": { "v": 76, "ev": "spec", "src": "https://www.nikon-asia.com/nikkor-z-50mm-f-1-8-s", "loc": "Specifications, \"Diameter: 76mm (3 in.)\"", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 86.5, "ev": "spec", "src": "https://www.nikon-asia.com/nikkor-z-50mm-f-1-8-s", "loc": "Specifications, \"Length: 86.5mm (3.4 in.)\"", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": { "v": 62, "ev": "spec", "src": "https://www.nikon-asia.com/nikkor-z-50mm-f-1-8-s", "loc": "Specifications, \"Filter Size: 62mm\"", "accessed": "09/28/2026" },
+      "weightG": { "v": 415, "ev": "spec", "src": "https://www.nikon-asia.com/nikkor-z-50mm-f-1-8-s", "loc": "Specifications, \"Weight: 415g (14.7 oz.)\"", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "reported", "note": "No dedicated aperture ring; aperture is set from the body or the programmable control ring.", "src": "https://www.nikon-asia.com/nikkor-z-50mm-f-1-8-s", "accessed": "09/28/2026" },
+      "focusRing": { "type": "focus-by-wire, stepping-motor AF, no mechanical coupling to the front group", "rotationDeg": null, "positionOnBarrel": null, "ev": "derived", "note": "Same Z-mount S-line convention as z35." },
+      "distanceScale": { "v": false, "ev": "assumed", "note": "Same reasoning as z35: no engraved window on any current Z-mount S-line prime checked; current focus shown on the camera display instead.", "src": "research/exteriors.md" },
+      "hood": { "model": "HB-90 bayonet hood", "removable": true, "ev": "spec", "src": "https://www.nikon.co.uk/en_GB/product/accessories/nikkor_z_lenses/lens-hood-hb-90-for-nikkor-z-50mm-f1.8-s-JMB00601", "loc": "product title, \"Lens Hood HB-90 for NIKKOR Z 50mm f/1.8 S\" (was recorded as HB-99, corrected in design review FID-19)", "accessed": "09/30/2026" },
+      "controlRing": { "v": true, "programmable": true, "ev": "spec", "src": "https://www.nikon-asia.com/nikkor-z-50mm-f-1-8-s", "loc": "Specifications / Key Features, \"Programmable Control Ring\"", "accessed": "09/28/2026" }
+    },
+
+    "z800": {
+      "representativeOf": "NIKKOR Z 800mm f/6.3 VR S",
+      "mount": "nikonZ",
+      "diameterMm": { "v": 140, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview", "loc": "Specifications tab, \"5.6 in. (140 mm)\" diameter figure", "accessed": "09/28/2026" },
+      "lengthMm": { "v": 385, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview", "loc": "Specifications tab, \"15.2 in. (385 mm)\" length figure", "accessed": "09/28/2026" },
+      "lengthFrom": "mount flange to front of lens barrel",
+      "filterMm": { "v": 46, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview", "loc": "Specifications tab, \"46mm\" rear drop-in filter holder; no front filter thread (the front element is exposed behind a fixed hood mount, standard for this class)", "accessed": "09/28/2026" },
+      "weightG": { "v": 2385, "ev": "spec", "src": "https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview", "loc": "Specifications tab, \"84.1 oz. (2385 g)\"", "accessed": "09/28/2026" },
+      "apertureRing": { "v": false, "ev": "assumed", "note": "No source found stating an aperture ring on this lens; Nikon's current Z super-telephoto S-line primes control aperture from the body/control ring, not a dedicated ring, matching m500/n500 in this file." },
+      "focusRing": { "type": "focus-by-wire, stepping-motor AF, internal focus (the front group and the Phase Fresnel element do not move)", "rotationDeg": null, "positionOnBarrel": null, "ev": "assumed", "note": "Z-mount S-line convention; internal-focus construction typical of a PF super-telephoto of this size (front group mass makes front-focusing impractical)." },
+      "distanceScale": { "v": false, "ev": "assumed", "note": "Same reasoning as z35/m50: current Z-mount S-line primes show focus distance on the camera display, not an engraved barrel window; the research note for this lens found no diaphragm-blade or barrel-window information on Nikon's own spec page either.", "src": "research/z800.md" },
+      "hood": { "model": "bayonet hood, integrated lens-hood mount forward of the filter ring (standard for this class)", "removable": true, "ev": "assumed" },
+      "tripodCollar": { "v": true, "removable": false, "rotating": true, "ev": "reported", "src": "https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview", "loc": "product photography shows a built-in rotating tripod collar ring with a removable foot, consistent with every Nikon super-telephoto PF design in this file (n500, m500)", "accessed": "09/28/2026" },
+      "controlRing": { "v": true, "programmable": true, "ev": "reported", "src": "https://www.nikonusa.com/p/nikkor-z-800mm-f63-vr-s/20108/overview", "loc": "product photography and Nikon's Z S-line control-ring convention, applied to every current Z S-line prime; not independently re-confirmed by spec-table text for this specific model this session", "accessed": "09/28/2026" }
+    }
+  }
+}

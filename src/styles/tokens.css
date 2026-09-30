@@ -1,0 +1,65 @@
+/* Design tokens, ported verbatim from design/LOOK.md ("One signature style", Reed 09/28/2026) and from
+   The Intelligence Factory's own src/styles.css tokens. Do not fork the accent, the evidence colors or the type
+   stack here -- see design/LOOK.md for why. Physics-only channel colors (--charge, --scale-badge) and the
+   materials tokens are new to this project; everything else is the shared family grammar. */
+
+:root {
+  color-scheme: dark;
+
+  /* structure -- identical to intelligence_factory, so the two sites share one grammar */
+  --ground: #000000;
+  --surface: #0b1015;
+  --raise: #121920;
+  --line: rgba(240, 240, 250, 0.14);
+  --line-2: rgba(240, 240, 250, 0.30);
+  --ink: #f0f0fa;
+  --muted: #aab2b9;
+  --faint: #6b747c;
+  --gutter: clamp(16px, 4.4vw, 72px);
+
+  /* the shared accent: The Intelligence Factory's amber (Reed, 09/28/2026: one signature style) */
+  --accent: #e6ba82;
+
+  /* evidence basis -- unchanged from intelligence_factory/src/evidence.js, same five kinds, same meaning */
+  --spec: #7ee0a1;
+  --vendor: #f2a66b;
+  --reported: #e6c86e;
+  --derived: #8fc3f0;
+  --assumed: #b7b0cf;
+
+  /* brand-mark bars only -- ported unchanged from intelligence_factory/src/styles.css's --mv/--nvl/--warm
+     (Reed, "one signature style": the mark carries over as-is, not recolored with this project's own
+     accent/evidence tokens, which happen to differ from IF's own mark colors). Not used anywhere else. */
+  --mv: #ffb14e;
+  --nvl: #ff5fd2;
+  --warm: #ff5a6e;
+
+  /* materials -- UI-only tokens for chrome around the 3D view. Never used to color a ray, a photon or a
+     spectral swatch. */
+  --metal-cool: #9aa3ab;
+  --metal-warm: #8a7a63;
+  --anodize-black: #17181b;
+  --silicon: #1b2029;
+
+  /* physics-only channel colors -- never UI chrome, only material tint on the thing they name */
+  --charge: #bfe4ff;
+  --scale-badge: #f0f0fa;
+
+  /* level-strip / layer dots for this project's three prototype levels + three layers */
+  --lens: #8fc3f0;    /* level 1, the lens -- reuses the derived blue, distinct from the shared amber */
+  --focus: #e6ba82;   /* level 2, focus & bokeh -- the shared accent itself, since it is the mid level */
+  --loupe: #7ee0a1;   /* level 3, the loupe -- reuses the spec green */
+  --rays: #f0f0fa;
+  --waves: #8fc3f0;
+  --charge-layer: #bfe4ff;
+
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --bar: 60px;
+}
+
+/* Light theme is deliberately skipped for the 3D scene (see design/LOOK.md, "Light theme"): the whole visual
+   identity is glass and metal lit against a black void. The UI chrome tokens above have no light variant either,
+   since this prototype's chrome and scene are inseparable (a HUD over a canvas). */

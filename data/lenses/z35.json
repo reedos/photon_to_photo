@@ -1,0 +1,343 @@
+{
+  "id": "z35",
+  "system": "mirrorless",
+  "focalLength": 35,
+  "maxFno": 1.85,
+  "markedFno": 1.8,
+  "name": "35 mm f/1.8 mirrorless-native wide-angle prime (patent numerical example)",
+  "representativeOf": "Nikon NIKKOR Z 35mm f/1.8 S",
+  "representativeSource": "Three independent sources agree. (1) photonstophotos.net Optical Bench Hub's model list ties patent JP2019-090947, Example04P, to \"Nikon Nikkor Z 35mm f/1.8 S\" (https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026; row in .local/lens-normal/modeldata.tsv). (2) The Hub's own per-lens data file, https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/Data/JP2019-090947_Example04P.txt (accessed 9/28/2026, William J. Claff), titles this exact example \"JP 2019-090947 Example 4 (Nikon Nikkor Z 35mm f/1.8 S)\", cites the figure source as Nikon's own Asia product page (nikon-asia.com/.../nikkor-z-35mm-f-1-8-s.html), and independently transcribes the same 23-surface prescription - his scaled r/nd/vd/asph values match this file's raw values times scale=22.5 exactly, to the last printed digit, confirming the transcription. His notes also independently flag the identical total-length gap this workstream found (\"Sum d = 4.40 but TL is 4.553\") and diagnose the same fix (\"Surface 5 d 0.108 -> 0.261\"), which is applied here (see notes) and closes both the TL gap and the EFL/BF self-check to within tolerance - strong evidence the correction is real and not a coincidence. (3) asobinet.com (Japanese lens-patent blog), https://asobinet.com/info-patent-nikkor-z-35mm-nikon-minolta/, accessed 9/28/2026, separately identifies the same Nikon/Konica Minolta joint patent family (JP2019-090947/090948/090949, all filed 11/15/2017, published 6/13/2019) as the source of the Z 35mm f/1.8 S design, citing the identical numbers (f=1.57, FNO=1.85, TL=4.553, BF=0.0425) for what it labels \"Example 3\" of sibling application JP2019-090949 - the same raw prescription transcribed here as Example 4 of JP2019-090947. Corroborated structurally, decisively, by a fourth, independent check: this transcription's element/group count from the engine's own cemented-interface rule is 11 elements in 9 groups, matching Nikon's own published \"11 elements in 9 groups\" exactly (nikonusa.com) and confirmed by this project's own vitest assertions; 3 of those 11 elements carry aspheric surfaces (patent surfaces 11-12, 18-19, 20-21, each biaspheric), matching Nikon's published \"3 aspherical elements\" exactly; and the two highest-Abbe-number elements (patent surface 9, nd=1.49700/vd=81.61; patent surface 16, nd=1.59282/vd=68.62) are consistent with Nikon's published \"2 ED glass elements\", though no source ties those two specific surfaces to a named ED glass product by name, so that last piece is circumstantial, not confirmed. The design's genuinely small back focus (about 0.96-0.98 mm at real scale) is corroborated independently by Claff's own \"Bf(p)\"/\"Bf\" fields (0.95625 / 0.97), not an artifact of this workstream's own scale choice.",
+  "source": {
+    "kind": "patent",
+    "ref": "JP 2019-090947 A (特開2019-090947、「撮像レンズ、撮像光学装置及びデジタル機器」), Numerical Example 4 (実施例４), granted as JP 7015679 B2",
+    "url": "https://patents.google.com/patent/JP2019090947A/en",
+    "assignee": "Nikon Corp / Konica Minolta Inc (joint application; original assignees per Google Patents bibliographic data)",
+    "published": "6/13/2019",
+    "accessed": "9/28/2026",
+    "location": "\"Example 4\" / 実施例４ [Surface data]/面データ, [Aspheric data]/非球面データ and [Various data]/各種データ blocks (Google machine translation, cross-checked against the embedded Japanese original “google-src-text” spans, which agreed on every digit transcribed here)"
+  },
+  "scale": 22.5,
+  "surfaces": [
+    {
+      "r": 4.6232,
+      "t": 0.102,
+      "medium": "glass",
+      "nd": 1.51680,
+      "vd": 64.13,
+      "sd": 0.832,
+      "sdSource": "patent",
+      "label": "L1 front (patent surface 1)"
+    },
+    {
+      "r": 0.8784,
+      "t": 0.354,
+      "medium": "air",
+      "sd": 0.673,
+      "sdSource": "patent",
+      "label": "L1 rear (patent surface 2)"
+    },
+    {
+      "r": 4.0730,
+      "t": 0.258,
+      "medium": "glass",
+      "nd": 1.95375,
+      "vd": 32.33,
+      "sd": 0.657,
+      "sdSource": "patent",
+      "label": "L2 front (patent surface 3, cemented doublet L2-L3 front)"
+    },
+    {
+      "r": -2.0290,
+      "t": 0.083,
+      "medium": "glass",
+      "nd": 1.60342,
+      "vd": 38.03,
+      "sd": 0.640,
+      "sdSource": "patent",
+      "coated": false,
+      "label": "L2-L3 cemented interface (patent surface 4)"
+    },
+    {
+      "r": 3.2358,
+      "t": 0.261,
+      "medium": "air",
+      "sd": 0.569,
+      "sdSource": "patent",
+      "label": "L3 rear (patent surface 5; CORRECTED from the patent's printed/OCR'd 0.108 to 0.261 - see notes on the Claff/Optical Bench cross-check)"
+    },
+    {
+      "r": -1.2945,
+      "t": 0.172,
+      "medium": "glass",
+      "nd": 1.68893,
+      "vd": 31.16,
+      "sd": 0.548,
+      "sdSource": "patent",
+      "label": "L4 front (patent surface 6, cemented doublet L4-L5 front)"
+    },
+    {
+      "r": 1.7517,
+      "t": 0.329,
+      "medium": "glass",
+      "nd": 1.85150,
+      "vd": 40.78,
+      "sd": 0.631,
+      "sdSource": "patent",
+      "coated": false,
+      "label": "L4-L5 cemented interface (patent surface 7)"
+    },
+    {
+      "r": -1.7517,
+      "t": 0.018,
+      "medium": "air",
+      "sd": 0.645,
+      "sdSource": "patent",
+      "label": "L5 rear (patent surface 8)"
+    },
+    {
+      "r": 1.1917,
+      "t": 0.368,
+      "medium": "glass",
+      "nd": 1.49700,
+      "vd": 81.61,
+      "sd": 0.653,
+      "sdSource": "patent",
+      "label": "L6 front (patent surface 9; highest-Abbe element, circumstantially one of the 2 ED elements Nikon's spec claims, not confirmed by name)"
+    },
+    {
+      "r": -3.5528,
+      "t": 0.009,
+      "medium": "air",
+      "sd": 0.631,
+      "sdSource": "patent",
+      "label": "L6 rear (patent surface 10)"
+    },
+    {
+      "r": 4.1556,
+      "t": 0.057,
+      "medium": "glass",
+      "nd": 1.83441,
+      "vd": 37.28,
+      "sd": 0.587,
+      "sdSource": "patent",
+      "asph": {
+        "k": -4.9288,
+        "A4": -0.09582,
+        "A6": 0.5043,
+        "A8": -0.4618,
+        "A10": 0,
+        "A12": 0,
+        "convention": "patent prints K directly (surface's own conic constant, not kappa=K+1); K=-4.9288 here is stored as k=-4.9288 per this schema's k=0-is-a-sphere convention only if the patent's K already means that - see note: this patent's own text was not found to state its K convention explicitly, so K is stored as printed (k=K) rather than reinterpreted; flagged in notes for the physics workstream to confirm against the patent's own sag formula if it renders visibly wrong"
+      },
+      "label": "L7 front, aspheric (patent surface 11)"
+    },
+    {
+      "r": 1.9836,
+      "t": 0.187,
+      "medium": "air",
+      "sd": 0.557,
+      "sdSource": "patent",
+      "asph": {
+        "k": -0.4693,
+        "A4": -0.08355,
+        "A6": 0.5689,
+        "A8": -0.2913,
+        "A10": 0,
+        "A12": 0,
+        "convention": "same K-as-printed convention as surface 11 (patent K=-0.4693, stored as k=K)"
+      },
+      "label": "L7 rear, aspheric (patent surface 12)"
+    },
+    {
+      "r": null,
+      "t": 0.514,
+      "medium": "air",
+      "sd": 0.533,
+      "sdSource": "patent",
+      "stop": true,
+      "label": "STO, aperture stop (patent surface 13; d13 and the stop's own effective radius R13 both vary with focus - 0.514 mm / R13=0.533 mm at infinity (POS1, used here), 0.283 mm / R13=0.509 mm at the patent's close-focus condition POS2; see focus.gaps)"
+    },
+    {
+      "r": -0.9917,
+      "t": 0.062,
+      "medium": "glass",
+      "nd": 1.61293,
+      "vd": 36.94,
+      "sd": 0.478,
+      "sdSource": "patent",
+      "label": "L8 front (patent surface 14)"
+    },
+    {
+      "r": -5.7790,
+      "t": 0.012,
+      "medium": "air",
+      "sd": 0.495,
+      "sdSource": "patent",
+      "label": "L8 rear (patent surface 15)"
+    },
+    {
+      "r": 2.1244,
+      "t": 0.282,
+      "medium": "glass",
+      "nd": 1.59282,
+      "vd": 68.62,
+      "sd": 0.544,
+      "sdSource": "patent",
+      "label": "L9 front (patent surface 16; second-highest-Abbe element, circumstantially the other of the 2 ED elements Nikon's spec claims, not confirmed by name)"
+    },
+    {
+      "r": -1.3918,
+      "t": 0.209,
+      "medium": "air",
+      "sd": 0.562,
+      "sdSource": "patent",
+      "label": "L9 rear (patent surface 17)"
+    },
+    {
+      "r": -8.4171,
+      "t": 0.098,
+      "medium": "glass",
+      "nd": 1.69350,
+      "vd": 53.20,
+      "sd": 0.599,
+      "sdSource": "patent",
+      "asph": {
+        "k": 15.3255,
+        "A4": -0.2063,
+        "A6": 0.0689,
+        "A8": 0,
+        "A10": 0,
+        "A12": 0,
+        "convention": "K-as-printed convention, same as surfaces 11-12 (patent K=15.3255, stored as k=K)"
+      },
+      "label": "L10 front, aspheric (patent surface 18)"
+    },
+    {
+      "r": -2.8176,
+      "t": 0.229,
+      "medium": "air",
+      "sd": 0.614,
+      "sdSource": "patent",
+      "asph": {
+        "k": -0.9347,
+        "A4": -0.002416,
+        "A6": 0.1158,
+        "A8": 0.1983,
+        "A10": -0.1130,
+        "A12": 0,
+        "convention": "K-as-printed convention, same as surfaces 11-12 (patent K=-0.9347, stored as k=K)"
+      },
+      "label": "L10 rear, aspheric (patent surface 19; d19 varies with focus - 0.229 mm at infinity (used here), 0.666 mm at the close-focus condition)"
+    },
+    {
+      "r": -1.8973,
+      "t": 0.083,
+      "medium": "glass",
+      "nd": 1.58313,
+      "vd": 59.46,
+      "sd": 0.645,
+      "sdSource": "patent",
+      "asph": {
+        "k": -0.1889,
+        "A4": -0.1143,
+        "A6": -0.1549,
+        "A8": 0,
+        "A10": 0,
+        "A12": 0,
+        "convention": "K-as-printed convention, same as surfaces 11-12 (patent K=-0.1889, stored as k=K)"
+      },
+      "label": "L11 front, aspheric (patent surface 20)"
+    },
+    {
+      "r": -6.9348,
+      "t": 0.751,
+      "medium": "air",
+      "sd": 0.704,
+      "sdSource": "patent",
+      "asph": {
+        "k": 0,
+        "A4": -0.09359,
+        "A6": -0.1873,
+        "A8": 0.1909,
+        "A10": -0.1298,
+        "A12": 0,
+        "convention": "K-as-printed convention, same as surfaces 11-12 (patent K=0, stored as k=K=0, i.e. a plain sphere baseline for this surface's conic term)"
+      },
+      "label": "L11 rear, aspheric (patent surface 21; d21 varies with focus - 0.751 mm at infinity (used here), 0.545 mm at the close-focus condition); last air gap before the cover-glass plate at infinity focus"
+    },
+    {
+      "r": null,
+      "t": 0.074,
+      "medium": "glass",
+      "nd": 1.51680,
+      "vd": 64.13,
+      "sd": 1.200,
+      "sdSource": "patent",
+      "plate": "cover-glass",
+      "label": "cover glass / filter plate, front face (patent surface 22, PT)"
+    },
+    {
+      "r": null,
+      "t": 0.0425,
+      "medium": "air",
+      "sd": 1.200,
+      "sdSource": "patent",
+      "label": "cover glass rear face to image plane, flat (patent surface 23; this gap, unchanged between POS1/POS2 in the patent's own [Various data] table, is the patent's stated BF)"
+    }
+  ],
+  "stated": {
+    "f": 1.57,
+    "fno": 1.85,
+    "halfFieldDeg": 32.45,
+    "bf": 0.0425,
+    "totalLength": 4.553
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 12,
+        "atInfinity": 0.514,
+        "atClose": 0.283,
+        "closeObjectDistance": 7.0,
+        "note": "d13 in the patent's own numbering (surface 13, the stop's own gap) = 0-based index 12; closeObjectDistance is the patent's raw [Variable data] d0=7.0 (pre-scale, same normalized unit system as the surfaces; scaled by design.scale it is ~156 mm from an unstated reference point - the translation does not say whether d0 is measured from the object to the first lens surface or to the image plane, same caveat as p24/p50/m50's closeObjectDistance notes). Nikon's shipped minimum focus distance (0.25 m, see focus.minFocusM) is not derived from this patent value; the two need not agree because the patent's own close-focus example is not necessarily the shipped lens's closest point (same situation documented in m50.json's minFocusSource note)."
+      },
+      {
+        "surface": 18,
+        "atInfinity": 0.229,
+        "atClose": 0.666,
+        "closeObjectDistance": 7.0,
+        "note": "d19 in patent numbering (surface 19, 1-based) = 0-based index 18"
+      },
+      {
+        "surface": 20,
+        "atInfinity": 0.751,
+        "atClose": 0.545,
+        "closeObjectDistance": 7.0,
+        "note": "d21 in patent numbering (surface 21, 1-based) = 0-based index 20"
+      }
+    ],
+    "minFocusM": 0.25,
+    "minFocusSource": "Nikon USA product page, https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview, accessed 9/28/2026 (\"Minimum Focus Distance: 0.82 ft. (0.25m)\")"
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Nikon USA product page, https://www.nikonusa.com/p/nikkor-z-35mm-f18-s/20081/overview, accessed 9/28/2026 (\"Diaphragm Blades: 9\"); \"rounded\" corroborated by B&H Photo's product listing (https://www.bhphotovideo.com/c/product/1431709-REG/nikon_20081_nikkor_z_35mm_f_1_8.html, accessed 9/28/2026: \"rounded nine-blade diaphragm\"), Nikon USA's own overview page does not use the word \"rounded\" itself",
+    "ev": "spec"
+  },
+  "elements": 11,
+  "groups": 9,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is Nikon/Konica Minolta's joint JP2019-090947A (\"Image capturing lens, image capturing optical device, and digital equipment\" / 撮像レンズ、撮像光学装置及びデジタル機器), application JP2017-220250, filed 11/15/2017, published 6/13/2019, granted as JP7015679B2. The same filing produced sibling applications JP2019-090948A and JP2019-090949A on the same day (per asobinet.com, a Japanese lens-patent blog); this file transcribes JP2019-090947A's own Example 4, whose numbers (f=1.57, FNO=1.85, TL=4.553, BF=0.0425) are the SAME numbers asobinet.com quotes for \"Example 3\" of sibling JP2019-090949A, so the three co-filed applications evidently share overlapping numerical examples under different example numbers; JP2019-090949A itself was not separately fetched or transcribed here.",
+    "SCALE NOTE: this patent's own surface-data table is normalized to a tiny unit system (stated focal length f=1.57 'mm', total length 4.553 'mm', BF=0.0425 'mm', close-focus object distance 7.0 'mm') that is far too small to be the lens's real physical size despite the patent's literal 'mm' labels - the patent's own background section describes 'a compact, wide-angle, large-aperture imaging lens suitable for a lens-interchangeable digital camera', which is inconsistent with a 4.553 mm-long, 1.57 mm-focal-length physical lens. This is standard practice for this kind of lens-design patent: the printed table is a normalized reference prescription, and any absolute physical size sharing the same radius/thickness ratios is claimed. `scale` = 22.5 is William J. Claff's own value (photonstophotos.net Optical Bench Hub data file for this exact example; see representativeSource), not independently re-derived here; it scales the design's raw stated focal length (1.57) to 35.325 mm, not to an exactly-round 35.000 mm, which is consistent with how every other lens file in this project keeps `focalLength` as the nominal marketed class while `stated.f` (and here, the scaled real f) can differ from it slightly (e.g. p35.json's raw f=36.00 for its nominal 35mm class). This workstream did not determine independently how Claff derived 22.5 specifically (plausibly by matching the design's own image circle to the real Z-mount FX sensor diagonal, 43.2 mm, which his data file lists as an exact round number - a more principled anchor than this workstream's earlier, since-replaced assumption of scaling to a round 35.000mm nominal focal length), but adopting his figure is justified because it is what makes the design's own paraxial EFL/BF self-check close (see the self-check note below) - i.e. it is corroborated by physics, not merely borrowed on authority.",
+    "Element/group count: this schema's engine (src/engine/lens.ts) counts consecutive glass surfaces joined with no air gap as separate cemented elements sharing one group (same rule documented in m50.json's notes). Applying that rule here: patent surfaces 3-4 are a cemented doublet (2 elements, 1 group), 6-7 are a cemented doublet (2 elements, 1 group), and surfaces 1, 9, 11-12 (biaspheric singlet), 14, 16, 18-19 (biaspheric singlet), 20-21 (biaspheric singlet) are each one singlet element/group. Total: 1 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1 = 11 elements in 9 groups, matching Nikon's own published '11 elements in 9 groups' spec exactly (nikonusa.com) - this is the strongest structural confirmation that this patent example is the Z 35mm f/1.8 S design, independent of the photonstophotos.net/asobinet.com ties.",
+    "TRANSCRIPTION CORRECTION (resolved): the patent's own printed/OCR'd surface-5 thickness (d5) reads 0.108 in both the English machine translation and the embedded Japanese original of JP2019-090947A - confirmed twice against both renderings, so it is not a translation artifact - but summing all 23 raw thicknesses with d5=0.108 gives total length 4.4015, not the patent's own stated TL=4.553 (a 3.4% gap), and the same raw data fails the required paraxial EFL/BF self-check by 3.4%/46%. William J. Claff's independent transcription of this exact example (photonstophotos.net Optical Bench Hub data file, see representativeSource) carries the same discrepancy in his own working notes (\"Sum d = 4.40 but TL is 4.553\") and the same diagnosis (\"Surface 5 d 0.108 -> 0.261\"). Substituting d5=0.261 (this file's current value) closes the total-length sum to 4.5545 (vs. stated 4.553, off by 0.03%) and brings the required self-check to EFL +0.153% and BFD +0.026 mm (both within tolerance; see research/lenses-z35.md). Two independent researchers reaching the same specific fix from the same specific symptom is strong evidence 0.108 is a genuine misprint/OCR error in the patent's own published table (most likely '0.108' for what should print as '0.261' - not obviously a single-character OCR slip, so possibly an error already present in the patent office's own typesetting) and 0.261 is correct; this is the one number in this file that is NOT the patent's own printed value.",
+    "Aspheric K convention is NOT confirmed independently for this patent. Unlike p24/p28/p35/m50 (where the patent text was found to explicitly state 'K=0 means a sphere' or an equivalent kappa relation), no such defining sentence was found in this patent's machine-translated text for its own aspheric-data block. K is therefore stored as printed (k = K, not k = K-1) by default/convention-of-least-assumption; this matters only for the aspheric shape at high ray heights (second-order and beyond), not for the paraxial EFL/BF self-check, which ignores all aspheric terms by construction (same as every other lens file in this project). Flagged for whichever workstream builds the real (non-paraxial) ray tracer to confirm against rendered spot diagrams.",
+    "Semi-diameters ARE patent-stated for every surface (column 'Ri' in the [Surface data] table, and 'R13' in the [Variable parameter] table for the stop) - unlike p24/p28/p35/p50/m50, whose patents print no effective-diameter column at all. sdSource is 'patent' throughout this file, not 'estimated-from-marginal-ray'.",
+    "medium is 'glass' (not a catalog key) everywhere because the patent gives only nd/vd, never a named glass catalog product; same situation as every other lens file in this project.",
+    "Object-side reference point for closeObjectDistance (7.0, raw/pre-scale) is not stated in the translated text, same caveat as every other lens file's closeObjectDistance note.",
+    "No public source independently confirms which two of this design's 11 elements are Nikon's '2 ED' elements by product glass name; the two highest-Abbe-number elements (surfaces 9 and 16, vd=81.61 and vd=68.62) are noted as circumstantially consistent, not confirmed."
+  ]
+}

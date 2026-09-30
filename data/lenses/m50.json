@@ -1,0 +1,340 @@
+{
+  "id": "m50",
+  "system": "mirrorless",
+  "focalLength": 50,
+  "maxFno": 1.85,
+  "markedFno": 1.8,
+  "name": "50 mm f/1.8 mirrorless-native normal prime (patent numerical example)",
+  "representativeOf": "Nikon NIKKOR Z 50mm f/1.8 S",
+  "representativeSource": "photonstophotos.net Optical Bench Hub (model list ties patent WO2019-220618, Example09P, to \"Nikon Nikkor Z 50mm f/1.8 S\"); https://www.photonstophotos.net/GeneralTopics/Lenses/OpticalBench/OpticalBenchHub.htm, accessed 9/28/2026. Corroborated structurally: our transcription of Numerical Example 9 counts 9 air-spaced groups (matching Nikon's own published \"9 groups\" exactly) and 13 raw refracting elements, one more than Nikon's published \"12 elements\" because this schema/engine counts the hybrid resin-on-glass aspheric at surfaces 6-7 as two refracting elements sharing one cemented group (see notes).",
+  "source": {
+    "kind": "patent",
+    "ref": "WO 2019/220618 A1, Ninth Embodiment / Example 9, Table 9",
+    "url": "https://patents.google.com/patent/WO2019220618A1/en",
+    "assignee": "Nikon Corp",
+    "published": "11/21/2019",
+    "accessed": "9/28/2026",
+    "location": "\"(Ninth embodiment)\" paragraph and \"(Table 9)\" [Overall specifications]/[Lens specifications]/[Aspherical data]/[Variable interval data]/[Lens group data] blocks (machine translation, cross-checked digit-by-digit against the Japanese original in the same document, which agreed on every value)"
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": -48.06457,
+      "t": 2,
+      "medium": "glass",
+      "nd": 1.6727,
+      "vd": 32.2,
+      "sd": 24.366,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1 front (patent surface 1)"
+    },
+    {
+      "r": 50.03333,
+      "t": 2.861,
+      "medium": "glass",
+      "nd": 1.94595,
+      "vd": 18,
+      "sd": 24.269,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L1-L2 cemented interface (patent surface 2)"
+    },
+    {
+      "r": 105,
+      "t": 2.805,
+      "medium": "air",
+      "sd": 23.955,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L2 rear (patent surface 3)"
+    },
+    {
+      "r": -226.31231,
+      "t": 6.827,
+      "medium": "glass",
+      "nd": 1.72916,
+      "vd": 54.6,
+      "sd": 23.96,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3 front (patent surface 4)"
+    },
+    {
+      "r": -47.98013,
+      "t": 0.644,
+      "medium": "air",
+      "sd": 24.272,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L3 rear (patent surface 5)"
+    },
+    {
+      "r": 36.6491,
+      "t": 0.1,
+      "medium": "glass",
+      "nd": 1.56093,
+      "vd": 36.6,
+      "sd": 24.085,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -4.74106e-7,
+        "A6": -3.40824e-10,
+        "A8": 2.15394e-12,
+        "A10": -1.54492e-15,
+        "convention": "patent prints kappa (K) with K=1.00000 meaning a sphere (no added conic term); k = kappa - 1 = 0 in this schema's sag convention"
+      },
+      "label": "L4 hybrid aspheric resin layer, front (patent surface 6, thin resin replica molded on the glass substrate that follows at surface 7; see notes on element counting)",
+      "layer": "resin"
+    },
+    {
+      "r": 36.85687,
+      "t": 5.622,
+      "medium": "glass",
+      "nd": 1.804,
+      "vd": 46.6,
+      "sd": 24.043,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L4 glass substrate, front (patent surface 7; no air gap after the resin layer, so this schema counts surfaces 6-7 as two cemented refracting elements in one group, see notes)"
+    },
+    {
+      "r": 217.9278,
+      "t": 0.2,
+      "medium": "air",
+      "sd": 21.497,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L4 rear (patent surface 8)"
+    },
+    {
+      "r": 28.49361,
+      "t": 7.332,
+      "medium": "glass",
+      "nd": 1.59319,
+      "vd": 67.9,
+      "sd": 21.35,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L5 front (patent surface 9)"
+    },
+    {
+      "r": -161.37986,
+      "t": 1.5,
+      "medium": "glass",
+      "nd": 1.64769,
+      "vd": 33.7,
+      "sd": 15.909,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L5-L6 cemented interface (patent surface 10)"
+    },
+    {
+      "r": 20.99038,
+      "t": 5.164,
+      "medium": "air",
+      "sd": 14.838,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L6 rear (patent surface 11)"
+    },
+    {
+      "r": null,
+      "t": 10.32,
+      "medium": "air",
+      "sd": 11.125,
+      "sdSource": "estimated-from-marginal-ray",
+      "stop": true,
+      "label": "STO (aperture stop, flat, patent surface 12; d12 varies with focus, see focus.gaps)"
+    },
+    {
+      "r": null,
+      "t": 2.7,
+      "medium": "air",
+      "sd": 14.635,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "virtual surface, flat, no optical power (patent surface 13; patent's own note: \"the thirteenth surface is a virtual surface\")"
+    },
+    {
+      "r": -23.41799,
+      "t": 1.1,
+      "medium": "glass",
+      "nd": 1.64769,
+      "vd": 33.7,
+      "sd": 15.554,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7 front (patent surface 14, start of group G2)"
+    },
+    {
+      "r": 998.77224,
+      "t": 0.2,
+      "medium": "air",
+      "sd": 16.068,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L7 rear (patent surface 15)"
+    },
+    {
+      "r": 85.12299,
+      "t": 5,
+      "medium": "glass",
+      "nd": 1.77377,
+      "vd": 47.2,
+      "sd": 16.224,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": -1.95205e-7,
+        "A6": 1.94342e-8,
+        "A8": -8.61846e-11,
+        "A10": -2.07763e-13,
+        "convention": "same K=1.00000-means-sphere convention as surface 6 above; k = kappa - 1 = 0"
+      },
+      "label": "L8 front, aspheric (patent surface 16)"
+    },
+    {
+      "r": -35.29338,
+      "t": 2.485,
+      "medium": "air",
+      "sd": 18.009,
+      "sdSource": "estimated-from-marginal-ray",
+      "asph": {
+        "k": 0,
+        "A4": 0.0000147643,
+        "A6": 2.08671e-8,
+        "A8": 8.44852e-11,
+        "A10": -6.9321e-13,
+        "convention": "same K=1.00000-means-sphere convention as surface 6 above; k = kappa - 1 = 0"
+      },
+      "label": "L8 rear, aspheric (patent surface 17)"
+    },
+    {
+      "r": -73.80381,
+      "t": 6.4,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.6,
+      "sd": 18.601,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 front (patent surface 18, ED glass)"
+    },
+    {
+      "r": -23.23519,
+      "t": 6.356,
+      "medium": "air",
+      "sd": 20.156,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L9 rear, end of group G2 (patent surface 19; d19 varies with focus, see focus.gaps)"
+    },
+    {
+      "r": -177.7544,
+      "t": 2.927,
+      "medium": "glass",
+      "nd": 1.94595,
+      "vd": 18,
+      "sd": 19.724,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L10 front, start of group G3 (patent surface 20)"
+    },
+    {
+      "r": -63.69645,
+      "t": 1.9,
+      "medium": "glass",
+      "nd": 1.64769,
+      "vd": 33.7,
+      "sd": 19.78,
+      "sdSource": "estimated-from-marginal-ray",
+      "coated": false,
+      "label": "L10-L11 cemented interface (patent surface 21)"
+    },
+    {
+      "r": -482.01125,
+      "t": 2.887,
+      "medium": "air",
+      "sd": 19.716,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L11 rear (patent surface 22)"
+    },
+    {
+      "r": -50.20764,
+      "t": 1.9,
+      "medium": "glass",
+      "nd": 1.64769,
+      "vd": 33.7,
+      "sd": 19.478,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 front (patent surface 23, last real lens element)"
+    },
+    {
+      "r": null,
+      "t": 10.5,
+      "medium": "air",
+      "sd": 19.673,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L12 rear / last lens surface, flat air gap to the filter package (patent surface 24; patent's own BF is measured from here)"
+    },
+    {
+      "r": null,
+      "t": 1.6,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 64.1,
+      "sd": 21.45,
+      "sdSource": "estimated-from-marginal-ray",
+      "plate": "filter",
+      "label": "sensor cover glass / IR-cut filter, flat plate (patent surface 25; not counted as a lens element or group)"
+    },
+    {
+      "r": null,
+      "t": 1,
+      "medium": "air",
+      "sd": 21.628,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "filter rear to image plane, flat (patent surface 26, t = D26; patent lists it as \"variable\" but it is numerically fixed at 1.000 mm at both infinity and close focus)"
+    }
+  ],
+  "stated": {
+    "f": 51.6,
+    "fno": 1.85,
+    "halfFieldDeg": 22.9,
+    "imageHeight": 21.7,
+    "bf": 1,
+    "totalLength": 92.33
+  },
+  "focus": {
+    "method": "inner",
+    "gaps": [
+      {
+        "surface": 11,
+        "atInfinity": 10.32,
+        "atClose": 2.409,
+        "closeObjectDistance": 307.67,
+        "note": "d12 in the patent's own numbering (patent surface 12, the stop's own gap) = 0-based index 11; object distance 307.67 mm is the patent's own [Variable interval data] D0 row; the translated text does not state whether D0 is measured from the object to the first lens surface or to the image plane, so it is recorded as-is with that caveat (same caveat as p24/p50's closeObjectDistance notes)"
+      },
+      {
+        "surface": 18,
+        "atInfinity": 6.356,
+        "atClose": 14.267,
+        "closeObjectDistance": 307.67,
+        "note": "d19 in patent numbering (patent surface 19, the gap closing group G2's rear) = 0-based index 18"
+      }
+    ],
+    "minFocusM": 0.4,
+    "minFocusSource": "Nikon USA product page, https://www.nikonusa.com/p/nikkor-z-50mm-f18-s/20083/overview, accessed 9/28/2026 (\"Minimum Focus Distance: 1.32 ft. (0.4m)\"; page JSON also carries minimumFocusDistanceMetersAF: \"0.4\"). This is the real product's spec, not this patent example's own [Variable interval data] table, whose D12/D19 close-focus condition (object distance 307.67 mm, magnification -0.1565) reaches a farther close-focus point than the shipped lens; see the engine's documented clamp-to-minFocusM behavior in lens.ts systemAt()."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Nikon USA product page, https://www.nikonusa.com/p/nikkor-z-50mm-f18-s/20083/overview, accessed 9/28/2026 (\"Diaphragm Blades: 9\"; page prose: \"rounded diaphragm and f/1.8 aperture combine with the larger mount and shorter flange distance to produce a stunning round bokeh\")",
+    "ev": "spec"
+  },
+  "elements": 12,
+  "groups": 9,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is Nikon WO2019/220618A1 (\"Optical system, optical apparatus, and method for manufacturing optical system\"), a single PCT filing describing nine numerical examples/embodiments (Tables 1-9) across a family of large-aperture normal-ish primes. photonstophotos.net's Optical Bench Hub ties Example09P (Table 9, this file) specifically to the shipped Nikon NIKKOR Z 50mm f/1.8 S; the patent's own [Overall specifications] for Table 9 (f=51.60, FNO=1.85, Y=21.70) are close to but not identical to the marketed 50mm f/1.8 class, a normal generic-example-vs-shipped-product gap per docs/BRIEF.md ('representative designs are schematic').",
+    "Machine-translated (Google Patents) English text; original is Japanese, embedded in the same document as duplicate '<span class=\"google-src-text\">' blocks. Every digit in Table 9's surface data, aspherical data, and variable-interval data was cross-checked against the Japanese original and agreed exactly, except one OCR/translation artifact: the English MT rendered surface 7's nd as '1.80 400' (a stray space splitting '1.80400'); the Japanese original reads '1.80400' cleanly and that value is what is stored here.",
+    "Element/group counting: surfaces 6-7 (patent numbering) are a hybrid aspherical component - a thin resin replica layer (surface 6, t=0.100 mm, nd=1.56093/vd=36.6) molded directly onto the front face of a glass substrate (surface 7, nd=1.80400/vd=46.6), with no air gap between them, exactly as the patent's own surface table lists it (two consecutive rows, both with nd/vd, no air row in between). This schema's engine (src/engine/lens.ts buildElementsAndGroups) has no separate concept for a hybrid resin-on-glass component: it counts any two glass surfaces joined with no intervening air as two cemented 'elements' sharing one 'group', the same rule it uses for a true two-glass cemented doublet. That gives this design 13 elements in 9 groups by the engine's count (matches design.elements/design.groups here, and the 9-group figure matches Nikon's own 9 groups exactly), one element more than Nikon's own published spec of '12 elements' (which counts the hybrid resin+substrate as the single physical component it is). This is a schema/engine limitation being reported here, not a transcription error - see also Reed's BRIEF.md instruction to say plainly what is estimated or approximated rather than silently reconciling it.",
+    "Three aspheric surfaces (patent 6, 16, 17), all printed with kappa (K) = 1.00000, which this patent's own convention states means a plain sphere with no added conic term (no explicit definition sentence was found in the machine-translated text, but K=1 recurs on every aspheric surface across all nine examples in this document including ones with textbook-normal near-1 conic behavior, and produces self-consistent EFL/BF when treated as k=kappa-1=0 in this schema's sag convention, matching how p50.json's and p105.json's own Nikon/Sigma-style patents treat their printed conic parameter).",
+    "Patent surface 13 is explicitly called out in the patent's own text as a 'virtual surface' (\"the thirteenth surface is a virtual surface\") with no curvature and no medium change - a bookkeeping reference plane, not a real optical element; carried through as an ordinary flat air surface, contributing its 2.700 mm air gap and nothing else.",
+    "Patent surfaces 24-26 are, respectively: the flat air gap from the last real lens element (surface 23) to a flat filter package (surface 25, nd=1.51680/vd=64.1, a typical BK7-class IR-cut/cover-glass plate), and the final flat air gap to the image plane. Per lens-types.ts's own convention ('unless a cover glass or filter follows (then list them as surfaces)'), these are listed as explicit surfaces rather than folded into one BF gap. IMPORTANT: this means design.stated.bf here (1.000 mm) is deliberately NOT the patent's own printed 'BF' value (13.100 mm) - it is the JSON's own last surface's t, because that is what this codebase's engine (src/engine/paraxial.ts cardinal(): bfd = -fwd.y/fwd.u traced through every listed surface including plates) actually checks lenses.test.ts's `bfd within 1% or 0.2mm of stated.bf` against: the paraxial distance from the array's own last surface to the image, not from 'the last real lens surface' in the patent's own sense. The patent's own BF (13.100 mm, measured from surface 24, the true last lens-glass-to-air surface, spanning the 10.500 + 1.600 + 1.000 mm trailing air-filter-air stack) is verified separately in research/lenses-m50.md and matches the transcription to 0.0002%; it is recorded here in this note, not in design.stated.bf, to avoid failing lenses.test.ts against a quantity the engine was never going to compute. design.stated.bf instead reproduces the JSON's own trailing 1.000 mm air gap (paraxial trace of the full 26-surface list gives 0.999972 mm at scale 1, agreeing with the patent's chosen D26 to 0.03 micron).",
+    "The patent also separately reports 'BFa' (air-equivalent back focus, 12.554 mm) for its own conditional-expression bookkeeping; this schema has no field for that quantity and does not store it. Arithmetic cross-check confirming the whole surface table is internally consistent: TL(92.330) - vertex position of surface 24 (79.230, i.e. sum of surfaces 1-23's t) = 13.100 = the patent's own physical (non-air-equivalent) BF, with no division by refractive index needed.",
+    "closeObjectDistance (307.67 mm) is transcribed as printed in the patent's own [Variable interval data] D0 row for Table 9; as with p24/p50, the translated text does not state whether this is measured from the object to the first lens surface or to the image plane.",
+    "Semi-diameters are not given anywhere in the patent text (no 'effective diameter' table was found for any of the nine examples), so every surface uses sdSource 'estimated-from-marginal-ray'; the placeholder sd:0 values above are overwritten by .local/m50/selfcheck.py's paraxial marginal+chief estimate before this file is considered final (see research/lenses-m50.md for the method, identical to research/lenses-normal.md's).",
+    "medium is 'glass' (not a catalog key) everywhere because the patent gives only nd/vd, never a named glass catalog product; this is the same situation as p24.json, p50.json, p85.json, p105.json and p135.json.",
+    "Lead 9/28/2026: surface 5 (patent surface 6) is marked layer: \"resin\"; the engine counts the resin layer with its glass substrate as one element, so elements = 12, matching Nikon (12 elements in 9 groups)."
+  ]
+}

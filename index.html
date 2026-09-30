@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex"> <!-- dark publish: live but unlinked until Reed says go live, per docs/BRIEF.md -->
+<title>Photon to Photo</title>
+<meta name="description" content="A camera with a lens attached, driven by a physics engine. Turn the focus ring and the glass inside moves; close the aperture and less light gets in. Every ray on screen is traced through the lens design.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/src/styles/tokens.css">
+<link rel="stylesheet" href="/src/styles/base.css">
+<link rel="stylesheet" href="/src/styles/app.css">
+<link rel="stylesheet" href="/src/styles/levels.css">
+</head>
+<body>
+<header class="topbar" id="topbar">
+  <a class="brand" href="#top" aria-label="Photon to Photo, top of the page">
+    <span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-t">Photon to Photo</span>
+  </a>
+  <nav class="topnav" id="topnav" aria-label="Site">
+    <a class="navlink" href="#stage-section" data-nav="stage" aria-current="true">The camera</a>
+    <a class="navlink" href="#scenario" data-nav="scenario">Settings</a>
+    <a class="navlink" href="#finalimg" data-nav="finalimg">Final image</a>
+    <span class="sep" aria-hidden="true"></span>
+    <a class="navlink" href="./models.html">Models</a>
+  </nav>
+  <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
+    <span aria-hidden="true"></span>Menu
+  </button>
+</header>
+
+<main class="wrap" id="top">
+  <header class="page-head">
+    <p class="eyebrow" id="piece-counter">01 / 04</p>
+    <h1 id="page-title">The camera</h1>
+    <p class="lede" id="page-lede">Turn the focus ring and the glass inside moves. Close the aperture and less light gets in. Every ray on screen is traced through the lens design.</p>
+  </header>
+
+  <section class="stage" aria-label="The camera in 3D" id="stage-section">
+    <nav class="steps" id="steps" aria-label="Level"></nav>
+    <div class="body">
+      <div class="viewer" id="viewer">
+        <div class="view" id="view">
+          <canvas id="gl" tabindex="0" aria-label="3D scene. Drag to orbit, Ctrl and scroll or pinch to zoom."></canvas>
+          <div class="pins" id="pins"></div>
+          <div class="hud tl" data-inset="top">
+            <span class="ttl" id="hud-title">The camera</span>
+            <span class="sub" id="hud-sub"></span>
+          </div>
+          <div class="hud bl">
+            <!-- hidden until a piece has real, calibrated 3D geometry to measure -- an axis-line stub has no
+                 true scale to report, and design/LOOK.md's own rule is never to show one that isn't real -->
+            <div class="scalebar" id="scalebar" hidden><span id="scale-label"></span><i id="scale-bar"></i></div>
+            <p class="scale-badge" id="scale-badge" hidden></p>
+          </div>
+          <!-- level 1's left rail on a wide screen: the exposure panel (src/scene/rig-exposure.ts) and the docked final image -->
+          <div class="hud rail" id="hud-rail" data-inset="left">
+            <button type="button" class="fi-dock" id="fi-dock" hidden data-inset="bottom-narrow" aria-label="The final image for these settings. Opens the full image below.">
+              <span class="fi-dock-img"><canvas id="fi-dock-canvas" width="352" height="234"></canvas><span class="fi-dock-empty" id="fi-dock-empty" hidden></span></span>
+              <span class="fi-dock-txt"><span class="fi-dock-k">Final image</span><span class="fi-dock-cap" id="fi-dock-cap"></span><span class="fi-dock-go">See it full size below</span></span>
+            </button>
+          </div>
+          <div class="hud br" id="hud-br">
+            <span class="backend-chip" id="backend-chip"></span>
+          </div>
+          <div class="hud tr" id="hud-tr" data-inset="corner">
+            <div class="hud-row hud-switches" id="hud-switches">
+              <button type="button" class="layer-chip" id="rays-chip" aria-pressed="true" style="--c: var(--rays)"><i></i>Rays</button>
+              <div class="hud-slot" id="hud-view-slot"></div>
+            </div>
+            <div class="hud-btns" id="hud-btns">
+              <div class="hud-row">
+                <button type="button" class="btn" id="reset-view">Reset view</button>
+                <button type="button" class="btn" id="share-btn">Share</button>
+              </div>
+            </div>
+            <p class="hint" id="hint">Drag the ring or the dials &middot; drag elsewhere to orbit &middot; Ctrl + scroll to zoom</p>
+          </div>
+          <div class="toast" id="toast" role="status" hidden></div>
+          <div class="veil" id="veil"><div class="veil-in"><span id="veil-msg">Starting the renderer&hellip;</span><i class="veil-bar"><b id="veil-bar"></b></i><button type="button" class="btn veil-reload" id="veil-reload">Reload</button></div></div>
+        </div>
+        <div class="view-strip" id="view-strip"></div>
+        <div class="hud-btns-phone" id="hud-btns-phone"></div>
+        <p class="view-cap">
+          <span class="vc-full">A personal educational project built from cited public sources. The lenses follow public patent examples, and a lens's card says when a source ties it to a product.</span>
+          <span class="vc-short">Personal project &middot; lenses from public patents</span>
+        </p>
+      </div>
+      <aside class="panel" aria-label="Parts">
+        <div class="panel-scroll">
+          <p class="intro" id="intro">Pick a part to see how it works.</p>
+          <div class="parts-head">
+            <span class="eyebrow" id="parts-k">8 parts</span>
+            <button type="button" class="btn btn-quiet" id="parts-all" hidden>All parts</button>
+          </div>
+          <ul class="parts" id="parts"></ul>
+          <article class="card" id="card" hidden>
+            <div class="card-grab" aria-hidden="true"></div>
+            <button type="button" class="card-x" id="card-x" aria-label="Close this part">&times;</button>
+            <span class="k" id="card-k"></span>
+            <h3 id="card-t"></h3>
+            <span class="card-sub" id="card-sub" hidden></span>
+            <p id="card-b"></p>
+            <dl class="specs" id="card-s"></dl>
+          </article>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="scenario" aria-labelledby="sc-h" id="scenario">
+    <div class="sc-head">
+      <p class="eyebrow">Settings</p>
+      <h2 id="sc-h">Set the shot</h2>
+    </div>
+    <div class="sc-controls">
+      <div class="sc-group sc-kit">
+        <div class="sc-kit-row">
+          <div class="sc-sub">
+            <span class="lab">Body</span>
+            <div class="sc-seg" id="sc-body" role="group" aria-label="Body"></div>
+          </div>
+          <div class="sc-sub sc-grow">
+            <span class="lab">Lens</span>
+            <div class="sc-seg sc-lens" id="sc-lens" role="group" aria-label="Lens"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sc-group">
+        <div class="ctl-head"><label for="sc-fno">Aperture</label><output id="sc-fno-v" for="sc-fno">f/4</output></div>
+        <input type="range" id="sc-fno" value="0">
+      </div>
+      <div class="sc-group">
+        <div class="ctl-head"><label for="sc-focus">Focus distance</label><output id="sc-focus-v" for="sc-focus">3 m</output></div>
+        <input type="range" id="sc-focus" value="0">
+      </div>
+      <div class="sc-group">
+        <div class="ctl-head"><label for="sc-shutter">Shutter</label><output id="sc-shutter-v" for="sc-shutter">1/250 s</output></div>
+        <input type="range" id="sc-shutter" value="0">
+      </div>
+      <div class="sc-group">
+        <div class="ctl-head"><label for="sc-iso">ISO</label><output id="sc-iso-v" for="sc-iso">400</output></div>
+        <input type="range" id="sc-iso" value="0">
+      </div>
+    </div>
+    <div class="sc-group sc-format">
+      <span class="lab">Format</span>
+      <div class="sc-seg" id="sc-format" role="group" aria-label="Sensor format"></div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <p class="note">The physics engine's figures for these settings. The chip beside each number says what backs it.</p>
+  </section>
+
+  <section class="finalimg" aria-labelledby="fi-h" id="finalimg">
+    <div class="sc-head">
+      <p class="eyebrow">The final image</p>
+      <h2 id="fi-h">What this shot becomes</h2>
+    </div>
+    <div class="finalimg-card">
+      <div class="finalimg-canvas-wrap">
+        <canvas id="finalimg-canvas" width="600" height="400" aria-label="The rendered photo for the current settings. Tap to open the loupe."></canvas>
+      </div>
+      <div class="finalimg-side">
+        <p class="finalimg-scale" id="finalimg-scale"></p>
+        <p class="finalimg-cap" id="finalimg-cap">Rendering the photo for these settings&hellip;</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

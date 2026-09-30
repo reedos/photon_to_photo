@@ -1,0 +1,287 @@
+{
+  "id": "p200",
+  "focalLength": 200,
+  "maxFno": 2,
+  "markedFno": 2,
+  "name": "200 mm f/2 floating-focus telephoto (patent example)",
+  "source": {
+    "kind": "patent",
+    "ref": "US 5,490,014, Embodiment 1",
+    "url": "https://patents.google.com/patent/US5490014A/en",
+    "assignee": "Nikon Corporation",
+    "published": "2/6/1996",
+    "accessed": "9/28/2026",
+    "location": "Table 1, \"(Specifications for Embodiment 1)\""
+  },
+  "scale": 1,
+  "surfaces": [
+    {
+      "r": 148.75,
+      "t": 11.5,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.6,
+      "sd": 62.6,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1a front",
+      "coated": true
+    },
+    {
+      "r": -1205.785,
+      "t": 0.3,
+      "medium": "air",
+      "sd": 60.14,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1a rear"
+    },
+    {
+      "r": 142.017,
+      "t": 14.5,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.6,
+      "sd": 60.03,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1b front",
+      "coated": true
+    },
+    {
+      "r": -320.577,
+      "t": 2,
+      "medium": "air",
+      "sd": 54.66,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1b rear"
+    },
+    {
+      "r": -307.636,
+      "t": 3.7,
+      "medium": "glass",
+      "nd": 1.7495,
+      "vd": 35.2,
+      "sd": 53.38,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1c front (negative element)",
+      "coated": true
+    },
+    {
+      "r": 280.469,
+      "t": 1,
+      "medium": "air",
+      "sd": 52.3,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1c rear"
+    },
+    {
+      "r": 136.923,
+      "t": 8,
+      "medium": "glass",
+      "nd": 1.49782,
+      "vd": 82.6,
+      "sd": 51.93,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1d front",
+      "coated": true
+    },
+    {
+      "r": 348.636,
+      "t": 30.9,
+      "medium": "air",
+      "sd": 48.94,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "L1d rear"
+    },
+    {
+      "r": 121.116,
+      "t": 3.9,
+      "medium": "glass",
+      "nd": 1.64,
+      "vd": 60,
+      "sd": 33.81,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G12 front element",
+      "coated": true
+    },
+    {
+      "r": 41.001,
+      "t": 15,
+      "medium": "glass",
+      "nd": 1.59319,
+      "vd": 67.9,
+      "sd": 32.22,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G12 cemented interface / rear element"
+    },
+    {
+      "r": 178.431,
+      "t": 5.9982,
+      "medium": "air",
+      "sd": 26.28,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G12 rear vertex (patent surface 11); not the stop -- see F7 fix note below and surfaces 16/17"
+    },
+    {
+      "r": -1353.905,
+      "t": 6,
+      "medium": "glass",
+      "nd": 1.84666,
+      "vd": 23.8,
+      "sd": 25.48,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "floating group A front",
+      "coated": true
+    },
+    {
+      "r": -105.258,
+      "t": 3,
+      "medium": "glass",
+      "nd": 1.5168,
+      "vd": 64.1,
+      "sd": 25.1,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "floating group A cemented interface / rear"
+    },
+    {
+      "r": 76.392,
+      "t": 7.1,
+      "medium": "air",
+      "sd": 24.71,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap to floating group B"
+    },
+    {
+      "r": -104.451,
+      "t": 3.5,
+      "medium": "glass",
+      "nd": 1.4645,
+      "vd": 65.7,
+      "sd": 24.51,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "floating group B (single element)",
+      "coated": true
+    },
+    {
+      "r": 61.871,
+      "t": 11.3881,
+      "medium": "air",
+      "sd": 24.7,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "floating group B rear vertex, into the front half of the patent's variable d16 gap"
+    },
+    {
+      "r": null,
+      "t": 11.3881,
+      "medium": "air",
+      "stop": true,
+      "sd": 26.28,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "aperture stop S (F7 fix, 09/30/2026): the patent's descriptive text places S between G2 and G3, inside this d16 air gap, not at the old surface 11 (a curved glass-to-air face inside G2, before G2 even ends). No patent figure or table pins the exact within-gap position, so the stop is placed here at the gap's midpoint -- evidence: assumed. sd carried over from the old surface-11 stop radius (the design's own maxFno target); only its axial position changes."
+    },
+    {
+      "r": 1692.861,
+      "t": 7.5,
+      "medium": "glass",
+      "nd": 1.6935,
+      "vd": 53.7,
+      "sd": 30.76,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G3 doublet front",
+      "coated": true
+    },
+    {
+      "r": -47.031,
+      "t": 2.5,
+      "medium": "glass",
+      "nd": 1.74,
+      "vd": 28.2,
+      "sd": 31.88,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G3 doublet cemented interface / rear"
+    },
+    {
+      "r": -306.591,
+      "t": 0.3,
+      "medium": "air",
+      "sd": 32.29,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap"
+    },
+    {
+      "r": 129.809,
+      "t": 6,
+      "medium": "glass",
+      "nd": 1.77279,
+      "vd": 49.4,
+      "sd": 32.35,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "G3 rear single element",
+      "coated": true
+    },
+    {
+      "r": -165.858,
+      "t": 11,
+      "medium": "air",
+      "sd": 32.4,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "air gap to patent's terminal flat surface"
+    },
+    {
+      "r": null,
+      "t": 67.9864,
+      "medium": "air",
+      "sd": 30.89,
+      "sdSource": "estimated-from-marginal-ray",
+      "label": "patent's terminal flat surface (\"22 = infinity (Bf)\"); t = patent's stated Bf"
+    }
+  ],
+  "stated": {
+    "f": 195,
+    "fno": 2,
+    "bf": 67.9864
+  },
+  "focus": {
+    "method": "floating",
+    "gaps": [
+      {
+        "surface": 10,
+        "atInfinity": 5.9982,
+        "atClose": 18.7714,
+        "closeObjectDistance": 1765.538,
+        "note": "patent's d11; D0=1765.538 mm is the patent's own object-distance datum (reference plane not stated precisely -- see notes); magnification at this condition is printed as beta = -0.1201"
+      },
+      {
+        "surface": 15,
+        "atInfinity": 11.3881,
+        "atClose": 5.0015,
+        "closeObjectDistance": 1765.538,
+        "note": "front half of patent's d16 (the gap now split by the F7 stop-position fix, 09/30/2026: an assumed midpoint split, both halves scaling identically with the same t as the whole d16 gap, so their sum still equals the patent's own d16 at every focus position)"
+      },
+      {
+        "surface": 16,
+        "atInfinity": 11.3881,
+        "atClose": 5.0015,
+        "closeObjectDistance": 1765.538,
+        "note": "rear half of patent's d16 (the aperture stop's own gap into G3); same close-focus condition as d11, see surface 15's note"
+      }
+    ],
+    "minFocusM": 1.9,
+    "minFocusSource": "Not tied to this patent by any public source. Typical/assumed value taken from the Nikon AF-S NIKKOR 200mm f/2G ED VR II spec page (closest commercial 200/2 full-frame Nikkor), https://www.dpreview.com/products/nikon/lenses/nikon_200_2g_ed_vrii_afs/specifications, accessed 9/28/2026: minimum focus distance 1.9 m. The patent's own raw D0 = 1765.538 mm (close-focus object distance, Table 1) is a different, non-comparable datum -- see notes."
+  },
+  "iris": {
+    "blades": 9,
+    "rounded": true,
+    "source": "Assumed typical for this class. Taken from the Nikon AF-S NIKKOR 200mm f/2G ED VR II spec page, https://www.dpreview.com/products/nikon/lenses/nikon_200_2g_ed_vrii_afs/specifications, accessed 9/28/2026 (9 rounded diaphragm blades). Not tied to this patent by any public source.",
+    "ev": "assumed"
+  },
+  "elements": 12,
+  "groups": 9,
+  "imageCircleMm": 43.27,
+  "notes": [
+    "Source is US 5,490,014 (\"High-aperture-ratio inner-focus telephoto lens\", Nikon Corp, inventor Fumio Suzuki; priority 12/28/1992, filed 12/16/1993, published 2/6/1996), Embodiment 1 of 5. Table 1 gives f=195.00 mm, F.no=2 (printed exactly as 'F.sub.no = 2', i.e. f/2.0, not f/2.05 or similar).",
+    "The raw table's row 22 ('22  infinity  (Bf)') is transcribed here as its own flat terminal surface (r=null) whose t equals the patent's separately-printed Bf value (67.9864 mm), per lens-types.ts convention. Row 21 (r=-165.858, d=11.00, air) is a genuine air gap preceding it, not the image plane itself -- the patent prints both d21=11.00 and Bf=67.9864 as distinct numbers, so surface 22 must be a real (if physically unclear -- possibly a mechanical reference plane, not a lens) additional surface.",
+    "Aperture-stop position (F7 fix, 09/30/2026, Astra-6 review): the raw numerical table (Table 1) does NOT print a 'stop' label on any row, unlike the Canon patent used for the 300/400/500 mm lenses in this set. This file previously placed stop:true on old surface 11 (0-indexed 10, the curved rear vertex of the G12 cemented doublet, right where the first variable focus air gap begins) per a since-superseded AI summarization pass. The patent's own text (Embodiment 1's description) instead orders the groups as G1 (including G12), then G2 (the two floating sub-groups), then the aperture stop S, then G3 -- unambiguously placing S in the air gap between G2 and G3 (patent surfaces 16-17, Table 1's d16), not inside G2. The stop is now a separate planar surface inserted in that gap (0-indexed 16); no patent figure or table pins its exact position within the gap, so it sits at the gap's midpoint (evidence: assumed -- see that surface's own label). The old surface-11 stop's own semi-diameter (26.28 mm) is preserved as the new stop's sd, since it was derived from the design's maxFno target, not from its old (wrong) position.",
+    "Focus method: patent text states 'the second lens group G2... focusing is effected by moving said second lens group G2 along the optical axis' but the numerical table has TWO variable air gaps (d11 and d16) rather than one, i.e. an internal floating arrangement (two groups move, not necessarily rigidly together) -- recorded here as focus.method = 'floating' rather than plain 'inner'. The two VariableGap entries are transcribed exactly as the patent's Table 1 D0/d11/d16/Bf block (Bf itself does not change with focus, consistent with a true inner/floating-focus design).",
+    "Elements/groups were counted directly from the cementing pattern in the prescription (shared-surface, zero-air-gap glass-to-glass transitions = cemented group): 4 fixed front singlets (G1) + 1 cemented doublet (G12) + 1 cemented doublet + 1 singlet (the two floating sub-groups) + 1 cemented doublet + 1 singlet (G3) = 12 elements in 9 groups. For reference only (NOT a claim this patent example equals the product): the current Nikon AF-S NIKKOR 200mm f/2G ED VR II is publicly specified as 13 elements in 9 groups -- the groups count matches exactly and the element count is off by one, which is suggestive of a lineage but is not a sourced identification, so representativeOf is deliberately left unset.",
+    "No effective/clear diameters are printed anywhere in the patent for this embodiment, so every sd is sdSource='estimated-from-marginal-ray', via .local/lens-tele/paraxial.py: the entrance-beam (marginal-ray) semi-diameter at surface 1 is set to EFL_computed/(2*Fno_stated) = 48.75 mm -- this is the definition of the full-aperture entrance pupil, not an assumption, because for an object at infinity the incoming collimated ray has not yet bent when it reaches surface 1, so its height there trivially equals the entrance-pupil semi-diameter. That ray is then traced forward through the real surfaces; the height it reaches at every surface (including the stop, where it comes out to 26.28 mm, smaller than 48.75 mm simply because the front group converges the beam before the stop -- normal telephoto behaviour, not an error) is added to the paraxial chief ray at an assumed full-frame half field of atan(21.6/195.00) = 6.321 deg (2omega and Y are not printed by the patent either; 21.6 mm is the standard 24x36 half-diagonal, used because the patent itself says only that the design covers 'an angle of view equivalent to that of a lens with focal length of about 200 mm' for 35 mm format). Because no patent-given diameter exists anywhere to check the STOP's own size independently, there is no second, non-circular 'Fno from stop sd' check possible for this lens -- the genuine, non-circular self-checks are EFL and BF, both of which pass (see research/lenses-tele.md)."
+  ]
+}
