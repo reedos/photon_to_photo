@@ -13,6 +13,7 @@ export interface Example {
   id: string;
   title: string;
   image: string;   // a path under public/examples/
+  thumb?: string;   // the picker's small copy, under public/examples/
   lens: string;     // an engine lens id
   fno: number;
   shutter: number;
@@ -47,7 +48,9 @@ function byId<T extends HTMLElement>(id: string): T {
 const FAR_BACKGROUND_MM = 1e9;
 
 function exampleScenario(ex: Example): Partial<Scenario> {
-  return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, focusM: ex.focusM };
+  // The engine's own subject stands where the real shot was focused, so the two frames are compared at the same
+  // subject distance (scenes.ts's sceneFor); a photo without a recorded distance keeps the scene's own layout.
+  return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, focusM: ex.focusM, subjectM: ex.focusM ?? undefined };
 }
 
 export function mountExamples(store: Store): void {
@@ -119,9 +122,23 @@ export function mountExamples(store: Store): void {
     for (const ex of examples) {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'btn btn-quiet';
+      btn.className = 'rp-pick';
       btn.dataset.id = ex.id;
-      btn.textContent = ex.title;
+      if (ex.thumb) {
+        const t = document.createElement('img');
+        t.src = `examples/${ex.thumb}`;
+        t.alt = '';
+        t.loading = 'lazy';
+        btn.appendChild(t);
+      }
+      const label = document.createElement('span');
+      label.className = 'rp-pick-t';
+      label.textContent = ex.title;
+      const sub = document.createElement('span');
+      sub.className = 'rp-pick-k';
+      const focal = (() => { try { return `${lensSummary(ex.lens).focalLength} mm`; } catch { return ex.lens; } })();
+      sub.textContent = `${focal} · ${fmtFno(ex.fno)}`;
+      btn.append(label, sub);
       btn.addEventListener('click', () => select(ex));
       picks.appendChild(btn);
     }

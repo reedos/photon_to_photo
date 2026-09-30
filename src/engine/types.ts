@@ -149,6 +149,9 @@ export interface Scenario {
   /** The scene's moving subject (scenes.ts's own `movingBillboardIds`), shifting laterally (+x, image
    *  horizontal) at this speed during the exposure. Absent, or 0, means the scene is still. */
   motion?: { speedMps: number };
+  /** Where the scene's subject stands, meters (scenes.ts's `sceneFor`): the subject, its perch and the foreground
+   *  move out together, the far background stays. Absent = the scene's own layout (3 m bench, 30 m field). */
+  subjectM?: number;
 }
 
 // ---- sensor --------------------------------------------------------------------------------------------------------

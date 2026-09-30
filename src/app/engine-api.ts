@@ -10,7 +10,7 @@ import { compute as engineCompute, lensFans as engineLensFans, pointBundle as en
 import { renderImage as engineRenderImage } from '../engine/render';
 import { focusRingAngleRad } from '../engine/focus-travel';
 import { lensDesign, lensIds, D850_SENSOR_ID, Z8_SENSOR_ID } from '../engine/data';
-import { sceneIds, getScene } from '../engine/scenes';
+import { sceneIds, sceneFor } from '../engine/scenes';
 
 export { FORMATS };
 // Re-exported so the Settings scene switch (ui.ts) can list what's actually registered (docs/PANE.md contract:
@@ -112,8 +112,8 @@ export function defaultFocusM(lensId: string): number {
 
 /** The bench scene's targets (the charts and the foreground card, not the backdrop), for the UI's "is anything in
  *  this frame" check: scene geometry only, mm, camera at the origin looking along +z. */
-export function sceneTargets(sceneId: string): { id: string; x0: number; x1: number; y0: number; y1: number; z: number }[] {
-  return getScene(sceneId).billboards.filter((b) => b.id !== 'backdrop').map((b) => ({
+export function sceneTargets(sceneId: string, subjectM?: number): { id: string; x0: number; x1: number; y0: number; y1: number; z: number }[] {
+  return sceneFor(sceneId, subjectM).billboards.filter((b) => b.id !== 'backdrop').map((b) => ({
     id: b.id, x0: b.center[0] - b.widthMm / 2, x1: b.center[0] + b.widthMm / 2,
     y0: b.center[1] - b.heightMm / 2, y1: b.center[1] + b.heightMm / 2, z: b.center[2],
   }));
@@ -166,7 +166,8 @@ export function normalizeScenario(input: Partial<Scenario>): Scenario {
   const motion = input.motion && Number.isFinite(input.motion.speedMps) && input.motion.speedMps > 0
     ? { speedMps: input.motion.speedMps }
     : undefined;
-  return { lens, fno, shutter, iso, focusM, format, shutterType, scene, lux: input.lux, cct: input.cct, sensor, motion };
+  const subjectM = input.subjectM !== undefined && Number.isFinite(input.subjectM) && input.subjectM > 0 ? input.subjectM : undefined;
+  return { lens, fno, shutter, iso, focusM, format, shutterType, scene, lux: input.lux, cct: input.cct, sensor, motion, subjectM };
 }
 
 export function compute(scenarioInput: Partial<Scenario>): Model {

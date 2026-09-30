@@ -131,7 +131,7 @@ export function targetsInFrame(model: Model): boolean {
   const wMm = (model.sensor.widthPx * model.sensor.pitchUm) / 1000, hMm = (model.sensor.heightPx * model.sensor.pitchUm) / 1000;
   const img = model.cardinal.efl * (1 + Math.abs(model.focus.magnification || 0));
   const tx = wMm / 2 / img, ty = hMm / 2 / img;
-  return sceneTargets(model.scenario.scene ?? 'bench').some((t) => t.x0 < t.z * tx && t.x1 > -t.z * tx && t.y0 < t.z * ty && t.y1 > -t.z * ty);
+  return sceneTargets(model.scenario.scene ?? 'bench', model.scenario.subjectM).some((t) => t.x0 < t.z * tx && t.x1 > -t.z * tx && t.y0 < t.z * ty && t.y1 > -t.z * ty);
 }
 
 /** A card title's parenthetical provenance ("50 mm f/1.8 (generic, after ...)") goes on a mono line of its own. */
@@ -533,7 +533,7 @@ export function mountUI(store: Store, stage: Stage): void {
       // A long lens's narrow view misses the charts at any focus: say so, in the card and on the dock, instead of
       // showing a gray field that looks like a failed render (R1-06).
       const empty = !targetsInFrame(model);
-      const chartsAt = fmtDistance(sceneTargets(model.scenario.scene ?? 'bench').find((t) => t.id === 'colorchecker')?.z ?? 3000);
+      const chartsAt = fmtDistance(sceneTargets(model.scenario.scene ?? 'bench', model.scenario.subjectM).find((t) => t.id === 'colorchecker')?.z ?? 3000);
       dom.finalimgCap.classList.toggle('finalimg-empty', empty);
       dom.finalimgCap.textContent = empty
         ? `At ${model.lens.focalLength} mm the view is too narrow to take in the test charts. The charts stand ${chartsAt} away, outside `

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getScene, sceneIds, sceneDefaultLux, sceneDefaultCctK, sceneSubjectDistanceMm, daylightAt, colorCheckerBillboard, siemensStarBillboard, pointHighlight, BENCH_LUX, DUSK_LUX, FIELD_LUX, FIELD_SUBJECT_DISTANCE_MM } from './scenes';
+import { getScene, sceneFor, sceneIds, sceneDefaultLux, sceneDefaultCctK, sceneSubjectDistanceMm, daylightAt, colorCheckerBillboard, siemensStarBillboard, pointHighlight, BENCH_LUX, DUSK_LUX, FIELD_LUX, FIELD_SUBJECT_DISTANCE_MM } from './scenes';
 import { radiance } from './scene';
 import { BINS, CMF, V_LAMBDA } from './data';
 import { compute } from './camera';
 import { renderSetup, renderImage, projectToRenderedPixel } from './render';
+import { exitPupilBlurDiameterMm } from './camera';
 import type { Scenario } from './types';
 
 describe('scene ids', () => {
@@ -254,4 +255,60 @@ describe('field scene silhouettes (billboard coverage)', () => {
     expect(hitAt(80, -115)).not.toBe('field-subject');
     expect(hitAt(-85, 110)).not.toBe('field-subject');
   });
+});
+
+describe('a scenario-set subject distance (sceneFor, the real-photo comparison)', () => {
+  // Geometry only: every getScene call builds fresh reflectance closures, so two scenes never deep-equal whole.
+  const geom = (sc: ReturnType<typeof getScene>) => ({
+    billboards: sc.billboards.map((b) => ({ id: b.id, center: b.center, w: b.widthMm, h: b.heightMm })),
+    highlights: (sc.pointHighlights ?? []).map((h) => ({ id: h.id, position: h.position, r: h.radiusMm })),
+  });
+  it('moves the near group out to the subject distance, scaled so its framing is unchanged; the far background stays', () => {
+    const base = getScene('field');
+    const moved = sceneFor('field', 8.9);
+    const k = 8900 / FIELD_SUBJECT_DISTANCE_MM;
+    for (const id of ['field-subject', 'field-branch', 'field-foreground']) {
+      const a = base.billboards.find((b) => b.id === id)!, b = moved.billboards.find((x) => x.id === id)!;
+      expect(b.center[2]).toBeCloseTo(a.center[2] * k, 6);
+      expect(b.widthMm / b.center[2]).toBeCloseTo(a.widthMm / a.center[2], 9);  // same angular size
+      expect(b.center[1] / b.center[2]).toBeCloseTo(a.center[1] / a.center[2], 9); // same place in the frame
+    }
+    expect(geom(moved).billboards.find((b) => b.id === 'field-background')).toEqual(geom(base).billboards.find((b) => b.id === 'field-background'));
+    expect(geom(moved).highlights).toEqual(geom(base).highlights);
+    expect(sceneSubjectDistanceMm('field', 8.9)).toBeCloseTo(8900, 6);
+    expect(sceneFor('bench', 6.3).billboards.find((b) => b.id === 'siemens-star')!.center[2]).toBeCloseTo(6300, 6);
+  });
+
+  it('absent or nonsense leaves the scene as built, and a huge distance stays in front of the background', () => {
+    expect(geom(sceneFor('field'))).toEqual(geom(getScene('field')));
+    expect(geom(sceneFor('field', -3))).toEqual(geom(getScene('field')));
+    const far = sceneFor('field', 10_000);
+    const subjectZ = far.billboards.find((b) => b.id === 'field-subject')!.center[2];
+    expect(subjectZ).toBeLessThan(far.billboards.find((b) => b.id === 'field-background')!.center[2]);
+  });
+
+  it('the subject renders sharp where the photo was focused: the flycatcher example (500 mm, f/5.6, 8.9 m)', () => {
+    const scen = { lens: 'n500', fno: 5.6, shutter: 1 / 4000, iso: 1400, focusM: 8.9, format: 'ff', shutterType: 'mechanical', scene: 'field', subjectM: 8.9 } as Scenario;
+    const model = compute(scen);
+    const subjectZ = sceneFor('field', 8.9).billboards.find((b) => b.id === 'field-subject')!.center[2];
+    expect(exitPupilBlurDiameterMm(model, subjectZ)).toBeLessThan(0.03); // inside the full-frame sharpness limit
+  });
+
+  it('a far glint past the kernel cap renders as a round disk of its true size, not a capped square ' +
+     '(regression 09/30/2026: the 500 mm at 8.9 m stamped hard squares)', () => {
+    const scen = { lens: 'n500', fno: 5.6, shutter: 1 / 4000, iso: 1400, focusM: 8.9, format: 'ff', shutterType: 'mechanical', scene: 'field', subjectM: 8.9 } as Scenario;
+    const model = compute(scen);
+    const setup = renderSetup(model, 600);
+    const res = renderImage(model, { width: 600, height: 400, seed: 1 });
+    const glint = getScene('field').pointHighlights![0];
+    const { bx, by } = projectToRenderedPixel(setup.efl, setup.blockPitchMm, 600, 400, ...glint.position);
+    const r = exitPupilBlurDiameterMm(model, glint.position[2]) / setup.blockPitchMm / 2;
+    expect(r).toBeGreaterThan(30); // well past the 18 px cap, or this test proves nothing
+    const luma = (x: number, y: number) => { const i = (Math.round(y) * 600 + Math.round(x)) * 4; return res.rgba[i] + res.rgba[i + 1] + res.rgba[i + 2]; };
+    const bg = luma(10, 10);
+    const inRim = [[0.8, 0], [-0.8, 0], [0, 0.8], [0, -0.8]].map(([dx, dy]) => luma(bx + dx * r, by + dy * r));
+    const outCorner = [[0.8, 0.8], [-0.8, 0.8], [0.8, -0.8], [-0.8, -0.8]].map(([dx, dy]) => luma(bx + dx * r, by + dy * r));
+    for (const v of inRim) expect(v, 'inside the disk, 0.8 r from center').toBeGreaterThan(bg + 150);
+    for (const v of outCorner) expect(v, 'a square corner, outside a round disk').toBeLessThan(bg + 150);
+  }, 120_000);
 });

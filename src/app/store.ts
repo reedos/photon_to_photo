@@ -70,6 +70,8 @@ export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>
   if (scene) scenario.scene = scene;
   const motion = params.get('motion');
   if (motion) { const v = Number(motion); if (Number.isFinite(v)) scenario.motion = { speedMps: v }; }
+  const subject = params.get('subject');
+  if (subject) { const v = Number(subject); if (Number.isFinite(v) && v > 0) scenario.subjectM = v; }
   const pieceRaw = params.get('piece');
   const piece = pieceRaw && VALID_PIECES.has(pieceRaw as PieceId) ? (pieceRaw as PieceId) : undefined;
   return { scenario, piece };
@@ -86,6 +88,7 @@ export function queryFromState(state: AppState): string {
   p.set('format', state.scenario.format);
   p.set('scene', state.scenario.scene);
   if (state.scenario.motion) p.set('motion', String(state.scenario.motion.speedMps));
+  if (state.scenario.subjectM !== undefined) p.set('subject', String(Number(state.scenario.subjectM.toFixed(2))));
   p.set('piece', state.piece);
   return `?${p.toString()}`;
 }
@@ -108,7 +111,11 @@ export class Store {
 
   /** Merges a partial scenario (and optionally switches the active piece), normalizes, notifies, syncs the URL. */
   set(partial: Partial<Scenario>, piece?: PieceId): void {
-    const scenario = normalizeScenario({ ...this.state.scenario, ...partial });
+    // A subject distance belongs to the layout it was set with (the real-photo panel's "Match these settings"
+    // sets it with its lens): a new lens or scene without one of its own goes back to the scene's own layout.
+    const merged = { ...this.state.scenario, ...partial };
+    if (('lens' in partial || 'scene' in partial) && !('subjectM' in partial)) delete merged.subjectM;
+    const scenario = normalizeScenario(merged);
     this.state = { scenario, piece: piece ?? this.state.piece };
     this.notify();
   }

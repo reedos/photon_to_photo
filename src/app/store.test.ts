@@ -131,3 +131,19 @@ describe('Store', () => {
     expect(calls).toBe(1);
   });
 });
+
+describe('a subject distance travels with its lens', () => {
+  it('survives the URL, and a new lens or scene without one drops it', () => {
+    const store = new Store({ scenario: { lens: 'n500', focusM: 8.9, subjectM: 8.9 } });
+    expect(store.get().scenario.subjectM).toBe(8.9);
+    expect(scenarioFromQuery(queryFromState(store.get())).scenario.subjectM).toBe(8.9);
+    store.set({ fno: 8 });
+    expect(store.get().scenario.subjectM).toBe(8.9);
+    store.set({ lens: 'n50' });
+    expect(store.get().scenario.subjectM).toBeUndefined();
+    store.set({ lens: 'n500', subjectM: 10 });
+    expect(store.get().scenario.subjectM).toBe(10);
+    store.set({ scene: 'bench' });
+    expect(store.get().scenario.subjectM).toBeUndefined();
+  });
+});

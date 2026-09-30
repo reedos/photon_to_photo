@@ -8,7 +8,7 @@ import type { Model, RenderRequest, RenderResult } from './model-types';
 import type { SensorSpec } from './sensor';
 
 import { BINS, V_LAMBDA, sensorFor, colorCheckerReflectance, COLOR_CHECKER_NAMES } from './data';
-import { getScene, daylightAt, sceneDefaultLux, sceneDefaultCctK } from './scenes';
+import { getScene, sceneFor, daylightAt, sceneDefaultLux, sceneDefaultCctK } from './scenes';
 import { radiance, shiftBillboards } from './scene';
 import { exitPupilBlurDiameterMm } from './camera';
 import { airyRadius } from './diffraction';
@@ -73,13 +73,17 @@ function pointInPolygonUnit(poly: readonly [number, number][], x: number, y: num
 /** Builds (and the caller caches by rounded radius) the splat kernel for one blur radius, shaped by the
  *  current iris outline (BRIEF.md: "scattering each source pixel into its blur disk shaped by the iris
  *  outline"). Weights are uniform over the covered cells and sum to 1 (energy-conserving: see e4.md). */
-function buildKernel(unitOutline: readonly [number, number][], radiusPx: number): KernelCell[] {
+function buildKernel(unitOutline: readonly [number, number][], radiusPx: number, capPx = MAX_KERNEL_RADIUS_PX): KernelCell[] {
   if (radiusPx < 0.5) return [{ dx: 0, dy: 0, w: 1 }];
-  const R = Math.min(Math.ceil(radiusPx), MAX_KERNEL_RADIUS_PX);
+  // Past the cap the outline is drawn AT the cap: the same iris shape, just smaller than the physics. Testing the
+  // capped box against the full radius instead put every cell inside the outline and stamped a hard square (a
+  // background glint at 9 m focus on the 500 mm, found 09/30/2026 in the real-photo comparison).
+  const r = Math.min(radiusPx, capPx);
+  const R = Math.ceil(r);
   const cells: { dx: number; dy: number }[] = [];
   for (let dy = -R; dy <= R; dy++) {
     for (let dx = -R; dx <= R; dx++) {
-      if (pointInPolygonUnit(unitOutline, dx / radiusPx, dy / radiusPx)) cells.push({ dx, dy });
+      if (pointInPolygonUnit(unitOutline, dx / r, dy / r)) cells.push({ dx, dy });
     }
   }
   if (cells.length === 0) cells.push({ dx: 0, dy: 0 });
@@ -344,7 +348,7 @@ export function renderSetup(model: Model, width: number): RenderSetup {
 
   const cctK = model.scenario.cct ?? sceneDefaultCctK(model.scenario.scene);
   const lux = model.scenario.lux ?? sceneDefaultLux(model.scenario.scene);
-  const baseScene = getScene(model.scenario.scene);
+  const baseScene = sceneFor(model.scenario.scene, model.scenario.subjectM);
   const illuminantShape = daylightAt(cctK);
   const sceneObj = { ...baseScene, illuminant: { spectrum: illuminantShape, lux } };
 
@@ -378,7 +382,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
     // effectively a full box regardless of exactly how much bigger radiusPx still is) — clamping the CACHE
     // KEY here too avoids rebuilding that same effective kernel over and over for many different very large
     // radii (a fast lens focused close with a background near infinity produces a wide range of them).
-    const clamped = Math.min(radiusPx, MAX_KERNEL_RADIUS_PX * 2);
+    const clamped = Math.min(radiusPx, MAX_KERNEL_RADIUS_PX);
     const key = Math.round(clamped * 4) / 4; // cache at quarter-rendered-pixel resolution
     let k = kernelCache.get(key);
     if (!k) {
@@ -449,7 +453,9 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
     const defocusDiameterMm = exitPupilBlurDiameterMm(model, Z);
     const combinedDiameterMm = Math.hypot(defocusDiameterMm, diffractionDiameterMm);
     const radiusPx = combinedDiameterMm / blockPitchMm / 2;
-    const kernel = kernelFor(radiusPx);
+    // A handful of highlights, not a pixel each: they get their true disk size, uncapped (up to a frame-sized
+    // bound), so a far glint behind a close subject reads as the big soft disk it is.
+    const kernel = buildKernel(unitOutline, radiusPx, Math.max(width, height) / 2);
     const bx0 = Math.round(bxf);
     const by0 = Math.round(byf);
     for (const cell of kernel) {

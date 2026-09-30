@@ -401,10 +401,57 @@ export function sceneDefaultCctK(_sceneId: string): number {
  * perch. Used by camera.ts to compute `model.motion`'s blur figures at the subject's own distance, which is
  * not necessarily the scenario's current focus distance.
  */
-export function sceneSubjectDistanceMm(sceneId: string): number {
-  if (sceneId === 'bench' || sceneId === 'dusk') return 3000;
-  if (sceneId === 'field') return FIELD_SUBJECT_DISTANCE_MM;
+export function sceneSubjectDistanceMm(sceneId: string, subjectM?: number | null): number {
+  if (sceneId === 'bench' || sceneId === 'dusk' || sceneId === 'field') return subjectScale(sceneId, subjectM) * sceneRefSubjectMm(sceneId);
   throw new Error(`scenes.ts: sceneSubjectDistanceMm: unknown scene id "${sceneId}"`);
+}
+
+function sceneRefSubjectMm(sceneId: string): number {
+  return sceneId === 'field' ? FIELD_SUBJECT_DISTANCE_MM : 3000;
+}
+
+/** Each scene's near group: the subject, what it stands on and the foreground in front of it. `sceneFor` moves
+ *  and scales these together when a scenario sets its own subject distance; the far background and its glints
+ *  stay put. */
+const NEAR_GROUP: Record<string, readonly string[]> = {
+  bench: ['colorchecker', 'siemens-star', 'foreground'],
+  dusk: ['colorchecker', 'siemens-star', 'foreground'],
+  field: ['field-subject', 'field-branch', 'field-foreground'],
+};
+
+/** How far the near group is scaled for a scenario's `subjectM`: 1 when absent, otherwise the ratio to the scene's
+ *  own subject distance, capped so the scaled group stays well in front of the far background. */
+function subjectScale(sceneId: string, subjectM?: number | null): number {
+  if (subjectM == null || !(subjectM > 0) || !Number.isFinite(subjectM)) return 1;
+  const scene = getScene(sceneId);
+  const near = new Set(NEAR_GROUP[sceneId] ?? []);
+  const farZ = Math.min(
+    ...scene.billboards.filter((b) => !near.has(b.id)).map((b) => b.center[2]),
+    ...(scene.pointHighlights ?? []).map((h) => h.position[2]),
+  );
+  const nearMaxZ = Math.max(...scene.billboards.filter((b) => near.has(b.id)).map((b) => b.center[2]));
+  const ref = sceneRefSubjectMm(sceneId);
+  const kMax = (0.8 * farZ) / nearMaxZ;
+  return Math.min(Math.max((subjectM * 1000) / ref, 0.05), kMax);
+}
+
+/**
+ * The scene a scenario renders: `getScene`, with the near group moved to the scenario's own subject distance
+ * (`Scenario.subjectM`, used by the real-photo comparison so the engine's subject stands where the real shot was
+ * focused). The group is scaled about the camera, positions and sizes alike, so its framing on the sensor is
+ * unchanged and only its depth moves; silhouettes and patterns work in normalized (u, v), so they scale with it.
+ */
+export function sceneFor(sceneId: string, subjectM?: number | null): Scene {
+  const scene = getScene(sceneId);
+  const k = subjectScale(sceneId, subjectM);
+  if (k === 1) return scene;
+  const near = new Set(NEAR_GROUP[sceneId] ?? []);
+  return {
+    ...scene,
+    billboards: scene.billboards.map((b) => near.has(b.id)
+      ? { ...b, center: [b.center[0] * k, b.center[1] * k, b.center[2] * k] as Vec3, widthMm: b.widthMm * k, heightMm: b.heightMm * k }
+      : b),
+  };
 }
 
 export function getScene(id: string): Scene {

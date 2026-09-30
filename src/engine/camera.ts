@@ -258,7 +258,7 @@ export function compute(scenario: Scenario): Model {
   // lens's own paraxial solve, not that approximation itself).
   let motion: Model['motion'] = null;
   if (scenario.motion && scenario.motion.speedMps > 0) {
-    const subjectDistMm = sceneSubjectDistanceMm(scenario.scene);
+    const subjectDistMm = sceneSubjectDistanceMm(scenario.scene, scenario.subjectM);
     const subjectObjectZ = sensorZEff - subjectDistMm;
     const subjectImg = imageOf(system, FRAUNHOFER_D_NM, subjectObjectZ);
     const blurMm = scenario.motion.speedMps * 1000 * scenario.shutter * Math.abs(subjectImg.magnification);
