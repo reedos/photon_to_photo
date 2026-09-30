@@ -601,6 +601,20 @@ export const build: BuildPiece = (ctx) => {
       f.transparent = true;
       f.opacity = Math.min(src.opacity ?? 1, src.transparent ? (src.opacity ?? 1) * 0.5 : FADE_OPACITY);
       f.depthWrite = false;
+      // Opacity alone still lets a bright specular or environment highlight (a mount ring, a bracket, a tripod-socket
+      // disc) blow past white under ACES tone mapping, since three.js renders the highlight at full HDR intensity
+      // and only blends its alpha over black -- a small alpha times a very bright value can still clip (R3-02). Clamp
+      // the reflectivity and any glow on a faded clone so the ghosted geometry reads as dim, not as the brightest
+      // thing on screen.
+      const sm = f as THREE.MeshStandardMaterial;
+      if ('envMapIntensity' in sm) sm.envMapIntensity = Math.min(sm.envMapIntensity ?? 1, 0.12);
+      if ('emissiveIntensity' in sm) sm.emissiveIntensity = Math.min(sm.emissiveIntensity ?? 1, 0.12);
+      if ('metalness' in sm) sm.metalness = Math.min(sm.metalness ?? 0, 0.15);
+      if ('roughness' in sm) sm.roughness = Math.max(sm.roughness ?? 0, 0.85);
+      // The clamps above only blunt a specular highlight; a bare, unlit color (or one this reflective to begin
+      // with) still rendered near-white through the alpha blend. Darken the base color itself too, so a ghosted
+      // mount ring or bracket reads as dim, never as the brightest thing in a detail mode (R3-02).
+      if ('color' in sm && sm.color) sm.color = sm.color.clone().multiplyScalar(0.35);
       fadedCache.set(src, f);
     }
     return f;
@@ -928,7 +942,10 @@ export const build: BuildPiece = (ctx) => {
     // with a part picked, the light is still there but steps back behind the part (R1-04)
     // (the glass mode too, and the focus mode's one cone at half: the part leads, the light is its context; R2-02)
     rayMat.opacity = detail ? RAYS_DETAIL_OPACITY : 1;
-    bMat.opacity = detail === 'focusRing' ? 0.5 : 0.7;
+    // The one-point bundle in the focus-ring mode used a lighter dim (0.5) than every other detail mode's 0.35,
+    // so on a phone, where the ring itself is already small, the bright rays read as full strength next to it
+    // (R3-09). Match the rest of the detail modes.
+    bMat.opacity = detail === 'focusRing' ? RAYS_DETAIL_OPACITY : 0.7;
     // the incoming bundle belongs to the whole-camera and lens views; from inside the body it is only a gray tube
     beam.visible = raysOn && !!lensRoot && (!detail || detail === 'lens' || detail === 'glass');
   }
@@ -967,8 +984,10 @@ export const build: BuildPiece = (ctx) => {
         const dir = new THREE.Vector3(-Math.sin(a), Math.sin(a) * 0.35, -Math.cos(a)).normalize();
         return { position: new THREE.Vector3(0, 0, epZ).addScaledVector(dir, dist), target: new THREE.Vector3(0, 0, epZ) };
       }
-      // side-on, the whole rig: the ring on the barrel, and the one point's cone running back to the sensor
-      case 'focusRing': return fitBox(wholeRigBox(), side, 1.08);
+      // side-on, the whole rig: the ring on the barrel, and the one point's cone running back to the sensor. On a
+      // phone the free strip above the sheet is short, and the default margin left the rig tiny with a band of empty
+      // black above it (R3-09): a tighter margin fills about 60% of the free width instead.
+      case 'focusRing': return fitBox(wholeRigBox(), side, phoneMq?.matches ? 0.78 : 1.08);
       case 'lens': return fitBox(barrel, new THREE.Vector3(-0.62, 0.34, -0.71), 1.2);
       // the glass with its barrel around it: the whole stack in section, not a close-up among ghosted walls
       case 'glass': return fitBox(barrel.clone().union(boxOf(['glass'])), side, 1.12);
@@ -1103,19 +1122,34 @@ export const build: BuildPiece = (ctx) => {
             at.x += toCam.x * r; at.y += toCam.y * r;
           }
           const p = at.project(ctx.camera);
-          const x = ((p.x + 1) / 2) * w, y = ((1 - p.y) / 2) * h;
+          let x = ((p.x + 1) / 2) * w, y = ((1 - p.y) / 2) * h;
+          // Two controls can land this close on the grip (the front dial and the shutter button). Hiding one ring
+          // and stacking both labels on the other left a reader unable to tell which fires and which sets the
+          // aperture (R3-03): nudge this one's ring a little further along the line away from the other instead, so
+          // both stay visible and each keeps its own label.
+          const near = centers.find((c) => c.n === 'commandDialFront' && Math.hypot(c.x - x, c.y - y) < 40);
+          if (m.node === 'shutterButton' && near) {
+            const dx = x - near.x, dy = y - near.y;
+            const len = Math.hypot(dx, dy);
+            const [ux, uy] = len > 1 ? [dx / len, dy / len] : [0, -1];
+            x += ux * 30; y += uy * 30;
+          }
           m.el.style.display = p.z < 1 ? '' : 'none';
           m.el.style.left = `${x}px`;
           m.el.style.top = `${y}px`;
-          // two controls this close (the dial and the button on a phone's grip) share one ring
-          m.el.classList.toggle('shared', m.node === 'shutterButton' && centers.some((c) => c.n === 'commandDialFront' && Math.hypot(c.x - x, c.y - y) < 40));
           centers.push({ x, y, n: m.node });
+          // On a narrow stage the model fills most of the width, so the default gap (26-28 px, sized for a desktop
+          // three-quarter view) still lands the label on the barrel or the body. Push it out to about a label-height
+          // instead, and draw a short leader back to the ring so the two stay connected (R3-FID-3).
+          const narrow = w < 560;
+          const gap = narrow ? 58 : 26, sideGap = narrow ? 62 : 28;
+          m.el.classList.toggle('far', narrow);
           const lw = m.text.length * 8.2 + 16, lh = 22;
           const rect: Record<string, R> = {
-            down: { l: x - lw / 2, t: y + 26, r: x + lw / 2, b: y + 26 + lh },
-            up: { l: x - lw / 2, t: y - 26 - lh, r: x + lw / 2, b: y - 26 },
-            left: { l: x - 28 - lw, t: y - lh / 2, r: x - 28, b: y + lh / 2 },
-            right: { l: x + 28, t: y - lh / 2, r: x + 28 + lw, b: y + lh / 2 },
+            down: { l: x - lw / 2, t: y + gap, r: x + lw / 2, b: y + gap + lh },
+            up: { l: x - lw / 2, t: y - gap - lh, r: x + lw / 2, b: y - gap },
+            left: { l: x - sideGap - lw, t: y - lh / 2, r: x - sideGap, b: y + lh / 2 },
+            right: { l: x + sideGap, t: y - lh / 2, r: x + sideGap + lw, b: y + lh / 2 },
           };
           const hit = (a: R) => a.l < 4 || a.t < 4 || a.r > w - 4 || a.b > h - 4 || taken.some((q) => a.l < q.r && q.l < a.r && a.t < q.b && q.t < a.b);
           const order = [m.side, 'down', 'up', 'left', 'right'].filter((v, k, arr) => arr.indexOf(v) === k);

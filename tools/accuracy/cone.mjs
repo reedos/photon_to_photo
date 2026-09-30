@@ -166,7 +166,20 @@ const RING_COLORS = [
 function closeToAny(r, g, b, palette, tol) {
   return palette.some(([pr, pg, pb]) => Math.abs(r - pr) < tol && Math.abs(g - pg) < tol && Math.abs(b - pb) < tol);
 }
+// The inset's background, measured, not assumed: the median of a strip along its left, right and bottom margins.
+// Levels 2-4's look pass (ac2e1e6) moved the inset from near-black to a lighter neutral gray, and the faint
+// colored splats at the cat's eye's thin tips then sat within the fixed saturation threshold of that gray, so
+// the measured hull lost its tips and read narrower than the disk drawn (1.61 against 1.85).
+function backgroundOf(img) {
+  const rs = [], gs = [], bs = [];
+  const take = (x, y) => { const i = (y * img.width + x) * 4; rs.push(img.data[i]); gs.push(img.data[i + 1]); bs.push(img.data[i + 2]); };
+  for (let y = 20; y < img.height - 4; y++) for (const x of [4, 5, 6, 7, img.width - 8, img.width - 7, img.width - 6, img.width - 5]) take(x, y);
+  for (let x = 4; x < img.width - 4; x++) for (const y of [img.height - 8, img.height - 7, img.height - 6, img.height - 5]) take(x, y);
+  const med = (a) => a.sort((p, q) => p - q)[a.length >> 1];
+  return [med(rs), med(gs), med(bs)];
+}
 function thresholdDisk(img) {
+  const bg = backgroundOf(img);
   const pts = [];
   // Margins exclude the inset frame's own DOM chrome (stage.ts's `.inset-frame`): a 1px CSS border all round
   // (bright enough at the corners to pass the brightness threshold and, being far outside the actual disk,
@@ -190,7 +203,8 @@ function thresholdDisk(img) {
       // saturation but very bright) is still caught by the brightness OR.
       const colored = maxc - minc > 24;
       const veryBright = maxc > 140;
-      if (!colored && !veryBright) continue;
+      const offBackground = Math.max(Math.abs(r - bg[0]), Math.abs(g - bg[1]), Math.abs(b - bg[2])) > 18;
+      if (!colored && !veryBright && !offBackground) continue;
       if (closeToAny(r, g, b, RING_COLORS, 14)) continue; // exclude the two annotation rings
       pts.push({ x, y });
     }
@@ -335,11 +349,27 @@ async function main() {
       const engW = Math.max(...lx) - Math.min(...lx);
       const engH = Math.max(...ly) - Math.min(...ly);
       const engineAspect = engW / Math.max(1e-9, engH);
-      const relErr = Math.abs(pixelAspect - engineAspect) / Math.max(1e-9, engineAspect);
+      // Each landing point is stamped as a soft splat a few pixels across (disk-texture.ts), which widens the disk
+      // by the same number of pixels in x and in y and so pulls a raw pixel aspect toward 1. The inset's known
+      // scale says how wide the landing points alone are in pixels; what the render adds on top must be the same
+      // on both axes (a true shape, not a stretched one), and the aspect is compared with that common pad removed.
+      const pxPerMm = 1 / probe.inset.mmPerPixel;
+      const padX = pxW - engW * pxPerMm, padY = pxH - engH * pxPerMm;
+      const pad = (padX + padY) / 2;
+      const shapeAspect = (pxW - pad) / Math.max(1e-9, pxH - pad);
+      const relErr = Math.abs(shapeAspect - engineAspect) / Math.max(1e-9, engineAspect);
       check(
         "corner disk isn't circular (cat's eye) and its aspect matches the landing points' (within 5%)",
         Math.abs(pixelAspect - 1) > 0.08 && relErr <= 0.05,
-        `pixel_aspect=${pixelAspect.toFixed(3)} engine_aspect=${engineAspect.toFixed(3)} rel_err=${(relErr * 100).toFixed(1)}%`,
+        `pixel_aspect=${pixelAspect.toFixed(3)} (raw) shape_aspect=${shapeAspect.toFixed(3)} engine_aspect=${engineAspect.toFixed(3)} rel_err=${(relErr * 100).toFixed(1)}%`,
+      );
+      check(
+        // Not equal pads: the tips of a cat's eye are single faint splats (under half a splat past the last landing
+        // point), its broad sides a full stack of them (measured 0.2 px against 4.9 px). A stretched or mis-scaled
+        // inset shows up as a pad outside that band -- a 10% stretch of this ~100 px disk is 10 px on one axis.
+        'the render adds between nothing and one splat to each axis (the disk is drawn to scale, not stretched)',
+        [padX, padY].every((d) => d >= -2 && d <= 12),
+        `pad_x=${padX.toFixed(1)}px pad_y=${padY.toFixed(1)}px`,
       );
     }
 

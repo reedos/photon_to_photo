@@ -2,11 +2,13 @@
 import * as THREE from 'three/webgpu';
 import type { CameraFrame, PieceContext } from './types';
 
-/** The scale badge's text, joined so a narrow view breaks it only after a "·", never inside a phrase: each phrase
- *  keeps its spaces as no-break spaces, and the one ordinary space sits after each separator. */
+/** The scale badge's text, joined so a narrow view only ever breaks before a "·", never inside a phrase and never
+ *  right after one, which would leave the dot dangling alone at the end of the old line (R3-06): each phrase keeps
+ *  its own spaces as no-break spaces, the ordinary (breakable) space sits before each separator, and the dot is
+ *  glued to the phrase that follows it by a no-break space of its own. */
 export function badgeJoin(...phrases: string[]): string {
   const nbsp = String.fromCharCode(0xa0);
-  return phrases.map((p) => p.replace(/ /g, nbsp)).join(`${nbsp}· `);
+  return phrases.map((p) => p.replace(/ /g, nbsp)).join(` ·${nbsp}`);
 }
 
 export const isPhone = () => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 760px)').matches;
@@ -22,6 +24,9 @@ export function frameAboveSheet(
   /** where in the free strip the anchor should land instead of its middle, in view px (the strip's top and bottom
    *  given), e.g. under an inset that stays up so the picked pin's label has room beside it (R2-06) */
   place?: (strip: { top: number; bottom: number; width: number }) => { x: number; y: number } | null,
+  /** Other world points that must also stay inside the free rect (e.g. the sensor plane), so a pick keeps the
+   *  context that explains it instead of panning until only the picked part is framed (R3-08). */
+  extent?: () => THREE.Vector3[] | null,
 ): () => void {
   if (!isPhone()) return () => {};
   let cancelled = false;
@@ -50,7 +55,23 @@ export function frameAboveSheet(
     const fwd = cam.getWorldDirection(new THREE.Vector3());
     const right = new THREE.Vector3().crossVectors(fwd, cam.up).normalize();
     const up = new THREE.Vector3().crossVectors(right, fwd).normalize();
-    const depth = a.clone().sub(cam.position).dot(fwd) * zoom;
+    let depth = a.clone().sub(cam.position).dot(fwd) * zoom;
+    // Widen the depth (pulling the camera back) until every extra point also sits inside the half-angle the anchor
+    // alone would get, not only the anchor: a pick that lands at one end of the rig otherwise pans until the other
+    // reference points (the sensor plane, the neighboring pin) run off the free rect's edge (R3-08).
+    const others = extent?.() ?? null;
+    if (others && others.length) {
+      const halfFov = THREE.MathUtils.degToRad(cam.fov) / 2;
+      const margin = 1.25;
+      for (const o of others) {
+        const rel = o.clone().sub(a);
+        const w = rel.dot(fwd); // how much farther than the anchor this point sits, along the view direction
+        const u = Math.abs(rel.dot(right)), v = Math.abs(rel.dot(up));
+        const dU = u * margin / (Math.tan(halfFov) * cam.aspect) - w;
+        const dV = v * margin / Math.tan(halfFov) - w;
+        depth = Math.max(depth, dU, dV);
+      }
+    }
     const halfH = depth * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2);
     const halfW = halfH * cam.aspect;
     // where the anchor should land, in normalized device coordinates: centered across, at yc down

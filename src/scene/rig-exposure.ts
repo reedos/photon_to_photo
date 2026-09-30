@@ -16,6 +16,8 @@ import type { ScaleBadge } from '../pieces/types';
 import type { Scenario } from '../engine/types';
 import { fmtFno, fmtPow10, fmtRange, fmtSci, fmtShutter as fmtShutterS } from '../app/units';
 import { equalExposureStep } from '../app/exposure-eq';
+import { badgeJoin } from '../pieces/phone-frame';
+import { motionOf } from '../app/motion';
 import dslrHw from '../../data/hardware/dslr.json';
 import bodyHw from '../../data/hardware/body.json';
 import z8 from '../../data/z8.json';
@@ -70,6 +72,7 @@ export function createExposure(d: ExposureDeps) {
     <div class="rx-row rx-total"><span>Whole sensor</span><b class="rx-all">0</b></div>
     <div class="rx-well"><i></i></div>
     <div class="rx-row rx-sub"><span class="rx-wellk">Well 0% full</span><span class="rx-snr"></span></div>
+    <div class="rx-row rx-motion" hidden><span>Streak on the sensor</span><b class="rx-motion-v"></b></div>
     <div class="rx-tl" hidden></div>
     <div class="rx-eq">
       <div class="rx-eq-k"><span>Equal exposure</span><span>±1 stop</span></div>
@@ -105,11 +108,19 @@ export function createExposure(d: ExposureDeps) {
     if (!after || after === before) return false;
     const pp = (x: Model) => Math.round(x.exposure.photonsMidGray).toLocaleString('en-US');
     const same = pp(before) === pp(after);
+    // Trading a stop of aperture for a stop of shutter also changes how much a moving subject streaks (the
+    // shutter time changed, and the streak is speed times shutter times magnification), so the note says so
+    // whenever there's a motion reading to compare (both sides read it defensively; see motion.ts).
+    const mb = (x: Model) => motionOf(x)?.blurPx;
+    const beforeMb = mb(before), afterMb = mb(after);
     eqNote = {
       key: eqKey(after),
       text: `<b class="nw">${fmtFno(before.scenario.fno)}</b> at <b class="nw">${fmtShutterS(before.scenario.shutter)}</b> became <b class="nw">${fmtFno(after.scenario.fno)}</b> at <b class="nw">${fmtShutterS(after.scenario.shutter)}</b>. `
         + (same ? `The same <b>${pp(after)}</b> photons reach each pixel. ` : `Photons per pixel went from <b>${pp(before)}</b> to <b>${pp(after)}</b>. `)
-        + `Depth of field went from ${dof(before)} to <b>${dof(after)}</b>.`,
+        + `Depth of field went from ${dof(before)} to <b>${dof(after)}</b>.`
+        + (beforeMb !== undefined && afterMb !== undefined
+          ? ` The moving subject's streak went from <b>${Math.round(beforeMb)} px</b> to <b>${Math.round(afterMb)} px</b>.`
+          : ''),
     };
     return true;
   }
@@ -348,7 +359,7 @@ export function createExposure(d: ExposureDeps) {
         const what = seg.name === 'exposure' ? `Exposure ${fmtShutter(m.scenario.shutter)}` : seg.name === 'release' ? 'Mirror up' : 'Mirror down';
         // each part keeps its words together, so a narrow screen breaks the badge only at a '·' (R2-01)
         const parts = [what, factorText(seg.factor), ...(seg.name === 'exposure' ? [`1 dot ≈ ${fmtPow10(dotPhotons)} photons`] : [])];
-        d.badge.show(parts.map((x) => x.replace(/ /g, ' ')).join(' · ').toUpperCase());
+        d.badge.show(badgeJoin(...parts).toUpperCase());
         renderTimeline(m, now - t0);
         if (seg.name === 'release') {
           if (pivot) pivot.rotation.x = mirrorUp * smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.8)));
@@ -425,6 +436,14 @@ export function createExposure(d: ExposureDeps) {
     (q('.rx-well i') as HTMLElement).style.width = `${(fill * 100).toFixed(1)}%`;
     q('.rx-wellk').textContent = well ? `Well ${(fill * 100).toFixed(fill < 0.1 ? 1 : 0)}% full` : 'Well';
     q('.rx-snr').textContent = f >= 1 ? `signal to noise ${m.exposure.snrMidGray.toFixed(0)}` : '';
+    // The moving-subject streak (shared contract with the scenes stream): hidden whenever there's no motion
+    // reading yet, whether that's because the subject is off or because the scenes stream hasn't merged its own
+    // edit to compute() (model.motion undefined) -- both read the same way to this panel (R3 brief, "code
+    // defensively").
+    const motion = motionOf(m);
+    const motionRow = q('.rx-motion');
+    motionRow.hidden = !motion;
+    if (motion) q('.rx-motion-v').textContent = `${Math.round(motion.blurPx)} px at ${fmtShutter(m.scenario.shutter)}`;
     // The mechanism's slow-motion factor (badged during the fired sequence, above) and the drawn photons'
     // flight speed are two separate, independently chosen visual scales -- light crosses this camera in a
     // fraction of a nanosecond, too fast for any mechanism slow-motion factor to also make visible, so the

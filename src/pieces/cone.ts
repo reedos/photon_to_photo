@@ -547,7 +547,13 @@ export const build: BuildPiece = (ctx) => {
           return { x: strip.width * 0.3, y: Math.min(strip.bottom - 24, Math.max(strip.top, insetBottom) + 40) };
         }
         : undefined;
-      if (probe) cancelSelect = frameAboveSheet(ctx, () => group.localToWorld(probe.anchor.clone()), 1, place);
+      // The exit pupil (x=0) and the sensor plane (x=sensorX) are the whole story's two ends; keeping both in view
+      // (whichever one isn't the pick) is what lets the picture explain the pick instead of just showing it in
+      // isolation cut against a view edge (R3-08).
+      const extent = (id === 'exit-pupil' || id === 'bokeh-disk')
+        ? () => [group.localToWorld(new THREE.Vector3(0, 0, 0)), group.localToWorld(new THREE.Vector3(sensorX, 0, 0))]
+        : undefined;
+      if (probe) cancelSelect = frameAboveSheet(ctx, () => group.localToWorld(probe.anchor.clone()), 1, place, extent);
     },
     activate() {
       // The main camera is shared across pieces (stage.ts); enable the context layer only while this piece

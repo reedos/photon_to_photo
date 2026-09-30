@@ -151,6 +151,14 @@
       <span class="lab">Format</span>
       <div class="sc-seg" id="sc-format" role="group" aria-label="Sensor format"></div>
     </div>
+    <div class="sc-group sc-format">
+      <span class="lab">Scene</span>
+      <div class="sc-seg" id="sc-scene" role="group" aria-label="Scene"></div>
+    </div>
+    <div class="sc-group sc-format">
+      <span class="lab">Moving subject</span>
+      <div class="sc-seg" id="sc-motion" role="group" aria-label="Moving subject"></div>
+    </div>
     <div class="kpis" id="kpis"></div>
     <p class="note">The physics engine's figures for these settings. The chip beside each number says what backs it.</p>
   </section>
@@ -167,6 +175,32 @@
       <div class="finalimg-side">
         <p class="finalimg-scale" id="finalimg-scale"></p>
         <p class="finalimg-cap" id="finalimg-cap">Rendering the photo for these settings&hellip;</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="rp-card" aria-labelledby="rp-h" id="rp-card" hidden>
+    <div class="sc-head">
+      <p class="eyebrow">Real photo</p>
+      <h2 id="rp-h">The engine against a real shot</h2>
+    </div>
+    <div class="rp-picks" id="rp-picks"></div>
+    <div class="rp-compare">
+      <figure class="rp-photo">
+        <img id="rp-img" alt="">
+        <figcaption id="rp-credit"></figcaption>
+      </figure>
+      <figure class="rp-render">
+        <canvas id="rp-canvas" width="600" height="400" aria-label="The engine's render at the real photo's own settings."></canvas>
+        <figcaption>The engine's prediction at the same settings</figcaption>
+      </figure>
+      <div class="rp-side">
+        <p class="rp-settings" id="rp-settings"></p>
+        <p class="rp-note" id="rp-note"></p>
+        <p class="note">The scene isn't the same -- this camera never saw that subject. The settings and the physics
+          figures below are.</p>
+        <button type="button" class="btn rp-match" id="rp-match">Match these settings</button>
+        <dl class="specs" id="rp-specs"></dl>
       </div>
     </div>
   </section>

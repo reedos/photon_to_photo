@@ -13,6 +13,9 @@ import { lensDesign, lensIds, D850_SENSOR_ID, Z8_SENSOR_ID } from '../engine/dat
 import { sceneIds, getScene } from '../engine/scenes';
 
 export { FORMATS };
+// Re-exported so the Settings scene switch (ui.ts) can list what's actually registered (docs/PANE.md contract:
+// 'field' joins 'bench' once the scenes stream's own edit to scenes.ts lands) without reaching past this file.
+export { sceneIds };
 
 /** The original 12 class-representative primes (docs/BRIEF.md's 20..500 mm list) the free-form scenario
  *  builder picks from, ascending by focal length. The docs/PANE.md lineup lenses (s35, n50, n500, n500fl,
@@ -120,6 +123,28 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 
 /** Fills defaults and applies the controls' bounds, so the UI and the URL show the normalized value at once.
  *  compute() applies the physics bounds (the lens's own maximum aperture, its reachable closest focus). */
+// The scene/focus defaults a long lens opens on (SHARED CONTRACT): a lens whose class focal length is >= this
+// reaches far enough that the bench scene's near charts fall outside a sensible frame (R1-FID-C, R1-06, the
+// same finding LONG_LENS_MM/defaultFocusM above already acted on for the bench scene) -- 200 mm, not 300 mm,
+// since the contract's own field scene is meant for every lens the field brief calls "long", not only the
+// three lineup 500s and the 800.
+const FIELD_SCENE_MIN_MM = 200;
+
+/** The scene a bare scenario (no explicit `scene`) opens on: 'field' for a long lens, 'bench' otherwise. An
+ *  explicit `scene` always wins (normalizeScenario below never calls this when `input.scene` is a known id). */
+function defaultSceneId(lensId: string): string {
+  return lensDesign(lensId).focalLength >= FIELD_SCENE_MIN_MM ? 'field' : 'bench';
+}
+
+/** The focus distance a bare scenario (no explicit `focusM`) opens at, once its scene is known (SHARED
+ *  CONTRACT: "field defaults to its subject distance (30 m) and bench keeps 3 m"). Any other scene (e.g.
+ *  'dusk', bench's own low-light twin) falls back to the pre-existing long/short-lens rule above. */
+function defaultFocusForScene(sceneId: string, lensId: string): number {
+  if (sceneId === 'field') return 30;
+  if (sceneId === 'bench') return 3;
+  return defaultFocusM(lensId);
+}
+
 export function normalizeScenario(input: Partial<Scenario>): Scenario {
   // the free-form primes and the lineup both resolve; anything else falls back to the default
   const lens = input.lens && (LENS_IDS.includes(input.lens) || PANE_LENS_IDS.includes(input.lens)) ? input.lens : DEFAULT_SCENARIO.lens;
@@ -128,15 +153,20 @@ export function normalizeScenario(input: Partial<Scenario>): Scenario {
   const shutter = clamp(input.shutter ?? DEFAULT_SCENARIO.shutter, 1 / 8000, 30);
   const iso = clamp(input.iso ?? DEFAULT_SCENARIO.iso, 100, 51200);
   const format: FormatId = input.format && input.format in FORMATS ? input.format : DEFAULT_SCENARIO.format;
-  const focusM = input.focusM === undefined ? defaultFocusM(lens) : input.focusM;
   const shutterType = input.shutterType ?? DEFAULT_SCENARIO.shutterType;
-  const scene = input.scene && sceneIds().includes(input.scene) ? input.scene : DEFAULT_SCENARIO.scene;
+  const scene = input.scene && sceneIds().includes(input.scene) ? input.scene : defaultSceneId(lens);
+  const focusM = input.focusM === undefined ? defaultFocusForScene(scene, lens) : input.focusM;
   // Finding S1: an explicitly supplied sensor id always wins; otherwise a lineup lens defaults to its own
   // body's real sensor (D850/Z8), and a free-form prime keeps falling back to sensorFor's per-format default
   // (undefined here, same as before this fix).
   const body = bodyForLens(lens);
   const sensor = input.sensor ?? (body ? BODY_SENSOR_ID[body] : undefined);
-  return { lens, fno, shutter, iso, focusM, format, shutterType, scene, lux: input.lux, cct: input.cct, sensor };
+  // SHARED CONTRACT: a positive, finite speed only -- 0, negative or non-finite all normalize to "still"
+  // (undefined), same as an absent `motion` altogether, so callers never have to special-case a zero speed.
+  const motion = input.motion && Number.isFinite(input.motion.speedMps) && input.motion.speedMps > 0
+    ? { speedMps: input.motion.speedMps }
+    : undefined;
+  return { lens, fno, shutter, iso, focusM, format, shutterType, scene, lux: input.lux, cct: input.cct, sensor, motion };
 }
 
 export function compute(scenarioInput: Partial<Scenario>): Model {

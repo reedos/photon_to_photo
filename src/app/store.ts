@@ -66,6 +66,10 @@ export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>
   if (iso) { const v = Number(iso); if (Number.isFinite(v)) scenario.iso = v; }
   const format = params.get('format');
   if (format === 'ff' || format === 'apsc' || format === 'mft') scenario.format = format as FormatId;
+  const scene = params.get('scene');
+  if (scene) scenario.scene = scene;
+  const motion = params.get('motion');
+  if (motion) { const v = Number(motion); if (Number.isFinite(v)) scenario.motion = { speedMps: v }; }
   const pieceRaw = params.get('piece');
   const piece = pieceRaw && VALID_PIECES.has(pieceRaw as PieceId) ? (pieceRaw as PieceId) : undefined;
   return { scenario, piece };
@@ -80,6 +84,8 @@ export function queryFromState(state: AppState): string {
   p.set('shutter', formatShutter(state.scenario.shutter));
   p.set('iso', String(Math.round(state.scenario.iso)));
   p.set('format', state.scenario.format);
+  p.set('scene', state.scenario.scene);
+  if (state.scenario.motion) p.set('motion', String(state.scenario.motion.speedMps));
   p.set('piece', state.piece);
   return `?${p.toString()}`;
 }

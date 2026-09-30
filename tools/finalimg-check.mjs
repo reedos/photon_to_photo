@@ -1,11 +1,14 @@
 // Checks the final-image panel end to end in the built app: the worker renders, the canvas paints, no errors.
-// node tools/finalimg-check.mjs  ->  shots/finalimg.png
+// node tools/finalimg-check.mjs [query] [name]  ->  shots/<name>.png
+//   node tools/finalimg-check.mjs 'lens=n500&fno=5.6&focus=30' finalimg-n500
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { startPreview } from './preview.mjs';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
+const query = process.argv[2] || 'lens=n50&fno=1.8&focus=3';
+const name = process.argv[3] || 'finalimg';
 const { url, close } = await startPreview();
 const browser = await chromium.launch({ headless: true, channel: 'chrome', args: ['--use-angle=d3d11', '--enable-unsafe-webgpu', '--ignore-gpu-blocklist'] });
 try {
@@ -13,18 +16,18 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  await page.goto(url + '?lens=p85&fno=1.4&focus=3', { waitUntil: 'load' });
+  await page.goto(url + '?' + query, { waitUntil: 'load' });
   await page.waitForFunction(() => Boolean(window.p2p), null, { timeout: 20000 });
   const t0 = Date.now();
   await page.waitForFunction(() => {
     const card = document.querySelector('.finalimg-card');
     const cap = document.getElementById('finalimg-cap')?.textContent || '';
-    return card && !card.classList.contains('rendering') && /Rendered by the engine/.test(cap);
+    return card && !card.classList.contains('rendering') && /engine's render|too narrow/.test(cap);
   }, null, { timeout: 60000 });
   const ms = Date.now() - t0;
   await page.locator('.finalimg').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
-  await page.locator('.finalimg').screenshot({ path: fileURLToPath(new URL('../shots/finalimg.png', import.meta.url)) });
+  await page.locator('.finalimg').screenshot({ path: fileURLToPath(new URL(`../shots/${name}.png`, import.meta.url)) });
   const stats = await page.evaluate(() => {
     const c = document.getElementById('finalimg-canvas');
     const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;

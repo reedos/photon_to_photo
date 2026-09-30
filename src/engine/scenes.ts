@@ -115,6 +115,46 @@ function highlightRadianceAt(nm: number): number {
   return (HIGHLIGHT_PEAK_RADIANCE * planckianShape(nm, HIGHLIGHT_TEMP_K)) / peakShape;
 }
 
+// ---- the field scene's own sun-glint highlights (bokeh discs from direct sunlight specular reflections) ----
+//
+// A field-scene sun glint is NOT a small lamp like the bench highlight above: it stands for a near-mirror
+// specular reflection of the sun itself off a wet leaf or dew drop deep in the canopy, at the scene's own
+// 5500 K daylight color (FIELD_CCT_K === BENCH_CCT_K), not the bench highlight's assumed 3000 K
+// incandescent. Its absolute scale is chosen (evidence: assumed), and deliberately far above the bench
+// highlight's "200x an 18% gray patch" convention: a specular highlight reflects the SUN's own radiance,
+// not a diffuse surface's -- the sun's own radiance is itself on the order of 10^7 W/sr/m^2 integrated over
+// the visible band (a ~5800 K blackbody disc), roughly 10^7 times an ordinary sunlit diffuse surface's, so
+// even a small, imperfect specular fleck reflecting a tiny fraction of that is legitimately far brighter
+// than the diffuse foliage around it.
+//
+// The engine's own render pipeline then dilutes that total energy across the highlight's full defocus disk
+// (render.ts's point-highlight splat: a flat, aperture-shaped kernel spread over every rendered pixel the
+// disk covers) before any one pixel sees it -- so "bright enough to read as a highlight" has to survive
+// that dilution, not just outshine the background before it. Checked directly against render.ts's own
+// numbers (n500 at f/5.6 focused 30 m on this scene, the SHARED CONTRACT's own default pairing): the
+// defocus disk here is about 285 rendered-pixel cells wide (radiusPx ~9.5 px, each cell taking an equal
+// ~1/285 share of the highlight's total electrons, `buildKernel`'s flat kernel), and at render.ts's
+// MAX_KERNEL_RADIUS_PX cap (18 px, the worst case for a lens whose background lands even more defocused
+// than that) a cell's share can be as low as ~1/1,000. FIELD_GLINT_PEAK_RADIANCE below is picked so the
+// highlight's peak per-pixel electron contribution still clears the local background's own per-pixel
+// electron count by a comfortable double-digit multiple even at that worst-case ~1/1,000 dilution --
+// verified directly in scenes.test.ts ("is visibly brighter than the local background"), which measures
+// the engine's actual rendered numbers rather than trusting this arithmetic alone.
+const FIELD_GLINT_TEMP_K = 5500; // daylight color, not the bench highlight's warm incandescent 3000 K
+const FIELD_GLINT_PEAK_RADIANCE = 600; // W . sr^-1 . m^-2 . nm^-1, at the Planckian's own peak wavelength; assumed
+
+function fieldGlintRadianceAt(nm: number): number {
+  const peakNm = 2.897771955e6 / FIELD_GLINT_TEMP_K;
+  const peakShape = planckianShape(peakNm, FIELD_GLINT_TEMP_K);
+  return (FIELD_GLINT_PEAK_RADIANCE * planckianShape(nm, FIELD_GLINT_TEMP_K)) / peakShape;
+}
+
+/** A field-scene sun glint: same shape as `pointHighlight` but at the much brighter, daylight-colored scale
+ *  this scene's specular highlights need to survive the defocus dilution above (see the doc comment there). */
+export function sunGlintHighlight(id: string, position: Vec3, radiusMm = 2): PointHighlight {
+  return { id, position, radiusMm, radianceAt: fieldGlintRadianceAt };
+}
+
 /** A background point highlight at `position` (mm), `radiusMm` a physically tiny disk (a few mm at tens of
  *  meters is sub-pixel angular size for every lens this project models; any visible blob in a render is
  *  therefore essentially all optical blur, not the source's own true size — see docs/engine/e4.md). */
@@ -161,6 +201,11 @@ function bench(): Scene {
     billboards: [colorChecker, star, foreground, backdrop],
     pointHighlights: highlights,
     illuminant: { spectrum: illuminantShape, lux: BENCH_LUX },
+    // The one moving subject a `motion` scenario can shift in this scene (SHARED CONTRACT, engine-scenes
+    // workstream): the Siemens star card, chosen over the ColorChecker/foreground because it already sits
+    // at the scene's own reference "subject distance" (`sceneSubjectDistanceMm('bench')` below, the same
+    // 3 m the bench scene opens focused at) and its fine radial pattern makes a lateral streak visible.
+    movingBillboardIds: ['siemens-star'],
   };
 }
 
@@ -170,16 +215,196 @@ function dusk(): Scene {
   return { ...b, illuminant: { spectrum: b.illuminant.spectrum, lux: DUSK_LUX } };
 }
 
-export const SCENES: Record<string, () => Scene> = { bench, dusk };
+// ---- the 'field' scene: a long-lens subject, 30 m out --------------------------------------------------------
+
+export const FIELD_CCT_K = BENCH_CCT_K; // same daylight color as the bench scene; only the geometry/lux differ
+export const FIELD_LUX = 20000; // assumed: daylight, brighter than the bench's overcast-ish 10,000 lux reference
+                                 // (see BENCH_LUX's own doc comment above for the same round-number reasoning)
+export const FIELD_SUBJECT_DISTANCE_MM = 30_000; // 30 m: the perched subject's own distance
+
+// A warm, mid-value brown standing in for plumage/bark — the ColorChecker's own real, cited "dark skin" and
+// "light skin" patches (data/color/colorchecker24-babelcolor.json) are reused rather than invented spectra:
+// a tan/brown reflectance is a plausible stand-in for both a small bird's back/wings and a bark-covered
+// branch, and a paler patch for its underside — the same "use a real cited patch as a stand-in" choice
+// bench()'s own foreground (the ColorChecker's "orange") already makes. Evidence: assumed (a stand-in
+// choice, not a measured bird/bark reflectance).
+const PLUMAGE_BACK = colorCheckerReflectance('dark skin');
+const PLUMAGE_BELLY = colorCheckerReflectance('light skin');
+const BARK = colorCheckerReflectance('dark skin');
+const FOLIAGE = colorCheckerReflectance('foliage'); // the ColorChecker's own dark, desaturated green patch
+const GRASS = colorCheckerReflectance('yellow green');
+
+/**
+ * The perched subject: a small (about 250 mm tall) billboard, two-tone (a darker back, a lighter belly,
+ * split at `bellyLine` in local v) — a coarse but real spectral stand-in for a bird's plumage, procedural
+ * like every reflectance function in this file (never a photo — BRIEF.md).
+ */
+function birdBillboard(id: string, center: Vec3, widthMm: number, heightMm: number): Billboard {
+  // A perched songbird's silhouette in mm about the billboard center (x right, y up), facing right: an egg-shaped
+  // body, a round head, a short beak, a tail angled down behind, a darker folded wing and a dark eye. Procedural
+  // and illustrative (evidence: assumed); the proportions are a generic passerine's, not any one species.
+  const mm = (u: number, v: number) => [u * widthMm, v * heightMm] as const;
+  const inEllipse = (x: number, y: number, cx: number, cy: number, rx: number, ry: number, rot = 0) => {
+    const c = Math.cos(rot), s = Math.sin(rot);
+    const dx = x - cx, dy = y - cy;
+    const a = (dx * c + dy * s) / rx, b = (-dx * s + dy * c) / ry;
+    return a * a + b * b <= 1;
+  };
+  const body = (x: number, y: number) => inEllipse(x, y, -4, -8, 52, 74, -0.28);
+  const head = (x: number, y: number) => inEllipse(x, y, 18, 78, 34, 32);
+  const beak = (x: number, y: number) => x >= 46 && x <= 70 && Math.abs(y - 76) <= 7 * (1 - (x - 46) / 24);
+  const tail = (x: number, y: number) => {
+    // a tapering wedge from under the body's back down and to the left
+    const t = (y + 60) / -62; // 0 at y = -60, 1 at y = -122
+    return t >= 0 && t <= 1 && Math.abs(x - (-30 - 22 * t)) <= 16 - 7 * t;
+  };
+  const wing = (x: number, y: number) => inEllipse(x, y, -16, 2, 36, 50, -0.45);
+  const eye = (x: number, y: number) => inEllipse(x, y, 30, 84, 5, 5);
+  const EYE = () => 0.03;
+  return {
+    id,
+    center,
+    normal: [0, 0, -1],
+    up: [0, 1, 0],
+    widthMm,
+    heightMm,
+    coverage: (u: number, v: number) => {
+      const [x, y] = mm(u, v);
+      return body(x, y) || head(x, y) || beak(x, y) || tail(x, y);
+    },
+    reflectanceAt: (u: number, v: number) => {
+      const [x, y] = mm(u, v);
+      if (eye(x, y)) return EYE;
+      if (beak(x, y)) return BARK;
+      if (wing(x, y) || tail(x, y)) return BARK;
+      // the pale breast on the front-lower half of the body, the darker back and crown elsewhere
+      return x > -10 && y < 40 ? PLUMAGE_BELLY : PLUMAGE_BACK;
+    },
+  };
+}
+
+/** A branch: a tapered, gently curving band with one side twig (evidence: assumed, illustrative). */
+function branchBillboard(id: string, center: Vec3, widthMm: number, heightMm: number, reflectance: (nm: number) => number): Billboard {
+  return {
+    id, center, normal: [0, 0, -1], up: [0, 1, 0], widthMm, heightMm,
+    coverage: (u: number, v: number) => {
+      const mid = 0.1 * Math.sin(u * 5.5);
+      const half = 0.26 - 0.16 * Math.abs(u);
+      const twig = u > 0.18 && u < 0.36 && Math.abs(v - (mid + (u - 0.18) * 2.2)) < 0.07;
+      return Math.abs(v - mid) < half || twig;
+    },
+    reflectanceAt: () => reflectance,
+  };
+}
+
+/** Grass: ragged blades rising from the bottom edge (evidence: assumed, illustrative). */
+function grassBillboard(id: string, center: Vec3, widthMm: number, heightMm: number, reflectance: (nm: number) => number): Billboard {
+  return {
+    id, center, normal: [0, 0, -1], up: [0, 1, 0], widthMm, heightMm,
+    coverage: (u: number, v: number) => {
+      const top = -0.2 + 0.7 * Math.abs(Math.sin(u * 61) * Math.sin(u * 23 + 1.3));
+      return v < top;
+    },
+    reflectanceAt: () => reflectance,
+  };
+}
+
+/**
+ * A large, dappled background canopy: `FOLIAGE`'s own reflectance modulated by a coarse, purely cosmetic
+ * two-frequency pattern in (u, v) standing in for light/shade mottling through leaves (evidence: assumed,
+ * visual only — the same role bench()'s ColorChecker inter-patch gaps play). The modulation never drops
+ * below 55% of the patch's own reflectance, so the canopy stays a plausible foliage color throughout, not a
+ * black-and-green checkerboard.
+ */
+function dappledFoliageBillboard(id: string, center: Vec3, widthMm: number, heightMm: number): Billboard {
+  return {
+    id,
+    center,
+    normal: [0, 0, -1],
+    up: [0, 1, 0],
+    widthMm,
+    heightMm,
+    reflectanceAt: (u: number, v: number) => {
+      const dapple = 0.775 + 0.225 * Math.sin(u * 37) * Math.cos(v * 29 + u * 11);
+      return (nm: number) => dapple * FOLIAGE(nm);
+    },
+  };
+}
+
+/**
+ * The `field` scene (SHARED CONTRACT): a bird-sized (about 25 cm) subject perched on a branch at 30 m, a
+ * dappled foliage background at about 150 m carrying a few sun-glint point highlights (so bokeh disks show
+ * behind it), and an out-of-focus foreground grass strip at about 12 m. Framing: a subject about 250 mm tall
+ * at 30,000 mm is, by the simple pinhole relation this engine's renderer itself uses (image size = object
+ * size * efl / distance — render.ts's `traceSource`), about 4.2 mm tall on the sensor at 500 mm EFL (about
+ * 17% of full frame's 24 mm height) and about 6.7 mm (about 28%) at 800 mm EFL: "a sensible part of the
+ * frame" at both the lineup's long lenses, per this scene's own brief.
+ */
+function field(): Scene {
+  const illuminantShape = daylightAt(FIELD_CCT_K);
+
+  const subject = birdBillboard('field-subject', [0, 20, FIELD_SUBJECT_DISTANCE_MM], 180, 250);
+  // The perch: a horizontal bark-colored strip just below the subject, wide enough to read as a branch
+  // under it at every focal length this scene targets.
+  const branch = branchBillboard('field-branch', [0, -110, FIELD_SUBJECT_DISTANCE_MM + 40], 900, 70, BARK);
+
+  const backgroundDistMm = 150_000; // 150 m
+  const background = dappledFoliageBillboard('field-background', [0, 0, backgroundDistMm], 150_000, 100_000);
+
+  // Sun glints in the background canopy, for bokeh disks (same `pointHighlight` emitter bench() uses for its
+  // own background lights) — kept off-axis so the on-axis ray path (the subject itself) reaches the subject,
+  // not a highlight, same reasoning as bench()'s own doc comment. Positions are bounded so they actually land
+  // inside the rendered frame for BOTH real lineup lenses this scene defaults into (the >=200mm rule's only
+  // two members, n500 at an EFL of about 465mm and z800 at about 702mm — see data/lenses/*.json for the
+  // as-built EFLs, which run a bit long of their nominal focal lengths): at this 150m-ish background
+  // distance the binding case is the longer z800 EFL, whose half-frame angle caps an off-axis point at
+  // roughly |x| < 3,375mm, |y| < 2,250mm (derived from render.ts's own projectToRenderedPixel: sensorXmm =
+  // x*efl/z must stay inside the sensor's +-18mm half-width, +-12mm half-height on this engine's 36x24mm
+  // full-frame format). The three positions below were checked with that exact function, at both lenses, at
+  // 600x400 render resolution, and land at roughly (170, 262), (412, 148), (207, 133) px for n500 and (105,
+  // 293), (470, 122), (160, 99) px for z800 -- all well inside [0,600) x [0,400), spread around the subject
+  // rather than stacked on it.
+  const glints: PointHighlight[] = [
+    sunGlintHighlight('field-glint-0', [2500, 1200, backgroundDistMm - 300]),
+    sunGlintHighlight('field-glint-1', [-2200, -1000, backgroundDistMm + 600]),
+    sunGlintHighlight('field-glint-2', [1800, -1300, backgroundDistMm + 150]),
+  ];
+
+  // An out-of-focus grass foreground, kept within the narrowest lineup lens's (800 mm) field of view at its
+  // own 12 m distance (half-height there is about 180 mm; this strip sits at y = -150 mm, within that).
+  const foreground = grassBillboard('field-foreground', [0, -150, 12_000], 2000, 250, GRASS);
+
+  return {
+    billboards: [subject, branch, background, foreground],
+    pointHighlights: glints,
+    illuminant: { spectrum: illuminantShape, lux: FIELD_LUX },
+    movingBillboardIds: ['field-subject'],
+  };
+}
+
+export const SCENES: Record<string, () => Scene> = { bench, dusk, field };
 
 export function sceneDefaultLux(sceneId: string): number {
   if (sceneId === 'bench') return BENCH_LUX;
   if (sceneId === 'dusk') return DUSK_LUX;
+  if (sceneId === 'field') return FIELD_LUX;
   throw new Error(`scenes.ts: sceneDefaultLux: unknown scene id "${sceneId}"`);
 }
 
 export function sceneDefaultCctK(_sceneId: string): number {
-  return BENCH_CCT_K; // both named scenes share the same illuminant color, only lux differs
+  return BENCH_CCT_K; // every named scene shares the same illuminant color, only lux (and geometry) differ
+}
+
+/**
+ * The scene's own moving subject's distance from the sensor, mm (SHARED CONTRACT: "the engine's own
+ * magnification at the subject distance") — the bench/dusk Siemens star's own 3 m, the field scene's 30 m
+ * perch. Used by camera.ts to compute `model.motion`'s blur figures at the subject's own distance, which is
+ * not necessarily the scenario's current focus distance.
+ */
+export function sceneSubjectDistanceMm(sceneId: string): number {
+  if (sceneId === 'bench' || sceneId === 'dusk') return 3000;
+  if (sceneId === 'field') return FIELD_SUBJECT_DISTANCE_MM;
+  throw new Error(`scenes.ts: sceneSubjectDistanceMm: unknown scene id "${sceneId}"`);
 }
 
 export function getScene(id: string): Scene {

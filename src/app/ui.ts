@@ -4,7 +4,8 @@
 // never computes physics itself. Queries the DOM ids index.html defines and wires them once.
 import type { Model } from '../engine/model-types';
 import type { FormatId, Scenario } from '../engine/types';
-import { bodyForLens, compute, defaultFocusM, lensSummary, LINEUP, LONG_LENS_MM, sceneTargets, type BodyId } from './engine-api';
+import { bodyForLens, compute, defaultFocusM, lensSummary, LINEUP, LONG_LENS_MM, sceneIds, sceneTargets, type BodyId } from './engine-api';
+import { motionPartial, motionSpeedOf } from './motion';
 import { currentRender, publishRender, requestRender, type RenderView } from './render-client';
 import { emit, on } from './bus';
 import { type PieceId, type Store } from './store';
@@ -44,7 +45,7 @@ const PIECES: { id: PieceId; n: number; title: string; short: string; color: str
     lede: 'A deep dive into one pixel. From a spot in the final photo down to the microlens, the color filter and the well that counts the electrons.' },
 ];
 
-function chip(ev: string, src?: string): string {
+export function chip(ev: string, src?: string): string {
   const SHORT: Record<string, string> = { spec: 'Spec', vendor: 'Vendor', reported: 'Reported', derived: 'Calc.', assumed: 'Assumed' };
   const TITLE: Record<string, string> = { spec: 'From a published specification', vendor: "From the maker's own figures", reported: 'Reported by a third party',
     derived: 'Calculated by the engine from backed inputs', assumed: 'Rests on a stated assumption (an 18% gray scene)' };
@@ -83,7 +84,7 @@ interface Dom {
   pieceCounter: HTMLElement; pageTitle: HTMLElement; pageLede: HTMLElement;
   scBody: HTMLElement; scLens: HTMLElement; scFno: HTMLInputElement; scFnoV: HTMLElement;
   scFocus: HTMLInputElement; scFocusV: HTMLElement; scShutter: HTMLInputElement; scShutterV: HTMLElement;
-  scIso: HTMLInputElement; scIsoV: HTMLElement; scFormat: HTMLElement; kpis: HTMLElement;
+  scIso: HTMLInputElement; scIsoV: HTMLElement; scFormat: HTMLElement; scScene: HTMLElement; scMotion: HTMLElement; kpis: HTMLElement;
   steps: HTMLElement; intro: HTMLElement; partsK: HTMLElement; parts: HTMLElement; partsAll: HTMLButtonElement;
   card: HTMLElement; cardK: HTMLElement; cardT: HTMLElement; cardSub: HTMLElement; cardB: HTMLElement; cardS: HTMLElement; cardX: HTMLButtonElement;
   resetView: HTMLButtonElement; shareBtn: HTMLButtonElement; toast: HTMLElement;
@@ -104,7 +105,7 @@ function queryDom(): Dom {
     pieceCounter: byId('piece-counter'), pageTitle: byId('page-title'), pageLede: byId('page-lede'),
     scBody: byId('sc-body'), scLens: byId('sc-lens'), scFno: byId('sc-fno'), scFnoV: byId('sc-fno-v'),
     scFocus: byId('sc-focus'), scFocusV: byId('sc-focus-v'), scShutter: byId('sc-shutter'), scShutterV: byId('sc-shutter-v'),
-    scIso: byId('sc-iso'), scIsoV: byId('sc-iso-v'), scFormat: byId('sc-format'), kpis: byId('kpis'),
+    scIso: byId('sc-iso'), scIsoV: byId('sc-iso-v'), scFormat: byId('sc-format'), scScene: byId('sc-scene'), scMotion: byId('sc-motion'), kpis: byId('kpis'),
     steps: byId('steps'), intro: byId('intro'), partsK: byId('parts-k'), parts: byId('parts'), partsAll: byId('parts-all'),
     card: byId('card'), cardK: byId('card-k'), cardT: byId('card-t'), cardSub: byId('card-sub'), cardB: byId('card-b'), cardS: byId('card-s'), cardX: byId('card-x'),
     resetView: byId('reset-view'), shareBtn: byId('share-btn'), toast: byId('toast'),
@@ -186,6 +187,39 @@ export function mountUI(store: Store, stage: Stage): void {
     btn.innerHTML = `${f.label}<small>${f.sub}</small>`;
     btn.addEventListener('click', () => store.set({ format: f.id }));
     dom.scFormat.appendChild(btn);
+  }
+
+  // ---- scene switch: Tabletop (the bench charts) / Field (a long lens's own default, docs contract with the scenes
+  // stream). Offered unconditionally: normalizeScenario already falls back to the default scene for an id sceneIds()
+  // doesn't know, so picking Field before that stream's edit to scenes.ts lands is a safe no-op, not a crash.
+  const SCENES: { id: string; label: string; sub: string }[] = [
+    { id: 'bench', label: 'Tabletop', sub: 'Close, still' },
+    { id: 'field', label: 'Field', sub: 'Far, open' },
+  ];
+  for (const s of SCENES) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.scene = s.id;
+    btn.innerHTML = `${s.label}<small>${s.sub}</small>`;
+    btn.addEventListener('click', () => store.set({ scene: s.id }));
+    dom.scScene.appendChild(btn);
+  }
+
+  // ---- moving subject: Off, or an illustrative walking/running/bird-in-flight speed (motion.ts's shared-contract
+  // helpers; hidden downstream wherever the model doesn't carry a motion readout yet).
+  const MOTIONS: { speedMps: number; label: string }[] = [
+    { speedMps: 0, label: 'Off' },
+    { speedMps: 1.5, label: 'Walking' },
+    { speedMps: 5, label: 'Running' },
+    { speedMps: 12, label: 'Bird in flight' },
+  ];
+  for (const m of MOTIONS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.speed = String(m.speedMps);
+    btn.innerHTML = m.speedMps > 0 ? `${m.label}<small>${m.speedMps} m/s, assumed</small>` : `${m.label}<small>Still</small>`;
+    btn.addEventListener('click', () => store.set(motionPartial(m.speedMps)));
+    dom.scMotion.appendChild(btn);
   }
 
   // ---- sliders: index into a standard third-stop array (aperture's array depends on the current lens) --------
@@ -340,6 +374,16 @@ export function mountUI(store: Store, stage: Stage): void {
     for (const btn of dom.scBody.children) (btn as HTMLElement).setAttribute('aria-pressed', String((btn as HTMLElement).dataset.body === body));
     for (const btn of dom.scLens.children) (btn as HTMLElement).setAttribute('aria-pressed', String((btn as HTMLElement).dataset.lens === scenario.lens));
     for (const btn of dom.scFormat.children) (btn as HTMLElement).setAttribute('aria-pressed', String((btn as HTMLElement).dataset.format === scenario.format));
+    const knownScenes = sceneIds();
+    for (const btn of dom.scScene.children) {
+      const el = btn as HTMLButtonElement;
+      el.setAttribute('aria-pressed', String(el.dataset.scene === scenario.scene));
+      // Disabled, not hidden, until the scenes stream's own scenes.ts registers it: a real option that isn't wired
+      // up yet reads as "not yet" rather than as a silent no-op (see the note by SCENES above).
+      el.disabled = !!el.dataset.scene && !knownScenes.includes(el.dataset.scene);
+    }
+    const speedMps = motionSpeedOf(scenario);
+    for (const btn of dom.scMotion.children) (btn as HTMLElement).setAttribute('aria-pressed', String(Number((btn as HTMLElement).dataset.speed) === speedMps));
 
     const fnoSteps = THIRD_STOP_FNO.filter((n) => n >= model.lens.maxFno - 1e-9);
     dom.scFno.max = String(Math.max(0, fnoSteps.length - 1));
@@ -479,7 +523,11 @@ export function mountUI(store: Store, stage: Stage): void {
       publishRender(view);
       const block = Math.round(view.pixelScale);
       const sc = view.scenario;
-      dom.finalimgScale.textContent = `${view.width} × ${view.height} px · each one ${block} × ${block} sensor pixels
+      const nbsp = ' ';
+      // "EACH ONE 14 × 14 SENSOR PIXELS" wraps mid-phrase if the line breaks at an ordinary space (R3-04): keep the
+      // pixel count and its unit on one line, wherever the rest of the (pre-line) text wraps.
+      const eachOne = `each one${nbsp}${block}${nbsp}×${nbsp}${block}${nbsp}sensor${nbsp}pixels`;
+      dom.finalimgScale.textContent = `${view.width} × ${view.height} px · ${eachOne}
 `
         + `${fmtFno(sc.fno)} · ${fmtShutter(sc.shutter)} · ISO ${Math.round(sc.iso)} · focus ${fmtDistance(model.focus.distanceMm)}`;
       // A long lens's narrow view misses the charts at any focus: say so, in the card and on the dock, instead of
@@ -488,8 +536,9 @@ export function mountUI(store: Store, stage: Stage): void {
       const chartsAt = fmtDistance(sceneTargets(model.scenario.scene ?? 'bench').find((t) => t.id === 'colorchecker')?.z ?? 3000);
       dom.finalimgCap.classList.toggle('finalimg-empty', empty);
       dom.finalimgCap.textContent = empty
-        ? `At ${model.lens.focalLength} mm the view is too narrow to take in the test charts. They stand ${chartsAt} away, to either side of it, `
-          + `so this frame holds only the gray wall far behind them. Pick a 35 or 50 mm lens to see the charts in the shot.`
+        ? `At ${model.lens.focalLength} mm the view is too narrow to take in the test charts. The charts stand ${chartsAt} away, outside `
+          + `this narrow view, so this frame holds the gray wall far behind them and the small foreground swatch used to test background blur. `
+          + `Pick a 35 or 50 mm lens to see the charts in the shot.`
         : `The engine's render of this shot, with the photon and read noise of the sensor pixels behind each image pixel. `
           + `It is shown no larger than it was rendered, so any softness comes from the shot, not from enlarging it. Tap a spot to open the loupe on it.`;
       const dockEmpty = document.getElementById('fi-dock-empty');

@@ -9,7 +9,7 @@ import type { SensorSpec } from './sensor';
 
 import { BINS, V_LAMBDA, sensorFor, colorCheckerReflectance, COLOR_CHECKER_NAMES } from './data';
 import { getScene, daylightAt, sceneDefaultLux, sceneDefaultCctK } from './scenes';
-import { radiance } from './scene';
+import { radiance, shiftBillboards } from './scene';
 import { exitPupilBlurDiameterMm } from './camera';
 import { airyRadius } from './diffraction';
 import { imageIrradiance, photonEnergy } from './exposure';
@@ -127,8 +127,13 @@ function traceSource(
 ): SourceSample {
   const halfW = width / 2;
   const halfH = height / 2;
-  const sensorXmm = (bx + 0.5 - halfW) * blockPitchMm;
-  const sensorYmm = (halfH - (by + 0.5)) * blockPitchMm;
+  // Rendered pixels are in PHOTO orientation (upright, as a camera's readout and its raw file present the frame).
+  // The lens forms the image on the sensor rotated 180 degrees, so a photo pixel right of and above center sits on
+  // the sensor left of and below its center: both sensor coordinates are the photo's, negated. (Until 09/30/2026
+  // the rendered image was the raw sensor image, i.e. the final photo came out upside down; see
+  // projectToRenderedPixel, which must stay this function's exact inverse.)
+  const sensorXmm = -(bx + 0.5 - halfW) * blockPitchMm;
+  const sensorYmm = -(halfH - (by + 0.5)) * blockPitchMm;
   // Rectilinear pinhole projection from the real efl and sensor geometry (BRIEF.md: "acceptable for the
   // prototype"): no lens distortion, no entrance-pupil offset, image inversion via the leading minus signs.
   const dir: Vec3 = normalize3([-sensorXmm / efl, -sensorYmm / efl, 1]);
@@ -147,6 +152,71 @@ function traceSource(
   return { dir, depthMm, hitId: hit.hitId, objectPoint, cosTheta, photonsByBinSharp, channelElectronsSharp };
 }
 
+// ---- motion blur: average several sub-exposure time samples of the moving subject's billboard(s) -------------
+
+// How many instants across the exposure the moving subject is sampled at, averaged into one source sample.
+// Evidence: assumed (a rendering-time/smoothness tradeoff, like MAX_KERNEL_RADIUS_PX above): only paid when
+// `scenario.motion` is set and the scene names a moving billboard (SHARED CONTRACT) -- a still scenario calls
+// `traceSource` exactly once per rendered pixel, same as before this feature existed, so the render time
+// budget (docs/BRIEF.md: "600 x 400 in under 3 s") is unaffected for every scenario that does not opt in.
+const MOTION_TIME_SAMPLES = 16;
+
+/** The mean of several `SourceSample`s' own per-bin photon counts and per-channel electron counts (the
+ *  quantities a moving billboard's own shifted position changes); every other field (direction, depth, hit
+ *  id, object point, cosTheta) is taken from the temporal MIDDLE sample, representative since only the
+ *  moving billboard's x position differs between samples -- its z (hence depth/defocus) does not. */
+function averageSourceSamples(samples: SourceSample[]): SourceSample {
+  const mid = samples[Math.floor(samples.length / 2)];
+  const nBins = mid.photonsByBinSharp.length;
+  const photonsByBinSharp = new Array<number>(nBins).fill(0);
+  const channelElectronsSharp: [number, number, number] = [0, 0, 0];
+  for (const s of samples) {
+    for (let i = 0; i < nBins; i++) photonsByBinSharp[i] += s.photonsByBinSharp[i] / samples.length;
+    for (let c = 0; c < 3; c++) channelElectronsSharp[c] += s.channelElectronsSharp[c] / samples.length;
+  }
+  return { ...mid, photonsByBinSharp, channelElectronsSharp };
+}
+
+/**
+ * `traceSource`, but for a scene carrying a moving subject (SHARED CONTRACT: `scenario.motion` plus the
+ * scene's own `movingBillboardIds`): each of `MOTION_TIME_SAMPLES` instants t in [0, exposureS) (sampled at
+ * its interval's own midpoint, so the exposure's own two ends are each covered by half an interval, not
+ * double-counted or left out) shifts the moving billboard(s) by `speedMps * t` (m -> mm) along +x before
+ * tracing, per the scenario's own `motion.speedMps`; comment on scenario.shutter's own role here: this is the
+ * scenario's REQUESTED exposure time, used as the shutter's open interval -- rolling/curtain skew across the
+ * frame is not modeled (every pixel's exposure is treated as the same [0, exposureS) interval), documented
+ * here rather than in a return value since it changes no number this function returns, only what a real
+ * rolling-shutter camera would additionally skew. When `motion` is absent, 0, or the scene names no moving
+ * billboard, this falls straight through to a single `traceSource` call -- the exact pre-motion-blur code
+ * path, so a still render's cost is unchanged.
+ */
+function traceSourceWithMotion(
+  bx: number,
+  by: number,
+  width: number,
+  height: number,
+  blockPitchMm: number,
+  efl: number,
+  workingFno: number,
+  sceneObj: ReturnType<typeof getScene>,
+  spec: SensorSpec,
+  exposureS: number,
+  motion: { speedMps: number } | undefined,
+  movingBillboardIds: readonly string[],
+): SourceSample {
+  if (!motion || motion.speedMps === 0 || movingBillboardIds.length === 0) {
+    return traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS);
+  }
+  const samples: SourceSample[] = [];
+  for (let i = 0; i < MOTION_TIME_SAMPLES; i++) {
+    const t = ((i + 0.5) / MOTION_TIME_SAMPLES) * exposureS;
+    const dxMm = motion.speedMps * 1000 * t; // m/s * 1000 mm/m * s -> mm
+    const shifted = shiftBillboards(sceneObj, movingBillboardIds, dxMm);
+    samples.push(traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, shifted, spec, exposureS));
+  }
+  return averageSourceSamples(samples);
+}
+
 /** The rectilinear-pinhole projection of a world point (mm, same origin/axes as `traceSource`'s primary
  *  rays) to a (possibly fractional) rendered-pixel position — the exact inverse of the sensorXmm/sensorYmm
  *  math `traceSource` uses, so a point highlight's own splat lands exactly where a primary ray aimed at it
@@ -156,8 +226,9 @@ export function projectToRenderedPixel(efl: number, blockPitchMm: number, width:
   const cosTheta = z / depthMm;
   const sensorXmm = (-x * efl) / z;
   const sensorYmm = (-y * efl) / z;
-  const bx = sensorXmm / blockPitchMm + width / 2 - 0.5;
-  const by = height / 2 - sensorYmm / blockPitchMm - 0.5;
+  // photo orientation: the sensor image rotated back upright (traceSource's exact inverse)
+  const bx = -sensorXmm / blockPitchMm + width / 2 - 0.5;
+  const by = height / 2 + sensorYmm / blockPitchMm - 0.5;
   return { bx, by, depthMm, cosTheta };
 }
 
@@ -258,6 +329,8 @@ export interface RenderSetup {
   workingFno: number;
   exposureS: number;
   iso: number;
+  motion: { speedMps: number } | undefined;
+  movingBillboardIds: string[];
 }
 
 export function renderSetup(model: Model, width: number): RenderSetup {
@@ -284,6 +357,8 @@ export function renderSetup(model: Model, width: number): RenderSetup {
     workingFno: model.focus.workingFno,
     exposureS: model.scenario.shutter,
     iso: model.scenario.iso,
+    motion: model.scenario.motion,
+    movingBillboardIds: sceneObj.movingBillboardIds ?? [],
   };
 }
 
@@ -292,7 +367,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
   const notes: string[] = [];
   const { width, height, seed } = req;
 
-  const { spec, pixelScale, blockPitchMm, sceneObj, efl, workingFno, exposureS, iso } = renderSetup(model, width);
+  const { spec, pixelScale, blockPitchMm, sceneObj, efl, workingFno, exposureS, iso, motion, movingBillboardIds } = renderSetup(model, width);
   notes.push(`pixelScale=${pixelScale} (each rendered pixel stands for a ${pixelScale}x${pixelScale} block of real sensor pixels)`);
 
   const unitOutline: [number, number][] = model.iris.outline.map(([x, y]) => [x / model.iris.radius, y / model.iris.radius]);
@@ -322,7 +397,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
   for (let by = 0; by < height; by++) {
     for (let bx = 0; bx < width; bx++) {
       const idx = by * width + bx;
-      const src = traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS);
+      const src = traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds);
 
       // exitPupilBlurDiameterMm's pointDistMm is the object's AXIAL distance from the sensor (the distance to
       // its z-plane), not the ray's Euclidean hit distance (src.depthMm, which is larger for every off-axis
@@ -432,7 +507,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
     // the well-fill level shown still reflects real defocus/diffraction mixing from neighboring points, not
     // just this one sharp sample. See e4.md, "render.ts", for why this is a documented approximation (the
     // spectral SHAPE shown is this point's own; only the TOTAL is blur-corrected).
-    const src = traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS);
+    const src = traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds);
     const sharpChannelE = src.channelElectronsSharp[ci];
     const blurredChannelE = destChannel[idx * 3 + ci];
     const scale = sharpChannelE > 1e-12 ? blurredChannelE / sharpChannelE : 0;
@@ -506,4 +581,4 @@ function pixelStream(bx: number, by: number): number {
   return blockStream(bx, by) + 1; // odd, guaranteed distinct from any blockStream() value
 }
 
-export { traceSource };
+export { traceSource, traceSourceWithMotion };

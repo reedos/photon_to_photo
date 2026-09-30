@@ -46,7 +46,10 @@
 .layer-chip:hover { border-color: var(--ink); }
 .layer-chip:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 .hud-btns .btn { min-height: 38px; padding: 0 14px; background: rgba(0,0,0,.72); backdrop-filter: blur(6px); font-size: 11px; }
-.hud-btns .btn:hover { background: var(--ink); color: #000; }
+/* Fill hovers guarded against sticking after a tap (R3-05): see base.css's own note by the first one. */
+@media (hover: hover) and (pointer: fine) {
+  .hud-btns .btn:hover { background: var(--ink); color: #000; }
+}
 .hud-btns-phone:empty { display: none; }
 
 /* a piece's own small controls over the 3D view (pieces/types.ts PieceContext.overlay) */
@@ -116,7 +119,10 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .fi-dock:hover .fi-dock-cap { color: var(--ink); }
 .fi-dock:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 .fi-dock.rendering canvas { opacity: .5; transition: opacity .18s; }
-.fi-dock.rendering .fi-dock-k::after { content: " · rendering"; color: var(--faint); }
+/* In the rail's narrow text column, "FINAL IMAGE · RENDERING" wrapped to two lines and pushed the card's content
+   down for the moment a render takes (R3-07): its own line under the title instead, so the title never wraps. */
+.fi-dock.rendering .fi-dock-k::after { content: "Rendering\2026"; display: block; margin-top: 2px; color: var(--faint);
+  font-weight: 400; text-transform: none; letter-spacing: normal; }
 /* in the rail: a row, the thumbnail beside its caption */
 .hud.rail .fi-dock { width: 100%; display: grid; grid-template-columns: 150px minmax(0, 1fr); background: rgba(11,16,21,.97); }
 .hud.rail .fi-dock canvas { width: 150px; height: 100px; }
@@ -158,7 +164,9 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rig-exposure .rx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .rig-exposure .rx-k { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 .rig-exposure .rx-fire { min-height: 36px; padding: 0 16px; font-size: 11px; border-color: var(--accent); color: var(--accent); }
-.rig-exposure .rx-fire:hover:not(:disabled) { background: var(--accent); color: #000; }
+@media (hover: hover) and (pointer: fine) {
+  .rig-exposure .rx-fire:hover:not(:disabled) { background: var(--accent); color: #000; }
+}
 .rig-exposure .rx-fire[data-armed="true"] { opacity: 1; background: var(--accent); color: #000; cursor: default; }
 /* off (the view failed to load): plainly off, never the lit "firing" look */
 .rig-exposure .rx-fire:disabled:not([data-armed="true"]) { opacity: .4; background: transparent; color: var(--accent); cursor: not-allowed; }
@@ -188,7 +196,9 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rx-eq-k { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .rx-eq-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .rx-eq-btns .btn { min-height: 40px; padding: 0 6px; justify-content: center; white-space: nowrap; font: 500 11px/1.15 var(--mono); letter-spacing: .02em; text-transform: none; text-align: center; }
-.rx-eq-btns .btn:hover:not(:disabled) { background: var(--ink); color: #000; }
+@media (hover: hover) and (pointer: fine) {
+  .rx-eq-btns .btn:hover:not(:disabled) { background: var(--ink); color: #000; }
+}
 .rx-eq-note { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .rx-eq-note b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 .rx-eq-note[hidden] { display: none; }
@@ -204,10 +214,21 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rig-teach span { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); padding: 4px 7px; font: 600 11px/1 var(--mono);
   letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; color: #000; background: var(--accent); }
 .rig-teach.up span { top: auto; bottom: calc(100% + 6px); }
-.rig-teach.shared i { visibility: hidden; }
 .rig-teach.left span { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
 .rig-teach.right span { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
 .rig-teach i { width: 40px; height: 40px; }
+/* On a narrow stage the label moves out past the model's own silhouette (R3-FID-3): a longer offset, with a short
+   hairline leader back to the ring so it still reads as that control's own label. */
+.rig-teach.far.down span { top: calc(100% + 38px); }
+.rig-teach.far.up span { bottom: calc(100% + 38px); }
+.rig-teach.far.left span { right: calc(100% + 40px); }
+.rig-teach.far.right span { left: calc(100% + 40px); }
+.rig-teach.far.down::after, .rig-teach.far.up::after, .rig-teach.far.left::after, .rig-teach.far.right::after {
+  content: ""; position: absolute; background: var(--accent); opacity: .55; }
+.rig-teach.far.down::after { left: 50%; top: 100%; width: 1px; height: 32px; transform: translateX(-50%); }
+.rig-teach.far.up::after { left: 50%; bottom: 100%; width: 1px; height: 32px; transform: translateX(-50%); }
+.rig-teach.far.left::after { top: 50%; right: 100%; width: 34px; height: 1px; transform: translateY(-50%); }
+.rig-teach.far.right::after { top: 50%; left: 100%; width: 34px; height: 1px; transform: translateY(-50%); }
 @keyframes teach { 50% { transform: scale(1.12); } }
 @media (prefers-reduced-motion: reduce) { .rig-teach i { animation: none; } }
 
@@ -220,16 +241,21 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rig-crumb .rc-sep { color: var(--faint); }
 .rig-crumb .rc-here { color: var(--ink); }
 .rig-crumb .rc-link { min-height: 36px; padding: 0 12px; font-size: 11px; margin-left: 6px; border-color: var(--accent); color: var(--accent); background: rgba(0,0,0,.6); }
-.rig-crumb .rc-link:hover { background: var(--accent); color: #000; }
+@media (hover: hover) and (pointer: fine) {
+  .rig-crumb .rc-link:hover { background: var(--accent); color: #000; }
+}
 body.rig-detail .rig-exposure { top: 136px; }
 .kpi .kl { flex-wrap: nowrap; white-space: nowrap; }
 body.rig-detail .hud.tr .hint { visibility: hidden; }
 /* a picked part owns the view: the other pins step out (the list still reaches them) */
 body.rig-detail .pins .pin.dim { display: none; }
 /* In a detail mode the zoomed, ghosted camera runs past the free rectangle: a scrim behind the rail and the title band
-   takes it back to the stage's black there, so no ghost geometry or ray sits under panel text (R2-02). */
+   takes it back to the stage's black there, so no ghost geometry or ray sits under panel text (R2-02). The same rays
+   run under the rail at the default cutaway too, and during Fire (R3-01), so the scrim runs whenever the rail has
+   anything in it, not only in a detail mode. */
 @media (min-width: 761px) {
-  body.rig-detail .view::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  .view:has(> .hud.rail > :not([hidden]))::before, body.rig-detail .view::before {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background:
       linear-gradient(90deg, #000 0, rgba(0,0,0,.94) calc(var(--gutter) + 312px), rgba(0,0,0,0) calc(var(--gutter) + 312px + 140px)),
       linear-gradient(180deg, rgba(0,0,0,.9) 0, rgba(0,0,0,.75) 100px, rgba(0,0,0,0) 170px); }
@@ -241,6 +267,24 @@ body.rig-detail .pins .pin.dim { display: none; }
 
 /* The loupe's own Back control sits under the title band, not on it (art-director finding "header-overlap"). */
 .piece-overlay[data-piece="loupe"] .btn { top: 90px; }
+
+/* ---------- the real-photo comparison panel (hidden whenever public/examples/examples.json is empty) ---------- */
+.rp-card[hidden] { display: none !important; }
+.rp-picks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.rp-compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 300px); gap: 0; border: 1px solid var(--line); max-width: 1200px; }
+.rp-photo, .rp-render { margin: 0; display: grid; grid-template-rows: 1fr auto; min-width: 0; }
+.rp-photo { border-right: 1px solid var(--line); }
+.rp-render { border-right: 1px solid var(--line); }
+.rp-photo img, .rp-render canvas { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; aspect-ratio: 3 / 2; }
+.rp-photo figcaption, .rp-render figcaption { padding: 8px 10px; font: 500 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); border-top: 1px solid var(--line); }
+.rp-side { padding: 18px 20px; display: grid; align-content: start; gap: 10px; }
+.rp-settings { margin: 0; font: 500 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.rp-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.rp-match { align-self: start; }
+@media (max-width: 900px) {
+  .rp-compare { grid-template-columns: minmax(0, 1fr); }
+  .rp-photo, .rp-render { border-right: 0; border-bottom: 1px solid var(--line); }
+}
 
 /* ---------- phones ---------- */
 @media (max-width: 760px) {

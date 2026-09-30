@@ -7,7 +7,7 @@ import type { Model, LensInfo, SensorInfo, FanRequest, FanSet, BundleRequest, Bu
 import type { RealizedLens } from './realize';
 
 import { getRealizedLens, sensorFor, BINS, V_LAMBDA } from './data';
-import { daylightAt, sceneDefaultLux, sceneDefaultCctK } from './scenes';
+import { daylightAt, sceneDefaultLux, sceneDefaultCctK, sceneSubjectDistanceMm } from './scenes';
 import { cardinal, systemAt } from './lens';
 import { stopRadiusFor, irisOutline, irisTest, bladeShapes } from './iris';
 import { imageOf } from './paraxial';
@@ -30,7 +30,10 @@ const GRAY_PATCH_REFLECTANCE = 0.18; // the standard photographic "18% gray" ref
 // ---- memoization -------------------------------------------------------------------------------------------
 
 function scenarioKey(s: Scenario): string {
-  return JSON.stringify([s.lens, s.fno, s.shutter, s.iso, s.focusM, s.format, s.sensor ?? null, s.shutterType, s.scene, s.lux ?? null, s.cct ?? null]);
+  return JSON.stringify([
+    s.lens, s.fno, s.shutter, s.iso, s.focusM, s.format, s.sensor ?? null, s.shutterType, s.scene, s.lux ?? null,
+    s.cct ?? null, s.motion?.speedMps ?? null,
+  ]);
 }
 
 const modelCache = new Map<string, Model>();
@@ -244,6 +247,24 @@ export function compute(scenario: Scenario): Model {
   const airyMm = airyRadius(550, workingFno);
   const diffraction = { airyRadiusUm: airyMm * 1000, airyRadiusPx: airyMm / pitchMm, nm: 550 };
 
+  // ---- motion blur (SHARED CONTRACT) --------------------------------------------------------------------
+  // The moving subject's own streak length on the sensor: speed * shutter * |magnification|, with the
+  // magnification taken from the REAL lens (paraxial.ts's imageOf, the same call focusBlock's own
+  // magnification above uses) at the scene's own subject distance (scenes.ts's sceneSubjectDistanceMm) --
+  // NOT model.focus.magnification, which is at whatever distance the scenario happens to be focused, and can
+  // differ from the subject's own distance (the reader is free to focus the field scene's foreground grass,
+  // say, while its bird subject still moves at its own 30 m). See camera.test.ts for the check of this
+  // magnification against the simple thin-lens f/(d-f) approximation (within 2%, since this uses the real
+  // lens's own paraxial solve, not that approximation itself).
+  let motion: Model['motion'] = null;
+  if (scenario.motion && scenario.motion.speedMps > 0) {
+    const subjectDistMm = sceneSubjectDistanceMm(scenario.scene);
+    const subjectObjectZ = sensorZEff - subjectDistMm;
+    const subjectImg = imageOf(system, FRAUNHOFER_D_NM, subjectObjectZ);
+    const blurMm = scenario.motion.speedMps * 1000 * scenario.shutter * Math.abs(subjectImg.magnification);
+    motion = { speedMps: scenario.motion.speedMps, blurMm, blurPx: blurMm / pitchMm, ev: 'derived' };
+  }
+
   // ---- exposure -------------------------------------------------------------------------------------------
   const sceneLux = scenario.lux ?? sceneDefaultLux(scenario.scene);
   const cctK = scenario.cct ?? sceneDefaultCctK(scenario.scene);
@@ -315,6 +336,9 @@ export function compute(scenario: Scenario): Model {
     fullWellE: sensorInfo.figs.fullWellE,
     readNoiseE: sensorInfo.figs.readNoiseE,
   };
+  if (motion) {
+    figs.motionBlurPx = { v: motion.blurPx, unit: 'px', ev: 'derived', calc: 'speedMps * shutter * |magnification| * 1000 / pitchMm, magnification at the scene\'s own subject distance' };
+  }
 
   const model: Model = {
     scenario: { ...scenario, fno, focusM: clampedFocusMm === null ? null : clampedFocusMm / 1000 },
@@ -326,6 +350,7 @@ export function compute(scenario: Scenario): Model {
     sensor: sensorInfo,
     focus: focusBlock,
     diffraction,
+    motion,
     exposure,
     figs,
   };

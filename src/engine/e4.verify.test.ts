@@ -66,10 +66,10 @@ describe('FINDING 1: render.ts blur-kernel sizing uses a Euclidean hit distance 
     'this engine: depthMm * cosTheta === the hit point\'s own z-coordinate (its axial distance from the ' +
     'sensor, per traceSource\'s own coordinate convention where the sensor sits at the local origin)', () => {
     // A real, in-frame scene hit (no synthetic geometry): p50 at f/2, focused at 1 m on the 'bench' scene,
-    // pixel (300, 50) at 600x400 lands on the 'foreground' billboard (verified below) at a real off-axis angle.
+    // pixel (299, 349) at 600x400 (photo orientation since 09/30/2026; it was (300, 50) when the image was stored inverted) lands on the 'foreground' billboard (verified below) at a real off-axis angle.
     const model = compute(scenario({ lens: 'p50', fno: 2, focusM: 1 }));
     const setup = renderSetup(model, 600);
-    const src = traceSource(300, 50, 600, 400, setup.blockPitchMm, setup.efl, setup.workingFno, setup.sceneObj, setup.spec, setup.exposureS);
+    const src = traceSource(299, 349, 600, 400, setup.blockPitchMm, setup.efl, setup.workingFno, setup.sceneObj, setup.spec, setup.exposureS);
     expect(src.hitId).toBe('foreground');
     expect(src.cosTheta).toBeLessThan(0.99); // genuinely off-axis, not a coincidentally-on-axis sample
 
@@ -85,7 +85,7 @@ describe('FINDING 1: render.ts blur-kernel sizing uses a Euclidean hit distance 
     'confirmed magnitude of E4-1 on an ordinary in-frame billboard hit, not a contrived extreme', () => {
     const model = compute(scenario({ lens: 'p50', fno: 2, focusM: 1 }));
     const setup = renderSetup(model, 600);
-    const src = traceSource(300, 50, 600, 400, setup.blockPitchMm, setup.efl, setup.workingFno, setup.sceneObj, setup.spec, setup.exposureS);
+    const src = traceSource(299, 349, 600, 400, setup.blockPitchMm, setup.efl, setup.workingFno, setup.sceneObj, setup.spec, setup.exposureS);
     expect(src.hitId).toBe('foreground');
 
     const axialZ = src.objectPoint[2]; // independently-derived correct "distance from the sensor" (finding 1

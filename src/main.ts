@@ -4,6 +4,7 @@
 import { createStore } from './app/store';
 import { createStage, type StageDom } from './app/stage';
 import { mountUI } from './app/ui';
+import { mountExamples } from './app/examples';
 import { installHooks } from './app/hooks';
 import { build as buildCamera } from './scene/camera-rig';
 import { build as buildLens } from './pieces/lens';
@@ -39,6 +40,7 @@ async function main() {
   stage.registerPiece('loupe', buildLoupe);
 
   mountUI(store, stage);
+  mountExamples(store);
   installHooks(store, stage);
 }
 

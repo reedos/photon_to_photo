@@ -28,6 +28,17 @@ describe('scenarioFromQuery', () => {
     const { scenario } = scenarioFromQuery('?fno=not-a-number');
     expect(scenario.fno).toBeUndefined();
   });
+
+  it('reads scene= and motion= (SHARED CONTRACT)', () => {
+    const { scenario } = scenarioFromQuery('?scene=field&motion=5.5');
+    expect(scenario.scene).toBe('field');
+    expect(scenario.motion).toEqual({ speedMps: 5.5 });
+  });
+
+  it('ignores a garbage motion= value rather than producing NaN', () => {
+    const { scenario } = scenarioFromQuery('?motion=not-a-number');
+    expect(scenario.motion).toBeUndefined();
+  });
 });
 
 describe('formatShutter', () => {
@@ -55,6 +66,32 @@ describe('queryFromState and scenarioFromQuery round-trip', () => {
     expect(qs).toContain('focus=inf');
     const back = scenarioFromQuery(qs);
     expect(back.scenario.focusM).toBeNull();
+  });
+
+  it('round-trips an explicit scene (SHARED CONTRACT: scene=)', () => {
+    const store = new Store({ scenario: { lens: 'p500', scene: 'bench' } });
+    const qs = queryFromState(store.get());
+    expect(qs).toContain('scene=bench');
+    const back = scenarioFromQuery(qs);
+    expect(back.scenario.scene).toBe('bench');
+    const roundTripped = new Store({ scenario: back.scenario });
+    expect(roundTripped.get().scenario).toEqual(store.get().scenario);
+  });
+
+  it('round-trips a motion speed (SHARED CONTRACT: motion=<m/s>)', () => {
+    const store = new Store({ scenario: { motion: { speedMps: 8 } } });
+    const qs = queryFromState(store.get());
+    expect(qs).toContain('motion=8');
+    const back = scenarioFromQuery(qs);
+    expect(back.scenario.motion).toEqual({ speedMps: 8 });
+    const roundTripped = new Store({ scenario: back.scenario });
+    expect(roundTripped.get().scenario).toEqual(store.get().scenario);
+  });
+
+  it('omits motion= from the URL when the scenario is still (no motion field to reproduce)', () => {
+    const store = new Store({ scenario: { lens: 'p50' } });
+    const qs = queryFromState(store.get());
+    expect(qs).not.toContain('motion=');
   });
 });
 

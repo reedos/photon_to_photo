@@ -7,6 +7,7 @@ import { imageOf as imageOfIndependent } from './paraxial';
 import { FRAUNHOFER_D_NM } from './glass';
 import type { Model } from './model-types';
 import type { Scenario } from './types';
+import { sceneSubjectDistanceMm } from './scenes';
 
 function baseScenario(overrides: Partial<Scenario> = {}): Scenario {
   return {
@@ -307,5 +308,84 @@ describe('pointBundle', () => {
     // Expected gap for a straight n-gon: circumradius vs inradius = 1 - cos(pi/n) ~= 6% for n = 9; require at
     // least a third of that (conservative against real-ray-trace/defocus-mapping/binning noise).
     expect(vertexMean).toBeGreaterThan(midpointMean * (1 + (1 - Math.cos(Math.PI / n)) / 3));
+  });
+});
+
+describe('model.motion (SHARED CONTRACT)', () => {
+  it('is null when scenario.motion is absent, or its speed is 0', () => {
+    expect(compute(baseScenario()).motion).toBeNull();
+    expect(compute(baseScenario({ motion: { speedMps: 0 } })).motion).toBeNull();
+  });
+
+  it("the bench scene's blurMm matches speed * shutter * |magnification|, the magnification at the scene's " +
+    "own subject distance (its Siemens star, 3 m) checked independently against the thin-lens f/(d-f) " +
+    'approximation, within 2% (the real lens vs. that approximation, per docs/engine/e4.md)',
+    () => {
+      const speedMps = 4;
+      const shutter = 1 / 200;
+      const model = compute(baseScenario({ lens: 'p50', focusM: 3, shutter, motion: { speedMps } }));
+      expect(model.motion).not.toBeNull();
+      const motion = model.motion!;
+      expect(motion.speedMps).toBe(speedMps);
+      expect(motion.ev).toBe('derived');
+
+      const pitchMm = model.sensor.pitchUm / 1000;
+      expect(motion.blurPx).toBeCloseTo(motion.blurMm / pitchMm, 9);
+
+      // Thin-lens approximation, independent of this engine's own imageOf: f/(d-f), with d measured from the
+      // FRONT PRINCIPAL PLANE (the convention that formula is written in — see camera.ts's own
+      // distanceFromSensorToP doc comment), not straight from the sensor (Scenario's own convention, which
+      // sceneSubjectDistanceMm reports in) — converted here the same way camera.ts converts every other
+      // thin-lens-vs-real-lens comparison it makes (e.g. its own hyperfocal golden test above).
+      const subjectDistMm = sceneSubjectDistanceMm('bench');
+      const sensorZEff = model.system.surfaces[model.system.surfaces.length - 1].z;
+      const subjectDistFromP = subjectDistMm + (model.cardinal.P - sensorZEff);
+      const f = model.cardinal.efl;
+      const thinLensMag = f / (subjectDistFromP - f);
+      const expectedBlurMm = speedMps * 1000 * shutter * thinLensMag;
+      expect(Math.abs(motion.blurMm - expectedBlurMm) / expectedBlurMm).toBeLessThan(0.02);
+    },
+  );
+
+  it("is governed by the scene's own subject distance, not the scenario's current focus distance: it stays " +
+    "within a few percent whether the reader focuses near the subject's own 3 m or far past it (the residual " +
+    'is real-lens focus breathing — every prescription here has some internal/group motion with focus, not a ' +
+    'bug this feature introduces — not a dependence this feature adds on top of it)',
+    () => {
+      const speedMps = 3;
+      const shutter = 1 / 500;
+      const near = compute(baseScenario({ lens: 'p200', focusM: 2, shutter, motion: { speedMps } }));
+      const far = compute(baseScenario({ lens: 'p200', focusM: 10, shutter, motion: { speedMps } }));
+      const diff = Math.abs(near.motion!.blurMm - far.motion!.blurMm) / near.motion!.blurMm;
+      expect(diff).toBeLessThan(0.02);
+    },
+  );
+
+  it("the field scene's subject (30 m) gives a smaller magnification, and blur, than the bench scene's (3 m) " +
+    'at the same lens/speed/shutter (closer subjects move further across the sensor for the same real speed)',
+    () => {
+      const speedMps = 5;
+      const shutter = 1 / 1000;
+      const bench = compute(baseScenario({ lens: 'p500', focusM: 3, scene: 'bench', shutter, motion: { speedMps } }));
+      const field = compute(baseScenario({ lens: 'p500', focusM: 30, scene: 'field', shutter, motion: { speedMps } }));
+      expect(field.motion!.blurMm).toBeLessThan(bench.motion!.blurMm);
+
+      const pitchMm = field.sensor.pitchUm / 1000;
+      const f = field.cardinal.efl;
+      const subjectDistMm = sceneSubjectDistanceMm('field');
+      const sensorZEffField = field.system.surfaces[field.system.surfaces.length - 1].z;
+      const subjectDistFromP = subjectDistMm + (field.cardinal.P - sensorZEffField);
+      const thinLensMag = f / (subjectDistFromP - f);
+      const expectedBlurMm = speedMps * 1000 * shutter * thinLensMag;
+      expect(Math.abs(field.motion!.blurMm - expectedBlurMm) / expectedBlurMm).toBeLessThan(0.02);
+    },
+  );
+
+  it('figs.motionBlurPx is present with motion, and absent without it', () => {
+    const withMotion = compute(baseScenario({ motion: { speedMps: 2 } }));
+    const without = compute(baseScenario());
+    expect(withMotion.figs.motionBlurPx).toBeDefined();
+    expect(withMotion.figs.motionBlurPx.v).toBeCloseTo(withMotion.motion!.blurPx, 9);
+    expect(without.figs.motionBlurPx).toBeUndefined();
   });
 });

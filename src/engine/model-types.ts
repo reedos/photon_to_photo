@@ -2,7 +2,7 @@
 // lead; camera.ts (workstream E4) implements it, the app shell and the set pieces consume it. Units as in types.ts
 // (mm, nm, s), except where a name says otherwise (Um = micrometers, Px = sensor pixels, M = meters).
 
-import type { Cardinal, Fig, Format, PixelState, RayPath, Scenario, TraceSystem, Vec2 } from './types';
+import type { Cardinal, Ev, Fig, Format, PixelState, RayPath, Scenario, TraceSystem, Vec2 } from './types';
 import type { RealizedLens } from './realize';
 
 export interface LensInfo {
@@ -63,6 +63,10 @@ export interface Model {
     cocMm: number;              // the circle of confusion used (assumed rule, see figs.coc)
   };
   diffraction: { airyRadiusUm: number; airyRadiusPx: number; nm: number };
+  /** The scene's moving subject's streak on the sensor (SHARED CONTRACT), from the REAL lens's own
+   *  magnification at the scene's subject distance (scenes.ts's `sceneSubjectDistanceMm`, not necessarily
+   *  the scenario's current focus distance): null when `scenario.motion` is absent or its speed is 0. */
+  motion: { speedMps: number; blurMm: number; blurPx: number; ev: Ev } | null;
   exposure: {
     ev100: number;
     sceneLux: number;

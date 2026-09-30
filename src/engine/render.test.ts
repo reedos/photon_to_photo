@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { compute, exitPupilBlurDiameterMm } from './camera';
-import { renderImage, renderSetup, traceSource, projectToRenderedPixel } from './render';
+import { renderImage, renderSetup, traceSource, traceSourceWithMotion, projectToRenderedPixel } from './render';
 import { varianceE, analogGain } from './sensor';
 import { airyRadius } from './diffraction';
 import type { Scenario } from './types';
@@ -172,7 +172,9 @@ function findFlatBackdropPixels(model: ReturnType<typeof compute>, width: number
   const out: FlatSample[] = [];
   const margin = 6;
   for (let by = margin; by < height - margin; by++) {
-    for (let bx = Math.floor(width * 0.68); bx < width - margin; bx++) {
+    // the scene's left side, a clean stretch of backdrop: the photo's left third since the image became upright
+    // (09/30/2026; it was the right third while the rendered image was stored inverted)
+    for (let bx = margin; bx < Math.ceil(width * 0.32); bx++) {
       const src = traceSource(bx, by, width, height, setup.blockPitchMm, setup.efl, setup.workingFno, setup.sceneObj, setup.spec, setup.exposureS);
       if (src.hitId !== 'backdrop') continue;
       const evenX = bx % 2 === 0;
@@ -334,5 +336,126 @@ describe('renderImage: golden — a point highlight renders as a disk matching t
     const predictedDiameterPx = combinedMm / setup.blockPitchMm;
 
     expect(Math.abs(measuredDiameterPx - predictedDiameterPx)).toBeLessThan(1);
+  });
+});
+
+describe('motion blur (SHARED CONTRACT)', () => {
+  // A hard-edged billboard covering world x in [0, 50000] mm at the bench scene's own Siemens-star distance
+  // (3 m), sharply focused there so defocus/diffraction stay negligible: only its LEFT edge (at x = 0, the
+  // optical axis) falls inside any lens's field of view here, so the frame shows a simple step from dark
+  // (x < 0, a miss) to lit (x >= 0). A moving billboard's own shift is +x (SHARED CONTRACT) over t in
+  // [0, exposureS); averaging that shift uniformly turns the step into an EXACTLY LINEAR ramp spanning
+  // world x in [0, speedMps*1000*exposureS] mm (a point at world x = p mm is covered for the fraction
+  // min(W,p)/W of the exposure, W = the shift's own total mm span, for 0 <= p <= W — a plain geometric
+  // fact about a box sliding at constant speed, independent of anything render.ts computes) — i.e. a ramp
+  // whose width, converted to the image plane by the pinhole projection's own magnification (efl / Z,
+  // traceSource's own dir computation), is exactly the streak width the SHARED CONTRACT names: speed *
+  // shutter * |m|. Measured here via traceSourceWithMotion directly (channelElectronsSharp), the same way
+  // this file's other physics checks (e.g. findFlatBackdropPixels above) read render.ts's pre-pipeline
+  // numbers rather than the final, demosaiced/tone-curved rgba (whose own interpolation kernels add a
+  // little unrelated spatial spread of their own).
+  const EDGE_Z_MM = 3000;
+
+  function withMovingEdge<T>(fn: () => T): T {
+    const saved = SCENES.bench;
+    SCENES.bench = () => ({
+      billboards: [flatBillboard('edge', [25000, 0, EDGE_Z_MM], 50000, 3000, () => 0.9)],
+      illuminant: { spectrum: daylightAt(5500), lux: 20000 },
+      movingBillboardIds: ['edge'],
+    });
+    try {
+      return fn();
+    } finally {
+      SCENES.bench = saved;
+    }
+  }
+
+  // The G-channel profile (channelElectronsSharp[1], present at every source pixel regardless of that
+  // pixel's own Bayer color — see traceSource — so consecutive columns are directly comparable, unlike the
+  // final mosaic) across one row, and the width (rendered px) of its transition from the row's own peak
+  // (plateau, at/just past the edge) down to zero (background, the pure miss beyond it).
+  function rampWidthPx(model: ReturnType<typeof compute>, width: number, height: number, row: number): number {
+    const setup = renderSetup(model, width);
+    const values: number[] = [];
+    for (let x = 0; x < width; x++) {
+      const src = traceSourceWithMotion(x, row, width, height, setup.blockPitchMm, setup.efl, setup.workingFno, setup.sceneObj, setup.spec, setup.exposureS, setup.motion, setup.movingBillboardIds);
+      values.push(src.channelElectronsSharp[1]);
+    }
+    const plateau = Math.max(...values);
+    // Measured at the edge itself, from whichever side is lit (since the image became upright on 09/30/2026 the
+    // lit side is on the photo's right): the zero column nearest the peak, then walk back toward the peak to the
+    // first column at the plateau. (Counting every sub-plateau column would also count the lit side's cos^4
+    // falloff toward the frame edge.)
+    const k = values.indexOf(plateau);
+    let z = -1;
+    for (let d = 1; d < width && z < 0; d++) {
+      if (k + d < width && values[k + d] <= 0.01 * plateau) z = k + d;
+      else if (k - d >= 0 && values[k - d] <= 0.01 * plateau) z = k - d;
+    }
+    expect(z).toBeGreaterThanOrEqual(0);
+    const step = z > k ? -1 : 1;
+    let f = z;
+    while (f !== k && values[f] < 0.99 * plateau) f += step;
+    return Math.abs(z - f);
+  }
+
+  it('the moving edge ramps over speed * shutter * |m| / (pitch * pixelScale) rendered pixels, m the ' +
+    "pinhole-projection magnification (efl / Z — traceSource's own dir) at the edge's distance, within one " +
+    'rendered pixel',
+    () => {
+      withMovingEdge(() => {
+        const width = 240, height = 80;
+        const speedMps = 6;
+        const scenario: Scenario = {
+          lens: 'p50', fno: 0, shutter: 1 / 60, iso: 200, focusM: EDGE_Z_MM / 1000, format: 'ff',
+          shutterType: 'mechanical', scene: 'bench', motion: { speedMps },
+        };
+        const model = compute(scenario);
+        const setup = renderSetup(model, width);
+        const mag = setup.efl / EDGE_Z_MM;
+        const expectedWidthPx = (speedMps * 1000 * model.scenario.shutter * mag) / setup.blockPitchMm;
+        expect(expectedWidthPx).toBeGreaterThan(4); // a meaningful ramp, not noise-level
+
+        const measuredWidthPx = rampWidthPx(model, width, height, Math.floor(height / 2));
+        expect(Math.abs(measuredWidthPx - expectedWidthPx)).toBeLessThan(1.5);
+      });
+    },
+  );
+
+  it('the edge is a sharp (at most one rendered pixel) step when scenario.motion is absent', () => {
+    withMovingEdge(() => {
+      const width = 240, height = 80;
+      const scenario: Scenario = {
+        lens: 'p50', fno: 0, shutter: 1 / 60, iso: 200, focusM: EDGE_Z_MM / 1000, format: 'ff',
+        shutterType: 'mechanical', scene: 'bench',
+      };
+      const model = compute(scenario);
+      expect(model.scenario.motion).toBeUndefined();
+      expect(rampWidthPx(model, width, height, Math.floor(height / 2))).toBeLessThanOrEqual(2);
+    });
+  });
+
+  it('is likewise a sharp step when scenario.motion.speedMps is 0, same as absent', () => {
+    withMovingEdge(() => {
+      const width = 240, height = 80;
+      const scenario: Scenario = {
+        lens: 'p50', fno: 0, shutter: 1 / 60, iso: 200, focusM: EDGE_Z_MM / 1000, format: 'ff',
+        shutterType: 'mechanical', scene: 'bench', motion: { speedMps: 0 },
+      };
+      const model = compute(scenario);
+      expect(rampWidthPx(model, width, height, Math.floor(height / 2))).toBeLessThanOrEqual(2);
+    });
+  });
+});
+
+describe('the final image is upright (photo orientation)', () => {
+  // A lens forms an inverted image; a camera presents it upright. An object above and to the right of the axis must
+  // land above and to the right of the photo's center (rows grow downward), and traceSource must be the projection's
+  // exact inverse.
+  it('an object up and to the right lands up and to the right of center', () => {
+    const setup = renderSetup(compute(baseScenario()), 600);
+    const p = projectToRenderedPixel(setup.efl, setup.blockPitchMm, 600, 400, 300, 200, 5000);
+    expect(p.bx).toBeGreaterThan(300);
+    expect(p.by).toBeLessThan(200);
   });
 });

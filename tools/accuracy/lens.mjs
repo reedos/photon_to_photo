@@ -78,7 +78,7 @@ async function main() {
     // drawImage()+getImageData() reads back fully transparent everywhere for this WebGPU canvas in this
     // environment (tried first; every sample came back [0,0,0,0] regardless of position), so this follows the
     // task brief's own "read pixels from screenshots" instruction literally instead.
-    const canvasBox = await page.locator('#view canvas').boundingBox();
+    const canvasBox = await page.locator('#gl').boundingBox();
     const shot = await page.screenshot();
     const img = decodePng(shot);
     // Many points along many rays are depth-occluded by glass/barrel from the camera's own viewpoint (only a

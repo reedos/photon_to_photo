@@ -48,6 +48,11 @@ export interface Billboard {
   widthMm: number;
   heightMm: number;
   /**
+   * Optional silhouette at local (u, v) in [-0.5, 0.5]: false means the surface is not there, and the ray passes on to
+   * whatever lies behind (a bird's outline, a branch, grass blades). Absent = the whole rectangle is solid.
+   */
+  coverage?: (u: number, v: number) => boolean;
+  /**
    * Spectral reflectance (0..1) at local coordinates u, v in [-0.5, 0.5] (fractions of widthMm/heightMm
    * from center) — a function of (u, v) so a single billboard can carry many regions, e.g. a ColorChecker's
    * 24 patches or a Siemens star (see `siemensStarReflectance` below).
@@ -75,6 +80,29 @@ export interface Scene {
   billboards: Billboard[];
   pointHighlights?: PointHighlight[];
   illuminant: Illuminant;
+  /** Ids (from `billboards`) of the scene's own moving subject, if any (scenes.ts's field scene's bird, the
+   *  bench scene's Siemens star card — see scenes.ts). render.ts shifts exactly these billboards' centers
+   *  along +x for a scenario carrying `motion`; every other billboard stays fixed. Absent/empty means the
+   *  scene has no subject a motion scenario can shift (a `motion` speed is then simply a no-op for it). */
+  movingBillboardIds?: string[];
+}
+
+/**
+ * Returns `scene` with every billboard whose id is in `ids` shifted `dxMm` along +x (world space; +x is the
+ * image-horizontal direction, types.ts's own axis convention) — the lateral subject displacement a moving
+ * scene's shutter-open interval produces at one instant. `dxMm = 0` (or an empty `ids`) returns `scene`
+ * itself unchanged (no allocation), so a still scenario's render path pays nothing for this helper existing.
+ * Every other billboard (and every point highlight) is kept exactly as-is, by reference.
+ */
+export function shiftBillboards(scene: Scene, ids: readonly string[], dxMm: number): Scene {
+  if (dxMm === 0 || ids.length === 0) return scene;
+  const idSet = new Set(ids);
+  return {
+    ...scene,
+    billboards: scene.billboards.map((b) =>
+      idSet.has(b.id) ? { ...b, center: [b.center[0] + dxMm, b.center[1], b.center[2]] as Vec3 } : b,
+    ),
+  };
 }
 
 // ---- illuminant: lux -> spectral irradiance, via the photopic luminous efficiency integral -----------------
@@ -255,6 +283,7 @@ export function radiance(scene: Scene, rayOrigin: Vec3, rayDir: Vec3, bins: Bins
 
   for (const bb of scene.billboards) {
     const hit = rayBillboardIntersect(rayOrigin, dir, bb);
+    if (hit && bb.coverage && !bb.coverage(hit.u, hit.v)) continue;
     if (hit && hit.t < bestT) {
       bestT = hit.t;
       hitBillboard = { bb, u: hit.u, v: hit.v };

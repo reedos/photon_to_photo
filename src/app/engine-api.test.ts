@@ -239,3 +239,47 @@ describe('focus ring on the model', () => {
     expect(focusRingThrow(inf)).toBeGreaterThan(0);
   });
 });
+
+describe('normalizeScenario: scene/focus/motion defaults (SHARED CONTRACT)', () => {
+  it("a lens with a class focal length >= 200 mm defaults to the 'field' scene, at its own 30 m subject distance", () => {
+    const s = normalizeScenario({ lens: 'p500' });
+    expect(s.scene).toBe('field');
+    expect(s.focusM).toBe(30);
+  });
+
+  it("a shorter lens defaults to the 'bench' scene, at 3 m", () => {
+    const s = normalizeScenario({ lens: 'p50' });
+    expect(s.scene).toBe('bench');
+    expect(s.focusM).toBe(3);
+  });
+
+  it('a lens right at the 200 mm threshold also gets the field scene', () => {
+    const s = normalizeScenario({ lens: 'p200' });
+    expect(s.scene).toBe('field');
+  });
+
+  it('an explicit scene always wins over the focal-length default, for either lens class', () => {
+    const long = normalizeScenario({ lens: 'p500', scene: 'bench' });
+    expect(long.scene).toBe('bench');
+    const short = normalizeScenario({ lens: 'p50', scene: 'field' });
+    expect(short.scene).toBe('field');
+  });
+
+  it('an explicit focusM always wins over the scene-based default', () => {
+    const s = normalizeScenario({ lens: 'p500', focusM: 8 });
+    expect(s.scene).toBe('field');
+    expect(s.focusM).toBe(8);
+  });
+
+  it('motion passes through a positive, finite speed unchanged', () => {
+    const s = normalizeScenario({ motion: { speedMps: 12.5 } });
+    expect(s.motion).toEqual({ speedMps: 12.5 });
+  });
+
+  it('motion normalizes a zero, negative or non-finite speed to "still" (undefined), same as omitting it', () => {
+    expect(normalizeScenario({ motion: { speedMps: 0 } }).motion).toBeUndefined();
+    expect(normalizeScenario({ motion: { speedMps: -3 } }).motion).toBeUndefined();
+    expect(normalizeScenario({ motion: { speedMps: NaN } }).motion).toBeUndefined();
+    expect(normalizeScenario({}).motion).toBeUndefined();
+  });
+});

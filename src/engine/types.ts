@@ -146,6 +146,9 @@ export interface Scenario {
   scene: string;                // synthetic scene id
   lux?: number;                 // scene illuminance override
   cct?: number;                 // illuminant color temperature override, K
+  /** The scene's moving subject (scenes.ts's own `movingBillboardIds`), shifting laterally (+x, image
+   *  horizontal) at this speed during the exposure. Absent, or 0, means the scene is still. */
+  motion?: { speedMps: number };
 }
 
 // ---- sensor --------------------------------------------------------------------------------------------------------
