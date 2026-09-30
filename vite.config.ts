@@ -18,5 +18,6 @@ export default defineConfig({
   // tsconfig.json already opts into `"types": ["vitest/globals"]` (describe/it/expect typed as ambient globals);
   // this turns that on at runtime too, matching what that typing promises. Not in workstream E1a's owned paths,
   // but every workstream's *.test.ts needs it to run at all -- see needs_from_lead in E1a's report.
-  test: { include: ['src/**/*.test.ts'], globals: true },
+  // 30 s: several tests realize every lens (a few seconds each on a CI runner); the 5 s default failed on GitHub
+  test: { include: ['src/**/*.test.ts'], globals: true, testTimeout: 30000 },
 });
