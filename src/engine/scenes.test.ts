@@ -130,7 +130,7 @@ describe('field scene: its sun-glint highlights actually land inside the rendere
         expect(glintLuma, `${lens} ${glint.id} luma vs background`).toBeGreaterThan(bgLuma * 1.2);
       }
     }
-  });
+  }, 120_000); // two full 600x400 renders: a few seconds here, 34 s on a GitHub runner (09/30/2026)
 });
 
 describe('bench scene names its moving billboard (SHARED CONTRACT)', () => {
