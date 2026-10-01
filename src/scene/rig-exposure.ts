@@ -57,6 +57,8 @@ export interface ExposureDeps {
   afterFire?(): void;
   /** Sets part of the scenario (the equal-exposure control trades aperture for shutter through it). */
   set?(partial: Partial<Scenario>): void;
+  /** Optional override for deterministic tests; otherwise follows the reader's system preference. */
+  reducedMotion?(): boolean;
 }
 
 type Seg = { name: 'release' | 'exposure' | 'return'; realMs: number; factor: number };
@@ -73,7 +75,13 @@ export function createExposure(d: ExposureDeps) {
     <div class="rx-well"><i></i></div>
     <div class="rx-row rx-sub"><span class="rx-wellk">Well 0% full</span><span class="rx-snr"></span></div>
     <div class="rx-row rx-motion" hidden><span>Streak on the sensor</span><b class="rx-motion-v"></b></div>
-    <div class="rx-tl" hidden></div>
+    <div class="rx-tl" aria-hidden="true" hidden></div>
+    <div class="rx-playback" hidden>
+      <div class="rx-playback-head"><button type="button" class="btn rx-pause">Pause</button><span class="rx-phase"></span></div>
+      <label class="rx-scrub-label">Inspect the exposure<input class="rx-scrub" type="range" min="0" max="1000" step="1" value="0" aria-label="Exposure playback position"></label>
+      <span class="rx-time"></span>
+    </div>
+    <p class="rx-status" role="status" aria-live="polite"></p>
     <div class="rx-eq">
       <div class="rx-eq-k"><span>Equal exposure</span><span>±1 stop</span></div>
       <div class="rx-eq-btns">
@@ -88,6 +96,8 @@ export function createExposure(d: ExposureDeps) {
   q('.rx-fire').addEventListener('click', () => fire());
   q('.rx-eq-open').addEventListener('click', () => equalStep(-1));
   q('.rx-eq-close').addEventListener('click', () => equalStep(1));
+  q('.rx-pause').addEventListener('click', () => { if (paused || !running) resume(); else pause(); });
+  q('.rx-scrub').addEventListener('input', (event) => seek(Number((event.target as HTMLInputElement).value) / 1000));
 
   // ---- equal exposure (docs/PANE.md, "Light and exposure"): one stop of aperture for one stop of shutter ---------
   // The f-number moves by exactly the square root of 2 and the time by exactly 2, so the light per pixel, which goes
@@ -146,35 +156,31 @@ export function createExposure(d: ExposureDeps) {
   let tlPlan = '';
   function renderTimeline(m: Model, elapsedVis: number) {
     const tl = q('.rx-tl');
-    if (!running) { tl.hidden = true; return; }
+    if (!shotModel) { tl.hidden = true; return; }
     tl.hidden = false;
     const total = segs.reduce((a, x) => a + x.realMs * x.factor, 0) || 1;
     const label = (x: Seg) => (x.name === 'release' ? 'Mirror up' : x.name === 'return' ? 'Mirror down' : `Open ${fmtShutterS(m.scenario.shutter)}`);
     const html = segs.map((x) => `<span>${label(x)}</span>`).join('') + '<i></i>';
     const plan = `${segs.length}:${total.toFixed(0)}:${m.scenario.shutter}`;
     if (tlPlan !== plan) { tl.innerHTML = html; tlPlan = plan; }
-    // equal cells, so each label fits; the playhead crosses each cell in that segment's own played time
-    let acc0 = 0, pos = segs.length;
-    for (let i = 0; i < segs.length; i++) {
-      const v = segs[i].realMs * segs[i].factor;
-      if (elapsedVis < acc0 + v) { pos = i + Math.max(0, (elapsedVis - acc0) / v); break; }
-      acc0 += v;
-    }
+    // Segment widths and the native slider share the same visual-time coordinate.
     const head = tl.querySelector('i') as HTMLElement | null;
-    if (head) head.style.left = `calc(${((pos / Math.max(1, segs.length)) * 100).toFixed(2)}% - 1px)`;
+    if (head) head.style.left = `calc(${(Math.min(1, elapsedVis / total) * 100).toFixed(2)}% - 1px)`;
     let acc = 0;
     const spans = tl.querySelectorAll ? tl.querySelectorAll('span') : [];
     segs.forEach((x, i) => {
       const v = x.realMs * x.factor;
       const on = elapsedVis >= acc && elapsedVis < acc + v;
       const el = spans[i] as HTMLElement | undefined;
-      if (el) el.className = on ? 'on' : '';
+      if (el) { el.className = on ? 'on' : ''; el.style.flex = String(v) + ' 1 0'; }
       acc += v;
     });
   }
 
   // ---- the photons: one Points buffer, each dot riding a traced path ---------------------------------------------
-  const MAX = 900;
+  // Rounding the weight to a power of ten permits up to DOTS*sqrt(10) dots in a shot.
+  // Every dot must fit even when a very short shutter emits them all during one visual flight.
+  const MAX = Math.ceil(DOTS * Math.sqrt(10));
   const pos = new Float32Array(MAX * 3);
   const col = new Float32Array(MAX * 3);
   const geo = new THREE.BufferGeometry();
@@ -187,7 +193,7 @@ export function createExposure(d: ExposureDeps) {
   dots.frustumCulled = false;
   dots.name = 'photons';
   d.group.add(dots);
-  const live: { path: number; born: number }[] = [];
+  let visibleDots = 0;
   let pathCache: { pts: THREE.Vector3[]; color: THREE.Color; len: number[]; total: number }[] = [];
 
   // ---- the mechanism nodes -------------------------------------------------------------------------------------
@@ -268,16 +274,30 @@ export function createExposure(d: ExposureDeps) {
     r.position.y = rb.y - rCenter + (1 - rearClosed) * h;
   }
 
-  // ---- the timeline --------------------------------------------------------------------------------------------
+  // ---- inspectable timeline: one playhead drives mechanisms, counters and photon positions -----------------------
   let segs: Seg[] = [];
-  let t0 = 0;
-  let running = false;
+  let running = false; // includes paused inspection: keep the camera's cutaway and mirror under our control
+  let paused = false;
+  let elapsedVis = 0;
+  let anchorNow = 0;
+  let anchorElapsed = 0;
+  let shotModel: Model | null = null;
+  let shotBody: 'dslr' | 'mirrorless' = 'dslr';
   let dotPhotons = 1;
-  let dotBudget = 1;           // total/dotPhotons: how many dots at that rounded weight the shot actually represents
-  let shownFraction = 1;       // how much of the exposure the counter shows (1 = the finished shot)
+  let dotBudget = 0;
+  let shownFraction = 1;
+  let mirrorIsUp = false;
+  let enabled = true;
+  let notice = '';
+  let heldUp = false;
 
-  function plan(m: Model) {
-    const dslr = d.body() === 'dslr';
+  const prefersReducedMotion = () => d.reducedMotion?.() ??
+    (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true);
+  const totalVisualMs = () => segs.reduce((sum, seg) => sum + seg.realMs * seg.factor, 0);
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+  function plan(m: Model): Seg[] {
+    const dslr = shotBody === 'dslr';
     const shutterMs = m.scenario.shutter * 1000;
     const expReal = shutterMs + (dslr ? CURTAIN_MS : READOUT_MS);
     const s: Seg[] = [];
@@ -287,141 +307,251 @@ export function createExposure(d: ExposureDeps) {
     return s;
   }
 
-  // off while the view has failed to load: nothing to fire or trade under an error (R1-10)
-  let enabled = true;
+  function segmentAt(elapsed: number) {
+    let start = 0;
+    for (const seg of segs) {
+      const end = start + seg.realMs * seg.factor;
+      if (elapsed < end) return { seg, local: Math.max(0, (elapsed - start) / seg.factor) };
+      start = end;
+    }
+    return null;
+  }
+
+  function setMirror(up: boolean) {
+    if (mirrorIsUp !== up) { mirrorIsUp = up; d.onMirror?.(up); }
+  }
+
+  function restoreMechanism() {
+    if (pivot) pivot.rotation.x = heldUp ? mirrorUp : 0;
+    if (base.size) curtainPose(0, 0);
+    if (scan) scan.visible = false;
+    setMirror(heldUp);
+  }
+
+  function announce(text: string) {
+    if (notice === text) return;
+    notice = text;
+    q('.rx-status').textContent = text;
+  }
+
+  function renderPlayback() {
+    const hasShot = !!shotModel;
+    hud.setAttribute('data-playback', !hasShot ? 'idle' : running ? paused ? 'paused' : 'playing' : 'complete');
+    q('.rx-playback').hidden = !hasShot;
+    const fireButton = q('.rx-fire') as HTMLButtonElement;
+    fireButton.disabled = !enabled || (running && !paused);
+    fireButton.setAttribute('data-armed', String(running && !paused));
+    const fireLabel = hasShot ? 'Replay' : 'Fire';
+    const fireHtml = fireLabel + ' <kbd>F</kbd>';
+    if (fireButton.innerHTML !== fireHtml) fireButton.innerHTML = fireHtml;
+    fireButton.title = fireLabel + ' the exposure (F)';
+    const pauseButton = q('.rx-pause') as HTMLButtonElement;
+    pauseButton.hidden = !running;
+    pauseButton.disabled = !enabled || !hasShot;
+    pauseButton.textContent = !running ? 'Replay' : paused ? 'Resume' : 'Pause';
+    pauseButton.setAttribute('aria-label', !running ? 'Replay the exposure' : paused ? 'Resume exposure playback' : 'Pause exposure playback');
+    if (!shotModel) { q('.rx-tl').hidden = true; return; }
+    const total = totalVisualMs();
+    const position = segmentAt(elapsedVis);
+    const phase = !position ? 'Shot complete' : position.seg.name === 'release' ? 'Mirror up' : position.seg.name === 'return' ? 'Mirror down' : 'Sensor exposure';
+    q('.rx-phase').textContent = phase;
+    const shutterMs = shotModel.scenario.shutter * 1000;
+    const digits = shutterMs < 1 ? 3 : shutterMs < 100 ? 2 : 0;
+    const timeText = (shownFraction * shutterMs).toFixed(digits) + ' / ' + shutterMs.toFixed(digits) + ' ms · center row';
+    q('.rx-time').textContent = timeText;
+    const scrub = q('.rx-scrub') as HTMLInputElement;
+    scrub.disabled = !enabled;
+    scrub.value = String(Math.round(clamp01(elapsedVis / total) * 1000));
+    scrub.setAttribute('aria-valuetext', phase + ', ' + timeText + (paused ? ', paused' : ''));
+    renderTimeline(shotModel, elapsedVis);
+  }
+
+  // Stop before accepting a new model: otherwise a half-finished old shot could use new exposure settings.
+  function cancel(message = '') {
+    const wasRunning = running;
+    running = false; paused = false; shotModel = null;
+    segs = []; elapsedVis = 0; dotBudget = 0; shownFraction = 1;
+    visibleDots = 0; geo.setDrawRange(0, 0); pathCache = [];
+    restoreMechanism();
+    d.badge.hide();
+    hud.setAttribute('data-fired', 'false');
+    announce(message);
+    renderPlayback();
+    const model = d.model();
+    if (model) readout(model);
+    if (wasRunning) d.afterFire?.();
+  }
+
+  /** Can be called as soon as the parent receives a new model, or checked on the next frame. */
+  function syncModel() {
+    if (shotModel && (d.model() !== shotModel || d.body() !== shotBody)) {
+      cancel('Settings changed. Fire to inspect the new exposure.');
+    }
+  }
+
   function setEnabled(on: boolean) {
     enabled = on;
-    const b = q('.rx-fire') as HTMLButtonElement;
-    if (!running) b.disabled = !on;
+    if (!on) cancel();
+    renderPlayback();
     const m = d.model();
     if (m) renderEq(m);
-    else for (const e of hud.querySelectorAll<HTMLButtonElement>('.rx-eq-btns .btn')) e.disabled = !on;
   }
 
   function fire() {
+    syncModel();
     const m = d.model();
-    if (!m || running || !enabled) return;
-    d.beforeFire?.();
+    if (!m || (running && !paused) || !enabled) return;
+    if (!running) d.beforeFire?.();
     rigMechanism();
+    shotModel = m;
+    shotBody = d.body();
     segs = plan(m);
     const total = m.exposure.photonsMidGray * m.sensor.widthPx * m.sensor.heightPx;
     dotPhotons = 10 ** Math.round(Math.log10(Math.max(1, total / DOTS)));
-    // the badge advertises "1 dot ~= dotPhotons photons": emit exactly total/dotPhotons dots (not the fixed
-    // DOTS target used only to choose a round dotPhotons scale), or the dots disagree with their own badge
-    // by whatever rounding the log10 step introduced (Astra-6 finding C3: 700 dots at 1e10 photons/dot was
-    // 2.93x the model's actual 2.39e12-photon total).
     dotBudget = total / dotPhotons;
-    pathCache = d.paths().map((p) => {
+    pathCache = d.paths().filter((p) => p.pts.length > 1).map((p) => {
+      // A shot owns its paths, so a new ray fan cannot mutate a paused frame.
+      const pts = p.pts.map((point) => point.clone());
       const len = [0];
-      for (let i = 1; i < p.pts.length; i++) len.push(len[i - 1] + p.pts[i].distanceTo(p.pts[i - 1]));
-      return { ...p, len, total: len[len.length - 1] };
+      for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + pts[i].distanceTo(pts[i - 1]));
+      return { pts, color: p.color.clone(), len, total: len[len.length - 1] };
     });
-    live.length = 0;
-    emitCarry = 0;               // reset between shots: a leftover fractional carry must not roll into the next
-    t0 = performance.now();
-    running = true;
-    shownFraction = 0;
-    q('.rx-fire').setAttribute('disabled', '');
-    q('.rx-fire').setAttribute('data-armed', 'true');
+    elapsedVis = 0; anchorElapsed = 0; anchorNow = performance.now();
+    running = true; paused = prefersReducedMotion();
     hud.setAttribute('data-fired', 'true');
+    announce(paused ? 'Ready to inspect. Reduced motion is on; scrub or choose Resume.' : 'Exposure playing. Pause or drag the timeline to inspect it.');
+    renderFrame();
   }
 
-  let emitCarry = 0;
-  let mirrorIsUp = false;
-  function tick(now: number, dt: number) {
-    const m = d.model();
-    if (!m) return;
-    if (running) {
-      // where are we: walk the segments in visual time
-      let tv = now - t0;
-      let seg: Seg | null = null, local = 0;
-      for (const s of segs) {
-        const vis = s.realMs * s.factor;
-        if (tv < vis) { seg = s; local = tv / s.factor; break; }
-        tv -= vis;
-      }
-      const dslr = d.body() === 'dslr';
-      const shutterMs = m.scenario.shutter * 1000;
-      if (!seg) {
-        running = false;
-        shownFraction = 1;
-        d.badge.hide();
-        if (enabled) q('.rx-fire').removeAttribute('disabled');
-        q('.rx-fire').setAttribute('data-armed', 'false');
-        if (pivot) pivot.rotation.x = heldUp ? mirrorUp : 0;
-        curtainPose(0, 0);
-        mirrorIsUp = heldUp;
-        d.onMirror?.(heldUp);
-        if (scan) scan.visible = false;
-        renderTimeline(m, 0);
-        d.afterFire?.();
-      } else {
-        const what = seg.name === 'exposure' ? `Exposure ${fmtShutter(m.scenario.shutter)}` : seg.name === 'release' ? 'Mirror up' : 'Mirror down';
-        // each part keeps its words together, so a narrow screen breaks the badge only at a '·' (R2-01)
-        const parts = [what, factorText(seg.factor), ...(seg.name === 'exposure' ? [`1 dot ≈ ${fmtPow10(dotPhotons)} photons`] : [])];
-        d.badge.show(badgeJoin(...parts).toUpperCase());
-        renderTimeline(m, now - t0);
-        if (seg.name === 'release') {
-          if (pivot) pivot.rotation.x = mirrorUp * smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.8)));
-          curtainPose(0, 0);
-          shownFraction = 0;
-        } else if (seg.name === 'exposure') {
-          if (pivot) pivot.rotation.x = mirrorUp;
-          if (!mirrorIsUp) { mirrorIsUp = true; d.onMirror?.(true); }
-          if (dslr) {
-            // the front curtain crosses in CURTAIN_MS; the rear follows exactly one shutter time later
-            curtainPose(Math.min(1, local / CURTAIN_MS), Math.max(0, Math.min(1, (local - shutterMs) / CURTAIN_MS)));
-          } else if (scan) {
-            // rows reset top to bottom, then read out top to bottom one exposure time later
-            const px = new THREE.Box3().setFromObject(d.node('pixelArray')!);
-            const phase = local < READOUT_MS ? local / READOUT_MS : local >= shutterMs ? Math.min(1, (local - shutterMs) / READOUT_MS) : -1;
-            scan.visible = phase >= 0 && phase <= 1;
-            scan.position.y = px.max.y - phase * (px.max.y - px.min.y);
-          }
-          // the center row (where the on-axis light lands) is open from half a traverse in, for exactly the shutter
-          const traverse = dslr ? CURTAIN_MS : READOUT_MS;
-          const open0 = traverse / 2, open1 = open0 + shutterMs;
-          shownFraction = Math.max(0, Math.min(1, (local - open0) / shutterMs));
-          // emit dotBudget dots over the whole exposure, at dotBudget/shutterMs per real ms of shutter-open
-          // time -- integrated against this tick's EXACT overlap with [open0, open1], not an all-or-nothing
-          // per-tick test, so a tick that only partly overlaps the open window (its first or last) is not
-          // over- or under-counted (Astra-6 finding C3).
-          const stepReal = Math.min(dt, 50) / seg.factor;
-          const overlap = Math.max(0, Math.min(open1, local) - Math.max(open0, local - stepReal));
-          if (overlap > 0 && pathCache.length) {
-            emitCarry += (dotBudget / shutterMs) * overlap;
-            while (emitCarry >= 1 && live.length < MAX) { emitCarry -= 1; live.push({ path: Math.floor(Math.random() * pathCache.length), born: now }); }
-          }
-        } else {
-          shownFraction = 1;
-          if (mirrorIsUp) { mirrorIsUp = false; d.onMirror?.(false); }
-          if (dslr) curtainPose(1, 1);
-          if (pivot) pivot.rotation.x = mirrorUp * (1 - smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.6))));
-        }
-      }
+  function pause() {
+    syncModel();
+    if (!running || paused || !shotModel) return;
+    // Freeze the last displayed frame; no invisible advance between the click and the next render.
+    paused = true;
+    announce('Playback paused. Drag the timeline or use its arrow keys to inspect.');
+    renderFrame();
+  }
+
+  function resume() {
+    syncModel();
+    if (!shotModel || !enabled) return;
+    if (!running || elapsedVis >= totalVisualMs()) {
+      fire();
+      if (!running) return;
     }
-    // move the dots
+    paused = false; anchorElapsed = elapsedVis; anchorNow = performance.now();
+    announce('Exposure playing.');
+    renderFrame();
+  }
+
+  /** 0..1 of the displayed timeline. Seeking always pauses, including native keyboard range changes. */
+  function seek(fraction: number) {
+    syncModel();
+    if (!shotModel || !enabled || !Number.isFinite(fraction)) return;
+    if (!running) d.beforeFire?.();
+    running = true; paused = true;
+    elapsedVis = clamp01(fraction) * totalVisualMs();
+    announce('Playback paused. Drag the timeline or use its arrow keys to inspect.');
+    renderFrame();
+  }
+
+  function renderPhotons() {
     let n = 0;
-    for (let i = live.length - 1; i >= 0; i--) {
-      const age = (now - live[i].born) / FLIGHT_MS;
-      if (age >= 1) { live.splice(i, 1); continue; }
+    if (shotModel && running && pathCache.length) {
+      const exposureSeg = segs.find((seg) => seg.name === 'exposure')!;
+      const release = segs.find((seg) => seg.name === 'release');
+      const openStart = (release ? release.realMs * release.factor : 0) +
+        (shotBody === 'dslr' ? CURTAIN_MS : READOUT_MS) / 2 * exposureSeg.factor;
+      const openDuration = shotModel.scenario.shutter * 1000 * exposureSeg.factor;
+      // Emission ordinal -> exact birth time. Reconstruct only dots still in flight, independent of tick
+      // size/history. Backwards seeking restores the same wavelengths, positions and count without re-sampling.
+      const emitted = Math.min(Math.floor(dotBudget), Math.max(0, Math.floor((elapsedVis - openStart) / openDuration * dotBudget + 1e-9)));
+      const expired = Math.max(0, Math.floor((elapsedVis - FLIGHT_MS - openStart) / openDuration * dotBudget + 1e-9));
+      for (let ordinal = expired + 1; ordinal <= emitted && n < MAX; ordinal++) {
+        const born = openStart + ordinal / dotBudget * openDuration;
+        const age = Math.max(0, (elapsedVis - born) / FLIGHT_MS);
+        // A stable spread through the supplied traced paths, not a new random choice on each seek.
+        const pathIndex = Math.floor(((ordinal * 0.6180339887498949) % 1) * pathCache.length);
+        const c = pathCache[pathIndex];
+        const distance = age * c.total;
+        let k = 1;
+        while (k < c.len.length - 1 && c.len[k] < distance) k++;
+        const a = c.pts[k - 1], b = c.pts[k];
+        const f = (distance - c.len[k - 1]) / Math.max(1e-9, c.len[k] - c.len[k - 1]);
+        pos[n * 3] = a.x + (b.x - a.x) * f;
+        pos[n * 3 + 1] = a.y + (b.y - a.y) * f;
+        pos[n * 3 + 2] = a.z + (b.z - a.z) * f;
+        col[n * 3] = c.color.r; col[n * 3 + 1] = c.color.g; col[n * 3 + 2] = c.color.b;
+        n++;
+      }
     }
-    for (const p of live) {
-      const c = pathCache[p.path];
-      if (!c) continue;
-      const s = ((now - p.born) / FLIGHT_MS) * c.total;
-      let k = 1;
-      while (k < c.len.length - 1 && c.len[k] < s) k++;
-      const a = c.pts[k - 1], b = c.pts[k];
-      const f = (s - c.len[k - 1]) / Math.max(1e-9, c.len[k] - c.len[k - 1]);
-      pos[n * 3] = a.x + (b.x - a.x) * f; pos[n * 3 + 1] = a.y + (b.y - a.y) * f; pos[n * 3 + 2] = a.z + (b.z - a.z) * f;
-      col[n * 3] = c.color.r; col[n * 3 + 1] = c.color.g; col[n * 3 + 2] = c.color.b;
-      n++;
-    }
+    visibleDots = n;
     geo.setDrawRange(0, n);
     geo.attributes.position.needsUpdate = true;
     geo.attributes.color.needsUpdate = true;
+  }
+
+  function renderFrame() {
+    const m = shotModel;
+    if (!m) return;
+    const position = segmentAt(elapsedVis);
+    const dslr = shotBody === 'dslr';
+    if (scan) scan.visible = false;
+    if (!position) {
+      shownFraction = 1;
+      restoreMechanism();
+      if (paused) d.badge.show('PAUSED · SHOT COMPLETE'); else d.badge.hide();
+    } else {
+      const { seg, local } = position;
+      const what = seg.name === 'exposure' ? 'Exposure ' + fmtShutter(m.scenario.shutter) : seg.name === 'release' ? 'Mirror up' : 'Mirror down';
+      const parts = [...(paused ? ['Paused'] : []), what, factorText(seg.factor),
+        ...(seg.name === 'exposure' ? ['1 dot ≈ ' + fmtPow10(dotPhotons) + ' photons'] : [])];
+      d.badge.show(badgeJoin(...parts).toUpperCase());
+      if (seg.name === 'release') {
+        if (pivot) pivot.rotation.x = mirrorUp * smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.8)));
+        setMirror(false);
+        curtainPose(0, 0);
+        shownFraction = 0;
+      } else if (seg.name === 'exposure') {
+        if (pivot) pivot.rotation.x = mirrorUp;
+        setMirror(true);
+        const shutterMs = m.scenario.shutter * 1000;
+        if (dslr) {
+          curtainPose(Math.min(1, local / CURTAIN_MS), clamp01((local - shutterMs) / CURTAIN_MS));
+        } else if (scan) {
+          const px = new THREE.Box3().setFromObject(d.node('pixelArray')!);
+          const phase = local < READOUT_MS ? local / READOUT_MS : local >= shutterMs ? Math.min(1, (local - shutterMs) / READOUT_MS) : -1;
+          scan.visible = phase >= 0 && phase <= 1;
+          scan.position.y = px.max.y - phase * (px.max.y - px.min.y);
+        }
+        const open0 = (dslr ? CURTAIN_MS : READOUT_MS) / 2;
+        shownFraction = clamp01((local - open0) / shutterMs);
+      } else {
+        shownFraction = 1;
+        setMirror(false);
+        if (dslr) curtainPose(1, 1);
+        if (pivot) pivot.rotation.x = mirrorUp * (1 - smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.6))));
+      }
+    }
+    renderPhotons();
+    renderPlayback();
     readout(m);
+  }
+
+  function tick(now: number, _dt: number) {
+    syncModel();
+    const m = d.model();
+    if (!m) return;
+    if (running && shotModel) {
+      if (paused) return; // seek/pause already rendered the frozen frame; keep all buffers untouched
+      if (!paused) elapsedVis = Math.min(totalVisualMs(), anchorElapsed + Math.max(0, now - anchorNow));
+      const finished = !paused && elapsedVis >= totalVisualMs();
+      if (finished) running = false;
+      renderFrame();
+      if (finished) { announce('Shot complete. Replay or drag the timeline to inspect.'); d.afterFire?.(); }
+    } else {
+      readout(m);
+    }
   }
 
   function readout(m: Model) {
@@ -452,13 +582,12 @@ export function createExposure(d: ExposureDeps) {
     // shown only while the shot plays (R1-08); the dots' own speed is disclosed here (Astra-6 C4)
     const cap = q('.rx-cap');
     cap.hidden = !running;
-    const text = (d.body() === 'dslr' ? 'Time is slowed to show the mirror and the curtains.' : 'Time is slowed to show the rows reset and read out.')
+    const text = (d.body() === 'dslr' ? 'Playback reveals the mirror and the curtains.' : 'Playback reveals the rows resetting and reading out.')
       + ' Real light crosses the camera in under a nanosecond, so the dots fly at a much slower visual speed you can follow.';
     if (cap.textContent !== text) cap.textContent = text;
   }
 
   /** Holds the mirror up (or lets it down) outside a shot, e.g. while the sensor is being looked at. */
-  let heldUp = false;
   function liftMirror(up: boolean) {
     heldUp = up;
     if (running) return;
@@ -468,17 +597,38 @@ export function createExposure(d: ExposureDeps) {
     if (mirrorIsUp !== up) { mirrorIsUp = up; d.onMirror?.(up); }
   }
 
+  function reset() {
+    heldUp = false;
+    cancel();
+    // Releasing a loaded body must not leave its mirror inside a stale, rotated hinge group.
+    if (pivot) {
+      pivot.rotation.x = 0;
+      const parent = pivot.parent;
+      if (parent) for (const child of [...pivot.children]) parent.attach(child);
+      pivot.removeFromParent(); pivot = null;
+    }
+    base.clear();
+    if (scan) { scan.removeFromParent(); scan = null; }
+  }
+
   return {
     el: hud,
     fire,
     tick,
+    pause,
+    resume,
+    seek,
+    cancel,
+    syncModel,
     liftMirror,
     equalStep,
     setEnabled,
     running: () => running,
-    reset() { pivot = null; base.clear(); if (scan) { scan.removeFromParent(); scan = null; } running = false; live.length = 0; shownFraction = 1; heldUp = false; mirrorIsUp = false; d.badge.hide(); },
-    state: () => ({ running, dotPhotons, shownFraction, dots: live.length, segs: segs.map((s) => ({ ...s })) }),
-    dispose() { geo.dispose(); mat.dispose(); hud.remove(); },
+    reset,
+    state: () => ({ running, paused, status: running ? paused ? 'paused' : 'playing' : shotModel ? 'complete' : 'idle',
+      elapsedVisMs: elapsedVis, durationVisMs: totalVisualMs(), progress: totalVisualMs() ? elapsedVis / totalVisualMs() : 0,
+      dotPhotons, shownFraction, dots: visibleDots, segs: segs.map((s) => ({ ...s })) }),
+    dispose() { reset(); geo.dispose(); mat.dispose(); dots.removeFromParent(); hud.remove(); },
   };
 }
 

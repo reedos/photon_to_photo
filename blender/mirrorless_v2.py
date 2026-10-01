@@ -53,8 +53,12 @@ def shell():
     # 28 degrees; the rear flush over the viewfinder housing. The DSLR's prism is taller, wider and keeps a nose.
     RAKE = (ZP - ZS - 1) * math.tan(math.radians(28))
     hump = K.solid('hump',
-                   K.fp([(-33, ZS - 3), (33, ZS - 3), (33, ZS + 0.5), (31, ZS + 2.5), (27, ZP), (-27, ZP), (-31, ZS + 2.5), (-33, ZS + 0.5)],
-                        [0, 0, 1.5, 3, 3, 3, 3, 1.5]),
+                   # A narrow flat seat supports the hot shoe; the roof falls toward rounded shoulders (R3-FID-1).
+                   # These silhouette offsets are illustrative, within the same published body envelope.
+                   K.fp([(-33, ZS - 3), (33, ZS - 3), (33, ZS + 0.5), (31, ZS + 2.5),
+                         (27, ZP - 3.5), (18, ZP - 0.8), (11, ZP), (-11, ZP), (-18, ZP - 0.8),
+                         (-27, ZP - 3.5), (-31, ZS + 2.5), (-33, ZS + 0.5)],
+                        [0, 0, 1.5, 3, 4, 8, 3, 3, 8, 4, 3, 1.5]),
                    K.fp([(-28, YF - 3), (28, YF - 3), (32, YF - 9), (32, YB - 2), (-32, YB - 2), (-32, YF - 9)],
                         [3, 3, 3, 2, 2, 3]),
                    K.fp([(YB - 2, ZS - 3), (YF - 3, ZS - 3), (YF - 3, ZS + 1), (YF - 3 - RAKE, ZP), (YB - 2, ZP)],

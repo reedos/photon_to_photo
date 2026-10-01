@@ -17,7 +17,8 @@ button { font: inherit; color: inherit; }
 .eyebrow, .kicker { margin: 0; font: 400 11px/1.5 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 /* the topbar is fixed (position: fixed, see below), so the page's own content has to clear it itself -- IF's
    own version of this rule lives on its hero section, which is this page's first section instead */
-.wrap { padding-block: calc(var(--bar) + 24px) 96px; display: grid; gap: 56px; }
+/* Let wide children (including the photo picker) scroll within the page without widening its grid track. */
+.wrap { padding-block: calc(var(--bar) + 24px) 96px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; }
 .wrap > .page-head + .stage { margin-top: -24px; }
 .wrap > :not(.stage) { width: min(1320px, 100% - 2 * var(--gutter)); margin-inline: auto; }
 

@@ -1,5 +1,5 @@
 // The page shell around the 3D view: the settings (body, lens, aperture, focus, shutter, ISO, format), the level strip
-// (level 1, the camera, and its three deep dives), the part list and its cards, the stat row with evidence chips, and
+// (the camera and its three inspection views), the part list and its cards, the stat row with evidence chips, and
 // the final image (docked live in the view, and in full below it). Reads Model only through engine-api.ts's compute();
 // never computes physics itself. Queries the DOM ids index.html defines and wires them once.
 import type { Model } from '../engine/model-types';
@@ -8,7 +8,9 @@ import { bodyForLens, compute, defaultFocusM, lensSummary, LINEUP, LONG_LENS_MM,
 import { motionPartial, motionSpeedOf } from './motion';
 import { currentRender, publishRender, requestRender, type RenderView } from './render-client';
 import { emit, on } from './bus';
-import { type PieceId, type Store } from './store';
+import { type AppState, type PieceId, type Store } from './store';
+import { cameraPart, PART_LABELS } from './inspection';
+import { FOCUS_STEPS, focusStepValue, focusStepFromMm } from './focus-control';
 import type { Stage } from './stage';
 import { fmtDistance, fmtFno, fmtShutter, fmtPitch, fmtDims, fmtNum, fmtRange } from './units';
 
@@ -17,7 +19,7 @@ import { fmtDistance, fmtFno, fmtShutter, fmtPitch, fmtDims, fmtNum, fmtRange } 
 // claim about the lens or sensor; no evidence chip applies to a control's step size.
 import { THIRD_STOP_FNO, THIRD_STOP_SHUTTER, THIRD_STOP_ISO } from './stops';
 // Focus distance: log scale from the lens's closest focus (mm) to infinity; infinity is the slider's top step.
-const FOCUS_STEPS = 64;
+
 
 const FORMAT_OPTIONS: { id: FormatId; label: string; sub: string }[] = [
   { id: 'ff', label: 'Full frame', sub: '36 × 24 mm' },
@@ -32,8 +34,8 @@ const BODIES: { id: BodyId; label: string; sub: string }[] = [
 /** When the body changes, the lens that plays the same part on the other mount (the 35, the 50, the long tele). */
 const COUNTERPART: Record<string, string> = { s35: 'z35', n50: 'm50', n500: 'z800', n500fl: 'z800', z35: 's35', m50: 'n50', z800: 'n500' };
 
-// Level 1 is the product; levels 2-4 are its deep dives (docs/PANE.md: the first-pass pieces become detail modes of
-// the one camera). They keep their own URLs (?piece=lens|cone|loupe) and their place in the strip, marked as dives.
+// The camera is the parent view. Its optics/focus/pixel inspections retain legacy URLs and renderer hooks,
+// while the store carries the selected camera part for return navigation and sharing.
 const PIECES: { id: PieceId; n: number; title: string; short: string; color: string; lede: string; deep: boolean }[] = [
   { id: 'camera', n: 1, title: 'The camera', short: 'Camera', color: 'var(--accent)', deep: false,
     lede: 'Turn the focus ring and the glass inside moves. Close the aperture and less light gets in. Every ray on screen is traced through the lens design.' },
@@ -57,20 +59,6 @@ function nearestIndex(arr: number[], v: number): number {
   let best = 0, bestD = Infinity;
   for (let i = 0; i < arr.length; i++) { const d = Math.abs(arr[i] - v); if (d < bestD) { bestD = d; best = i; } }
   return best;
-}
-
-/** log scale from `minMm` to infinity, FOCUS_STEPS positions, the last one being infinity. */
-function focusStepValue(minMm: number, step: number): number | null {
-  if (step >= FOCUS_STEPS - 1) return null;
-  const maxMm = 20000; // 20 m -- effectively infinity for a camera's focus throw; the slider's last step is true infinity
-  const t = step / (FOCUS_STEPS - 2);
-  return Math.exp(Math.log(minMm) + t * (Math.log(maxMm) - Math.log(minMm)));
-}
-function focusStepFromMm(minMm: number, mm: number | null): number {
-  if (mm === null) return FOCUS_STEPS - 1;
-  const maxMm = 20000;
-  const t = (Math.log(Math.max(minMm, mm)) - Math.log(minMm)) / (Math.log(maxMm) - Math.log(minMm));
-  return Math.round(Math.min(1, Math.max(0, t)) * (FOCUS_STEPS - 2));
 }
 
 /** A lens's picker label: focal length, maximum aperture, and PF when it has a phase Fresnel element. */
@@ -240,7 +228,7 @@ export function mountUI(store: Store, stage: Stage): void {
   dom.scIso.addEventListener('input', () => store.set({ iso: THIRD_STOP_ISO[Number(dom.scIso.value)] }));
   dom.scFocus.addEventListener('input', () => {
     const minFocusMm = lastModel ? lastModel.lens.closestFocusMm : 300;
-    const mm = focusStepValue(minFocusMm, Number(dom.scFocus.value));
+    const mm = focusStepValue(minFocusMm, lastModel?.lens.focalLength ?? 50, Number(dom.scFocus.value));
     store.set({ focusM: mm === null ? null : mm / 1000 });
   });
 
@@ -252,14 +240,23 @@ export function mountUI(store: Store, stage: Stage): void {
     btn.className = p.deep ? 'step deep' : 'step';
     btn.style.setProperty('--c', p.color);
     btn.dataset.piece = p.id;
-    btn.setAttribute('aria-label', p.deep ? `Deep dive: ${p.title}` : p.title);
-    btn.innerHTML = `<span class="top"><span class="n">${p.n}</span><span class="t"><span class="t-long">${p.title}</span><span class="t-short">${p.short}</span></span>`
-      + `${p.deep ? '<span class="tag">Deep dive</span>' : ''}</span>`
+    const label = { camera: 'Camera', lens: 'Optics', cone: 'Focus', loupe: 'Pixel' }[p.id];
+    btn.setAttribute('aria-label', p.deep ? `Inspect ${label.toLowerCase()}` : 'Camera overview');
+    btn.innerHTML = `<span class="top"><span class="t">${label}</span></span>`
       + `<span class="meta"><span class="dot"></span><span class="sub"></span></span>`;
-    btn.addEventListener('click', () => store.setPiece(p.id));
+    btn.addEventListener('click', () => p.id === 'camera' ? store.showCameraOverview() : store.setPiece(p.id));
     dom.steps.appendChild(btn);
     stepEls.set(p.id, btn);
   }
+
+  const inspectionBar = document.createElement('div');
+  inspectionBar.className = 'inspection-context';
+  inspectionBar.hidden = true;
+  inspectionBar.innerHTML = '<button type="button" class="inspection-back"></button><span aria-hidden="true">/</span><span class="inspection-here"></span><span class="inspection-note">Same shot, a closer look</span>';
+  dom.steps.after(inspectionBar);
+  const inspectionBack = inspectionBar.querySelector<HTMLButtonElement>('button')!;
+  inspectionBack.addEventListener('click', () => store.setPiece('camera'));
+  dom.steps.setAttribute('aria-label', 'Camera inspection views');
 
   // ---- the top bar: site sections; the menu closes after a pick; the current section is underlined -------------
   dom.menuBtn.addEventListener('click', () => {
@@ -269,8 +266,8 @@ export function mountUI(store: Store, stage: Stage): void {
   dom.topnav.addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest('a')) { dom.topnav.classList.remove('open'); dom.menuBtn.setAttribute('aria-expanded', 'false'); }
   });
-  // Scroll-spy: the section whose top has passed a line a third of the way down the screen is the current one; on a
-  // deep dive "The camera" is not what is on screen, so nothing is marked while the stage is (R1-11).
+  // Scroll-spy: the section whose top has passed a line a third of the way down the screen is current.
+  // Camera inspections remain inside the same camera section.
   const navLinks = [...dom.topnav.querySelectorAll<HTMLAnchorElement>('a[data-nav]')];
   const spy = () => {
     const line = window.innerHeight * 0.33;
@@ -281,7 +278,6 @@ export function mountUI(store: Store, stage: Stage): void {
     }
     // the last section can never reach the line: at the foot of the page it is the one on screen (R2-05)
     if (document.getElementById('finalimg') && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) key = 'finalimg';
-    if (key === 'stage' && store.get().piece !== 'camera') key = '';
     for (const a of navLinks) a.setAttribute('aria-current', String(a.dataset.nav === key));
   };
   window.addEventListener('scroll', spy, { passive: true });
@@ -358,6 +354,7 @@ export function mountUI(store: Store, stage: Stage): void {
     listOpen = false;
     stage.selectPin(null);
     const s = store.get();
+    if (s.piece === 'camera') store.setCameraPart(null);
     renderPanel(compute(s.scenario), s.piece);
   }
   dom.cardX.addEventListener('click', clearSelection);
@@ -390,8 +387,9 @@ export function mountUI(store: Store, stage: Stage): void {
     dom.scFno.value = String(nearestIndex(fnoSteps, scenario.fno));
     dom.scFnoV.textContent = fmtFno(scenario.fno);
 
-    dom.scFocus.value = String(focusStepFromMm(model.lens.closestFocusMm, scenario.focusM === null ? null : scenario.focusM * 1000));
+    dom.scFocus.value = String(focusStepFromMm(model.lens.closestFocusMm, model.lens.focalLength, scenario.focusM === null ? null : scenario.focusM * 1000));
     dom.scFocusV.textContent = fmtDistance(model.focus.distanceMm);
+    dom.scFocus.setAttribute('aria-valuetext', dom.scFocusV.textContent);
 
     dom.scShutter.value = String(nearestIndex(THIRD_STOP_SHUTTER, scenario.shutter));
     dom.scShutterV.textContent = fmtShutter(scenario.shutter);
@@ -429,10 +427,14 @@ export function mountUI(store: Store, stage: Stage): void {
 
   function renderPanel(model: Model, activePiece: PieceId) {
     const p = PIECES.find((x) => x.id === activePiece)!;
-    dom.pieceCounter.textContent = p.deep ? `Deep dive · 0${p.n} / 0${PIECES.length}` : `0${p.n} / 0${PIECES.length}`;
-    dom.pageTitle.textContent = p.title;
-    dom.pageLede.textContent = p.lede;
-    dom.intro.textContent = activePiece === 'camera' ? 'Pick a part to see how it works.' : 'Pick a part of this deep dive to read about it.';
+    dom.pieceCounter.textContent = 'From light to a photograph';
+    dom.pageTitle.textContent = PIECES[0].title;
+    dom.pageLede.textContent = PIECES[0].lede;
+    dom.intro.textContent = activePiece === 'camera' ? 'Pick a part to see how it works.' : p.lede;
+    inspectionBar.hidden = !p.deep;
+    const parent = store.get().cameraPart;
+    inspectionBack.textContent = `← Camera${parent ? ` · ${PART_LABELS[parent]}` : ''}`;
+    inspectionBar.querySelector('.inspection-here')!.textContent = p.title;
     const probes = stage.activeProbes();
     if (selectedPartId && !probes.some((pr) => pr.id === selectedPartId)) selectedPartId = null;
     const collapsed = !!selectedPartId && !listOpen && !phone?.matches;
@@ -454,7 +456,8 @@ export function mountUI(store: Store, stage: Stage): void {
       btn.addEventListener('click', () => {
         selectedPartId = selectedPartId === probe.id ? null : probe.id;
         listOpen = false;
-        stage.selectPin(selectedPartId);
+        if (store.get().piece === 'camera') store.setCameraPart(cameraPart(selectedPartId));
+        else stage.selectPin(selectedPartId);
         renderPanel(model, store.get().piece);
         // on a phone the list sits under the view: bring the camera back up so the flight and the sheet show together
         if (phone?.matches && selectedPartId) dom.stageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -546,12 +549,23 @@ export function mountUI(store: Store, stage: Stage): void {
     }, 120);
   }
 
-  function render(scenario: Scenario, piece: PieceId) {
-    const model = compute(scenario);
+  let renderedState: AppState | null = null;
+  function render(state: AppState) {
+    const { scenario, piece } = state;
+    const shotChanged = !renderedState || renderedState.scenario !== scenario;
+    const viewChanged = !renderedState || renderedState.piece !== piece;
+    const parentChanged = !renderedState || renderedState.cameraPart !== state.cameraPart;
+    const model = shotChanged || !lastModel ? compute(scenario) : lastModel;
     lastModel = model;
     const p = PIECES.find((x) => x.id === piece)!;
     stage.showPiece(piece, p.title, subFor(model, piece));
-    stage.update(model, scenario);
+    if (shotChanged || viewChanged) stage.update(model, scenario);
+    if (viewChanged) { selectedPartId = null; listOpen = false; }
+    if (piece === 'camera' && (viewChanged || parentChanged)) {
+      selectedPartId = state.cameraPart;
+      stage.selectPin(selectedPartId);
+    }
+    renderedState = state;
     // the camera's own chrome: the Rays chip and the docked final image belong to level 1
     dom.raysChip.hidden = piece !== 'camera';
     dom.dock.hidden = piece !== 'camera';
@@ -560,7 +574,7 @@ export function mountUI(store: Store, stage: Stage): void {
     renderScenario(scenario, model);
     renderSteps(model, piece);
     renderPanel(model, piece);
-    renderFinalImage(model);
+    if (shotChanged) renderFinalImage(model);
   }
 
   // the camera's own controls (the focus ring, the command dials) set the scenario through the bus
@@ -571,7 +585,8 @@ export function mountUI(store: Store, stage: Stage): void {
     selectedPartId = e.id;
     listOpen = false;
     const state = store.get();
+    if (state.piece === 'camera') store.setCameraPart(cameraPart(e.id));
     renderPanel(compute(state.scenario), state.piece);
   });
-  store.subscribe((state) => render(state.scenario, state.piece));
+  store.subscribe(render);
 }

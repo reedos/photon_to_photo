@@ -4,6 +4,7 @@
 // guarded so it is safe to import from a non-browser environment (vitest's default node test environment).
 import type { FormatId, Scenario } from '../engine/types';
 import { normalizeScenario } from './engine-api';
+import { cameraPart, inspectionParent, type CameraPart } from './inspection';
 
 // 'camera' is docs/PANE.md's one pane (the whole camera and lens); the three first-pass pieces stay as its details
 export type PieceId = 'camera' | 'lens' | 'cone' | 'loupe';
@@ -12,6 +13,7 @@ export const PIECE_IDS: PieceId[] = ['camera', 'lens', 'cone', 'loupe'];
 export interface AppState {
   scenario: Scenario;
   piece: PieceId;
+  cameraPart: CameraPart | null;
 }
 
 type Listener = (state: AppState) => void;
@@ -51,7 +53,7 @@ const VALID_PIECES = new Set<PieceId>(PIECE_IDS);
 
 /** Reads a query string (with or without its leading "?") into a partial scenario plus the active piece. Every
  *  field is optional; normalizeScenario (engine-api.ts) fills and clamps whatever is missing or out of range. */
-export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>; piece?: PieceId } {
+export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>; piece?: PieceId; cameraPart: CameraPart | null } {
   const params = new URLSearchParams(search);
   const scenario: Partial<Scenario> = {};
   const lens = params.get('lens');
@@ -74,7 +76,7 @@ export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>
   if (subject) { const v = Number(subject); if (Number.isFinite(v) && v > 0) scenario.subjectM = v; }
   const pieceRaw = params.get('piece');
   const piece = pieceRaw && VALID_PIECES.has(pieceRaw as PieceId) ? (pieceRaw as PieceId) : undefined;
-  return { scenario, piece };
+  return { scenario, piece, cameraPart: cameraPart(params.get('part')) };
 }
 
 /** The inverse of scenarioFromQuery: a full normalized state -> the query string that reproduces it. */
@@ -90,6 +92,7 @@ export function queryFromState(state: AppState): string {
   if (state.scenario.motion) p.set('motion', String(state.scenario.motion.speedMps));
   if (state.scenario.subjectM !== undefined) p.set('subject', String(Number(state.scenario.subjectM.toFixed(2))));
   p.set('piece', state.piece);
+  if (state.cameraPart) p.set('part', state.cameraPart);
   return `?${p.toString()}`;
 }
 
@@ -99,10 +102,10 @@ export class Store {
   private state: AppState;
   private listeners = new Set<Listener>();
 
-  constructor(initial?: { scenario?: Partial<Scenario>; piece?: PieceId }) {
+  constructor(initial?: { scenario?: Partial<Scenario>; piece?: PieceId; cameraPart?: CameraPart | null }) {
     const scenario = normalizeScenario(initial?.scenario ?? {});
     const piece = initial?.piece ?? 'camera';
-    this.state = { scenario, piece };
+    this.state = { scenario, piece, cameraPart: inspectionParent(piece, initial?.cameraPart ?? null) };
   }
 
   get(): AppState {
@@ -116,13 +119,28 @@ export class Store {
     const merged = { ...this.state.scenario, ...partial };
     if (('lens' in partial || 'scene' in partial) && !('subjectM' in partial)) delete merged.subjectM;
     const scenario = normalizeScenario(merged);
-    this.state = { scenario, piece: piece ?? this.state.piece };
+    const nextPiece = piece ?? this.state.piece;
+    this.state = { scenario, piece: nextPiece, cameraPart: inspectionParent(nextPiece, this.state.cameraPart) };
     this.notify();
   }
 
   setPiece(piece: PieceId): void {
     if (piece === this.state.piece) return;
-    this.state = { ...this.state, piece };
+    this.state = { ...this.state, piece, cameraPart: inspectionParent(piece, this.state.cameraPart) };
+    this.notify();
+  }
+
+  /** Select a camera part without changing the shot or re-rendering its sensor image. */
+  setCameraPart(part: CameraPart | null): void {
+    if (part === this.state.cameraPart) return;
+    this.state = { ...this.state, cameraPart: part };
+    this.notify();
+  }
+
+  /** The overview button leaves a detail; the inspection breadcrumb returns to its parent instead. */
+  showCameraOverview(): void {
+    if (this.state.piece === 'camera' && this.state.cameraPart === null) return;
+    this.state = { ...this.state, piece: 'camera', cameraPart: null };
     this.notify();
   }
 
@@ -144,6 +162,5 @@ export class Store {
 /** The app's one store, seeded from the page's own URL when running in a browser. */
 export function createStore(): Store {
   const initialSearch = inBrowser ? window.location.search : '';
-  const { scenario, piece } = scenarioFromQuery(initialSearch);
-  return new Store({ scenario, piece });
+  return new Store(scenarioFromQuery(initialSearch));
 }

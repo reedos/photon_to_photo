@@ -217,18 +217,11 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rig-teach.left span { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
 .rig-teach.right span { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
 .rig-teach i { width: 40px; height: 40px; }
-/* On a narrow stage the label moves out past the model's own silhouette (R3-FID-3): a longer offset, with a short
-   hairline leader back to the ring so it still reads as that control's own label. */
-.rig-teach.far.down span { top: calc(100% + 38px); }
-.rig-teach.far.up span { bottom: calc(100% + 38px); }
-.rig-teach.far.left span { right: calc(100% + 40px); }
-.rig-teach.far.right span { left: calc(100% + 40px); }
-.rig-teach.far.down::after, .rig-teach.far.up::after, .rig-teach.far.left::after, .rig-teach.far.right::after {
-  content: ""; position: absolute; background: var(--accent); opacity: .55; }
-.rig-teach.far.down::after { left: 50%; top: 100%; width: 1px; height: 32px; transform: translateX(-50%); }
-.rig-teach.far.up::after { left: 50%; bottom: 100%; width: 1px; height: 32px; transform: translateX(-50%); }
-.rig-teach.far.left::after { top: 50%; right: 100%; width: 34px; height: 1px; transform: translateY(-50%); }
-.rig-teach.far.right::after { top: 50%; left: 100%; width: 34px; height: 1px; transform: translateY(-50%); }
+/* Phone labels choose free space outside the model and connect back to their controls. */
+.rig-teach.placed span { right: auto; bottom: auto; transform: none; }
+.rig-teach-leader { display: none; }
+.rig-teach.placed .rig-teach-leader { display: block; position: absolute; left: 20px; top: 20px; height: 1px;
+  background: var(--accent); opacity: .55; transform-origin: 0 50%; }
 @keyframes teach { 50% { transform: scale(1.12); } }
 @media (prefers-reduced-motion: reduce) { .rig-teach i { animation: none; } }
 

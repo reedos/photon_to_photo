@@ -6,6 +6,7 @@
 import type { Vec3 } from './types';
 import type { Billboard, PointHighlight, Scene } from './scene';
 import { siemensStarReflectance, daylightSpd } from './scene';
+import { fieldBirdCoverage, fieldBirdReflectance, fieldBranchCoverage, fieldBranchReflectance } from './field-patterns';
 import { COLOR_CHECKER_NAMES, colorCheckerReflectance, DAYLIGHT_LAMBDAS, DAYLIGHT_S0, DAYLIGHT_S1, DAYLIGHT_S2, tableSpectrum } from './data';
 
 // ---- illuminant: daylight at an arbitrary CCT, built from the real CIE S0/S1/S2 basis ----------------------
@@ -222,78 +223,26 @@ export const FIELD_LUX = 20000; // assumed: daylight, brighter than the bench's 
                                  // (see BENCH_LUX's own doc comment above for the same round-number reasoning)
 export const FIELD_SUBJECT_DISTANCE_MM = 30_000; // 30 m: the perched subject's own distance
 
-// A warm, mid-value brown standing in for plumage/bark — the ColorChecker's own real, cited "dark skin" and
-// "light skin" patches (data/color/colorchecker24-babelcolor.json) are reused rather than invented spectra:
-// a tan/brown reflectance is a plausible stand-in for both a small bird's back/wings and a bark-covered
-// branch, and a paler patch for its underside — the same "use a real cited patch as a stand-in" choice
-// bench()'s own foreground (the ColorChecker's "orange") already makes. Evidence: assumed (a stand-in
-// choice, not a measured bird/bark reflectance).
-const PLUMAGE_BACK = colorCheckerReflectance('dark skin');
-const PLUMAGE_BELLY = colorCheckerReflectance('light skin');
-const BARK = colorCheckerReflectance('dark skin');
-const FOLIAGE = colorCheckerReflectance('foliage'); // the ColorChecker's own dark, desaturated green patch
+// ColorChecker pigments are assumed stand-ins for natural materials, not measured bird/bark spectra.
+const FOLIAGE = colorCheckerReflectance('foliage');
 const GRASS = colorCheckerReflectance('yellow green');
 
-/**
- * The perched subject: a small (about 250 mm tall) billboard, two-tone (a darker back, a lighter belly,
- * split at `bellyLine` in local v) — a coarse but real spectral stand-in for a bird's plumage, procedural
- * like every reflectance function in this file (never a photo — BRIEF.md).
- */
+/** A generic songbird with deterministic spectral plumage, eye, bill, flight feathers and gripping feet.
+ *  The geometry remains a flat billboard, not a measured species or a 3D animal. All markings are assumed. */
 function birdBillboard(id: string, center: Vec3, widthMm: number, heightMm: number): Billboard {
-  // A perched songbird's silhouette in mm about the billboard center (x right, y up), facing right: an egg-shaped
-  // body, a round head, a short beak, a tail angled down behind, a darker folded wing and a dark eye. Procedural
-  // and illustrative (evidence: assumed); the proportions are a generic passerine's, not any one species.
-  const mm = (u: number, v: number) => [u * widthMm, v * heightMm] as const;
-  const inEllipse = (x: number, y: number, cx: number, cy: number, rx: number, ry: number, rot = 0) => {
-    const c = Math.cos(rot), s = Math.sin(rot);
-    const dx = x - cx, dy = y - cy;
-    const a = (dx * c + dy * s) / rx, b = (-dx * s + dy * c) / ry;
-    return a * a + b * b <= 1;
-  };
-  const body = (x: number, y: number) => inEllipse(x, y, -4, -8, 52, 74, -0.28);
-  const head = (x: number, y: number) => inEllipse(x, y, 18, 78, 34, 32);
-  const beak = (x: number, y: number) => x >= 46 && x <= 70 && Math.abs(y - 76) <= 7 * (1 - (x - 46) / 24);
-  const tail = (x: number, y: number) => {
-    // a tapering wedge from under the body's back down and to the left
-    const t = (y + 60) / -62; // 0 at y = -60, 1 at y = -122
-    return t >= 0 && t <= 1 && Math.abs(x - (-30 - 22 * t)) <= 16 - 7 * t;
-  };
-  const wing = (x: number, y: number) => inEllipse(x, y, -16, 2, 36, 50, -0.45);
-  const eye = (x: number, y: number) => inEllipse(x, y, 30, 84, 5, 5);
-  const EYE = () => 0.03;
   return {
-    id,
-    center,
-    normal: [0, 0, -1],
-    up: [0, 1, 0],
-    widthMm,
-    heightMm,
-    coverage: (u: number, v: number) => {
-      const [x, y] = mm(u, v);
-      return body(x, y) || head(x, y) || beak(x, y) || tail(x, y);
-    },
-    reflectanceAt: (u: number, v: number) => {
-      const [x, y] = mm(u, v);
-      if (eye(x, y)) return EYE;
-      if (beak(x, y)) return BARK;
-      if (wing(x, y) || tail(x, y)) return BARK;
-      // the pale breast on the front-lower half of the body, the darker back and crown elsewhere
-      return x > -10 && y < 40 ? PLUMAGE_BELLY : PLUMAGE_BACK;
-    },
+    id, center, normal: [0, 0, -1], up: [0, 1, 0], widthMm, heightMm,
+    coverage: (u, v) => fieldBirdCoverage(u * widthMm, v * heightMm),
+    reflectanceAt: (u, v) => fieldBirdReflectance(u * widthMm, v * heightMm),
   };
 }
 
-/** A branch: a tapered, gently curving band with one side twig (evidence: assumed, illustrative). */
-function branchBillboard(id: string, center: Vec3, widthMm: number, heightMm: number, reflectance: (nm: number) => number): Billboard {
+/** A tapered perch with deterministic bark grain, a knot and lichen-colored patches. Assumed illustration. */
+function branchBillboard(id: string, center: Vec3, widthMm: number, heightMm: number): Billboard {
   return {
     id, center, normal: [0, 0, -1], up: [0, 1, 0], widthMm, heightMm,
-    coverage: (u: number, v: number) => {
-      const mid = 0.1 * Math.sin(u * 5.5);
-      const half = 0.26 - 0.16 * Math.abs(u);
-      const twig = u > 0.18 && u < 0.36 && Math.abs(v - (mid + (u - 0.18) * 2.2)) < 0.07;
-      return Math.abs(v - mid) < half || twig;
-    },
-    reflectanceAt: () => reflectance,
+    coverage: fieldBranchCoverage,
+    reflectanceAt: fieldBranchReflectance,
   };
 }
 
@@ -346,7 +295,7 @@ function field(): Scene {
   const subject = birdBillboard('field-subject', [0, 20, FIELD_SUBJECT_DISTANCE_MM], 180, 250);
   // The perch: a horizontal bark-colored strip just below the subject, wide enough to read as a branch
   // under it at every focal length this scene targets.
-  const branch = branchBillboard('field-branch', [0, -110, FIELD_SUBJECT_DISTANCE_MM + 40], 900, 70, BARK);
+  const branch = branchBillboard('field-branch', [0, -110, FIELD_SUBJECT_DISTANCE_MM + 40], 900, 70);
 
   const backgroundDistMm = 150_000; // 150 m
   const background = dappledFoliageBillboard('field-background', [0, 0, backgroundDistMm], 150_000, 100_000);

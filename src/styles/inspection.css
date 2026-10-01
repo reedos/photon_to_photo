@@ -1,0 +1,28 @@
+/* One camera, with inspections that keep their place in the shot. */
+.steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.step { padding: 15px 20px; }
+.step .top { gap: 0; }
+.step .t, .step.deep .t { font-size: 17px; }
+.step .meta { margin-top: 6px; }
+.inspection-context {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px;
+  padding: 10px 20px; border-bottom: 1px solid var(--line);
+  color: var(--muted); font: 500 12px/1.5 var(--mono);
+  background: var(--surface);
+}
+.inspection-context[hidden] { display: none; }
+.inspection-back {
+  border: 0; background: none; color: var(--accent); cursor: pointer;
+  padding: 5px 0; font: inherit;
+}
+.inspection-back:hover { color: var(--ink); }
+.inspection-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.inspection-here { color: var(--ink); }
+.inspection-note { margin-left: auto; font-size: 11px; color: var(--faint); }
+@media (max-width: 760px) {
+  .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .step { min-height: 48px; padding: 12px 6px; }
+  .step .t, .step.deep .t { font-size: 14px; }
+  .inspection-context { padding: 7px 12px; gap: 4px 8px; font-size: 11px; }
+  .inspection-note { display: none; }
+}

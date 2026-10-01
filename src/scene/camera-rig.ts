@@ -140,8 +140,14 @@ export const build: BuildPiece = (ctx) => {
   const sleeveMat = new THREE.MeshStandardMaterial({ color: 0x141518, metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide });
   const sleeve = new THREE.Group();
   sleeve.name = 'focus-sleeve';
-  const sleeveFull = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 72, 1, true), sleeveMat);
-  const sleeveHalf = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 36, 1, true, 0, Math.PI), sleeveMat);
+  // An illustrative two-stage drawtube: a broader lens-side section and a recessed body-side section.
+  // The overlap and turned shoulders give a long extension a mechanical shape; its travel remains engine-driven.
+  const sleeveProfile = [
+    [1.05, -0.5], [1.08, -0.48], [1.08, -0.08], [1.07, -0.06],
+    [1, -0.06], [1, 0.48], [0.98, 0.5], [0.94, 0.5], [0.94, -0.5], [1.05, -0.5],
+  ].map(([r, z]) => new THREE.Vector2(r, z));
+  const sleeveFull = new THREE.Mesh(new THREE.LatheGeometry(sleeveProfile, 72), sleeveMat);
+  const sleeveHalf = new THREE.Mesh(new THREE.LatheGeometry(sleeveProfile, 36, 0, Math.PI), sleeveMat);
   for (const m of [sleeveFull, sleeveHalf]) { m.rotation.x = Math.PI / 2; sleeve.add(m); }
   // a thin lit lip where the sleeve meets the body, so the sleeve reads as the barrel's own inner tube run out, not
   // an adapter (R2-FID-5); full round outside, half in the cutaway like the sleeve
@@ -503,6 +509,26 @@ export const build: BuildPiece = (ctx) => {
       for (const n of ['lensMount', 'lensMountCut', 'mountCollar']) { const o = lensRoot.getObjectByName(n); if (o) b.expandByObject(o); }
       lensRoot.position.z = saved; lensRoot.updateMatrixWorld(true);
       sleeveR = b.isEmpty() ? 30 : Math.max(b.max.x, b.max.y) * 0.96;
+      // The exterior drawtube fits the rear barrel, not just the narrower bayonet throat (R3-FID-2).
+      // Sample its rear-most outer vertices in lens coordinates; the bore stays clear and glass is untouched.
+      const barrel = lensRoot.getObjectByName('barrel');
+      if (barrel) {
+        const rear: THREE.Vector3[] = [];
+        let rearZ = -Infinity;
+        barrel.traverse(o => {
+          const mesh = o as THREE.Mesh;
+          const positions = mesh.geometry?.attributes.position;
+          if (!positions) return;
+          mesh.updateWorldMatrix(true, false);
+          for (let i = 0; i < positions.count; i++) {
+            const p = lensRoot!.worldToLocal(new THREE.Vector3().fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld));
+            rear.push(p); rearZ = Math.max(rearZ, p.z);
+          }
+        });
+        let rearRadius = 0;
+        for (const p of rear) if (p.z > rearZ - 2) rearRadius = Math.max(rearRadius, Math.hypot(p.x, p.y));
+        if (rearRadius > 0) sleeveR = Math.max(sleeveR, rearRadius / 1.08);
+      }
       // the barrel's own paint, so the sleeve is part of the lens
       let paint: THREE.MeshStandardMaterial | null = null;
       lensRoot.getObjectByName('barrel')?.traverse((c) => { const m = (c as THREE.Mesh).material; if (!paint && m && !Array.isArray(m) && (m as THREE.MeshStandardMaterial).isMeshStandardMaterial) paint = m as THREE.MeshStandardMaterial; });
@@ -984,10 +1010,9 @@ export const build: BuildPiece = (ctx) => {
         const dir = new THREE.Vector3(-Math.sin(a), Math.sin(a) * 0.35, -Math.cos(a)).normalize();
         return { position: new THREE.Vector3(0, 0, epZ).addScaledVector(dir, dist), target: new THREE.Vector3(0, 0, epZ) };
       }
-      // side-on, the whole rig: the ring on the barrel, and the one point's cone running back to the sensor. On a
-      // phone the free strip above the sheet is short, and the default margin left the rig tiny with a band of empty
-      // black above it (R3-09): a tighter margin fills about 60% of the free width instead.
-      case 'focusRing': return fitBox(wholeRigBox(), side, phoneMq?.matches ? 0.78 : 1.08);
+      // Side-on, keep the whole path from the front element to the sensor visible. A margin below one zooms past
+      // the free rectangle and crops a long lens and body on phones; retain a small gutter around both endpoints.
+      case 'focusRing': return fitBox(wholeRigBox(), side, phoneMq?.matches ? 1.04 : 1.08);
       case 'lens': return fitBox(barrel, new THREE.Vector3(-0.62, 0.34, -0.71), 1.2);
       // the glass with its barrel around it: the whole stack in section, not a close-up among ghosted walls
       case 'glass': return fitBox(barrel.clone().union(boxOf(['glass'])), side, 1.12);
@@ -1086,7 +1111,7 @@ export const build: BuildPiece = (ctx) => {
         for (const [node, text, side] of [['focusRing', 'Drag · focus', 'down'], ['commandDialFront', 'Drag · aperture', 'left'], ['shutterButton', 'Press · fire', narrow ? 'right' : 'up']] as const) {
           const el = document.createElement('div');
           el.className = `rig-teach ${side}`;
-          el.innerHTML = `<i></i><span>${text}</span>`;
+          el.innerHTML = `<i></i><b class="rig-teach-leader" aria-hidden="true"></b><span>${text}</span>`;
           ctx.overlay.appendChild(el);
           marks.push({ node, text, side, el });
         }
@@ -1106,6 +1131,25 @@ export const build: BuildPiece = (ctx) => {
         // each label takes the first side that keeps it inside the view and off the labels placed before it
         type R = { l: number; t: number; r: number; b: number };
         const taken: R[] = [];
+        const narrow = w <= 760;
+        if (narrow) {
+          // Keep phone text outside the projected rig, including while the camera settles into its frame.
+          const box = wholeRigBox();
+          const model: R = { l: Infinity, t: Infinity, r: -Infinity, b: -Infinity };
+          for (const bx of [box.min.x, box.max.x]) for (const by of [box.min.y, box.max.y]) for (const bz of [box.min.z, box.max.z]) {
+            const p = new THREE.Vector3(bx, by, bz).project(ctx.camera);
+            const px = (p.x + 1) * w / 2, py = (1 - p.y) * h / 2;
+            model.l = Math.min(model.l, px - 6); model.r = Math.max(model.r, px + 6);
+            model.t = Math.min(model.t, py - 6); model.b = Math.max(model.b, py + 6);
+          }
+          taken.push(model);
+          const origin = ctx.overlay.getBoundingClientRect();
+          for (const el of ctx.overlay.parentElement!.querySelectorAll<HTMLElement>('.hud.tr, .hud.br, .hud.bl')) {
+            if (!el.offsetWidth || !el.offsetHeight) continue;
+            const r = el.getBoundingClientRect();
+            taken.push({ l: r.left - origin.left - 4, t: r.top - origin.top - 4, r: r.right - origin.left + 4, b: r.bottom - origin.top + 4 });
+          }
+        }
         const centers: { x: number; y: number; n: string }[] = [];
         for (const m of marks) {
           const o = assembly.getObjectByName(m.node);
@@ -1138,12 +1182,40 @@ export const build: BuildPiece = (ctx) => {
           m.el.style.left = `${x}px`;
           m.el.style.top = `${y}px`;
           centers.push({ x, y, n: m.node });
-          // On a narrow stage the model fills most of the width, so the default gap (26-28 px, sized for a desktop
-          // three-quarter view) still lands the label on the barrel or the body. Push it out to about a label-height
-          // instead, and draw a short leader back to the ring so the two stay connected (R3-FID-3).
-          const narrow = w < 560;
-          const gap = narrow ? 58 : 26, sideGap = narrow ? 62 : 28;
-          m.el.classList.toggle('far', narrow);
+          // A fixed phone offset still covers the body or barrel; place text in free space (R3-FID-3).
+          const label = m.el.querySelector('span')!;
+          const leader = m.el.querySelector<HTMLElement>('.rig-teach-leader')!;
+          m.el.classList.toggle('placed', narrow);
+          label.hidden = false;
+          if (narrow) {
+            // Measure the actual font, then choose the nearest free label slot. Rings stay on their controls.
+            const lw = label.offsetWidth, lh = label.offsetHeight;
+            const xs = [Math.max(8, Math.min(w - lw - 8, x - lw / 2))];
+            for (let left = 8; left <= w - lw - 8; left += 12) xs.push(left);
+            let best: R | undefined, score = Infinity;
+            for (let top = 64; top <= h - lh - 8; top += 8) for (const left of xs) {
+              const candidate = { l: left, t: top, r: left + lw, b: top + lh };
+              if (taken.some(q => candidate.l < q.r + 4 && q.l < candidate.r + 4 && candidate.t < q.b + 4 && q.t < candidate.b + 4)) continue;
+              const d = Math.hypot(left + lw / 2 - x, top + lh / 2 - y);
+              if (d < score) { best = candidate; score = d; }
+            }
+            label.hidden = !best;
+            leader.hidden = !best;
+            if (best) {
+              taken.push(best);
+              label.style.left = (best.l - x + 20) + 'px';
+              label.style.top = (best.t - y + 20) + 'px';
+              const dx = Math.max(best.l, Math.min(best.r, x)) - x;
+              const dy = Math.max(best.t, Math.min(best.b, y)) - y;
+              const length = Math.hypot(dx, dy), angle = Math.atan2(dy, dx);
+              leader.style.width = Math.max(0, length - 24) + 'px';
+              leader.style.transform = 'rotate(' + angle + 'rad) translateX(22px)';
+            }
+            continue;
+          }
+          label.style.removeProperty('left'); label.style.removeProperty('top');
+          leader.hidden = true;
+          const gap = 26, sideGap = 28;
           const lw = m.text.length * 8.2 + 16, lh = 22;
           const rect: Record<string, R> = {
             down: { l: x - lw / 2, t: y + gap, r: x + lw / 2, b: y + gap + lh },
@@ -1189,6 +1261,7 @@ export const build: BuildPiece = (ctx) => {
     probes: PROBES,
     update(model, scenario) {
       lastModel = model; lastScenario = scenario;
+      exposure.syncModel();
       // the part names follow the lens's body now, not when its model finishes loading, so the parts list never shows
       // the DSLR's "Shutter" for a mirrorless lens
       const bodyNow = bodyForLens(scenario.lens);
@@ -1222,6 +1295,7 @@ export const build: BuildPiece = (ctx) => {
       if (!everLoaded) reportProgress();
     },
     deactivate() {
+      exposure.pause();
       if (savedTone !== null) { r.toneMapping = savedTone; r.toneMappingExposure = savedExposure; }
       if (savedEnv !== undefined) ctx.scene.environment = savedEnv;
       viewSwitch.hidden = true;
@@ -1258,6 +1332,9 @@ export const build: BuildPiece = (ctx) => {
       },
       fire: () => exposure.fire(),
       exposure: () => exposure.state(),
+      exposurePause: () => exposure.pause(),
+      exposureResume: () => exposure.resume(),
+      exposureSeek: (fraction: number) => exposure.seek(fraction),
       /** Test hook: the focus distance (mm; null = infinity) a drag of the ring to `angle` sets. */
       ringTo: (angle: number) => (lastModel ? distanceForRingAngle(lastModel, angle) : undefined),
     },

@@ -257,6 +257,47 @@ describe('field scene silhouettes (billboard coverage)', () => {
   });
 });
 
+describe('the field subject has synthetic spectral detail', () => {
+  const field = getScene('field');
+  const bird = field.billboards.find((b) => b.id === 'field-subject')!;
+  const branch = field.billboards.find((b) => b.id === 'field-branch')!;
+  const plumage = (x: number, y: number, nm = 550) => bird.reflectanceAt(x / bird.widthMm, y / bird.heightMm)(nm);
+
+  it('keeps the dark eye readable against a pale cheek and the breast warmer than blue', () => {
+    expect(plumage(29, 82)).toBeLessThan(plumage(30, 68) / 3);
+    expect(plumage(25, -20, 650)).toBeGreaterThan(plumage(25, -20, 450));
+  });
+
+  it('has feather and bark contrast within a material, rather than uniform filled regions', () => {
+    const wing = [-32, -27, -22, -17, -12].map((x) => plumage(x, 8));
+    const bark = [-0.20, -0.15, -0.10, -0.05, 0, 0.05].map((u) => branch.reflectanceAt(u, 0.05)(550));
+    expect(Math.max(...wing) - Math.min(...wing)).toBeGreaterThan(0.01);
+    expect(Math.max(...bark) - Math.min(...bark)).toBeGreaterThan(0.01);
+  });
+
+  it('places gripping feet between the body and perch without filling the surrounding empty rectangle', () => {
+    expect(bird.coverage!(7 / 180, -117 / 250)).toBe(true);
+    expect(bird.coverage!(42 / 180, -117 / 250)).toBe(false);
+  });
+
+  it('is deterministic and conserves reflectance bounds across the visible spectrum', () => {
+    const again = getScene('field');
+    for (const material of [bird, branch]) {
+      const duplicate = again.billboards.find((b) => b.id === material.id)!;
+      for (let j = 0; j <= 20; j++) for (let i = 0; i <= 20; i++) {
+        const u = i / 20 - 0.5, v = j / 20 - 0.5;
+        if (!material.coverage!(u, v)) continue;
+        for (const nm of [400, 450, 500, 550, 600, 650, 700]) {
+          const r = material.reflectanceAt(u, v)(nm);
+          expect(r).toBeGreaterThanOrEqual(0);
+          expect(r).toBeLessThanOrEqual(1);
+          expect(duplicate.reflectanceAt(u, v)(nm)).toBe(r);
+        }
+      }
+    }
+  });
+});
+
 describe('a scenario-set subject distance (sceneFor, the real-photo comparison)', () => {
   // Geometry only: every getScene call builds fresh reflectance closures, so two scenes never deep-equal whole.
   const geom = (sc: ReturnType<typeof getScene>) => ({

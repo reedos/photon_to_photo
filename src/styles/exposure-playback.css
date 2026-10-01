@@ -1,0 +1,22 @@
+/* Native range and buttons keep a fired exposure inspectable with a mouse, touch or keyboard. */
+.rig-exposure .rx-playback { display: grid; gap: 7px; padding-top: 8px; border-top: 1px solid var(--line); }
+.rig-exposure .rx-playback[hidden] { display: none; }
+.rig-exposure .rx-playback-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rig-exposure .rx-pause { min-width: 76px; min-height: 36px; padding: 0 12px; font-size: 11px; }
+.rig-exposure .rx-phase { font: 500 11px/1.4 var(--mono); color: var(--ink); text-align: right; }
+.rig-exposure .rx-scrub-label { display: grid; gap: 1px; font-size: 11px; line-height: 1.4; color: var(--muted); }
+.rig-exposure .rx-scrub { display: block; width: 100%; min-width: 0; height: 30px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.rig-exposure .rx-scrub:focus-visible,
+.rig-exposure .rx-pause:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.rig-exposure .rx-time { font: 400 10.5px/1.5 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.rig-exposure .rx-status { margin: 0; font-size: 11px; line-height: 1.45; color: var(--faint); }
+.rig-exposure .rx-status:empty { display: none; }
+/* The settings trade is disabled during a shot; make room for its inspection controls. */
+.rig-exposure:is([data-playback="playing"], [data-playback="paused"]) .rx-eq { display: none; }
+@media (min-width: 761px) {
+  .hud.rail:has(.rig-exposure:is([data-playback="playing"], [data-playback="paused"])) .fi-dock { display: none; }
+}
+@media (pointer: coarse), (max-width: 760px) {
+  .rig-exposure .rx-pause { min-height: 44px; }
+  .rig-exposure .rx-scrub { height: 44px; }
+}
