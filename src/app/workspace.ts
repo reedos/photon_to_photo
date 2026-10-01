@@ -1,3 +1,4 @@
+import { siteNavigation, mountSiteNavigation } from './site-nav';
 import type { Store } from './store';
 
 const el = (id: string) => document.getElementById(id)!;
@@ -11,12 +12,26 @@ export function buildWorkspace(): void {
   toolbar.innerHTML = `<label>Camera<select id="kit-body" aria-label="Camera body"></select></label>
     <label>Lens<select id="kit-lens" aria-label="Lens"></select></label>
     <label>Scene<select id="kit-scene" aria-label="Scene"></select></label>
-    <div id="studio-actions"></div>`;
+    <details class="view-menu"><summary aria-label="View menu">•••</summary><div id="studio-actions"></div></details>`;
   stage.prepend(toolbar);
   const viewer = el('viewer');
   const exposure = document.createElement('div');
   exposure.id = 'studio-exposure';
   viewer.append(exposure);
+  const transport = document.createElement('nav');
+  transport.className = 'part-nav';
+  transport.setAttribute('aria-label', 'Part navigation');
+  transport.innerHTML = '<button type="button" class="btn" id="part-prev" aria-label="Previous part">‹ <span>Previous</span></button><button type="button" class="btn" id="part-overview">Overview</button><button type="button" class="btn" id="part-next" aria-label="Next part"><span>Next</span> ›</button><span id="part-position" role="status" aria-live="polite">Overview</span>';
+  el('hud-btns-phone').prepend(transport);
+  const door = document.createElement('button');
+  door.type = 'button'; door.id = 'card-go'; door.className = 'btn go'; door.hidden = true;
+  el('card-t').after(door);
+  const narrow = matchMedia('(max-width: 760px)');
+  const placeDoor = () => {
+    if (narrow.matches) document.querySelector('.parts-head')!.append(door);
+    else el('card-t').after(door);
+  };
+  placeDoor(); narrow.addEventListener('change', placeDoor);
   const sidebar = document.createElement('aside');
   sidebar.className = 'studio-sidebar';
   sidebar.setAttribute('aria-label', 'Photo and settings');
@@ -28,7 +43,7 @@ export function buildWorkspace(): void {
   tabs.setAttribute('role', 'tablist');
   tabs.setAttribute('aria-label', 'Explore the camera');
   tabs.innerHTML = `<button type="button" role="tab" id="tab-controls" aria-controls="scenario" aria-selected="true">Controls</button>
-    <button type="button" role="tab" id="tab-explain" aria-controls="studio-explain" aria-selected="false" tabindex="-1">How it works</button>`;
+    <button type="button" role="tab" id="tab-explain" aria-controls="studio-explain" aria-selected="false" tabindex="-1">Parts</button>`;
   const controls = el('scenario');
   controls.setAttribute('role', 'tabpanel');
   controls.setAttribute('aria-labelledby', 'tab-controls');
@@ -69,11 +84,14 @@ export function buildWorkspace(): void {
   photo.querySelector('.finalimg-card')!.append(photoHint);
   sidebar.append(photo, tabs, controls, panel);
   stage.querySelector('.body')!.append(sidebar);
-  el('topnav').innerHTML = '<a class="navlink" href="#stage-section" data-nav="stage" aria-current="true">Explore</a><a class="navlink" href="#rp-card">Real photos</a><a class="navlink" href="./models.html">Sources & models</a>';
+  el('topnav').innerHTML = siteNavigation();
 }
 
 /** Reuse the original buttons' actions, keeping a single path for scenario changes. */
 export function mountWorkspace(store: Store): void {
+  mountSiteNavigation(true);
+  el('share-btn').textContent = 'Share this view';
+  el('studio-actions').insertAdjacentHTML('beforeend', '<a class="btn" href="#rp-card">Real photo comparison</a><a class="btn" href="./reference.html?page=story">How to explore</a>');
   const selectors = ['body', 'lens', 'scene'].map((name) => {
     const select = el(`kit-${name}`) as HTMLSelectElement;
     const group = el(`sc-${name}`);
@@ -89,6 +107,7 @@ export function mountWorkspace(store: Store): void {
       tab.setAttribute('aria-selected', String(i === index));
       tab.tabIndex = i === index ? 0 : -1;
       panels[i].hidden = i !== index;
+      document.querySelector<HTMLElement>('.studio-sidebar')!.dataset.pane = index === 0 ? 'controls' : 'parts';
     });
   }
   tabs.forEach((tab, index) => {
@@ -116,10 +135,9 @@ export function mountWorkspace(store: Store): void {
     }
     if (state.cameraPart && state.cameraPart !== lastPart) {
       activate(1);
-      const card = el('card');
-      if (!card.hidden) panels[1].scrollTop += card.getBoundingClientRect().top - panels[1].getBoundingClientRect().top - 12;
+
     }
-    if (!state.cameraPart && lastPart) activate(0);
+
     lastPart = state.cameraPart;
   });
 }

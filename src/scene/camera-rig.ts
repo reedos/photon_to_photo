@@ -412,7 +412,10 @@ export const build: BuildPiece = (ctx) => {
     } catch { /* drawing compiles on demand anyway */ }
     if (rigKey !== want) return;
     if (!everLoaded) { everLoaded = true; ctx.bus.emit('piece-loading', { id: 'camera', loading: false }); }
-    fitDive(frame());
+    // A shared part link or lens/body change may select a part before the GLB arrives.
+    // Reapply it to the new meshes and frame that part, not the whole camera.
+    if (detail) openDetail(detail);
+    else fitDive(frame());
     if (group.visible) teach.start();
   }
 

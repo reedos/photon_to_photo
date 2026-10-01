@@ -10,6 +10,7 @@ import { currentRender, publishRender, requestRender, type RenderView } from './
 import { emit, on } from './bus';
 import { type AppState, type PieceId, type Store } from './store';
 import { cameraPart, PART_LABELS } from './inspection';
+import { adjacentPart, insideView, VIEW_LABELS } from './part-navigation';
 import { FOCUS_STEPS, focusStepValue, focusStepFromMm } from './focus-control';
 import type { Stage } from './stage';
 import { fmtDistance, fmtFno, fmtShutter, fmtPitch, fmtDims, fmtNum, fmtRange } from './units';
@@ -133,8 +134,7 @@ export function splitTitle(title: string): { title: string; sub: string | null }
 export function mountUI(store: Store, stage: Stage): void {
   const dom = queryDom();
   let selectedPartId: string | null = null;
-  let listOpen = false;
-  let cardShownFor: string | null = null;   // the card is scrolled into view once per selection, not on every render
+  let shownCard: string | null = null;
 
   // ---- body and lens: two groups, the lens group showing only the lenses that mount on the chosen body ----------
   for (const b of BODIES) {
@@ -299,7 +299,7 @@ export function mountUI(store: Store, stage: Stage): void {
   };
   const placeButtons = () => {
     const actions = document.getElementById('studio-actions');
-    if (actions) { (phone?.matches ? dom.hudBtnsPhone : actions).append(dom.hudBtns); dom.hudBtnsPhone.append(dom.hint); }
+    if (actions) { actions.append(dom.hudBtns); dom.hudBtnsPhone.append(dom.hint); }
     else if (phone?.matches) { dom.hudBtnsPhone.append(dom.hudBtns, dom.hint); }
     else { dom.hudTr.append(dom.hudBtns, dom.hint); }
     setHint();
@@ -313,7 +313,10 @@ export function mountUI(store: Store, stage: Stage): void {
   phone?.addEventListener('change', placeDock);
   document.getElementById('veil-reload')?.addEventListener('click', () => location.reload());
 
-  dom.resetView.addEventListener('click', () => stage.resetView());
+  dom.resetView.addEventListener('click', () => {
+    if (store.get().piece === 'camera' && selectedPartId) stage.selectPin(selectedPartId);
+    else stage.resetView();
+  });
   let toastTimer = 0;
   function toast(text: string, select = false, ms = 4000) {
     dom.toast.textContent = text;
@@ -350,10 +353,33 @@ export function mountUI(store: Store, stage: Stage): void {
   dom.dock.addEventListener('click', () => document.getElementById('finalimg')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   // ---- the part list and its card ---------------------------------------------------------------------------
-  dom.partsAll.addEventListener('click', () => { listOpen = !listOpen; const s = store.get(); renderPanel(compute(s.scenario), s.piece); });
+  const previous = byId<HTMLButtonElement>('part-prev'), next = byId<HTMLButtonElement>('part-next');
+  const door = byId<HTMLButtonElement>('card-go');
+  function selectPart(id: string | null) {
+    selectedPartId = id;
+    if (store.get().piece === 'camera') store.setCameraPart(cameraPart(id));
+    else { stage.selectPin(id); if (!id) stage.resetView(); }
+    renderPanel(compute(store.get().scenario), store.get().piece);
+    document.getElementById('tab-explain')?.click();
+  }
+  function stepPart(direction: -1 | 1) {
+    selectPart(adjacentPart(stage.activeProbes().map(p => p.id), selectedPartId, direction));
+  }
+  previous.addEventListener('click', () => stepPart(-1));
+  next.addEventListener('click', () => stepPart(1));
+  byId('part-overview').addEventListener('click', () => selectPart(null));
+  door.addEventListener('click', () => {
+    const destination = insideView(cameraPart(selectedPartId));
+    if (destination && store.get().piece === 'camera') store.setPiece(destination);
+  });
+  byId('gl').addEventListener('keydown', event => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault(); stepPart(event.key === 'ArrowLeft' ? -1 : 1);
+    }
+  });
   function clearSelection() {
     selectedPartId = null;
-    listOpen = false;
     stage.selectPin(null);
     const s = store.get();
     if (s.piece === 'camera') store.setCameraPart(null);
@@ -439,12 +465,25 @@ export function mountUI(store: Store, stage: Stage): void {
     inspectionBar.querySelector('.inspection-here')!.textContent = p.title;
     const probes = stage.activeProbes();
     if (selectedPartId && !probes.some((pr) => pr.id === selectedPartId)) selectedPartId = null;
-    const collapsed = !!selectedPartId && !listOpen && !phone?.matches;
-    dom.partsK.textContent = `${probes.length} ${probes.length === 1 ? 'part' : 'parts'}`;
-    dom.partsAll.hidden = !selectedPartId || !!phone?.matches;
-    dom.partsAll.textContent = collapsed ? `All ${probes.length} parts` : 'Fewer';
-    dom.parts.classList.toggle('collapsed', collapsed);
 
+    dom.partsK.textContent = `${probes.length} ${probes.length === 1 ? 'part' : 'parts'}`;
+    dom.partsAll.hidden = true;
+    dom.parts.classList.remove('collapsed');
+    const selectedIndex = probes.findIndex(pr => pr.id === selectedPartId);
+    byId('part-position').textContent = selectedIndex < 0 ? 'Overview' : (selectedIndex + 1) + ' / ' + probes.length;
+    for (const [button, direction] of [[previous, -1], [next, 1]] as const) {
+      const id = adjacentPart(probes.map(pr => pr.id), selectedPartId, direction);
+      const label = probes.find(pr => pr.id === id)?.label ?? 'Overview';
+      button.title = (direction < 0 ? 'Previous: ' : 'Next: ') + label;
+      button.setAttribute('aria-label', button.title);
+      button.disabled = !probes.length;
+    }
+    const destination = activePiece === 'camera' ? insideView(cameraPart(selectedPartId)) : null;
+    door.hidden = !destination;
+    door.textContent = destination ? 'Go inside: ' + VIEW_LABELS[destination] + ' →' : '';
+    dom.card.closest('.panel')?.classList.toggle('has-selection', !!selectedPartId);
+
+    const focusedPart = dom.parts.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.partId : null;
     dom.parts.innerHTML = '';
     probes.forEach((probe, i) => {
       const li = document.createElement('li');
@@ -457,7 +496,6 @@ export function mountUI(store: Store, stage: Stage): void {
       (btn.querySelector('.pt') as HTMLElement).textContent = probe.label;
       btn.addEventListener('click', () => {
         selectedPartId = selectedPartId === probe.id ? null : probe.id;
-        listOpen = false;
         if (store.get().piece === 'camera') store.setCameraPart(cameraPart(selectedPartId));
         else stage.selectPin(selectedPartId);
         renderPanel(model, store.get().piece);
@@ -468,6 +506,9 @@ export function mountUI(store: Store, stage: Stage): void {
       dom.parts.appendChild(li);
     });
 
+    if (focusedPart) dom.parts.querySelector<HTMLElement>(`[data-part-id="${focusedPart}"]`)?.focus({ preventScroll: true });
+    if (shownCard !== selectedPartId) dom.card.scrollTop = 0;
+    shownCard = selectedPartId;
     const sel = probes.find((pr) => pr.id === selectedPartId);
     const card = sel?.card?.(model);
     if (card) {
@@ -487,11 +528,8 @@ export function mountUI(store: Store, stage: Stage): void {
         if (row.fig) div.insertAdjacentHTML('beforeend', chip(row.fig.ev, row.fig.src && !/^https?:/.test(row.fig.src) ? row.fig.src : row.fig.src ? row.fig.src.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] : undefined));
         dom.cardS.appendChild(div);
       }
-      if (!phone?.matches && cardShownFor !== selectedPartId) dom.card.scrollIntoView({ block: 'nearest' });
-      cardShownFor = selectedPartId;
     } else {
       dom.card.hidden = true;
-      cardShownFor = null;
     }
   }
 
@@ -562,7 +600,7 @@ export function mountUI(store: Store, stage: Stage): void {
     const p = PIECES.find((x) => x.id === piece)!;
     stage.showPiece(piece, p.title, subFor(model, piece));
     if (shotChanged || viewChanged) stage.update(model, scenario);
-    if (viewChanged) { selectedPartId = null; listOpen = false; }
+    if (viewChanged) { selectedPartId = null; }
     if (piece === 'camera' && (viewChanged || parentChanged)) {
       selectedPartId = state.cameraPart;
       stage.selectPin(selectedPartId);
@@ -585,10 +623,10 @@ export function mountUI(store: Store, stage: Stage): void {
   on('select-part', (e) => {
     if (e.id === selectedPartId) return;
     selectedPartId = e.id;
-    listOpen = false;
     const state = store.get();
     if (state.piece === 'camera') store.setCameraPart(cameraPart(e.id));
     renderPanel(compute(state.scenario), state.piece);
+    if (e.id) document.getElementById('tab-explain')?.click();
   });
   store.subscribe(render);
 }

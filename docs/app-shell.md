@@ -17,6 +17,27 @@ and sits beside it on phones. Real-photo comparisons remain below the workspace.
 sizes, real selector/slider actions, tabs, part return, exposure playback and photo-to-pixel inspection.
 The existing accuracy gates continue to check the actual optical rendering.
 
+## Reference navigation (10/1/2026)
+
+The part transport follows the current reference site's cycle: overview is stop zero, and Previous/Next
+wrap through the current view's real probes. The transport stays under the canvas, independent of the
+inspector's scroll position. Arrow keys navigate only while the canvas has focus; sliders retain their keys.
+
+The Parts pane never collapses to the selected row or automatically switches back to Controls. All numbered
+parts remain above an independently scrolling card. Go inside appears next to the part title on desktop
+and above the parts list on phones, with explicit Camera breadcrumbs back to the same parent and shot.
+Supported doors are lens/glass/aperture to Optics, focus ring to Focus, and sensor to Pixel.
+
+The shared menu offers Visualizer, The story, Evidence, Method, Glossary, Parts and Models. The root still
+opens the compact workspace. Reference pages use reference.html?page=..., work without a 3D renderer,
+and preserve the current shot through same-tab navigation. The evidence index is generated from the
+existing source-bearing camera/lens records, not from new source claims. Reset, Share this view, real-photo
+comparison and the introduction are also reachable from the view menu.
+
+Validation: tools/test-navigation.mjs walks every part, wraparound, keyboard isolation, all implemented doors,
+reload, menus and reference-page round trips at desktop/laptop/phone widths. tools/test-workspace.mjs retains
+the six-size fit and interaction checks; the optics gates continue to measure the renderer against the engine.
+
 ## Structure
 
 ```

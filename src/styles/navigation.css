@@ -1,0 +1,60 @@
+/* Port the reference site's persistent part transport and compact inspector. */
+.part-nav { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+.part-nav .btn { min-height: 36px; padding: 0 12px; gap: 8px; font-size: 11px; }
+.part-nav .btn + .btn { margin-left: -1px; }
+#part-position { margin-left: 12px; font: 11px var(--mono); color: var(--muted); }
+.workspace .hud-btns-phone { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 16px; }
+.workspace .hud-btns-phone .hint { text-align: right; }
+.view-menu { margin-left: auto; position: relative; }
+.workspace .view-menu > summary { display: grid; place-items: center; width: 40px; height: 36px; padding: 0; border: 1px solid var(--line-2); font-size: 15px; list-style: none; }
+.view-menu > summary::-webkit-details-marker { display: none; }
+.view-menu #studio-actions { position: absolute; z-index: 80; top: calc(100% + 8px); right: 0; width: 220px; padding: 10px; border: 1px solid var(--line-2); background: var(--surface); box-shadow: 0 18px 44px #0009; }
+.view-menu .hud-row { display: grid; }
+.view-menu .btn { width: 100%; }
+.workspace .studio-sidebar[data-pane="parts"] .finalimg { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 5px 12px; padding-block: 10px; }
+.studio-sidebar[data-pane="parts"] .finalimg .sc-head { grid-column: 1 / -1; }
+.studio-sidebar[data-pane="parts"] .finalimg .sc-head > span { display: none; }
+.studio-sidebar[data-pane="parts"] .photo-hint { display: none; }
+.studio-sidebar[data-pane="parts"] .photo-details[open] { grid-column: 1 / -1; }
+.workspace .panel { display: grid; grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; padding: 10px 16px; }
+.workspace .panel-scroll { display: contents; }
+.workspace #intro { display: none; }
+.workspace .parts-head { padding-bottom: 6px; }
+.workspace #parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 0 10px; gap: 0 8px; }
+.workspace #parts li { display: block; min-width: 0; }
+.workspace #parts button { padding: 5px 3px; min-height: 32px; gap: 6px; grid-template-columns: 20px minmax(0, 1fr); }
+.workspace #parts .pn { width: 18px; height: 18px; font-size: 10px; }
+.workspace #parts .pt { font-size: 12px; }
+.workspace #parts .pk { display: none; }
+.workspace #card:not([hidden]) { min-height: 0; overflow: auto; align-content: start; gap: 10px; }
+.workspace #card-go { justify-content: center; width: 100%; min-height: 40px; font-size: 11px; }
+.workspace .card p { font-size: 13px; line-height: 1.55; }
+.workspace #card .card-x { all: unset; cursor: pointer; display: grid; place-items: center; position: absolute; top: 2px; right: 3px; width: 34px; height: 34px; font-size: 22px; color: var(--muted); }
+.topnav a[aria-current="page"] { color: var(--ink); }
+.topnav a[aria-current="page"]::after { transform: scaleX(1); }
+.workspace #card h3 { padding-right: 24px; }
+@media (max-width: 1000px) {
+  .workspace .topnav .navlink { font-size: 10px; padding-inline: 7px; }
+}
+@media (max-width: 760px) {
+  .workspace #studio-actions { display: block; }
+  .studio-kit { gap: 6px; }
+  .studio-kit label:nth-child(2) { flex: 1.25; }
+  .workspace .view-menu { align-self: end; }
+  .workspace .view-menu > summary { width: 32px; height: 34px; }
+  .workspace .hud-btns-phone { padding: 4px 10px; }
+  .workspace .hud-btns-phone .hint { display: none; }
+  .workspace .part-nav { width: 100%; }
+  .workspace .part-nav .btn { min-height: 36px; padding-inline: 12px; font-size: 10px; justify-content: center; }
+  #part-position { margin-left: auto; font-size: 10px; }
+  .workspace .studio-sidebar[data-pane="parts"] .finalimg { display: block; padding: 10px; }
+  .workspace .studio-sidebar[data-pane="parts"] .finalimg .sc-head > span { display: block; }
+  .workspace .panel { height: 470px; max-height: none; padding: 10px; }
+  .workspace #parts { gap: 0 5px; }
+  .workspace #parts button { min-height: 44px; padding: 4px 0; gap: 4px; }
+  .workspace #parts .pt { font-size: 11px; }
+  .workspace #card:not([hidden]) { padding: 10px; }
+  .workspace #card-go { font-size: 10px; padding-inline: 8px; }
+  .workspace .parts-head #card-go { width: auto; min-height: 36px; padding-inline: 7px; font-size: 9px; }
+  .workspace .topnav .navlink { font-size: 12px; padding: 0 4px; }
+}

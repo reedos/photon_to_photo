@@ -43,6 +43,7 @@ try {
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.detail()), null);
     await page.evaluate(() => window.p2p.set({ lens: 'n500', focusM: 30 }));
     await page.evaluate(() => window.p2p.pieces.camera.ready());
+    await page.locator('#tab-controls').click();
     const slider = page.locator('#sc-focus');
     const before = Number(await slider.inputValue());
     await slider.focus();

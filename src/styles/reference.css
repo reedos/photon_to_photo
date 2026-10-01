@@ -1,0 +1,22 @@
+.reference main { max-width: 1120px; margin: 0 auto; padding: calc(var(--bar) + 48px) 28px 64px; }
+.reference h1 { font: 600 clamp(44px, 8vw, 92px)/.95 var(--display); text-transform: uppercase; margin: 12px 0 24px; }
+.reference .lede { max-width: 68ch; color: var(--muted); font-size: 17px; }
+.reference h2 { font: 600 32px/1.1 var(--display); margin: 32px 0 14px; }
+.reference p { max-width: 78ch; }
+.reference a { color: var(--ink); text-underline-offset: 4px; text-decoration-color: var(--accent); }
+.reference .ref-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 40px; }
+.reference .ref-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.reference .ref-card { border: 1px solid var(--line); background: var(--surface); padding: 22px; min-width: 0; }
+.reference .ref-card h2 { margin-top: 0; }
+.reference .ref-card p { color: var(--muted); font-size: 14px; }
+.reference .ref-card .btn { margin-top: 10px; }
+.reference .ref-search { display: grid; gap: 8px; margin: 24px 0; max-width: 480px; }
+.reference input { width: 100%; padding: 12px; border: 1px solid var(--line-2); color: var(--ink); background: var(--surface); font: 14px var(--sans); }
+.reference dl { margin: 0; }
+.reference dt { font-weight: 700; color: var(--accent); }
+.reference dd { margin: 8px 0 24px; color: var(--muted); }
+.reference .evidence-row { display: grid; grid-template-columns: 180px 1fr; gap: 16px; border-bottom: 1px solid var(--line); padding: 16px 0; overflow-wrap: anywhere; }
+.reference .evidence-row small { display: block; color: var(--muted); }
+.reference footer { padding: 24px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.reference [hidden] { display: none !important; }
+@media(max-width: 760px) { .reference main { padding: calc(var(--bar) + 24px) 20px 40px; } .reference .ref-grid { grid-template-columns: 1fr; } .reference .evidence-row { grid-template-columns: 1fr; gap: 6px; } }

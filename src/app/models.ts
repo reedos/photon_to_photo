@@ -4,6 +4,7 @@
 // the tailnet is not a secure context) and WebGPU on the PC.
 //
 //   models.html?body=dslr|mirrorless&lens=<id>|none&view=outside|cutaway&part=<component>
+import { siteNavigation, mountSiteNavigation } from './site-nav';
 import * as THREE from 'three/webgpu';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -439,8 +440,7 @@ async function main() {
     b.addEventListener('click', () => setView(b.dataset.view as ViewId)));
   $('reset').addEventListener('click', () => bodyRoot && frame());
   // the site bar's menu on a phone, as on the main page
-  const nav = $('topnav'), menu = $('menu-btn');
-  menu?.addEventListener('click', () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); });
+
   $('clear').addEventListener('click', () => select(null));
 
   renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
@@ -449,6 +449,8 @@ async function main() {
   (window as unknown as { p2pModels: unknown }).p2pModels = { scene, camera, renderer, state, ready: true };
 }
 
+$('topnav').innerHTML = siteNavigation('models');
+mountSiteNavigation();
 main().catch((e) => {
   veil.classList.remove('off');
   veil.classList.add('err');

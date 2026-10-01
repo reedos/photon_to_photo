@@ -11,7 +11,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     // the standalone previews (docs/PANE.md) need their own build entries: lens-preview.html shows one lens,
     // scene-preview.html the two bodies; screenshot tooling runs `vite preview` against a real build
-    rollupOptions: { input: { main: 'index.html', lensPreview: 'lens-preview.html', scenePreview: 'scene-preview.html', models: 'models.html' } },
+    rollupOptions: { input: { main: 'index.html', lensPreview: 'lens-preview.html', scenePreview: 'scene-preview.html', models: 'models.html', reference: 'reference.html' } },
   },
   // agent worktrees live under .claude/; their edits must not reload this server's page
   server: { watch: { ignored: ['**/.claude/**', '**/shots/**', '**/dist*/**', '**/recordings/**'] } },

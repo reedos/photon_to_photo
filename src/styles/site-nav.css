@@ -1,0 +1,5 @@
+.topnav a[aria-current="page"] { color: var(--ink); }
+.topnav a[aria-current="page"]::after { transform: scaleX(1); }
+@media (min-width: 901px) and (max-width: 1150px) {
+  .topnav a.navlink { padding-inline: 7px; font-size: 10px; letter-spacing: .06em; }
+}

@@ -44,7 +44,8 @@ try {
       return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === canvas;
     }), true, 'part explanation does not cover the photo');
     await page.locator('#steps [data-piece="camera"]').click();
-    assert.equal(await page.locator('#scenario').isVisible(), true);
+    assert.equal(await page.locator('#studio-explain').isVisible(), true, 'overview does not hide the parts pane');
+    await page.locator('#tab-controls').click();
     await page.locator('.rx-fire').click();
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.exposure().status), 'paused');
     assert.equal(await page.locator('.rx-scrub').isVisible(), true);
