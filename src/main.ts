@@ -3,6 +3,7 @@
 // window.p2p test hooks. See docs/app-shell.md.
 import { createStore } from './app/store';
 import { createStage, type StageDom } from './app/stage';
+import { buildWorkspace, mountWorkspace } from './app/workspace';
 import { mountUI } from './app/ui';
 import { mountExamples } from './app/examples';
 import { installHooks } from './app/hooks';
@@ -18,6 +19,7 @@ function byId<T extends HTMLElement>(id: string): T {
 }
 
 async function main() {
+  buildWorkspace();
   const dom: StageDom = {
     canvas: byId('gl'),
     view: byId('view'),
@@ -40,6 +42,7 @@ async function main() {
   stage.registerPiece('loupe', buildLoupe);
 
   mountUI(store, stage);
+  mountWorkspace(store);
   mountExamples(store);
   installHooks(store, stage);
 }

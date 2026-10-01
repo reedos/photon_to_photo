@@ -4,6 +4,19 @@ The look prototype's UI shell: the page, the scenario builder, the stage (render
 right panel, and the final-image panel. Ports The Intelligence Factory's CSS and DOM patterns per Reed's "one
 signature style" call in design/LOOK.md. Talks to the physics only through `src/app/engine-api.ts`.
 
+## Compact workspace (10/1/2026)
+
+`src/app/workspace.ts` assembles the existing DOM before the stage starts. The camera, live photo,
+four primary sliders and exposure playback share the first screen. Compact body/lens/scene selects
+reuse the original UI actions. Controls and How it works are keyboard-accessible tabs; choosing a
+part reveals its explanation. Measurements, photo captions and equal-exposure comparisons are
+expandable. The photo stays above the independently scrolling controls/explanation area on desktop,
+and sits beside it on phones. Real-photo comparisons remain below the workspace.
+
+`src/styles/workspace.css` owns the responsive layout. `tools/test-workspace.mjs` verifies six viewport
+sizes, real selector/slider actions, tabs, part return, exposure playback and photo-to-pixel inspection.
+The existing accuracy gates continue to check the actual optical rendering.
+
 ## Structure
 
 ```

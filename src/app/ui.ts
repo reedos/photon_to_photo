@@ -294,11 +294,13 @@ export function mountUI(store: Store, stage: Stage): void {
   const setHint = () => {
     const zoom = phone?.matches ? 'pinch to zoom' : 'Ctrl + scroll to zoom';
     dom.hint.textContent = store.get().piece === 'camera'
-      ? `Drag the focus ring or a dial to set it · drag elsewhere to orbit · ${zoom} · shutter and ISO are also in Settings`
+      ? `Drag the focus ring or a dial to set it · drag elsewhere to orbit · ${zoom}`
       : `Drag to orbit · ${zoom}`;
   };
   const placeButtons = () => {
-    if (phone?.matches) { dom.hudBtnsPhone.append(dom.hudBtns, dom.hint); }
+    const actions = document.getElementById('studio-actions');
+    if (actions) { (phone?.matches ? dom.hudBtnsPhone : actions).append(dom.hudBtns); dom.hudBtnsPhone.append(dom.hint); }
+    else if (phone?.matches) { dom.hudBtnsPhone.append(dom.hudBtns, dom.hint); }
     else { dom.hudTr.append(dom.hudBtns, dom.hint); }
     setHint();
   };
@@ -337,10 +339,10 @@ export function mountUI(store: Store, stage: Stage): void {
   // A tap on the final image opens the loupe at that rendered pixel (the loupe piece hears it on the bus).
   dom.finalimgCanvas.addEventListener('click', (ev) => {
     const view = currentRender();
+    const r = dom.finalimgCanvas.getBoundingClientRect();
     store.setPiece('loupe');
     dom.stageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (!view) return;
-    const r = dom.finalimgCanvas.getBoundingClientRect();
     const x = Math.min(view.width - 1, Math.max(0, Math.floor(((ev.clientX - r.left) / r.width) * view.width)));
     const y = Math.min(view.height - 1, Math.max(0, Math.floor(((ev.clientY - r.top) / r.height) * view.height)));
     emit('loupe-tap', { x, y, renderId: view.renderId });

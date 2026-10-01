@@ -18,6 +18,7 @@ try {
     assert.equal(await page.evaluate(() => window.p2p.backend()), 'webgpu');
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     await page.locator('#stage-section').scrollIntoViewIfNeeded();
+    await page.locator('#tab-explain').click();
     await page.locator('#parts button[data-part-id="iris"]').click();
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.detail()), 'iris');
     await page.locator('#steps [data-piece="lens"]').click();

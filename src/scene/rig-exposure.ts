@@ -69,7 +69,7 @@ export function createExposure(d: ExposureDeps) {
   hud.className = 'rig-exposure';
   hud.setAttribute('data-fired', 'false');
   hud.innerHTML = `
-    <div class="rx-head"><span class="rx-k">Exposure</span><button type="button" class="btn rx-fire" title="Fire the shutter (F)">Fire <kbd>F</kbd></button></div>
+    <div class="rx-head"><span class="rx-k">Exposure</span><button type="button" class="btn rx-fire" title="Fire the shutter (F)">Play exposure <kbd>F</kbd></button></div>
     <div class="rx-row rx-pprow"><span>Photons per pixel <small>18% gray</small></span><b class="rx-pp">0</b></div>
     <div class="rx-row rx-total"><span>Whole sensor</span><b class="rx-all">0</b></div>
     <div class="rx-well"><i></i></div>
@@ -341,10 +341,10 @@ export function createExposure(d: ExposureDeps) {
     const fireButton = q('.rx-fire') as HTMLButtonElement;
     fireButton.disabled = !enabled || (running && !paused);
     fireButton.setAttribute('data-armed', String(running && !paused));
-    const fireLabel = hasShot ? 'Replay' : 'Fire';
+    const fireLabel = hasShot ? 'Replay' : 'Play exposure';
     const fireHtml = fireLabel + ' <kbd>F</kbd>';
     if (fireButton.innerHTML !== fireHtml) fireButton.innerHTML = fireHtml;
-    fireButton.title = fireLabel + ' the exposure (F)';
+    fireButton.title = hasShot ? 'Replay the exposure (F)' : 'Play the exposure (F)';
     const pauseButton = q('.rx-pause') as HTMLButtonElement;
     pauseButton.hidden = !running;
     pauseButton.disabled = !enabled || !hasShot;
@@ -385,7 +385,7 @@ export function createExposure(d: ExposureDeps) {
   /** Can be called as soon as the parent receives a new model, or checked on the next frame. */
   function syncModel() {
     if (shotModel && (d.model() !== shotModel || d.body() !== shotBody)) {
-      cancel('Settings changed. Fire to inspect the new exposure.');
+      cancel('Settings changed. Play to inspect the new exposure.');
     }
   }
 

@@ -53,6 +53,7 @@ try {
       }
       await page.locator('#view').screenshot({ path: `${out}/${width}-${lens}.png` });
       if (phone) {
+        await page.locator('.exposure-details summary').click();
         const button = page.locator('.rx-eq-close');
         const before = await button.evaluate(e => getComputedStyle(e).backgroundColor);
         await button.tap();

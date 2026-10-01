@@ -188,7 +188,19 @@ export const build: BuildPiece = (ctx) => {
   const rail = typeof document !== 'undefined' ? document.getElementById('hud-rail') : null;
   const phoneMq = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(max-width: 760px)') : null;
   const placePanel = () => {
-    if (phoneMq?.matches && strip) strip.appendChild(exposure.el);
+    const workspace = document.getElementById('studio-exposure');
+    if (workspace) {
+      workspace.append(exposure.el);
+      exposure.el.removeAttribute('data-inset');
+      if (!exposure.el.querySelector('.exposure-details')) {
+        const details = document.createElement('details');
+        details.className = 'exposure-details';
+        details.innerHTML = '<summary>Exposure details & equal exposure</summary>';
+        for (const node of exposure.el.querySelectorAll('.rx-pprow, .rx-total, .rx-well, .rx-sub, .rx-motion, .rx-tl, .rx-eq, .rx-cap, .rx-time')) details.append(node);
+        exposure.el.append(details);
+      }
+    }
+    else if (phoneMq?.matches && strip) strip.appendChild(exposure.el);
     else if (rail) rail.prepend(exposure.el);
     else ctx.overlay.appendChild(exposure.el);
   };
