@@ -441,6 +441,7 @@ interface BodySensorJson {
     microlensFillFactor: { v: number };
     qe: { dxomarkDerivedPeakPercent: { v: number } };
     adcBitDepthBits?: { rawUncompressed?: { v: number }; raw?: { v: number } };
+    readout: { electronicFullFrameMs: { v: number; src: string; confidence: string } };
   };
   readNoise: {
     fwcElectrons: number;
@@ -513,8 +514,9 @@ function buildBodySensorBundle(body: BodySensorJson, format: FormatId, iso: numb
     readNoiseE: rnE,
     unityGainIso,
     bits,
-    readoutS: 0.05, // placeholder scan time; same convention as the other picks (see below)
+    readoutS: rec.readout.electronicFullFrameMs.v / 1000,
     figs: {
+      readoutS: { v: rec.readout.electronicFullFrameMs.v / 1000, unit: 's', ev: 'reported', src: rec.readout.electronicFullFrameMs.src, loc: `sensor.readout.electronicFullFrameMs; ${rec.readout.electronicFullFrameMs.confidence}` },
       pitchUm: { v: pitchUm, unit: 'um', ev: 'reported', src: srcFile, loc: 'sensor.pixelPitchUm' },
       fullWellE: { v: fullWellE, unit: 'e-', ev: 'reported', src: srcFile, loc: 'readNoise.fwcElectrons', calc: 'Claff RN_e.htm series fwc field' },
       readNoiseE: { v: rnE, unit: 'e- rms', ev: 'derived', src: srcFile, loc: 'readNoise.points', calc: `log-log interpolation of Claff's measured points at ISO ${iso}` },
@@ -613,6 +615,7 @@ export function sensorFor(format: FormatId, iso: number, sensorId?: string): Sen
     bits,
     readoutS: 0.05, // placeholder scan time; no per-format figure is wired here (out of E4's own path list)
     figs: {
+      readoutS: { v: 0.05, unit: 's', ev: 'assumed', loc: 'Illustrative 50 ms scan; no camera-specific value is wired for this sensor.' },
       pitchUm: { v: pitchUm, unit: 'um', ev: 'reported', src: 'data/sensors.json', loc: `${rec.id}.pixelPitchUm` },
       fullWellE: { v: fullWellE, unit: 'e-', ev: 'reported', src: 'data/read-noise.json', loc: `${readNoiseKey}.fwcElectrons`, calc: 'Claff RN_e.htm series fwc field' },
       readNoiseE: { v: rn, unit: 'e- rms', ev: 'derived', src: 'data/read-noise.json', loc: `${readNoiseKey}.points`, calc: `log-log interpolation of Claff's measured points at ISO ${iso}` },

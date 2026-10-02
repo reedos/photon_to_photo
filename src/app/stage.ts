@@ -632,6 +632,11 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       dom.hudTitle.textContent = title;
       dom.hudSub.textContent = upperKeepMicro(sub);
       if (activeId === id) return;
+      // A short crossfade joins inspection scales without pretending their different coordinate systems are one.
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        dom.canvas.getAnimations().forEach(animation => animation.cancel());
+        dom.canvas.animate([{ opacity: 0.35 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
+      }
       if (activeId) {
         const prev = built.get(activeId);
         if (prev) { prev.group.visible = false; prev.deactivate?.(); }

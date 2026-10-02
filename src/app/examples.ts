@@ -103,7 +103,8 @@ export function mountExamples(store: Store): void {
       const dt = document.createElement('dt'); dt.textContent = k;
       const dd = document.createElement('dd'); dd.textContent = v;
       div.append(dt, dd);
-      div.insertAdjacentHTML('beforeend', chip('derived'));
+      const evidence = document.createElement('dd'); evidence.className = 'spec-evidence'; evidence.innerHTML = chip('derived');
+      div.append(evidence);
       specs.appendChild(div);
     }
     for (const b of picks.children) (b as HTMLElement).setAttribute('aria-pressed', String((b as HTMLElement).dataset.id === ex.id));

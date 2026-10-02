@@ -6,6 +6,8 @@ import { createStage, type StageDom } from './app/stage';
 import { buildWorkspace, mountWorkspace } from './app/workspace';
 import { mountUI } from './app/ui';
 import { mountExamples } from './app/examples';
+import { mountLearning } from './app/learning';
+import { mountComparison } from './app/comparison';
 import { installHooks } from './app/hooks';
 import { build as buildCamera } from './scene/camera-rig';
 import { build as buildLens } from './pieces/lens';
@@ -19,6 +21,8 @@ function byId<T extends HTMLElement>(id: string): T {
 }
 
 async function main() {
+  const startTour = new URLSearchParams(location.search).get('tour') === '1';
+  const startLesson = new URLSearchParams(location.search).get('lesson');
   buildWorkspace();
   const dom: StageDom = {
     canvas: byId('gl'),
@@ -44,6 +48,8 @@ async function main() {
   mountUI(store, stage);
   mountWorkspace(store);
   mountExamples(store);
+  mountLearning(store, startTour, startLesson);
+  mountComparison(store);
   installHooks(store, stage);
 }
 

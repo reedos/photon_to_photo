@@ -525,7 +525,11 @@ export function mountUI(store: Store, stage: Stage): void {
         const dt = document.createElement('dt'); dt.textContent = row.k;
         const dd = document.createElement('dd'); dd.textContent = row.v;
         div.append(dt, dd);
-        if (row.fig) div.insertAdjacentHTML('beforeend', chip(row.fig.ev, row.fig.src && !/^https?:/.test(row.fig.src) ? row.fig.src : row.fig.src ? row.fig.src.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] : undefined));
+        if (row.fig) {
+          const evidence = document.createElement('dd'); evidence.className = 'spec-evidence';
+          evidence.innerHTML = chip(row.fig.ev, row.fig.src && !/^https?:/.test(row.fig.src) ? row.fig.src : row.fig.src ? row.fig.src.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] : undefined);
+          div.append(evidence);
+        }
         dom.cardS.appendChild(div);
       }
     } else {
@@ -537,7 +541,9 @@ export function mountUI(store: Store, stage: Stage): void {
   // for one render when it pauses, and latest-wins so a stale render never paints over a newer setting. The docked
   // thumbnail in the view is the same render, scaled down.
   let renderTimer = 0;
+  let renderGeneration = 0;
   function renderFinalImage(model: Model) {
+    const generation = ++renderGeneration;
     window.clearTimeout(renderTimer);
     dom.finalimgCanvas.closest('.finalimg-card')?.classList.add('rendering');
     dom.dock.classList.add('rendering');
@@ -548,12 +554,13 @@ export function mountUI(store: Store, stage: Stage): void {
       try {
         view = await requestRender(model.scenario, w, h, 1);
       } catch (err) {
+        if (generation !== renderGeneration) return;
         dom.finalimgCap.textContent = 'The photo could not be rendered for these settings. Change a setting to try again.';
         dom.dock.classList.remove('rendering');
         console.error('ui.ts: render failed', err);
         return;
       }
-      if (!view) return; // superseded by a newer setting
+      if (!view || generation !== renderGeneration) return; // includes changes still inside the debounce interval
       const ctx = dom.finalimgCanvas.getContext('2d');
       if (!ctx) return;
       const imageData = ctx.createImageData(view.width, view.height);

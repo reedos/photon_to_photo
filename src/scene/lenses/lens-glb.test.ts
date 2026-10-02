@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import * as THREE from 'three';
 import manifest from '../../../public/models/lenses.json';
 import exteriors from '../../../data/hardware/lens-exteriors.json';
+import { getRealizedLens } from '../../engine/data';
 
 const ROOT = resolve(__dirname, '../../..');
 
@@ -50,6 +51,14 @@ describe.each(Object.keys(lenses))('lens %s (Blender export)', (id) => {
   const g = readGltf(m.glb);
   const b = boxes(g);
   const optics = JSON.parse(readFileSync(resolve(ROOT, `blender/data/${id}-optics.json`), 'utf8'));
+
+  it('uses the current realized clear apertures, with no glass clipped to fit the exterior', () => {
+    const current = getRealizedLens(id).realization.sdRealized;
+    for (const surface of optics.surfaces) {
+      if (surface.sdRealized !== null) expect(surface.sdRealized).toBeCloseTo(current[surface.index], 5);
+    }
+    expect(m.clipped).toEqual([]);
+  });
 
   it('is under 1.5 MB (the phone loads it over the tailnet)', () => {
     expect(statSync(resolve(ROOT, m.glb)).size).toBeLessThan(1.5 * 1024 * 1024);

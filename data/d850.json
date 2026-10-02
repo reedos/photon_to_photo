@@ -9,7 +9,7 @@
     "readNoiseMethod": "Same method as data/read-noise.json: photonstophotos.net's RN_e.htm/PDR.htm/Sensor_Characteristics.htm write their per-camera series into a literal JS array in the page's inline <script> (Highcharts 4.0.4 config); this pass fetched the three pages with plain curl (confirmed byte-identical to the earlier Playwright captures already in .local/read-noise/, and reused here -- see .local/d850/captures/*.html) and extracted the 'Nikon D850_14' / 'Nikon D850(ES)_14' (RN_e.htm) and 'Nikon D850' (PDR.htm) series with a bracket-balanced scan + new Function() eval, same scripts pattern as .local/read-noise/*.cjs, copied/adapted at .local/d850/*.cjs. ISO = round(3.125 * 2^x); readNoiseE = 2^y.",
     "dcgDetectionMethod": "Same slope-based method as data/read-noise.json: steepest negative slope of log2(read noise) vs log2(ISO) between adjacent, unmarked, in-normal-analog-range points. Reported as the bracketing ISO pair, derived not reported.",
     "openProblems": [
-      "D850 full-sensor electronic-shutter readout/scan time (64 ms figure below) could not be independently re-verified: the horshack-dpreview RollingShutter combined-results table (the primary source used for the a7R IV/a6400/OM-1 in data/read-noise.json) does not carry a D850 row, and the two DPReview forum threads that discuss the D850's readout speed (including a Jim Kasson post) returned HTTP 403 to this session's fetch tool, same failure mode noted in research/sensor-sources.md for other cameras. The 64ms figure is recorded via this session's web-search-tool summary only, flagged low-confidence.",
+      "Resolved 10/01/2026: the D850 electronic full-frame Mode 1 scan time of 64 ms was directly verified against Jim Kasson's original oscilloscope measurement. Mode 2 is cropped and has a different scan time; 64 ms is not a value for every shooting mode.",
       "Nikon does not publish first-party shutter-curtain travel time; flash sync speed (1/250s) is used as the closest published proxy for mechanical-shutter speed, not a direct curtain-travel-time figure.",
       "Chip identity: Nikon does not publicly name the D850's sensor supplier or part number. It is widely reported (DPReview, DxOMark, press coverage at launch) to be a Sony-fabricated BSI full-frame sensor closely related to the a7R III's (same 45.7MP-class BSI part family), but no vendor datasheet naming an exact Sony IMX part number for the D850 was found, unlike the a7R IV/IMX455 case in data/sensors.json. Not claimed as a specific chip here.",
       "Two independent full-well figures are recorded (RN_e.htm 59,126 e- vs Sensor_Characteristics.htm/DxOMark-derived 60,912 e-) -- both kept, not averaged, consistent with this project's convention for the a7R IV/a6400/OM-1 records."
@@ -251,10 +251,10 @@
         "v": 64,
         "unit": "ms",
         "ev": "reported",
-        "src": "https://www.dpreview.com/forums/thread/4494255",
-        "loc": "DPReview forum thread \"Optimum shutter speed range to avoid rolling shutter effect D850\" -- figure obtained via this session's web-search-tool summary, not a direct page load (the thread returned HTTP 403 to this session's fetch tool, the same failure mode research/sensor-sources.md and research/read-noise.md hit repeatedly on DPReview forum URLs). A companion Jim Kasson blog post, \"How fast is the Nikon 850 electronic shutter?\" (https://blog.kasson.com/d850/how-fast-is-the-nikon-850-electronic-shutter/), almost certainly has the primary number but also returned HTTP 403 in this pass and was not independently read.",
-        "accessed": "09/28/2026",
-        "confidence": "low -- not independently re-verified against a directly-loaded primary source; the horshack-dpreview RollingShutter combined-results table (used for the other three cameras in data/read-noise.json) does not carry a D850 row."
+        "src": "https://blog.kasson.com/d850/how-fast-is-the-nikon-850-electronic-shutter/",
+        "loc": "Jim Kasson, 2017-10-30, Electronic Shutter Mode 1: analog oscilloscope trace with a 10 ms/division time base, 6.4 divisions across the full frame. Mode 1 image dimensions are 8256 by 5504; Mode 2 is cropped and excluded here.",
+        "accessed": "10/01/2026",
+        "confidence": "Primary measurement directly read and verified; applies to full-frame electronic silent Mode 1 on the tested D850, not all readout modes."
       },
       "mechanicalShutterRangeS": {
         "v": "1/8000-30",

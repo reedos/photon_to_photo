@@ -398,32 +398,56 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
   const diffractionDiameterMm = 2 * airyRadius(550, workingFno);
   let kernelClamped = false;
 
+  // At field silhouettes, integrate four spatial samples BEFORE blur, retaining each sample's own depth.
+  // Averaging foreground and background depths would invent a false blur disk along bird/branch edges.
+  // Three cached center rows identify boundaries cheaply; interiors retain the single-sample fast path.
+  const edgeSampling = model.scenario.scene === 'field';
+  const centerRows = new Map<number, SourceSample[]>();
+  const centerRow = (y: number) => {
+    const rowY = Math.max(0, Math.min(height - 1, y));
+    let row = centerRows.get(rowY);
+    if (!row) {
+      row = Array.from({ length: width }, (_, x) => traceSourceWithMotion(x, rowY, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds));
+      centerRows.set(rowY, row);
+    }
+    return row;
+  };
+  let sampledEdges = 0;
+
   for (let by = 0; by < height; by++) {
+    const row = edgeSampling ? centerRow(by) : null;
+    const above = edgeSampling ? centerRow(by - 1) : null;
+    const below = edgeSampling ? centerRow(by + 1) : null;
     for (let bx = 0; bx < width; bx++) {
-      const idx = by * width + bx;
-      const src = traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds);
+      const center = row ? row[bx] : traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds);
+      const boundary = row && [row[Math.max(0, bx - 1)], row[Math.min(width - 1, bx + 1)], above![bx], below![bx]].some(s => s.hitId !== center.hitId);
+      const samples = boundary ? [-0.25, 0.25].flatMap(dy => [-0.25, 0.25].map(dx => traceSourceWithMotion(bx + dx, by + dy, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds))) : [center];
+      if (boundary) sampledEdges++;
+      for (const src of samples) {
+        // exitPupilBlurDiameterMm's pointDistMm is the object's AXIAL distance from the sensor (the distance to
+        // its z-plane), not the ray's Euclidean hit distance (src.depthMm, which is larger for every off-axis
+        // pixel by 1/cosTheta) — see camera.ts's own pointBundle convention and paraxial.ts's imageOf doc
+        // comment, both cited in e4.md. src.objectPoint[2] is that hit point's own axial z, already computed.
+        const defocusDiameterMm = exitPupilBlurDiameterMm(model, src.objectPoint[2]);
+        const combinedDiameterMm = Math.hypot(defocusDiameterMm, diffractionDiameterMm); // RSS combination, assumed
+        const radiusPx = combinedDiameterMm / blockPitchMm / 2;
+        if (radiusPx > MAX_KERNEL_RADIUS_PX) kernelClamped = true;
+        const kernel = kernelFor(radiusPx);
 
-      // exitPupilBlurDiameterMm's pointDistMm is the object's AXIAL distance from the sensor (the distance to
-      // its z-plane), not the ray's Euclidean hit distance (src.depthMm, which is larger for every off-axis
-      // pixel by 1/cosTheta) — see camera.ts's own pointBundle convention and paraxial.ts's imageOf doc
-      // comment, both cited in e4.md. src.objectPoint[2] is that hit point's own axial z, already computed.
-      const defocusDiameterMm = exitPupilBlurDiameterMm(model, src.objectPoint[2]);
-      const combinedDiameterMm = Math.hypot(defocusDiameterMm, diffractionDiameterMm); // RSS combination, assumed
-      const radiusPx = combinedDiameterMm / blockPitchMm / 2;
-      if (radiusPx > MAX_KERNEL_RADIUS_PX) kernelClamped = true;
-      const kernel = kernelFor(radiusPx);
-
-      for (const cell of kernel) {
-        const ddx = bx + cell.dx;
-        const ddy = by + cell.dy;
-        if (ddx < 0 || ddx >= width || ddy < 0 || ddy >= height) continue;
-        const didx = (ddy * width + ddx) * 3;
-        destChannel[didx] += src.channelElectronsSharp[0] * cell.w;
-        destChannel[didx + 1] += src.channelElectronsSharp[1] * cell.w;
-        destChannel[didx + 2] += src.channelElectronsSharp[2] * cell.w;
+        for (const cell of kernel) {
+          const ddx = bx + cell.dx;
+          const ddy = by + cell.dy;
+          if (ddx < 0 || ddx >= width || ddy < 0 || ddy >= height) continue;
+          const didx = (ddy * width + ddx) * 3;
+          destChannel[didx] += src.channelElectronsSharp[0] * cell.w / samples.length;
+          destChannel[didx + 1] += src.channelElectronsSharp[1] * cell.w / samples.length;
+          destChannel[didx + 2] += src.channelElectronsSharp[2] * cell.w / samples.length;
+        }
       }
     }
+    centerRows.delete(by - 1);
   }
+  if (edgeSampling) notes.push(`field silhouette antialiasing: four depth-preserving subpixel samples at ${sampledEdges} boundary pixels; fine features smaller than the sampling grid remain approximate`);
   if (kernelClamped) notes.push(`some source pixels' blur exceeded the ${MAX_KERNEL_RADIUS_PX}-rendered-pixel kernel cap and render slightly sharper than the true physics there (see e4.md)`);
 
   // ---- point highlights: splat directly, by projection, not by hoping a per-pixel primary ray hits them ----

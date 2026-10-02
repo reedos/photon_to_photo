@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { compute, exitPupilBlurDiameterMm } from './camera';
 import { renderImage, renderSetup, traceSource, traceSourceWithMotion, projectToRenderedPixel } from './render';
-import { varianceE, analogGain } from './sensor';
+import { varianceE, analogGain, readout } from './sensor';
 import { airyRadius } from './diffraction';
 import type { Scenario } from './types';
 import { BINS, sensorFor } from './data';
@@ -20,6 +20,34 @@ function baseScenario(overrides: Partial<Scenario> = {}): Scenario {
     ...overrides,
   };
 }
+
+describe('field silhouette integration', () => {
+  it('integrates a half-covered pixel before readout instead of choosing one side of the edge', () => {
+    const original = SCENES.field;
+    try {
+      const model = compute(baseScenario({ lens: 'n500', scene: 'field', focusM: 30, fno: 8, shutter: 1 / 1000, iso: 100 }));
+      const width = 120, height = 80, x = 60, y = 40;
+      const setup = renderSetup(model, width);
+      const edgeX = (x + .5 - width / 2) * setup.blockPitchMm * 30000 / setup.efl;
+      const front = flatBillboard('edge', [0, 0, 30000], 100000, 100000, () => .8);
+      front.coverage = u => u < edgeX / 100000;
+      const back = flatBillboard('background', [0, 0, 30000.01], 100000, 100000, () => .05);
+      SCENES.field = () => ({ billboards: [front, back], illuminant: { spectrum: daylightAt(5500), lux: 20000 }, movingBillboardIds: ['offscreen-subject'] });
+      const sampleScene = renderSetup(model, width).sceneObj;
+      const samples = [-.25, .25].flatMap(dy => [-.25, .25].map(dx => traceSource(x + dx, y + dy, width, height, setup.blockPitchMm, setup.efl, setup.workingFno, sampleScene, setup.spec, setup.exposureS)));
+      expect(samples.filter(s => s.hitId === 'edge')).toHaveLength(2);
+      const mean = samples.reduce((sum, s) => sum + s.channelElectronsSharp[0] / 4, 0);
+      const expected = readout(setup.spec, mean + setup.spec.darkCurrentEPerS * setup.exposureS, setup.iso);
+      const result = renderImage(model, { width, height, seed: 1 });
+      expect(Math.abs(result.raw[y * width + x] - expected)).toBeLessThan(5);
+      const oneSide = readout(setup.spec, samples[0].channelElectronsSharp[0], setup.iso);
+      expect(Math.abs(result.raw[y * width + x] - oneSide)).toBeGreaterThan(20);
+      // Enabling motion for another subject must not change a stationary silhouette's sampling quality.
+      const moving = renderImage({ ...model, scenario: { ...model.scenario, motion: { speedMps: .000001 } } }, { width, height, seed: 1 });
+      expect(moving.raw).toEqual(result.raw);
+    } finally { SCENES.field = original; }
+  });
+});
 
 describe('renderImage: basics', () => {
   // A time budget only means something on a quiet machine: alone this renders in ~1.9 s, inside the full parallel

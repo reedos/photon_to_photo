@@ -1,0 +1,89 @@
+.learn-launch { min-height: 36px; padding-inline: 14px; color: var(--accent); }
+#journey { padding: 10px 16px; background: #1b2025; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 16px; }
+.journey-copy { min-width: 0; flex: 1; }
+.journey-label { display: block; color: var(--accent); font: 10px var(--mono); letter-spacing: .04em; margin-bottom: 4px; }
+#journey select { width: 100%; border: 0; padding: 2px 20px 2px 0; color: var(--ink); background: #1b2025; font: 600 14px var(--sans); }
+#journey p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+#journey nav { display: flex; flex-wrap: wrap; justify-content: end; gap: 4px; max-width: 230px; }
+#journey nav .btn { padding: 0 10px; min-height: 36px; }
+#journey .btn:disabled, #compare-dialog .btn:disabled, .photo-actions .btn:disabled { opacity: .45; cursor: default; }
+.photo-actions { display: flex; gap: 5px; margin: 0 0 6px; }
+.photo-actions .btn { min-height: 30px; font-size: 10px; padding: 0 10px; flex: 1; }
+.workspace .studio-sidebar[data-pane="parts"] .photo-actions { grid-column: 1 / -1; }
+.lesson-shortcuts { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.lesson-shortcuts .btn { flex: 1; min-height: 36px; padding: 0 6px; font-size: 10px; }
+#sensor-lesson { position: absolute; inset: 0; z-index: 65; background: var(--surface); padding: clamp(12px, 2vw, 24px); overflow: auto; }
+#sensor-lesson header, #compare-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#sensor-lesson h2, #compare-dialog h2 { margin: 0; font: 600 26px var(--display); }
+#sensor-lesson header { position: sticky; top: -24px; z-index: 2; padding-block: 4px; background: var(--surface); }
+#sensor-lesson p { font-size: 12px; line-height: 1.5; max-width: 80ch; margin: 9px 0; }
+#sensor-lesson .lesson-note { color: var(--muted); font-size: 11px; }
+.lesson-tabs { display: flex; gap: 6px; margin: 12px 0; }
+.lesson-tabs [aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+.lesson-control { display: block; font-size: 12px; }
+.lesson-control input { display: block; width: 100%; height: 32px; accent-color: var(--accent); }
+.lesson-control output { float: right; font: 11px var(--mono); }
+.lesson-control select, .experiment-picker select { margin: 5px 0; display: block; width: 100%; background: var(--raise); color: var(--ink); border: 1px solid var(--line-2); padding: 8px; font: 12px var(--sans); }
+.row-demo { display: grid; gap: 2px; margin: 8px 0; }
+.scan-row { display: grid; grid-template-columns: 18px 1fr 65px; align-items: center; gap: 8px; font: 9px var(--mono); color: var(--muted); }
+.scan-row i { position: relative; display: block; height: 7px; background: #26313a; }
+.scan-row i::after { content: ''; position: absolute; top: -1px; bottom: -1px; left: var(--scan); width: 2px; background: var(--ink); }
+.scan-row b { position: absolute; height: 7px; min-width: 1px; background: #6c7780; }
+.scan-row.collecting b { background: var(--accent); }
+.scan-row.read b { background: var(--spec); }
+.charge-demo { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 18px; border-block: 1px solid var(--line); padding: 10px 0; }
+.charge-demo meter { width: 100%; }
+#adc-value { font-family: var(--mono); color: var(--charge); }
+.pipeline-picture { position: relative; max-width: 600px; margin: 10px auto; }
+#pipeline-canvas { position: static; inset: auto; display: block; width: 100%; height: auto; max-height: 34vh; object-fit: contain; background: #16191d; }
+#pipeline-crop { width: 80px; height: 80px; position: absolute; inset: auto 6px 6px auto; border: 2px solid var(--accent); background: #15191c; image-rendering: pixelated; }
+#sensor-lesson { touch-action: pan-y; }
+.specs dt, .rp-pick-k, .rp-card figcaption, .rp-card .note { color: var(--muted); }
+.specs .spec-evidence { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.show-lesson > :not(#sensor-lesson) { visibility: hidden; }
+.workspace .viewer:has(#sensor-lesson:not([hidden])) #studio-exposure { display: none; }
+#compare-dialog { width: min(1050px, calc(100vw - 32px)); max-height: calc(100svh - 32px); box-sizing: border-box; padding: 24px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-2); border-radius: 8px; }
+#compare-dialog::backdrop { background: #000b; }
+#compare-dialog .btn { min-height: 40px; }
+.experiment-picker { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-top: 16px; }
+.experiment-picker label { font-size: 11px; flex: 1; min-width: 180px; }
+.experiment-picker select { margin-bottom: 0; height: 40px; }
+#experiment-note, #compare-difference { font-size: 13px; line-height: 1.5; }
+.compare-pictures { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.compare-pictures figure { margin: 0; min-width: 0; }
+.compare-pictures h3 { font: 600 14px var(--sans); }
+.compare-pictures canvas { display: block; width: 100%; background: #181c20; }
+.compare-pictures figcaption { font: 11px/1.6 var(--mono); margin-top: 8px; }
+#compare-dialog footer { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; }
+#compare-status { color: var(--muted); font-size: 11px; }
+:is(#journey, #sensor-lesson, #compare-dialog, .photo-actions) :is(button, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (min-width: 1000px) {
+  #readout-lesson { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 24px; }
+  #readout-lesson > p:first-child { grid-column: 1 / -1; }
+  #row-demo { grid-column: 1; grid-row: 2; }
+  #readout-lesson > .lesson-control { grid-column: 1; grid-row: 3; }
+  #scan-detail { grid-column: 1; grid-row: 4; }
+  #readout-lesson .charge-demo { grid-column: 2; grid-row: 2 / span 2; display: block; border: 0; padding: 0; }
+  #charge-detail { grid-column: 2; grid-row: 4; }
+  #readout-lesson > p:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .workspace .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .learn-launch { padding-inline: 9px; font-size: 10px; align-self: stretch; min-height: 40px; border-width: 0 0 0 1px; }
+  #journey { padding: 8px 10px; display: block; }
+  #journey nav { max-width: none; margin-top: 6px; justify-content: start; }
+  #journey p { font-size: 11px; }
+  #journey select { font-size: 12px; }
+  .photo-actions { flex-wrap: wrap; }
+  .photo-actions .btn { min-height: 36px; padding: 0 5px; }
+  .workspace .view:has(#sensor-lesson:not([hidden])) { height: clamp(380px, 56svh, 550px); }
+  #sensor-lesson { padding: 12px; }
+  #sensor-lesson header { top: -12px; }
+  #sensor-lesson h2 { font-size: 22px; }
+  #sensor-lesson header .btn { font-size: 10px; padding-inline: 8px; }
+  .charge-demo { grid-template-columns: 1fr; gap: 0; }
+  #compare-dialog { padding: 14px; width: calc(100vw - 16px); max-height: calc(100svh - 16px); }
+  .compare-pictures { gap: 8px; }
+  .compare-pictures figcaption { font-size: 9px; }
+  #compare-dialog footer .btn { flex: 1; }
+}

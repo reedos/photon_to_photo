@@ -181,6 +181,7 @@ export const build: BuildPiece = (ctx) => {
   let mirrorUp = false;
   let raysOn = true;
   const offLayer = ctx.bus.on('layer', (e) => { if (e.id === 'rays') { raysOn = e.on; if (lastModel) updateExtras(lastModel); } });
+  const offPause = ctx.bus.on('pause-exposure', () => exposure.pause());
 
   // The exposure panel sits in the view's left rail (with the docked final image under it) on a wide screen and
   // becomes a strip under the view on a phone (UI-11).
@@ -933,7 +934,7 @@ export const build: BuildPiece = (ctx) => {
   linkBtn.addEventListener('click', () => { if (linkTo) ctx.bus.emit('goto-piece', { piece: linkTo }); });
   function back() { openDetail(null); ctx.bus.emit('select-part', { id: null }); }
   const onKey = (e: KeyboardEvent) => {
-    if (!group.visible) return;
+    if (!group.visible || canvas.inert || document.querySelector('dialog[open]')) return;
     const typing = (e.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable]');
     if (e.key === 'Escape' && detail) back();
     else if ((e.key === 'f' || e.key === 'F') && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) exposure.fire();
@@ -1357,6 +1358,7 @@ export const build: BuildPiece = (ctx) => {
       rays.dispose();
       exposure.dispose();
       offLayer();
+      offPause();
       phoneMq?.removeEventListener('change', placePanel);
       viewSwitch.remove();
       teach.stop();

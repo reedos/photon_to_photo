@@ -2,6 +2,17 @@
 
 _Lead, 09/28/2026. Working name; the brief is docs/BRIEF.md._
 
+## Current buildout, 10/01/2026
+
+The original plan below records the broader vision; its historical progress counts are not the current status.
+The compact workspace and reference-style navigation now have an optional eight-stop Follow the light tour,
+an interactive row-readout/ADC lesson, an explorer for the renderer's actual image-pipeline buffers, and pinned
+A/B photos with three controlled experiments. The field renderer integrates silhouette edge samples before blur.
+Current behavior, verification commands and remaining physical-device checks are in [INSPECTION.md](INSPECTION.md).
+
+The inspection pieces remain separate renderers connected by camera context and a brief transition; they are
+not yet a single continuous physical-scale scene. Advanced diffraction/coating lessons remain future work.
+
 A reader picks a lens, a body and settings, then follows light from a synthetic scene through every glass element
 and the iris onto the sensor, into one pixel's well and out through the pipeline to the finished photo. Every ray,
 spot, photon and well level on screen is computed by the engine in `src/engine` for the current settings. The site

@@ -8,6 +8,8 @@
 //                    the pins back until it says loading: false
 //   'layer': the view's layer chips (Rays on/off) -- the camera hides its traced light when Rays is off
 type Events = { 'loupe-tap': { x: number; y: number; renderId: number }; 'scenario-set': Partial<import('../engine/types').Scenario>;
+  'pause-exposure': Record<string, never>;
+  'pause-tour': Record<string, never>;
   'goto-piece': { piece: 'camera' | 'lens' | 'cone' | 'loupe' }; 'select-part': { id: string | null };
   'piece-loading': { id: string; loading: boolean; progress?: number; label?: string; error?: string }; 'layer': { id: 'rays'; on: boolean } };
 type Name = keyof Events;
