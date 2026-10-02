@@ -50,6 +50,13 @@ export function rowWindow(row: number, rows: number, scanS: number, exposureS: n
   return { start, end: start + exposureS };
 }
 
+/** Integral of an illustrative step edge moving right at four sensor widths/s, initially at x=.22.
+ * A sample is lit until the edge crosses it. Normalize by the complete exposure, including when scrubbing. */
+export function movingEdgeFraction(position: number, start: number, exposure: number, time: number): number {
+  const collected = Math.max(0, Math.min(exposure, time - start));
+  return exposure > 0 ? Math.max(0, Math.min(collected, (position - .22) / 4 - start)) / exposure : 0;
+}
+
 export const EXPERIMENTS: Record<string, { title: string; text: string; before: Partial<Scenario>; after: Partial<Scenario> }> = {
   depth: { title: 'Blur the background', text: 'A: f/8. B: f/2. The shutter is shortened four stops to keep nominal exposure constant. Compare the background and the sharp foreground.', before: { lens: 'n50', scene: 'bench', focusM: 1.5, fno: 8, shutter: 1 / 60, iso: 100, motion: { speedMps: 0 }, subjectM: undefined }, after: { fno: 2, shutter: 1 / 960 } },
   motion: { title: 'Freeze motion', text: 'The star card moves at 1 m/s. A: 1/60 s. B: 1/1000 s with ISO raised to hold brightness approximately steady. Less blur costs collected light.', before: { lens: 'n50', scene: 'bench', focusM: 3, fno: 4, shutter: 1 / 60, iso: 100, motion: { speedMps: 1 }, subjectM: undefined }, after: { shutter: 1 / 1000, iso: 1600 } },

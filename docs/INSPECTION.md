@@ -42,6 +42,28 @@ recipe explanation. Restore my shot restores all starting settings. Pins intenti
 
 ## Release checks
 
+The physics and animation pass adds expandable notes at all eight tour stops: photon energy, Snell refraction,
+aperture/working f-number and diffraction, focus/CoC, QE and shot noise, row timing/ADC, color processing, and
+motion blur. Live quantities come from the current model. Examples cover portraits, landscapes, birds, indoor
+light, fast action and tripod exposures.
+
+Lens and focus playback clips bright trails to the existing traced segments, preserving every bend and terminal
+surface. Progress is geometric and normalized per ray; it is not light-speed or optical-path-time simulation.
+The pixel's arriving-packet animation is now explicitly controlled rather than ambient. These views start paused,
+support scrubbing, and pause on leaving the view, opening a lesson/dialog, or hiding the document.
+
+Readout playback integrates a step edge moving at an illustrative four sensor widths per second over each row's
+actual modeled exposure window. The diagram is a separate timing chart, not rolling-shutter distortion applied
+to the photo. Charge/ADC represent a separately adjustable pixel. The binary code is the same engine readout
+value shown in the numeric caption. Pipeline playback wipes between cached copies of the actual intermediate
+buffers; the wipe does not simulate processor scheduling. Intermediate values remain unencoded, and the final
+stage remains byte-identical to the photo. Static controls work with reduced motion; nothing starts automatically.
+
+`tools/test-animation.mjs` covers opt-in playback, pause stability, scrubbing, switching views, final-buffer identity,
+stage accessibility descriptions, desktop/phone layouts and console errors. `trace-playback.test.ts` checks that
+trails never shortcut a refracting corner or overshoot their terminal point. The moving-edge integral has an
+analytic timing regression in `learning-model.test.ts`.
+
 `tools/test-learning.mjs` verifies tour continuity, pipeline byte identity and layout, accessible slider names,
 focus restoration, clamped focus, stale-render rejection, experimental pairing, restore and four viewport sizes.
 `tools/test-accessibility.mjs` runs axe WCAG 2/2.1/2.2 A/AA checks on the workspace, both lessons, comparison,

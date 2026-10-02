@@ -42,7 +42,7 @@ try {
         await page.locator('#pipeline-stage').selectOption('raw');
         assert.ok(await page.locator('#pipeline-description').textContent().then(s => s.includes('RGGB')));
         const picture = await page.locator('#pipeline-canvas').boundingBox(), explanation = await page.locator('#pipeline-description').boundingBox();
-        assert.ok(picture.height > 90 && explanation.y >= picture.y + picture.height, 'pipeline image occupies space above its explanation');
+        assert.ok(picture.height > 90 && (explanation.y >= picture.y + picture.height || explanation.x >= picture.x + picture.width), 'pipeline image and explanation have separate readable space');
         await page.screenshot({ path: `shots/learning/pipeline-${width}.png` });
       }
       assert.ok(await page.locator('#journey-next').isVisible());

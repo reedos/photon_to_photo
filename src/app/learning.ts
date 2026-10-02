@@ -6,6 +6,8 @@ import { sensorFor } from '../engine/data';
 import { analogGain, readout, maxDn } from '../engine/sensor';
 import '../styles/learning.css';
 import { emit, on } from './bus';
+import { learningInsights } from './learning-insights';
+import { drawReadout } from './readout-visual';
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -22,19 +24,24 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p></div>
     <nav aria-label="Tour controls"><button class="btn" id="journey-prev" aria-label="Previous tour stop">‹</button><button class="btn" id="journey-play">Play</button><button class="btn" id="journey-next" aria-label="Next tour stop">Next ›</button><button class="btn" id="journey-restart">Restart</button><button class="btn" id="journey-close" aria-label="Close tour">×</button></nav>`;
   el('viewer').prepend(journey);
+  journey.querySelector('.journey-copy')!.insertAdjacentHTML('beforeend', '<details id="journey-physics"><summary>Physics & practical use</summary><p id="journey-equation"></p><p id="journey-live"></p><p id="journey-use"></p></details>');
   const lesson = document.createElement('section');
   lesson.id = 'sensor-lesson'; lesson.hidden = true; lesson.setAttribute('aria-label', 'Sensor to photo');
   lesson.innerHTML = `<header><div><span class="journey-label">Inside your camera · Sensor → Photo</span><h2 id="lesson-title">Read the sensor</h2></div><button class="btn" id="lesson-close">← Camera</button></header>
-    <div class="lesson-tabs" role="group" aria-label="Sensor lessons"><button class="btn" id="lesson-readout" aria-pressed="true">Readout</button><button class="btn" id="lesson-pipeline" aria-pressed="false">Image pipeline</button></div>
-    <div id="readout-lesson"><p>Rows collect light for the same duration, but start at different times. Scrub through a full electronic scan.</p>
+    <div class="lesson-toolbar"><div class="lesson-tabs" role="group" aria-label="Sensor lessons"><button class="btn" id="lesson-readout" aria-pressed="true">Readout</button><button class="btn" id="lesson-pipeline" aria-pressed="false">Image pipeline</button></div>
+    <div class="lesson-playback"><button class="btn" id="lesson-play">Play scan</button><button class="btn" id="lesson-replay">Restart</button><span id="lesson-timing">Time expanded for visibility</span></div></div>
+    <div id="readout-lesson"><p>Rows collect light for the same duration, but start at different times. Watch a moving edge bend as it is read row by row.</p>
+      <canvas id="readout-visual" width="760" height="210" role="img" aria-label="Electronic scan, charge well and digital conversion"></canvas>
       <div class="row-demo" id="row-demo" role="img" aria-label="Row exposure timing"></div>
-      <label class="lesson-control" for="scan-progress">Scan progress <output id="scan-value" aria-hidden="true"></output><input id="scan-progress" type="range" min="0" max="100" value="50"></label>
+      <label class="lesson-control" for="scan-progress">Scan progress <output id="scan-value" aria-hidden="true"></output><input id="scan-progress" type="range" min="0" max="100" step="0.1" value="50"></label>
       <p id="scan-detail" class="lesson-note"></p>
       <div class="charge-demo"><div><label class="lesson-control" for="charge-level">Collected charge <output id="charge-value" aria-hidden="true"></output><input id="charge-level" type="range" min="0" max="100" value="25"></label><meter id="charge-meter" aria-label="Fraction of full well" min="0" max="100" value="25">25%</meter></div><p id="adc-value" role="status"></p></div>
-      <p id="charge-detail" class="lesson-note"></p><p class="lesson-note">Schematic electronic shutter timing; travel direction and row count are illustrative. Mechanical curtains have their own timing. This preview does not add rolling-shutter skew to the photo.</p>
+      <p id="charge-detail" class="lesson-note"></p><details class="lesson-context"><summary>How this applies to a real photograph</summary><p class="lesson-note">Try it: a fast shutter reduces motion blur within a row; a fast scan reduces skew between rows. The moving edge is a schematic at 4 sensor widths/s; the dashed line marks its first-row exposure midpoint. Charge and ADC illustrate a separately selected pixel. Mechanical curtains have their own timing. Skew is not added to your photo.</p></details>
     </div>
     <div id="pipeline-lesson" hidden><label class="lesson-control">Processing stage<select id="pipeline-stage">${PIPELINE.map(([id, title], i) => `<option value="${id}">${i + 1}. ${title}</option>`).join('')}</select></label>
-      <div class="pipeline-picture"><canvas id="pipeline-canvas" width="600" height="400" role="img" aria-label="Current shot at the selected processing stage"></canvas><canvas id="pipeline-crop" width="128" height="128" role="img" aria-label="Enlarged center sample of the selected processing stage"></canvas></div>
+      <div id="pipeline-route" aria-label="Processing sequence">${PIPELINE.map(([id, title], i) => `<button class="btn" data-stage="${id}" aria-label="${title}">${i + 1}<span>${['Raw', 'Color', 'Balance', 'Matrix', 'Display'][i]}</span></button>`).join('')}</div>
+      <div class="pipeline-picture"><canvas id="pipeline-canvas" width="600" height="400" role="img" aria-label="Current shot at the selected processing stage"></canvas><canvas id="pipeline-crop" width="128" height="128" role="img" aria-label="Enlarged center sample of the selected processing stage"></canvas><i id="pipeline-wipe" hidden></i></div>
+      <label class="lesson-control" for="pipeline-progress">Processing journey<input id="pipeline-progress" type="range" min="0" max="1000" value="0"></label>
       <p id="pipeline-description" role="status"></p><p class="lesson-note">Full frame + enlarged center sample. Intermediate stages are shown as stored, without display encoding; they can look dark. Each sample represents a block of sensor pixels.</p>
     </div><p id="lesson-shot" class="lesson-note" role="status"></p>`;
   el('view').append(lesson);
@@ -46,33 +53,64 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   let returnState: Pick<AppState, 'piece' | 'cameraPart'> | null = null;
   let tourReturn: Pick<AppState, 'piece' | 'cameraPart'> | null = null;
   let lessonOpener: HTMLElement | null = null;
-  const rendered = () => { const v = currentRender(); return v && sameShot(v.scenario, compute(store.get().scenario).scenario) ? v : null; };
+  let lessonModel = compute(store.get().scenario);
+  let animation = 0, animating = false, animationTime = 0, lastFrame = 0;
+  const pipelineCache = new Map<string, HTMLCanvasElement>();
+  let cachedRenderId = -1;
+  const duration = () => mode === 'readout' ? 8000 : 15000;
+  function pauseLesson() {
+    animating = false; cancelAnimationFrame(animation);
+    el('lesson-play').textContent = mode === 'readout' ? 'Play scan' : 'Play pipeline';
+  }
+  function showInsights() {
+    const insight = learningInsights(lessonModel)[index];
+    el('journey-equation').textContent = insight.equation;
+    el('journey-live').textContent = insight.live;
+    el('journey-use').textContent = insight.use;
+  }
+  const rendered = () => { const v = currentRender(); return v && sameShot(v.scenario, lessonModel.scenario) ? v : null; };
   function pause() { playing = false; clearTimeout(timer); el('journey-play').textContent = 'Play'; }
-  on('pause-tour', pause);
+  on('pause-tour', () => { pause(); pauseLesson(); });
   function schedule() {
     clearTimeout(timer);
     if (playing) timer = window.setTimeout(() => { if (index < TOUR.length - 1) go(index + 1); else pause(); }, 14000);
   }
-  function paintPipeline(view: RenderView | null) {
+  function paintPipeline(view: RenderView | null, reveal = 1) {
     const stage = el<HTMLSelectElement>('pipeline-stage').value as PipelineStage;
     const desc = PIPELINE.find(([id]) => id === stage)!;
-    el('pipeline-description').textContent = desc[2];
+    if (el('pipeline-description').textContent !== desc[2]) el('pipeline-description').textContent = desc[2];
+    for (const button of el('pipeline-route').querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.stage === stage));
     const canvas = el<HTMLCanvasElement>('pipeline-canvas'), crop = el<HTMLCanvasElement>('pipeline-crop');
     const ctx = canvas.getContext('2d')!, cctx = crop.getContext('2d')!;
     if (!view) { ctx.clearRect(0, 0, canvas.width, canvas.height); cctx.clearRect(0, 0, 128, 128); return; }
     canvas.width = view.width; canvas.height = view.height;
-    const data = ctx.createImageData(view.width, view.height); data.data.set(pipelinePixels(view, stage)); ctx.putImageData(data, 0, 0);
+    if (cachedRenderId !== view.renderId) { pipelineCache.clear(); cachedRenderId = view.renderId; }
+    const buffer = (id: PipelineStage) => {
+      let image = pipelineCache.get(id);
+      if (!image) {
+        image = document.createElement('canvas'); image.width = view.width; image.height = view.height;
+        const context = image.getContext('2d')!, data = context.createImageData(view.width, view.height);
+        data.data.set(pipelinePixels(view, id)); context.putImageData(data, 0, 0); pipelineCache.set(id, image);
+      }
+      return image;
+    };
+    const step = PIPELINE.findIndex(([id]) => id === stage);
+    if (reveal < 1 && step > 0) ctx.drawImage(buffer(PIPELINE[step - 1][0]), 0, 0);
+    else { ctx.fillStyle = '#0d141c'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, canvas.width * reveal, canvas.height); ctx.clip(); ctx.drawImage(buffer(stage), 0, 0); ctx.restore();
+    el('pipeline-wipe').hidden = reveal >= 1;
+    el('pipeline-wipe').style.left = `${reveal * 100}%`;
     cctx.imageSmoothingEnabled = false;
     cctx.drawImage(canvas, Math.floor(view.width / 2) - 8, Math.floor(view.height / 2) - 8, 16, 16, 0, 0, 128, 128);
     canvas.setAttribute('aria-label', `Your shot: ${desc[1]}`);
   }
   function paintReadout() {
-    const model = compute(store.get().scenario), sc = model.scenario;
+    const model = lessonModel, sc = model.scenario;
     const spec = sensorFor(sc.format, sc.iso, sc.sensor).spec;
     const progress = Number(el<HTMLInputElement>('scan-progress').value) / 100;
     const total = model.sensor.readoutS + sc.shutter, time = progress * total;
     const rows = 8;
-    el('row-demo').replaceChildren(...Array.from({ length: rows }, (_, row) => {
+    if (!el('row-demo').children.length) el('row-demo').replaceChildren(...Array.from({ length: rows }, (_, row) => {
       const line = document.createElement('div'); const window = rowWindow(row, rows, model.sensor.readoutS, sc.shutter);
       const status = time < window.start ? 'waiting' : time < window.end ? 'collecting' : 'read';
       line.className = `scan-row ${status}`;
@@ -82,6 +120,12 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
       track.append(exposure); const state = document.createElement('span'); state.textContent = status;
       line.append(label, track, state); return line;
     }));
+    Array.from(el('row-demo').children).forEach((node, row) => {
+      const window = rowWindow(row, rows, model.sensor.readoutS, sc.shutter);
+      const status = time < window.start ? 'waiting' : time < window.end ? 'collecting' : 'read';
+      node.className = `scan-row ${status}`; node.lastElementChild!.textContent = status;
+      const bar = node.querySelector('b')!; bar.style.left = `${100 * window.start / total}%`; bar.style.width = `${100 * sc.shutter / total}%`;
+    });
     el('row-demo').style.setProperty('--scan', `${100 * progress}%`);
     el('scan-value').textContent = `${(time * 1000).toFixed(2)} ms`;
     el('scan-progress').setAttribute('aria-valuetext', `${(time * 1000).toFixed(2)} milliseconds`);
@@ -93,16 +137,37 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el('charge-value').textContent = `${Math.round(electrons).toLocaleString()} e−`;
     el('charge-level').setAttribute('aria-valuetext', `${Math.round(electrons).toLocaleString()} electrons, ${Math.round(fraction * 100)} percent of full well`);
     el<HTMLMeterElement>('charge-meter').value = fraction * 100;
-    el('adc-value').textContent = `${Math.round(electrons).toLocaleString()} e− → ${analogGain(spec, sc.iso).toFixed(3)} DN/e− → ${code.toLocaleString()} DN${code === maxDn(spec) ? ' · ADC clipped' : ''}`;
+    const adcText = `${Math.round(electrons).toLocaleString()} e− → ${analogGain(spec, sc.iso).toFixed(3)} DN/e− → ${code.toLocaleString()} DN${code === maxDn(spec) ? ' · ADC clipped' : ''}`;
+    if (el('adc-value').textContent !== adcText) el('adc-value').textContent = adcText;
     el('charge-detail').textContent = `ISO ${sc.iso} · ${spec.bitDepth}-bit ADC · ${model.sensor.readNoiseE.toFixed(2)} e− RMS read noise. Conversion shown at zero sampled read noise, including black level and rounding. Full well: ${Math.round(model.sensor.fullWellE).toLocaleString()} e−. The pixel view shows stochastic noise.`;
+    drawReadout(el<HTMLCanvasElement>('readout-visual'), time, model.sensor.readoutS, sc.shutter, fraction, code, spec.bitDepth);
+  }
+  function paintAnimation() {
+    if (mode === 'readout') { el<HTMLInputElement>('scan-progress').value = String(100 * animationTime / duration()); paintReadout(); }
+    else {
+      const step = Math.min(4, Math.floor(animationTime / 3000));
+      el<HTMLSelectElement>('pipeline-stage').value = PIPELINE[step][0];
+      el<HTMLInputElement>('pipeline-progress').value = String(1000 * animationTime / duration());
+      el('pipeline-progress').setAttribute('aria-valuetext', `${PIPELINE[step][1]}, ${Math.round(100 * animationTime / duration())} percent through the journey`);
+      paintPipeline(rendered(), Math.min(1, (animationTime - step * 3000) / 1000));
+    }
+  }
+  function animate(now: number) {
+    if (!animating) return;
+    if (document.hidden || lesson.hidden || document.querySelector('dialog[open]')) { pauseLesson(); return; }
+    animationTime = Math.min(duration(), animationTime + Math.min(100, now - lastFrame)); lastFrame = now;
+    paintAnimation();
+    if (animationTime >= duration()) pauseLesson(); else animation = requestAnimationFrame(animate);
   }
   function refresh() {
     if (lesson.hidden) return;
     const view = rendered();
+    el<HTMLButtonElement>('lesson-play').disabled = mode === 'pipeline' && !view;
     el('lesson-shot').textContent = view ? `Same shot · ${view.scenario.lens} · f/${view.scenario.fno} · ISO ${view.scenario.iso}` : 'Updating your shot…';
     if (mode === 'pipeline') paintPipeline(view); else paintReadout();
   }
   function hideLesson(restore = false) {
+    pauseLesson();
     lesson.hidden = true; el('view').classList.remove('show-lesson');
     // Hidden canvas controls cannot take keyboard focus behind the lesson.
     for (const child of Array.from(el('view').children)) if (child !== lesson) (child as HTMLElement).inert = false;
@@ -116,25 +181,33 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     target.focus({ preventScroll: true });
   }
   function openLesson(nextMode: 'readout' | 'pipeline') {
+    pauseLesson();
     emit('pause-exposure', {});
     if (lesson.hidden) {
       returnState = { piece: store.get().piece, cameraPart: store.get().cameraPart };
       lessonOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     }
     el('lesson-close').textContent = '← ' + ({ camera: 'Camera', lens: 'Optics', cone: 'Focus', loupe: 'Pixel' }[returnState?.piece ?? 'camera']);
-    mode = nextMode; lesson.hidden = false; el('view').classList.add('show-lesson');
+    mode = nextMode; animationTime = 0; pauseLesson(); lesson.hidden = false; el('view').classList.add('show-lesson');
+    el('lesson-timing').textContent = mode === 'readout' ? 'Playback scaled · actual time in ms' : 'Stored buffers · illustrative wipe';
     lesson.scrollTop = 0;
     for (const child of Array.from(el('view').children)) if (child !== lesson) (child as HTMLElement).inert = true;
     el('readout-lesson').hidden = mode !== 'readout'; el('pipeline-lesson').hidden = mode !== 'pipeline';
     el('lesson-readout').setAttribute('aria-pressed', String(mode === 'readout'));
     el('lesson-pipeline').setAttribute('aria-pressed', String(mode === 'pipeline'));
-    el('lesson-title').textContent = mode === 'readout' ? 'Read the sensor' : 'From raw to photo'; refresh();
+    el('lesson-title').textContent = mode === 'readout' ? 'Read the sensor' : 'From raw to photo';
+    if (mode === 'pipeline') {
+      animationTime = PIPELINE.findIndex(([id]) => id === el<HTMLSelectElement>('pipeline-stage').value) * 3000 + 1000;
+      paintAnimation();
+    }
+    refresh();
   }
   function go(next: number) {
     index = Math.max(0, Math.min(TOUR.length - 1, next)); const stop = TOUR[index];
     entering = true; hideLesson(); store.setPiece(stop.piece); store.setCameraPart(stop.part); entering = false;
     if (stop.lesson) openLesson(stop.lesson);
     el<HTMLSelectElement>('journey-stop').value = String(index); el('journey-text').textContent = stop.text;
+    showInsights();
     el<HTMLButtonElement>('journey-prev').disabled = index === 0;
     el('journey-next').textContent = index === TOUR.length - 1 ? 'Finish ✓' : 'Next ›';
     schedule();
@@ -162,9 +235,24 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el(`lesson-${name}`).onclick = () => { pause(); openLesson(name); };
   }
   el('lesson-close').onclick = closeLesson;
-  el('pipeline-stage').onchange = () => { pause(); paintPipeline(rendered()); };
-  for (const id of ['scan-progress', 'charge-level']) el(id).oninput = () => { pause(); paintReadout(); };
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+  function pickStage(stage: PipelineStage) {
+    pause(); pauseLesson(); el<HTMLSelectElement>('pipeline-stage').value = stage;
+    animationTime = PIPELINE.findIndex(([id]) => id === stage) * 3000 + 1000;
+    paintAnimation();
+  }
+  el('pipeline-stage').onchange = () => pickStage(el<HTMLSelectElement>('pipeline-stage').value as PipelineStage);
+  for (const button of el('pipeline-route').querySelectorAll('button')) button.onclick = () => pickStage(button.dataset.stage as PipelineStage);
+  for (const id of ['scan-progress', 'charge-level']) el(id).oninput = () => { pause(); pauseLesson(); paintReadout(); };
+  el('pipeline-progress').oninput = () => { pause(); pauseLesson(); animationTime = Number(el<HTMLInputElement>('pipeline-progress').value) * 15; paintAnimation(); };
+  el('lesson-play').onclick = () => {
+    pause(); if (animating) { pauseLesson(); return; }
+    if (mode === 'readout') animationTime = Number(el<HTMLInputElement>('scan-progress').value) * 80;
+    if (animationTime >= duration()) animationTime = 0;
+    animating = true; lastFrame = performance.now(); el('lesson-play').textContent = 'Pause'; animation = requestAnimationFrame(animate);
+  };
+  el('lesson-replay').onclick = () => { pause(); pauseLesson(); animationTime = 0; paintAnimation(); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { pause(); pauseLesson(); } });
+  window.addEventListener('resize', () => { if (!lesson.hidden && mode === 'readout') paintReadout(); });
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
     if (!lesson.hidden) { event.stopImmediatePropagation(); closeLesson(); }
@@ -173,11 +261,11 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   let previous = store.get();
   store.subscribe(state => {
     if (!entering && state !== previous) {
-      pause();
+      pause(); pauseLesson();
       if (state.piece !== previous.piece || state.cameraPart !== previous.cameraPart) hideLesson();
       if (!journey.hidden && (state.piece !== previous.piece || state.cameraPart !== previous.cameraPart)) el('journey-text').textContent = 'Exploring freely. Next returns to the guided journey; Restart begins at the scene.';
     }
-    previous = state; refresh();
+    previous = state; lessonModel = compute(state.scenario); showInsights(); refresh();
   });
   onRender(refresh);
   if (startTour) begin();

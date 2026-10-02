@@ -1,11 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { pipelinePixels, rowWindow, sameShot, EXPERIMENTS } from './learning-model';
+import { pipelinePixels, rowWindow, movingEdgeFraction, sameShot, EXPERIMENTS } from './learning-model';
 import { compute, normalizeScenario } from './engine-api';
 import { renderImage } from '../engine/render';
 import { sensorFor } from '../engine/data';
 import type { RenderView } from './render-client';
 
 describe('sensor-to-photo lessons', () => {
+  it('integrates the moving-edge chart over each row window, keeping skew separate from exposure blur', () => {
+    // x=.38 is crossed at 40 ms. A 30–50 ms exposure is half lit; scrubbing at 35 ms has accumulated a quarter.
+    expect(movingEdgeFraction(.38, .03, .02, .1)).toBeCloseTo(.5, 10);
+    expect(movingEdgeFraction(.38, .03, .02, .035)).toBeCloseTo(.25, 10);
+    expect(movingEdgeFraction(.38, .03, .02, .02)).toBe(0);
+    // Both rows expose for just 1 ms, but a 64 ms scan still records different sides of the same edge.
+    expect(movingEdgeFraction(.38, 0, .001, 1)).toBe(1);
+    expect(movingEdgeFraction(.38, .064, .001, 1)).toBe(0);
+  });
   it('keeps exposure length independent of full-frame scan time, including long exposures', () => {
     for (const exposure of [1 / 8000, 1 / 30, 2]) {
       const first = rowWindow(0, 12, .064, exposure), last = rowWindow(11, 12, .064, exposure);

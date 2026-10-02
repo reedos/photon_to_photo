@@ -8,6 +8,10 @@ The original plan below records the broader vision; its historical progress coun
 The compact workspace and reference-style navigation now have an optional eight-stop Follow the light tour,
 an interactive row-readout/ADC lesson, an explorer for the renderer's actual image-pipeline buffers, and pinned
 A/B photos with three controlled experiments. The field renderer integrates silhouette edge samples before blur.
+The tour now includes live physics and practical photography examples at every stop. Lens and focus views have
+scrubbable light trails along existing traced paths; the pixel view has explicit photon playback. The sensor
+lesson animates an integrated moving-edge chart, charge and ADC diagram, while the pipeline reveals actual
+intermediate buffers. Playback is opt-in, pausable and labeled with its illustrative timing.
 Current behavior, verification commands and remaining physical-device checks are in [INSPECTION.md](INSPECTION.md).
 
 The inspection pieces remain separate renderers connected by camera context and a brief transition; they are

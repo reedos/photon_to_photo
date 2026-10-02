@@ -1,4 +1,27 @@
 .learn-launch { min-height: 36px; padding-inline: 14px; color: var(--accent); }
+.light-playback { display: flex; align-items: center; gap: 12px; padding: 6px 14px; border-top: 1px solid var(--line); background: #131b23; flex: 0 0 auto; }
+.light-playback .btn { min-height: 34px; white-space: nowrap; font-size: 11px; }
+.light-playback label { flex: 1; display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--muted); }
+.light-playback input { width: 100%; min-width: 30px; height: 28px; accent-color: var(--accent); }
+.light-playback > span { max-width: 130px; font: 9px/1.5 var(--mono); color: var(--muted); }
+.workspace .viewer:has(#sensor-lesson:not([hidden])) > .light-playback { display: none; }
+#journey-physics { font-size: 11px; margin-top: 4px; }
+#journey-physics summary { color: var(--accent); cursor: pointer; }
+#journey-physics #journey-equation { color: #b8def6; font-family: var(--mono); }
+.lesson-playback { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
+.lesson-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lesson-toolbar .lesson-tabs { margin: 8px 0; }
+.lesson-toolbar .lesson-playback { flex: 1; }
+.lesson-context { grid-column: 1 / -1; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.lesson-context summary { cursor: pointer; color: var(--accent); }
+.lesson-playback .btn { min-height: 32px; font-size: 11px; }
+.lesson-playback span { color: var(--muted); font: 10px var(--mono); margin-left: auto; }
+#readout-visual { position: static; inset: auto; width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 7px; box-sizing: border-box; }
+#pipeline-route { display: flex; gap: 4px; margin: 6px 0; }
+#pipeline-route .btn { flex: 1; min-width: 0; padding: 6px 3px; height: auto; min-height: 38px; font: 12px var(--mono); flex-direction: column; gap: 3px; }
+#pipeline-route .btn span { display: block; font: 10px/1.4 var(--sans); white-space: normal; }
+#pipeline-route [aria-pressed="true"] { background: #273b47; border-color: #9acfe7; color: #e0f3ff; }
+#pipeline-wipe { position: absolute; top: 0; bottom: 0; width: 2px; background: #d5f4ff; box-shadow: 0 0 14px 3px #87cee9; pointer-events: none; }
 #journey { padding: 10px 16px; background: #1b2025; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 16px; }
 .journey-copy { min-width: 0; flex: 1; }
 .journey-label { display: block; color: var(--accent); font: 10px var(--mono); letter-spacing: .04em; margin-bottom: 4px; }
@@ -34,8 +57,8 @@
 .charge-demo { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 18px; border-block: 1px solid var(--line); padding: 10px 0; }
 .charge-demo meter { width: 100%; }
 #adc-value { font-family: var(--mono); color: var(--charge); }
-.pipeline-picture { position: relative; max-width: 600px; margin: 10px auto; }
-#pipeline-canvas { position: static; inset: auto; display: block; width: 100%; height: auto; max-height: 34vh; object-fit: contain; background: #16191d; }
+.pipeline-picture { position: relative; width: min(100%, 45vh); max-width: 600px; margin: 10px auto; }
+#pipeline-canvas { position: static; inset: auto; display: block; width: 100%; height: auto; background: #16191d; }
 #pipeline-crop { width: 80px; height: 80px; position: absolute; inset: auto 6px 6px auto; border: 2px solid var(--accent); background: #15191c; image-rendering: pixelated; }
 #sensor-lesson { touch-action: pan-y; }
 .specs dt, .rp-pick-k, .rp-card figcaption, .rp-card .note { color: var(--muted); }
@@ -60,14 +83,28 @@
 @media (min-width: 1000px) {
   #readout-lesson { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 24px; }
   #readout-lesson > p:first-child { grid-column: 1 / -1; }
-  #row-demo { grid-column: 1; grid-row: 2; }
-  #readout-lesson > .lesson-control { grid-column: 1; grid-row: 3; }
-  #scan-detail { grid-column: 1; grid-row: 4; }
-  #readout-lesson .charge-demo { grid-column: 2; grid-row: 2 / span 2; display: block; border: 0; padding: 0; }
-  #charge-detail { grid-column: 2; grid-row: 4; }
+  #readout-visual { grid-column: 1; grid-row: 2 / span 2; align-self: center; background: #0d141c; }
+  #row-demo { grid-column: 2; grid-row: 2; }
+  #readout-lesson > .lesson-control { grid-column: 2; grid-row: 3; }
+  #scan-detail { grid-column: 2; grid-row: 4 / span 2; }
+  #readout-lesson .charge-demo { grid-column: 1; grid-row: 4; border: 0; padding: 0; }
+  #charge-detail { grid-column: 1; grid-row: 5; }
   #readout-lesson > p:last-child { grid-column: 1 / -1; }
+  #pipeline-lesson { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); column-gap: 20px; }
+  #pipeline-lesson > .lesson-control:first-child { grid-column: 2; grid-row: 1; }
+  #pipeline-route { grid-column: 2; grid-row: 2; }
+  #pipeline-lesson .pipeline-picture { grid-column: 1; grid-row: 1 / span 4; align-self: center; }
+  #pipeline-lesson > .lesson-control[for="pipeline-progress"] { grid-column: 1; grid-row: 5; }
+  #pipeline-description { grid-column: 2; grid-row: 3; }
+  #pipeline-lesson > .lesson-note { grid-column: 2; grid-row: 4 / span 2; }
 }
 @media (max-width: 760px) {
+  .light-playback { padding: 4px 10px; gap: 6px; }
+  .light-playback label { font-size: 0; gap: 0; }
+  .light-playback > span { max-width: 95px; }
+  .lesson-playback span { max-width: 120px; font-size: 9px; }
+  #readout-visual { min-width: 0; }
+  #pipeline-route .btn span { font-size: 10px; }
   .workspace .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .learn-launch { padding-inline: 9px; font-size: 10px; align-self: stretch; min-height: 40px; border-width: 0 0 0 1px; }
   #journey { padding: 8px 10px; display: block; }

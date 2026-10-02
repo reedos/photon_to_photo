@@ -4,6 +4,7 @@
 // physics) and the Model it already carries -- this piece computes no optics of its own, only scene geometry from
 // numbers the engine returned (see src/pieces/cone/coords.ts's module doc for the scene-space convention).
 import * as THREE from 'three/webgpu';
+import { lightPlayback } from './light-playback';
 import type { BuildPiece, Inset, PartCard } from './types';
 import type { Bundle, Model } from '../engine/model-types';
 import { pointBundle } from '../app/engine-api';
@@ -59,6 +60,7 @@ function insetRectFor(viewW: number, viewH: number): { left: number; bottom: num
 export const build: BuildPiece = (ctx) => {
   const group = new THREE.Group();
   group.name = 'piece-cone';
+  const flight = lightPlayback(ctx, group, 'Toward the sensor', 1);
 
   // ---- persistent objects (geometry/material/texture swapped in place on rebuild(), never the containers -----
   // glassMaterial()'s own transmission:1 (LOOK.md: real optical glass) reads as nearly invisible against this
@@ -268,10 +270,11 @@ export const build: BuildPiece = (ctx) => {
       const c = ctx.look.wavelengthToThreeColor(rayNms[i]);
       rayColors.set([c.r, c.g, c.b, c.r, c.g, c.b], i * 6);
     }
-    sparseRaysGeom.dispose();
+    sparseRays.geometry.dispose();
     sparseRays.geometry = new THREE.BufferGeometry();
     sparseRays.geometry.setAttribute('position', new THREE.Float32BufferAttribute(rayPositions, 3));
     sparseRays.geometry.setAttribute('color', new THREE.Float32BufferAttribute(rayColors, 3));
+    flight.update(rayNms.map((nm, i) => ({ nm, world: [Array.from(rayPositions.slice(i * 6, i * 6 + 3)), Array.from(rayPositions.slice(i * 6 + 3, i * 6 + 6))] as [number, number, number][] })));
 
     // ---- the bokeh disk texture + CoC/predicted rings, sized to comfortably contain all three -----------------
     const cx = bundle.centroid[0];
@@ -495,7 +498,9 @@ export const build: BuildPiece = (ctx) => {
         label: 'On the pixels',
       }];
     },
+    tick(dt) { flight.tick(dt); },
     hooks: {
+      light: flight.state,
       /** Names and screen-space bounds of what this piece draws (layout checks in the screenshot tools). */
       debugObjects() {
         ctx.camera.updateMatrixWorld(true);
@@ -556,11 +561,13 @@ export const build: BuildPiece = (ctx) => {
       if (probe) cancelSelect = frameAboveSheet(ctx, () => group.localToWorld(probe.anchor.clone()), 1, place, extent);
     },
     activate() {
+      flight.activate();
       // The main camera is shared across pieces (stage.ts); enable the context layer only while this piece
       // owns it (see the CONTEXT_LAYER comment above), and disable it again in deactivate() below.
       ctx.camera.layers.enable(1);
     },
     deactivate() {
+      flight.deactivate();
       // Own hygiene for switching away from this piece: stage.ts does not clear a piece's HUD labels or the
       // scale badge on its own when another piece is shown (only pin buttons are resynced), so a piece that
       // wants to leave nothing behind removes what it set. See docs/pieces/cone.md, "Known limits" for the
@@ -573,6 +580,7 @@ export const build: BuildPiece = (ctx) => {
       ctx.camera.layers.disable(1);
     },
     dispose() {
+      flight.dispose();
       controls.dispose();
       guard.dispose();
       window.clearTimeout(debounceTimer);

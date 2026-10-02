@@ -358,6 +358,17 @@ export const build: BuildPiece = (ctx) => {
 
   // ---- photon sparks: a small pool, respawned on a cycle while the well is on screen ---------------------------
   const sparkGroup = new THREE.Group();
+  const photonControls = document.createElement('div'); photonControls.className = 'light-playback'; photonControls.hidden = true;
+  photonControls.innerHTML = '<button class="btn" type="button">Animate photons</button><label>Arriving light<input type="range" min="0" max="1000" value="0" aria-label="Photon animation phase"></label><span>Illustrative packets · not real time</span>';
+  document.getElementById('studio-exposure')!.before(photonControls);
+  const photonButton = photonControls.querySelector('button')!, photonRange = photonControls.querySelector('input')!;
+  let photonPlaying = false, photonTime = 0;
+  const pausePhotons = () => { photonPlaying = false; photonButton.textContent = 'Animate photons'; };
+  photonButton.onclick = () => { if (photonPlaying) pausePhotons(); else { photonPlaying = true; photonButton.textContent = 'Pause photons'; } };
+  photonRange.oninput = () => { pausePhotons(); photonTime = Number(photonRange.value) / 1000 * SPARK_FALL_MS; };
+  const offPhotonPause = ctx.bus.on('pause-exposure', pausePhotons);
+  const hiddenPhotons = () => { if (document.hidden) pausePhotons(); };
+  document.addEventListener('visibilitychange', hiddenPhotons);
   gridGroup.add(sparkGroup);
   const sparkGeo = new THREE.SphereGeometry(0.06, 8, 6);
   const sparkMat = ctx.look.physicsColorMaterial(ctx.look.wavelengthToThreeColor(560));
@@ -870,7 +881,9 @@ export const build: BuildPiece = (ctx) => {
 
     probes,
 
-    tick(_dtMs, nowMs) {
+    tick(dtMs) {
+      if (document.hidden || ctx.renderer.domElement.inert || document.querySelector('dialog[open]')) pausePhotons();
+      if (photonPlaying) { photonTime = (photonTime + Math.min(dtMs, 100)) % SPARK_FALL_MS; photonRange.value = String(Math.round(1000 * photonTime / SPARK_FALL_MS)); }
       // Park every stack pin off-screen until a tap has actually resolved something for it to point at (art
       // director, "pin-overlap": at the pre-tap grid-overview frame every one of these anchors' 3D separation
       // collapses to the same on-screen point at that extreme zoom-out, rendering as one fused, illegible label
@@ -886,7 +899,7 @@ export const build: BuildPiece = (ctx) => {
       chargeMesh.visible = ctx.camera.position.y < Y_PHOTO - 0.5;
       // Photon sparks: a small pool falling on a fixed cycle from just above the microlens down to its apex.
       for (const s of sparks) {
-        const t = ((nowMs + s.phaseMs) % SPARK_FALL_MS) / SPARK_FALL_MS;
+        const t = ((photonTime + s.phaseMs) % SPARK_FALL_MS) / SPARK_FALL_MS;
         s.mesh.position.y = THREE.MathUtils.lerp(SPARK_SPAWN_Y, MICROLENS_APEX_Y, t);
         s.mesh.visible = diveStage === 'well';
       }
@@ -924,11 +937,13 @@ export const build: BuildPiece = (ctx) => {
     },
 
     activate() {
+      photonControls.hidden = false;
       syncBackButton();
       window.addEventListener('keydown', onKeydown);
     },
 
     deactivate() {
+      pausePhotons(); photonControls.hidden = true;
       window.removeEventListener('keydown', onKeydown);
       cancelSelect();
       pickedOnPhone = false;
@@ -936,6 +951,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     hooks: {
+      photons: () => ({ playing: photonPlaying, phase: photonTime / SPARK_FALL_MS }),
       // Test/accuracy-gate surface: window.p2p.pieces.loupe.<name>(...). See tools/accuracy/loupe.mjs.
       tap(x: number, y: number) {
         const view = currentRender();
@@ -1044,6 +1060,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     dispose() {
+      offPhotonPause(); document.removeEventListener('visibilitychange', hiddenPhotons); photonControls.remove();
       offBusTap();
       offRender();
       window.removeEventListener('keydown', onKeydown);

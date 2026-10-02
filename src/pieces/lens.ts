@@ -4,6 +4,7 @@
 // itself computes no optics, only geometry/camera framing from those already-computed numbers. See
 // docs/pieces/lens.md for what each visual is computed from and this piece's known limits.
 import * as THREE from 'three/webgpu';
+import { lightPlayback } from './light-playback';
 import type { BuildPiece, CameraFrame, Inset } from './types';
 import type { Model } from '../engine/model-types';
 import type { RayStatus } from '../engine/types';
@@ -74,6 +75,7 @@ function focusGroupZ(model: Model): number {
 export const build: BuildPiece = (ctx) => {
   const group = new THREE.Group();
   group.name = 'piece-lens';
+  const flight = lightPlayback(ctx, group, 'Through the glass');
 
   let lensId: string | null = null;
   let elementsHandle: ElementsHandle | null = null;
@@ -298,6 +300,7 @@ export const build: BuildPiece = (ctx) => {
       extras.bins = traceableBins(model, BINS.centers);
       const fans = marginalAwareFans(model, FIELDS, extras.bins, RAYS_PER_FIELD);
       raysHandle.update(fans);
+      flight.update(raysHandle.samples.filter(s => s.status === 'ok' || s.world.length > 2));
 
       sensorHandle.update(model);
       syncInset(model);
@@ -312,7 +315,8 @@ export const build: BuildPiece = (ctx) => {
 
     probes,
 
-    tick() {
+    tick(dt) {
+      flight.tick(dt);
       const changed = irisHandle.tick();
       extras.irisDrawnRadius = irisHandle.drawnRadius();
       return changed;
@@ -347,10 +351,12 @@ export const build: BuildPiece = (ctx) => {
     },
 
     activate() {
+      flight.activate();
       if (extents) ctx.dive(computeFrame(extents, ctx.camera.aspect));
     },
 
     deactivate() {
+      flight.deactivate();
       cancelSelect();
       selectedId = null;
       scaleBar.hidden = true;
@@ -370,6 +376,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     hooks: {
+      light: flight.state,
       /** Where the shared camera is now and where this piece wants it (framing checks in the screenshot tools). */
       camera() {
         const f = computeFrame(extents, ctx.camera.aspect);
@@ -423,6 +430,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     dispose() {
+      flight.dispose();
       elementsHandle?.dispose();
       barrelHandle?.dispose();
       housing?.dispose();
