@@ -45,10 +45,12 @@
   --charge: #bfe4ff;
   --scale-badge: #f0f0fa;
 
-  /* level-strip / layer dots for this project's three prototype levels + three layers */
-  --lens: #8fc3f0;    /* level 1, the lens -- reuses the derived blue, distinct from the shared amber */
-  --focus: #e6ba82;   /* level 2, focus & bokeh -- the shared accent itself, since it is the mid level */
-  --loupe: #7ee0a1;   /* level 3, the loupe -- reuses the spec green */
+  /* Inspection navigation: the Factory's amber, cyan, violet and mint palette. These identify levels,
+     not wavelengths, sensor filters, evidence categories or physical materials. */
+  --camera: #ffb14e;
+  --lens: #47cfff;
+  --focus: #b69cff;
+  --loupe: #5ce1c6;
   --rays: #f0f0fa;
   --waves: #8fc3f0;
   --charge-layer: #bfe4ff;

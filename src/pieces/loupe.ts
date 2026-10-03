@@ -1,3 +1,4 @@
+import { selectionFrame } from './selection-frame';
 // Set piece 9, the loupe: docs/BRIEF.md #9, design/LOOK.md "9. The loupe," docs/PROTOTYPE.md's loupe section.
 // Everything drawn here is computed: the photo is the render worker's own rgba (render-client.ts), the target
 // pixel's numbers come from pixelAt() (a real sampled PixelState), the ray bundle from pointBundle() (a real
@@ -17,7 +18,7 @@ import type { Model } from '../engine/model-types';
 import type { Fig, RayPath } from '../engine/types';
 import { pointBundle } from '../app/engine-api';
 import { traceableBins } from './lens/valid-bins';
-import { badgeJoin, frameAboveSheet, isPhone } from './phone-frame';
+import { badgeJoin, isPhone } from './phone-frame';
 import { currentRender, onRender, pixelAt, type PixelInfo, type RenderView } from '../app/render-client';
 import { cfaColorAt } from '../engine/pipeline';
 import { projectToRenderedPixel, renderSetup } from '../engine/render';
@@ -659,6 +660,7 @@ export const build: BuildPiece = (ctx) => {
     if (diveTimer !== null) { window.clearTimeout(diveTimer); diveTimer = null; }
     diveStage = 'photo';
     ctx.dive(PHOTO_FRAME);
+    ctx.bus.emit('select-part', { id: null });
     syncBackButton();
   }
 
@@ -736,7 +738,6 @@ export const build: BuildPiece = (ctx) => {
   });
 
   // ---- probes -------------------------------------------------------------------------------------------------
-  let cancelSelect = () => {};
   function selectedProbeSync(): void { /* probes read closure state live; nothing to push */ }
 
   const probes: PieceProbe[] = [
@@ -931,15 +932,14 @@ export const build: BuildPiece = (ctx) => {
     },
 
     select(id) {
-      // On a phone, slide the picked part of the pixel into the strip of view above the part sheet (R1-13);
-      // clearing the pick flies back to this stage of the dive.
-      cancelSelect();
       pickedOnPhone = !!id && isPhone();
       syncBackButton();
-      if (!isPhone()) return;
-      if (!id) { ctx.dive(diveStage === 'well' ? wellFrame() : PHOTO_FRAME); return; }
-      const probe = probes.find((p) => p.id === id);
-      if (probe && diveStage === 'well') cancelSelect = frameAboveSheet(ctx, () => group.localToWorld(probe.anchor.clone()));
+    },
+    selectionFrame(id) {
+      const anchor = realAnchors.get(id);
+      return diveStage === 'well' && anchor
+        ? selectionFrame(wellFrame(), group.localToWorld(anchor.clone()))
+        : this.frame();
     },
 
     activate() {
@@ -951,7 +951,6 @@ export const build: BuildPiece = (ctx) => {
     deactivate() {
       pausePhotons(); photonControls.hidden = true;
       window.removeEventListener('keydown', onKeydown);
-      cancelSelect();
       pickedOnPhone = false;
       if (diveTimer !== null) { window.clearTimeout(diveTimer); diveTimer = null; }
     },

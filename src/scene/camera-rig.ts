@@ -362,7 +362,7 @@ export const build: BuildPiece = (ctx) => {
     applyView();
     if (lastModel) applyModel(lastModel);
     anchorProbes();
-    fitDive(frame());
+    fitDive(detail ? partFrame(detail) : frame());
   }
 
   let inflight: Promise<void> = Promise.resolve();
@@ -769,6 +769,9 @@ export const build: BuildPiece = (ctx) => {
   /** Fits a box seen from `dir`: every corner inside the free rectangle with a margin, the box centered in it. Tighter
    *  than a bounding sphere, which leaves a long telephoto rig small in a wide frame. */
   function fitBox(box: THREE.Box3, dir: THREE.Vector3, margin = 1.1): CameraFrame {
+    // Shared part links and quick selections can arrive before the GLB. Empty bounds contain infinities,
+    // which otherwise poison the camera permanently, even after the real model has loaded.
+    if (box.isEmpty()) box = wholeRigBox();
     const cam = ctx.camera;
     const { fw, fh } = freeFraction();
     const tanV = (Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) * fh) / margin;
@@ -840,7 +843,6 @@ export const build: BuildPiece = (ctx) => {
 
   function onDown(e: PointerEvent) {
     teach.stop();
-    userMoved = true;
     const p = pick(e);
     if (!p || !lastModel) return;
     e.stopImmediatePropagation();
@@ -1285,8 +1287,10 @@ export const build: BuildPiece = (ctx) => {
       loading = ensureRig(scenario.lens);
       applyModel(model);
       anchorProbes();
+      if (detail && group.visible && !userMoved) fitDive(partFrame(detail));
     },
     frame,
+    onViewInteraction() { userMoved = true; },
     tick(dt: number, now: number) {
       exposure.tick(now, dt);
       teach.tick();

@@ -1,3 +1,4 @@
+import { selectionFrame } from './selection-frame';
 // Set piece 2: the lens as glass you can see into (docs/BRIEF.md, design/LOOK.md "2. The lens as glass you can
 // see into", docs/PROTOTYPE.md "Lens cutaway"). Everything drawn here is read straight from model.realized (the
 // element stack), model.system (the current-focus surfaces), model.iris and lensFans()/BINS -- this module
@@ -20,7 +21,7 @@ import { buildInsetFrame, type InsetFrame } from './lens/inset';
 import { CUTAWAY_DIR } from './lens/geometry';
 import { hasGlb, loadGlbBarrel, type GlbBarrel } from './lens/glb-barrel';
 import { traceableBins } from './lens/valid-bins';
-import { frameAboveSheet, insetGuard, isPhone } from './phone-frame';
+import { insetGuard, isPhone } from './phone-frame';
 
 const FIELDS = [0, 0.7]; // on-axis, and the off-axis field the detail inset zooms into (LOOK.md: "an off-axis object point")
 const RAYS_PER_FIELD = 9;
@@ -146,7 +147,6 @@ export const build: BuildPiece = (ctx) => {
   const scaleBarText = scaleBar.querySelector('span') as HTMLElement;
   // the inset's footprint for the pin pass, and its "1 square = 1 pixel" note when the grid is drawn
   const guard = insetGuard(ctx.overlay);
-  let cancelSelect = () => {};
   let selectedId: string | null = null;
   let extents: Extents | null = null;
 
@@ -357,22 +357,16 @@ export const build: BuildPiece = (ctx) => {
 
     deactivate() {
       flight.deactivate();
-      cancelSelect();
       selectedId = null;
       scaleBar.hidden = true;
       guard.update(null);
       ctx.badge.hide();
     },
 
-    select(id) {
-      // On a phone, slide the picked part into the strip of view above the part sheet (R1-13); clearing the
-      // pick flies back to the whole cutaway.
-      cancelSelect();
-      selectedId = id;
-      if (!isPhone()) return;
-      if (!id) { ctx.dive(computeFrame(extents, ctx.camera.aspect)); return; }
-      const probe = probes.find((p) => p.id === id);
-      if (probe) cancelSelect = frameAboveSheet(ctx, () => group.localToWorld(probe.anchor.clone()), 0.8);
+    select(id) { selectedId = id; },
+    selectionFrame(id) {
+      const probe = this.probes.find(p => p.id === id);
+      return probe ? selectionFrame(this.frame(), group.localToWorld(probe.anchor.clone())) : this.frame();
     },
 
     hooks: {
@@ -444,7 +438,6 @@ export const build: BuildPiece = (ctx) => {
       raysHandle.dispose();
       sensorHandle.dispose();
       ctx.labels.remove('lens-fno');
-      cancelSelect();
       scaleBar.remove();
     },
   };

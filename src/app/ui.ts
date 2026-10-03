@@ -38,7 +38,7 @@ const COUNTERPART: Record<string, string> = { s35: 'z35', n50: 'm50', n500: 'z80
 // The camera is the parent view. Its optics/focus/pixel inspections retain legacy URLs and renderer hooks,
 // while the store carries the selected camera part for return navigation and sharing.
 const PIECES: { id: PieceId; n: number; title: string; short: string; color: string; lede: string; deep: boolean }[] = [
-  { id: 'camera', n: 1, title: 'The camera', short: 'Camera', color: 'var(--accent)', deep: false,
+  { id: 'camera', n: 1, title: 'The camera', short: 'Camera', color: 'var(--camera)', deep: false,
     lede: 'Turn the focus ring and the glass inside moves. Close the aperture and less light gets in. Every ray on screen is traced through the lens design.' },
   { id: 'lens', n: 2, title: 'The lens', short: 'Lens', color: 'var(--lens)', deep: true,
     lede: 'A deep dive into the lens. The element stack, the aperture blades and a live ray fan, traced surface by surface.' },
@@ -244,7 +244,13 @@ export function mountUI(store: Store, stage: Stage): void {
     btn.setAttribute('aria-label', p.deep ? `Inspect ${label.toLowerCase()}` : 'Camera overview');
     btn.innerHTML = `<span class="top"><span class="t">${label}</span></span>`
       + `<span class="meta"><span class="dot"></span><span class="sub"></span></span>`;
-    btn.addEventListener('click', () => p.id === 'camera' ? store.showCameraOverview() : store.setPiece(p.id));
+    btn.addEventListener('click', () => {
+      if (p.id === 'camera') {
+        store.showCameraOverview();
+        stage.resetView();
+      } else if (store.get().piece === p.id) stage.resetView();
+      else store.setPiece(p.id);
+    });
     dom.steps.appendChild(btn);
     stepEls.set(p.id, btn);
   }
@@ -356,7 +362,10 @@ export function mountUI(store: Store, stage: Stage): void {
   const door = byId<HTMLButtonElement>('card-go');
   function selectPart(id: string | null) {
     selectedPartId = id;
-    if (store.get().piece === 'camera') store.setCameraPart(cameraPart(id));
+    if (store.get().piece === 'camera') {
+      if (store.get().cameraPart === id) stage.selectPin(id);
+      else store.setCameraPart(cameraPart(id));
+    }
     else { stage.selectPin(id); if (!id) stage.resetView(); }
     renderPanel(compute(store.get().scenario), store.get().piece);
     document.getElementById('tab-explain')?.click();
@@ -622,6 +631,8 @@ export function mountUI(store: Store, stage: Stage): void {
     const model = shotChanged || !lastModel ? compute(scenario) : lastModel;
     lastModel = model;
     const p = PIECES.find((x) => x.id === piece)!;
+    dom.stageSection.style.setProperty('--accent', p.color);
+    dom.stageSection.dataset.level = piece;
     stage.showPiece(piece, p.title, subFor(model, piece));
     if (shotChanged || viewChanged) stage.update(model, scenario);
     if (viewChanged) { selectedPartId = null; }
@@ -649,6 +660,7 @@ export function mountUI(store: Store, stage: Stage): void {
     selectedPartId = e.id;
     const state = store.get();
     if (state.piece === 'camera') store.setCameraPart(cameraPart(e.id));
+    else stage.selectPin(e.id);
     renderPanel(compute(state.scenario), state.piece);
     if (e.id) document.getElementById('tab-explain')?.click();
   });

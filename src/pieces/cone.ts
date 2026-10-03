@@ -1,3 +1,4 @@
+import { selectionFrame } from './selection-frame';
 // Set piece 3, focus as a cone of light and the bokeh disk -- docs/BRIEF.md ("3. Focus as a cone of light"),
 // design/LOOK.md ("3. Focus as a cone of light" composition notes), docs/PROTOTYPE.md ("3. Cone of focus and
 // bokeh"). Everything drawn here comes from pointBundle(model, ...) (src/app/engine-api.ts, the only door to the
@@ -16,7 +17,7 @@ import {
 } from './cone/geometry';
 import { buildDiskTexture, type DiskTexture } from './cone/disk-texture';
 import { buildOverlay, fmtDist, type ConeControls } from './cone/overlay';
-import { frameAboveSheet, insetGuard, isPhone } from './phone-frame';
+import { insetGuard, isPhone } from './phone-frame';
 
 // The engine's own 16-bin visible-spectrum centers (see src/engine/spectrum.ts's bins(16, 380, 780) -- reproduced
 // here, not imported, because engine-api.ts is this piece's only door to the engine and does not re-export the
@@ -343,9 +344,9 @@ export const build: BuildPiece = (ctx) => {
     const spreadZ = (format?.w ?? 36) * 0.36;
     anchorPixelGrid.set(sensorX + 0.001, spreadY, spreadZ);
     anchorCoc.set(sensorX + 0.001, -spreadY, spreadZ);
+    if (selectedId && group.visible) ctx.dive(frame());
   }
 
-  let cancelSelect = () => {};
   let selectedId: string | null = null;
   // the inset's footprint for the pin pass (R2-06), and its note: what a square is and how wide the inset is
   const guard = insetGuard(ctx.overlay);
@@ -363,6 +364,35 @@ export const build: BuildPiece = (ctx) => {
     return { v, unit, ev: 'derived', calc };
   }
 
+  function frame() {
+    // Fits a sphere around everything this piece draws (the last element's rim, the exit pupil, the sensor
+    // plate's corners, each point's axial and radial offset together) into the stage camera, fitting the
+    // tighter of the vertical and the aspect-derived horizontal fov, then pans the frame away from the sensor
+    // inset's corner (insetRectFor): left of it on a desktop, below it on a phone.
+    if (!lastModel) return { position: new THREE.Vector3(40, 30, 90), target: new THREE.Vector3(40, 0, 0) };
+    const spanMin = Math.min(0, elementFrontX);
+    const spanMax = sensorX;
+    const centerX = (spanMin + spanMax) / 2;
+    const halfSpanX = Math.max(spanMax - centerX, centerX - spanMin);
+    const maxRadial = Math.max(lastModel.cardinal.xp.r, lastElementR, lastModel.sensor.format.diag / 2);
+    const trueRadius = Math.hypot(halfSpanX, maxRadial);
+    const aspect = ctx.camera.aspect || 1.5;
+    const phone = aspect < 0.9;
+    const halfFovRad = THREE.MathUtils.degToRad(20);
+    const halfFovHoriz = Math.atan(Math.tan(halfFovRad) * aspect);
+    const dist = (trueRadius / Math.sin(Math.min(halfFovRad, halfFovHoriz))) * (phone ? 1.18 : 1.0);
+    const dir = new THREE.Vector3(0.45, 0.32, 0.75).normalize();
+    const target = new THREE.Vector3(centerX, 0, 0);
+    const forward = dir.clone().negate();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+    const halfH = dist * Math.tan(halfFovRad);
+    const [sx, sy] = phone ? [0.02, 0.02] : [0.3, -0.02];
+    target.addScaledVector(right, sx * halfH * aspect).addScaledVector(up, sy * halfH);
+    const position = target.clone().addScaledVector(dir, dist);
+    return { position, target };
+  }
+
   return {
     group,
     update(model) {
@@ -370,34 +400,8 @@ export const build: BuildPiece = (ctx) => {
       rebuild(model);
       if (lensChanged && group.visible) ctx.dive(this.frame());
     },
-    frame() {
-      // Fits a sphere around everything this piece draws (the last element's rim, the exit pupil, the sensor
-      // plate's corners, each point's axial and radial offset together) into the stage camera, fitting the
-      // tighter of the vertical and the aspect-derived horizontal fov, then pans the frame away from the sensor
-      // inset's corner (insetRectFor): left of it on a desktop, below it on a phone.
-      if (!lastModel) return { position: new THREE.Vector3(40, 30, 90), target: new THREE.Vector3(40, 0, 0) };
-      const spanMin = Math.min(0, elementFrontX);
-      const spanMax = sensorX;
-      const centerX = (spanMin + spanMax) / 2;
-      const halfSpanX = Math.max(spanMax - centerX, centerX - spanMin);
-      const maxRadial = Math.max(lastModel.cardinal.xp.r, lastElementR, lastModel.sensor.format.diag / 2);
-      const trueRadius = Math.hypot(halfSpanX, maxRadial);
-      const aspect = ctx.camera.aspect || 1.5;
-      const phone = aspect < 0.9;
-      const halfFovRad = THREE.MathUtils.degToRad(20);
-      const halfFovHoriz = Math.atan(Math.tan(halfFovRad) * aspect);
-      const dist = (trueRadius / Math.sin(Math.min(halfFovRad, halfFovHoriz))) * (phone ? 1.18 : 1.0);
-      const dir = new THREE.Vector3(0.45, 0.32, 0.75).normalize();
-      const target = new THREE.Vector3(centerX, 0, 0);
-      const forward = dir.clone().negate();
-      const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-      const up = new THREE.Vector3().crossVectors(right, forward).normalize();
-      const halfH = dist * Math.tan(halfFovRad);
-      const [sx, sy] = phone ? [0.02, 0.02] : [0.3, -0.02];
-      target.addScaledVector(right, sx * halfH * aspect).addScaledVector(up, sy * halfH);
-      const position = target.clone().addScaledVector(dir, dist);
-      return { position, target };
-    },
+    frame,
+
     probes: [
       {
         id: 'exit-pupil',
@@ -553,31 +557,10 @@ export const build: BuildPiece = (ctx) => {
         return convexHullIndices(pts);
       },
     },
-    select(id) {
-      // On a phone, slide the picked part into the strip of view above the part sheet (R1-13); clearing the
-      // pick flies back to the whole scene.
-      cancelSelect();
-      selectedId = id;
-      if (!isPhone()) return;
-      if (!id) { ctx.dive(this.frame()); return; }
-      const probe = this.probes?.find((p) => p.id === id);
-      // A pick the inset shows keeps the inset up in the top right, so the part lands left of center and under
-      // the inset instead of in the middle of the strip, where its label would have nowhere to go but onto the
-      // inset (R2-06).
-      const place = INSET_PARTS.has(id ?? '')
-        ? (strip: { top: number; bottom: number; width: number }) => {
-          const viewH = (ctx.renderer as unknown as { domElement?: HTMLElement }).domElement?.clientHeight ?? 0;
-          const insetBottom = viewH - lastInsetRect.bottom;
-          return { x: strip.width * 0.3, y: Math.min(strip.bottom - 24, Math.max(strip.top, insetBottom) + 40) };
-        }
-        : undefined;
-      // The exit pupil (x=0) and the sensor plane (x=sensorX) are the whole story's two ends; keeping both in view
-      // (whichever one isn't the pick) is what lets the picture explain the pick instead of just showing it in
-      // isolation cut against a view edge (R3-08).
-      const extent = (id === 'exit-pupil' || id === 'bokeh-disk')
-        ? () => [group.localToWorld(new THREE.Vector3(0, 0, 0)), group.localToWorld(new THREE.Vector3(sensorX, 0, 0))]
-        : undefined;
-      if (probe) cancelSelect = frameAboveSheet(ctx, () => group.localToWorld(probe.anchor.clone()), 1, place, extent);
+    select(id) { selectedId = id; },
+    selectionFrame(id) {
+      const probe = this.probes.find(p => p.id === id);
+      return probe ? selectionFrame(this.frame(), group.localToWorld(probe.anchor.clone())) : this.frame();
     },
     activate() {
       flight.activate();
@@ -592,7 +575,6 @@ export const build: BuildPiece = (ctx) => {
       // wants to leave nothing behind removes what it set. See docs/pieces/cone.md, "Known limits" for the
       // one label this can't fix (a piece shown before this one that skips this same cleanup).
       ctx.labels.remove('cone-hud');
-      cancelSelect();
       selectedId = null;
       guard.update(null);
       ctx.badge.hide();

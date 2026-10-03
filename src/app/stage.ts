@@ -48,6 +48,7 @@ export interface Stage {
   gpuIdle(): Promise<void>;
   settle(): Promise<void>;
   pins(): PinScreen[];
+  framing(): { piece: string | null; selected: string | null; position: number[]; target: number[]; moving: boolean };
   /** The active piece's probes (its numbered parts), for the right panel. */
   activeProbes(): PieceProbe[];
   /** A piece's test and accuracy-gate hooks (building it if needed): window.p2p.pieces[id]. */
@@ -198,7 +199,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       const build = builders.get(id);
       if (!build) throw new Error(`stage.ts: no piece registered for "${id}"`);
       handle = build({ renderer, look, labels, badge, camera, scene, overlay: pieceOverlay(id), dive: (to) => {
-        if (activeId === id) startDive(to);
+        if (activeId === id) startDive(selectedFrame(built.get(id), to));
       }, bus });
       handle.group.visible = false;
       scene.add(handle.group);
@@ -210,6 +211,10 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   // ---- pins (from the active piece's probes) -----------------------------------------------------------------
   const pinEls = new Map<string, HTMLButtonElement>();
   let selectedPin: string | null = null;
+
+  function selectedFrame(handle: PieceHandle | undefined, fallback: CameraFrame): CameraFrame {
+    return selectedPin && handle?.selectionFrame ? handle.selectionFrame(selectedPin) : fallback;
+  }
 
   function syncPinEls(handle: PieceHandle | null) {
     for (const [id, el] of pinEls) { el.remove(); pinEls.delete(id); }
@@ -236,8 +241,21 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   let diveTo: CameraFrame | null = null;
   let diveStart = 0;
   let diveMs = 0;
+  let manuallyMoved = false;
+  let resizeFrame = false;
+  controls.addEventListener('start', () => {
+    diveTo = null;
+    manuallyMoved = true;
+    if (activeId) built.get(activeId)?.onViewInteraction?.();
+  });
 
   function startDive(to: CameraFrame) {
+    if (![...to.position.toArray(), ...to.target.toArray()].every(Number.isFinite)) return;
+    // Flush orbit/pan damping before a guided move. Otherwise controls.update() keeps pulling it off target.
+    controls.enableDamping = false;
+    controls.update();
+    controls.enableDamping = true;
+    manuallyMoved = false;
     if (reducedMotion()) {
       camera.position.copy(to.position);
       controls.target.copy(to.target);
@@ -249,13 +267,13 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     const decades = Math.abs(Math.log10(distTo / distFrom));
     diveMs = Math.min(DIVE_MAX_MS, DIVE_BASE_MS + DIVE_PER_DECADE_MS * decades);
     diveFrom = { position: camera.position.clone(), target: controls.target.clone() };
-    diveTo = to;
+    diveTo = { position: to.position.clone(), target: to.target.clone() };
     diveStart = performance.now();
   }
 
   function tickDive(now: number) {
     if (!diveTo || !diveFrom) return;
-    const t = Math.min(1, (now - diveStart) / diveMs);
+    const t = Math.max(0, Math.min(1, (now - diveStart) / diveMs));
     const e = diveEase(t);
     camera.position.lerpVectors(diveFrom.position, diveTo.position, e);
     controls.target.lerpVectors(diveFrom.target, diveTo.target, e);
@@ -272,6 +290,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     const w = dom.view.clientWidth || 1;
     const h = dom.view.clientHeight || 1;
     camera.aspect = w / h;
+    resizeFrame = true;
     forceMeasure = true;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap()));
@@ -350,6 +369,10 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     tickDive(now);
     controls.update();
     const active = activeId ? built.get(activeId) : null;
+    if (resizeFrame) {
+      resizeFrame = false;
+      if (active?.selectionFrame && !manuallyMoved) startDive(selectedFrame(active, active.frame()));
+    }
     active?.tick?.(dt, now);
     renderer.render(scene, camera);
     const insets = active?.insets?.() ?? [];
@@ -581,7 +604,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
         got = pick(candsFor(two + 10, 34));
         if (!got) two = 0;
       }
-      if (!got && p.id === selectedPin) got = cands.find((c) => c[1].l >= 4 && c[1].r <= w - 4) ?? cands[0];
+      // A selected label may displace a dimmed pin, but must never cover a magnified inset or its controls.
+      if (!got && p.id === selectedPin) got = cands.find(([, r]) => r.l >= 4 && r.r <= w - 4 && r.t >= 4 && r.b <= h - 4
+        && !exclusion.some(q => overlaps(q, r)));
       if (got) { placed.push(got[1]); placement.set(p.id, got[0]); } else placement.set(p.id, 'none');
       if (two) twoLine.set(p.id, two); else twoLine.delete(p.id);
     }
@@ -647,11 +672,11 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       }
       const handle = ensureBuilt(id);
       activeId = id;
+      selectedPin = null;
       handle.group.visible = true;
       handle.activate?.();
       const ov = overlays.get(id);
       if (ov) ov.hidden = false;
-      selectedPin = null;
       dom.hudTitle.textContent = title;
       dom.hudSub.textContent = upperKeepMicro(sub);
       forceMeasure = true;
@@ -668,23 +693,30 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       // scaleLabel/scaleBar stay unused (see index.html's #scalebar) until a piece has real, calibrated
       // geometry to measure -- an axis-line stub has no true scale to report.
       handle?.update(model, scenario);
+      if (handle?.selectionFrame && selectedPin) startDive(selectedFrame(handle, handle.frame()));
       start();
     },
 
     resetView() {
       if (!activeId) return;
       const handle = built.get(activeId);
-      if (handle) startDive(handle.frame());
+      if (handle) {
+        if (selectedPin && !handle.selectionFrame) handle.select?.(selectedPin);
+        else startDive(selectedFrame(handle, handle.frame()));
+      }
       start();
     },
 
     selectPin(id) {
       selectedPin = id;
-      if (activeId) built.get(activeId)?.select?.(id);
+      const handle = activeId ? built.get(activeId) : undefined;
+      handle?.select?.(id);
+      if (handle?.selectionFrame) startDive(selectedFrame(handle, handle.frame()));
       for (const [pid, el] of pinEls) el.classList.toggle('on', pid === id);
     },
 
     backend() { return backendKind; },
+    framing() { return { piece: activeId, selected: selectedPin, position: camera.position.toArray(), target: controls.target.toArray(), moving: !!diveTo }; },
     qualityTier() { return tier; },
 
     async gpuIdle() {

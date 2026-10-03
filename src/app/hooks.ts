@@ -17,6 +17,7 @@ export interface P2P {
   model(): Model;
   scenario(): Scenario;
   pins(): PinScreen[];
+  framing(): ReturnType<Stage['framing']>;
   /** Each piece's own hooks (probes for the visual accuracy gate, recording controls): p2p.pieces.lens.probe() */
   pieces: Record<string, Record<string, (...args: any[]) => any>>;
   /** The latest final-image render (sizes, meta); the loupe and the gates read it. */
@@ -39,6 +40,7 @@ export function installHooks(store: Store, stage: Stage): void {
     model() { return compute(store.get().scenario); },
     scenario() { return store.get().scenario; },
     pins() { return stage.pins(); },
+    framing() { return stage.framing(); },
     pieces: new Proxy({} as Record<string, Record<string, (...args: any[]) => any>>, {
       get: (_t, id: string) => stage.pieceHooks(id),
     }),

@@ -78,10 +78,14 @@ export interface PieceHandle {
   update(model: Model, scenario: Scenario): void;
   /** The camera rig position/target this piece wants framed right now, for the stage's dive and Reset view. */
   frame(): CameraFrame;
+  /** Stable framing for a selected probe, also used after resize, model updates and late asset loads. */
+  selectionFrame?(id: string): CameraFrame;
   probes: PieceProbe[];
   dispose(): void;
   /** Called every drawn frame while the piece is shown (physically timed mechanisms, arriving photons, dives). */
   tick?(dtMs: number, nowMs: number): void;
+  /** The reader has taken control of the view by orbiting, panning or zooming. */
+  onViewInteraction?(): void;
   /** Extra viewports to draw this frame (see Inset). */
   insets?(): Inset[];
   /** Test and accuracy-gate hooks, exposed as window.p2p.pieces[id] (e.g. probe(): rendered vs engine values). */

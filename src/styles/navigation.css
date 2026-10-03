@@ -1,4 +1,13 @@
 /* Port the reference site's persistent part transport and compact inspector. */
+.workspace .step { border-top: 2px solid color-mix(in srgb, var(--c) 45%, transparent); }
+.workspace .step .top { align-items: center; gap: 8px; }
+.workspace .step .top::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: none; }
+.workspace .step .t { color: var(--c); }
+.workspace .step[aria-current="step"] { border-top-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.workspace .step[aria-current="step"] .top::before { box-shadow: 0 0 10px color-mix(in srgb, var(--c) 55%, transparent); }
+.workspace .inspection-here { color: var(--accent); }
+.workspace .part-nav .btn:hover, .workspace #card-go { border-color: var(--accent); color: var(--accent); }
+.workspace #card-go { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
 .part-nav { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
 .part-nav .btn { min-height: 36px; padding: 0 12px; gap: 8px; font-size: 11px; }
 .part-nav .btn + .btn { margin-left: -1px; }

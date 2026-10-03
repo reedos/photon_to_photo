@@ -14,6 +14,12 @@ wins and this document is wrong until fixed.
 
 ## One signature style (Reed, 09/28/2026)
 
+Update 10/03/2026: the inspection levels now carry distinct Factory-family colors throughout their navigation,
+selected pins, part cards and controls: Camera amber `#ffb14e`, Optics cyan `#47cfff`, Focus violet `#b69cff`,
+Pixel mint `#5ce1c6`. This implements Reed's request for the same clear level coloring as Intelligence Factory.
+The page-level brand accent and evidence categories keep their existing meanings; spectral rays, Bayer filters
+and physical materials retain their computed or documented colors. Labels and selection outlines accompany color.
+
 Reed: "I like the look and want to maintain a coherent signature style" (pointing at
 https://reedos.github.io/intelligence_factory/?view=0.power). So this site does not get its own accent or its own
 components. It uses The Intelligence Factory's, and differs only in its subject and its physics colors.

@@ -18,7 +18,7 @@
 .inspection-back:hover { color: var(--ink); }
 .inspection-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .inspection-here { color: var(--ink); }
-.inspection-note { margin-left: auto; font-size: 11px; color: var(--faint); }
+.inspection-note { margin-left: auto; font-size: 11px; color: var(--muted); }
 @media (max-width: 760px) {
   .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .step { min-height: 48px; padding: 12px 6px; }
