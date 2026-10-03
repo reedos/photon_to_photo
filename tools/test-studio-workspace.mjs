@@ -93,13 +93,41 @@ try {
   report.checks.push('wheel and button zoom; keyboard workspace tabs; preserved framing and photo; settings action returns to model');
   for(const [name,width,height] of [['short',1280,600],['phone',390,844],['small-phone',320,568]]) {
     await page.setViewportSize({width,height}); await page.locator('#workspace-model').click();
+    if(width<=390) {
+      assert.equal(await page.locator('#equipment-toggle').getAttribute('aria-expanded'),'false');
+      assert.equal(await page.locator('#kit-body').isVisible(),false,'equipment editor starts manually collapsed');
+      await page.locator('#equipment-toggle').click();
+      const previousScene=await page.locator('#kit-scene').inputValue();
+      const scene=await page.locator('#kit-scene option').evaluateAll(nodes=>nodes.map(n=>n.value).find(value=>value!==document.querySelector('#kit-scene').value));
+      await page.locator('#kit-scene').selectOption(scene);
+      assert.ok((await page.locator('#equipment-summary').textContent()).includes(await page.locator('#kit-scene option:checked').textContent()));
+      await page.screenshot({path:`${output}/${name}-equipment-editor.png`});
+      await page.locator('#kit-scene').selectOption(previousScene); await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#equipment-toggle').getAttribute('aria-expanded'),'false');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'equipment-toggle');
+    }
     for(const piece of ['camera','lens','cone','loupe']) {
       await page.locator(`#steps [data-piece="${piece}"]`).click(); await rest(); await sample(`${name}-${piece}`);
+      if(width===320 && ['lens','loupe'].includes(piece)) {
+        const button=page.locator('.light-playback:visible button');
+        await button.click(); assert.equal(await button.getAttribute('aria-pressed'),'true');
+        await page.waitForTimeout(250); await button.click(); assert.equal(await button.getAttribute('aria-pressed'),'false');
+        assert.match(await button.textContent(),/Resume/);
+      }
       if(width<=390) {
         await page.locator('#expand-model').click(); await rest(); await sample(`${name}-${piece}-expanded`);
         assert.equal(await page.locator('#expand-model').getAttribute('aria-pressed'),'true');
         await page.locator('#expand-model').click(); await rest();
       }
+    }
+    if(height<680 && width<600) {
+      const before=await page.locator('.studio-sidebar').boundingBox();
+      await page.locator('#inspector-size').click();
+      assert.ok((await page.locator('.studio-sidebar').boundingBox()).height>before.height*1.5,'explicit inspector expansion exposes more controls');
+      assert.equal(await page.locator('#tab-explain').isVisible(),true,'Parts remains apparent');
+      await page.screenshot({path:`${output}/${name}-expanded-inspector.png`});
+      await page.locator('#inspector-size').click();
+      assert.equal(await page.locator('#inspector-size').getAttribute('aria-expanded'),'false');
     }
     await page.locator('#workspace-photos').click(); await sample(`${name}-photos`);
     await page.locator('#rp-prediction summary').click();

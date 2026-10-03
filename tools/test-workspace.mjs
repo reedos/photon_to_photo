@@ -18,9 +18,17 @@ try {
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
-    for (const selector of ['#kit-body', '#kit-lens', '#kit-scene', '#finalimg-canvas', '#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso', '#compact-fire']) {
+    for (const selector of ['#finalimg-canvas', '#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso', '#compact-fire']) {
       const box = await page.locator(selector).boundingBox();
       assert.ok(box && box.y >= 0 && box.y + box.height <= height, `${selector} fits ${width}×${height}: ${JSON.stringify(box)}`);
+    }
+    if(width<600) {
+      assert.equal(await page.locator('#kit-body').isVisible(),false,'compact equipment starts collapsed');
+      await page.locator('#equipment-toggle').click();
+    }
+    for(const selector of ['#kit-body','#kit-lens','#kit-scene']) {
+      const box=await page.locator(selector).boundingBox();
+      assert.ok(box && box.y>=0 && box.y+box.height<=height,`${selector} equipment editor fits viewport`);
     }
     await page.locator('#kit-body').selectOption('mirrorless');
     assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'm50');
@@ -29,6 +37,7 @@ try {
     assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'z800');
     await page.locator('#kit-scene').selectOption('bench');
     assert.equal(await page.evaluate(() => window.p2p.scenario().scene), 'bench');
+    if(width<600) await page.locator('#equipment-toggle').click();
     const before = await page.evaluate(() => window.p2p.scenario().iso);
     await page.locator('#sc-iso').focus();
     await page.locator('#sc-iso').press('ArrowRight');

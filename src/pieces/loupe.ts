@@ -375,7 +375,7 @@ export const build: BuildPiece = (ctx) => {
   // ---- photon sparks: a small pool, respawned on a cycle while the well is on screen ---------------------------
   const sparkGroup = new THREE.Group();
   const photonControls = document.createElement('div'); photonControls.className = 'light-playback'; photonControls.hidden = true;
-  photonControls.innerHTML = '<button class="btn" type="button">Animate photons</button><label>Arriving light<input type="range" min="0" max="1000" value="0" aria-label="Photon animation phase"></label><span>Illustrative packets · not real time</span>';
+  photonControls.innerHTML = '<button class="btn" type="button" aria-pressed="false">▶ Play photons</button><label><span class="playback-caption">Arriving light<small>Illustrative time · drag to inspect</small></span><input type="range" min="0" max="1000" value="0" aria-label="Photon animation phase"></label><span>Illustrative packets<br>Not individual real-time photons</span>';
   document.getElementById('model-experiments')!.before(photonControls);
   const photonButton = photonControls.querySelector('button')!, photonRange = photonControls.querySelector('input')!;
   const rainLaunch = document.createElement('button'); rainLaunch.type = 'button'; rainLaunch.className = 'btn rain-launch';
@@ -392,9 +392,9 @@ export const build: BuildPiece = (ctx) => {
     finally { rainLaunch.disabled = false; }
   };
   let photonPlaying = false, photonTime = 0;
-  const pausePhotons = () => { photonPlaying = false; photonButton.textContent = 'Animate photons'; };
-  photonButton.onclick = () => { if (photonPlaying) pausePhotons(); else { photonPlaying = true; photonButton.textContent = 'Pause photons'; } };
-  photonRange.oninput = () => { pausePhotons(); photonTime = Number(photonRange.value) / 1000 * SPARK_FALL_MS; };
+  const pausePhotons = () => { photonPlaying = false; photonButton.setAttribute('aria-pressed', 'false'); photonButton.textContent = photonTime > 0 ? '▶ Resume photons' : '▶ Play photons'; };
+  photonButton.onclick = () => { if (photonPlaying) pausePhotons(); else { photonPlaying = true; photonButton.textContent = 'Ⅱ Pause photons'; photonButton.setAttribute('aria-pressed', 'true'); } };
+  photonRange.oninput = () => { photonTime = Number(photonRange.value) / 1000 * SPARK_FALL_MS; pausePhotons(); };
   const offPhotonPause = ctx.bus.on('pause-exposure', pausePhotons);
   const hiddenPhotons = () => { if (document.hidden) pausePhotons(); };
   document.addEventListener('visibilitychange', hiddenPhotons);

@@ -35,21 +35,39 @@ export function buildWorkspace(): void {
   study.append(studyStatus, el('rp-card')); stage.after(study);
   const toolbar = document.createElement('div');
   toolbar.className = 'studio-kit';
-  toolbar.innerHTML = `<label>Camera<select id="kit-body" aria-label="Camera body"></select></label>
+  toolbar.innerHTML = `<button type="button" id="equipment-toggle" aria-expanded="false" aria-controls="equipment-controls"><span id="equipment-summary">Camera equipment</span><b>Edit</b></button>
+    <div id="equipment-controls"><label>Camera<select id="kit-body" aria-label="Camera body"></select></label>
     <label>Lens<select id="kit-lens" aria-label="Lens"></select></label>
-    <label>Scene<select id="kit-scene" aria-label="Scene"></select></label>
+    <label>Scene<select id="kit-scene" aria-label="Scene"></select></label></div>
     <details class="view-menu"><summary aria-label="View menu">•••</summary><div id="studio-actions"></div></details>`;
   stage.prepend(toolbar);
+  const equipmentToggle = el('equipment-toggle');
+  const setEquipmentOpen = (open: boolean) => {
+    toolbar.classList.toggle('equipment-open', open);
+    equipmentToggle.setAttribute('aria-expanded', String(open));
+    equipmentToggle.querySelector('b')!.textContent = open ? 'Done' : 'Edit';
+    equipmentToggleLabel(el('equipment-summary').textContent || '');
+    if (open) el('kit-body').focus({ preventScroll: true });
+    else equipmentToggle.focus({ preventScroll: true });
+  };
+  equipmentToggle.addEventListener('click', () => setEquipmentOpen(!toolbar.classList.contains('equipment-open')));
+  toolbar.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && toolbar.classList.contains('equipment-open')) { event.preventDefault(); setEquipmentOpen(false); }
+  });
   const viewer = el('viewer');
   const modelTools = document.createElement('div');
   modelTools.id = 'model-tools';
   modelTools.append(el('hud-switches'));
   const compactFire = document.createElement('button');
   compactFire.id = 'compact-fire'; compactFire.type = 'button'; compactFire.className = 'btn';
-  compactFire.textContent = 'Fire'; compactFire.setAttribute('aria-label', 'Fire shutter');
+  compactFire.innerHTML = '<span class="action-name">Fire shutter</span><span class="action-short">● Fire</span><small><span class="action-name">Current settings</span><span class="action-short">Shutter</span></small>';
+  compactFire.setAttribute('aria-label', 'Fire shutter'); compactFire.title = 'Fire one simulated exposure using the current settings';
   compactFire.disabled = true;
   compactFire.addEventListener('click', () => document.querySelector<HTMLButtonElement>('.rx-fire')?.click());
   modelTools.append(compactFire);
+  const gestures = document.createElement('p'); gestures.className = 'model-gestures';
+  gestures.textContent = 'Drag ring: focus · Drag dial: aperture · Tap shutter';
+  modelTools.append(gestures);
   viewer.prepend(modelTools);
   new MutationObserver(() => {
     el('view').querySelectorAll(':scope > .shot-launch').forEach(node => modelTools.append(node));
@@ -98,6 +116,16 @@ export function buildWorkspace(): void {
   tabs.setAttribute('aria-label', 'Explore the camera');
   tabs.innerHTML = `<button type="button" role="tab" id="tab-controls" aria-controls="scenario" aria-selected="true">Controls</button>
     <button type="button" role="tab" id="tab-explain" aria-controls="studio-explain" aria-selected="false" tabindex="-1">Parts</button>`;
+  const inspectorSize = document.createElement('button'); inspectorSize.type = 'button'; inspectorSize.id = 'inspector-size';
+  inspectorSize.textContent = 'More ↑'; inspectorSize.setAttribute('aria-expanded', 'false');
+  inspectorSize.setAttribute('aria-label', 'Expand controls and parts'); inspectorSize.setAttribute('aria-controls', 'scenario studio-explain');
+  // This is a layout action, not a third tab. Keep it outside the tablist.
+  const tabRow = document.createElement('div'); tabRow.className = 'inspector-tab-row'; tabRow.append(tabs, inspectorSize);
+  inspectorSize.addEventListener('click', () => {
+    const expanded = document.body.classList.toggle('inspector-expanded');
+    inspectorSize.setAttribute('aria-expanded', String(expanded)); inspectorSize.textContent = expanded ? 'Less ↓' : 'More ↑';
+    inspectorSize.setAttribute('aria-label', expanded ? 'Reduce controls and parts' : 'Expand controls and parts');
+  });
   const controls = el('scenario');
   controls.append(exposure);
   controls.setAttribute('role', 'tabpanel');
@@ -138,7 +166,7 @@ export function buildWorkspace(): void {
   photoHint.className = 'photo-hint';
   photoHint.textContent = 'Tap the photo to inspect a pixel';
   photo.querySelector('.finalimg-card')!.append(photoHint);
-  sidebar.append(photo, tabs, controls, panel);
+  sidebar.append(photo, tabRow, controls, panel);
   stage.querySelector('.body')!.append(sidebar);
   el('topnav').innerHTML = siteNavigation();
 }
@@ -221,6 +249,10 @@ export function mountWorkspace(store: Store): void {
       select.value = buttons.find(button => button.getAttribute('aria-pressed') === 'true')?.dataset[name] ?? '';
       select.disabled = !buttons.length;
     }
+    const equipment = selectors.map(({ select }) => select.selectedOptions[0]?.textContent?.replace(/\s*·\s*/g, ' ') || '').filter(Boolean);
+    const summary = el('equipment-summary');
+    summary.textContent = `${equipment[0]} · ${equipment[1]} · ${equipment[2]}`;
+    equipmentToggleLabel(summary.textContent);
     if (state.cameraPart && state.cameraPart !== lastPart) {
       activate(1);
 
@@ -228,4 +260,9 @@ export function mountWorkspace(store: Store): void {
 
     lastPart = state.cameraPart;
   });
+}
+
+function equipmentToggleLabel(summary: string) {
+  const toggle = el('equipment-toggle');
+  toggle.setAttribute('aria-label', `${toggle.getAttribute('aria-expanded') === 'true' ? 'Close equipment editor' : 'Edit equipment'}: ${summary}`);
 }

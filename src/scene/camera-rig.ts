@@ -18,6 +18,7 @@ import { buildRays } from '../pieces/lens/rays';
 import { marginalAwareFans } from '../pieces/lens/marginal-rays';
 import { bodyForLens, compute, distanceForRingAngle, pointBundle, focusRingAngle, focusRingThrow, lensSummary, type BodyId } from '../app/engine-api';
 import { createExposure } from './rig-exposure';
+import { overviewFrame } from './overview-frame';
 import { apertureSteps, THIRD_STOP_SHUTTER } from '../app/stops';
 import { LENS_FACTS as LENSES, partCard, partLabel, type PartId } from '../app/rig-cards';
 import bodyFacts from '../../public/models/bodies.json';
@@ -816,7 +817,13 @@ export const build: BuildPiece = (ctx) => {
 
   /** The whole rig, lens front to eyecup, inside the free rectangle with a small margin (R1-FID-I, FID-9). */
   function frame(): CameraFrame {
-    return fitBox(wholeRigBox(), outsideDir(), 1.1);
+    // Long telephotos need the wider assembly envelope for their front rim and its oblique end-on view.
+    // The tighter component fit is for the body + short-lens overview, where empty box corners dominated.
+    if ((LENSES[state.lens]?.lengthMm ?? 0) > 180) return fitBox(wholeRigBox(), outsideDir(), 1.1);
+    const { fw, fh } = freeFraction();
+    const tan = Math.tan(THREE.MathUtils.degToRad(ctx.camera.fov) / 2) / 1.08;
+    return overviewFrame(assembly, outsideDir(), tan * ctx.camera.aspect * fw, tan * fh)
+      ?? fitBox(wholeRigBox(), outsideDir(), 1.1);
   }
 
   // ---- controls on the model: drag the focus ring, turn the command dials, press the shutter button ------------

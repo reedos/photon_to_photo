@@ -5,6 +5,7 @@
 // `?gl=webgl2` forces the WebGL2 backend; the real backend obtained is always reported truthfully, even when it
 // silently differs from what was asked for (the same "silent fallback" gotcha the rendering spike names).
 import * as THREE from 'three/webgpu';
+import '../styles/model-polish.css';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { Model } from '../engine/model-types';
 import type { Scenario } from '../engine/types';
@@ -198,12 +199,15 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   // ---- pins (from the active piece's probes) -----------------------------------------------------------------
   const pinEls = new Map<string, HTMLButtonElement>();
   let selectedPin: string | null = null;
+  let hoveredPin: string | null = null;
+  let focusedPin: string | null = null;
 
   function selectedFrame(handle: PieceHandle | undefined, fallback: CameraFrame): CameraFrame {
     return selectedPin && handle?.selectionFrame ? handle.selectionFrame(selectedPin) : fallback;
   }
 
   function syncPinEls(handle: PieceHandle | null) {
+    hoveredPin = focusedPin = null;
     for (const [id, el] of pinEls) { el.remove(); pinEls.delete(id); }
     if (!handle) return;
     handle.probes.forEach((probe, i) => {
@@ -213,6 +217,11 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       el.dataset.pinId = probe.id;
       el.innerHTML = `<span class="num">${i + 1}</span><span class="lbl">${probe.label}</span>`;
       el.setAttribute('aria-label', `${i + 1}. ${probe.label}`);
+      const refreshLabel = () => { projectLabelsAndPins(false); start(); };
+      el.addEventListener('pointerenter', () => { hoveredPin = probe.id; refreshLabel(); });
+      el.addEventListener('pointerleave', () => { if (hoveredPin === probe.id) hoveredPin = null; refreshLabel(); });
+      el.addEventListener('focus', () => { focusedPin = probe.id; refreshLabel(); });
+      el.addEventListener('blur', () => { if (focusedPin === probe.id) focusedPin = null; refreshLabel(); });
       el.addEventListener('click', () => {
         const id = selectedPin === probe.id ? null : probe.id;
         stage.selectPin(id);
@@ -494,7 +503,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     const shown = (el: Element) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
     // chrome the pins and their labels must stay clear of
     exclusion = [];
-    const sel = '.hud.tl > *, .hud.tr > *, .hud.br > *, .hud.bl > *, .hud.rail > *, .piece-overlay:not([hidden]) > *, .toast, .shot-launch';
+    const sel = '.hud.tl > *, .hud.tr > *, .hud.br > *, .hud.bl > *, .hud.rail > *, .piece-overlay:not([hidden]) > *, .rig-teach span:not([hidden]), .toast, .shot-launch';
     for (const el of dom.view.querySelectorAll(sel)) {
       if (el.classList.contains('hint') || el.classList.contains('hud-slot') || !shown(el)) continue;
       if (el.classList.contains('rig-teach') || el.classList.contains('rig-tip') || el.classList.contains('rig-note') || el.classList.contains('mode-slotted')) continue;
@@ -561,7 +570,6 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     }
     const handle = activeId ? built.get(activeId) : null;
     if (!handle) return;
-    const narrow = w < 560;
     type P = { id: string; i: number; el: HTMLButtonElement; x: number; y: number; z: number; show: boolean };
     const ps: P[] = [];
     handle.probes.forEach((probe, i) => {
@@ -603,8 +611,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     const twoLine = new Map<string, number>();
     for (const p of order) {
       const lbl = p.el.querySelector('.lbl') as HTMLElement | null;
-      const merges = (merged.get(p.id)?.length ?? 1) > 1;
-      const wantLabel = selectedPin ? p.id === selectedPin : !narrow && !merges;
+      // Persistent numbers locate every part; only the chosen or actively explored part needs a full name.
+      // Interaction hints remain visible on the physical controls independently of this quieter label layer.
+      const wantLabel = p.id === selectedPin || p.id === (focusedPin ?? hoveredPin);
       if (!lbl || !wantLabel) { placement.set(p.id, 'none'); continue; }
       // the label is one line of 11 px IBM Plex Mono with .06em tracking: 0.6em advance + 0.06em per character. Worked
       // out, not read back from layout, so a hidden label (display: none measures 0) is still placed at its real width.
@@ -672,6 +681,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       if (lblEl && probe && lblEl.textContent !== probe.label) { lblEl.textContent = probe.label; el.setAttribute('aria-label', `${p.i + 1}. ${probe.label}`); }
       const on = p.id === selectedPin;
       el.classList.toggle('on', on);
+      el.classList.toggle('preview', p.id === (focusedPin ?? hoveredPin));
+      if (el.getAttribute('aria-pressed') !== String(on)) el.setAttribute('aria-pressed', String(on));
       el.classList.toggle('dim', !!selectedPin && !on);
       const m = merged.get(p.id) ?? [p.i];
       el.classList.toggle('merged', m.length > 1);

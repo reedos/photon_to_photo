@@ -1,0 +1,35 @@
+/* Numbered parts stay apparent while the chosen part carries the strongest emphasis. */
+.workspace.viewport-studio .pin .num {
+  color: #e7edf3; background: #17212bea; border: 1px solid #a5b9ca99;
+  box-shadow: 0 1px 5px #0009; font-weight: 500;
+}
+.workspace.viewport-studio .pin:is(.on,.preview) .num {
+  color: #091118; background: var(--accent); border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent), 0 2px 9px #0008;
+}
+.workspace.viewport-studio .pin.preview { opacity: 1; }
+.workspace.viewport-studio .pin.preview:not(.no-lbl) .lbl { display: block; }
+.workspace.viewport-studio .pin .lbl {
+  background: #101922f2; color: #eef4f8; border-left: 2px solid var(--accent);
+  border-radius: 2px; padding: 4px 5px;
+}
+.workspace.viewport-studio .pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; border-radius: 50%; }
+
+/* Keep all three physical actions discoverable without three large solid-color labels competing with the model. */
+.workspace.viewport-studio .rig-teach span {
+  color: #ffce91; background: #101923f2; border: 1px solid #dbaa6470;
+  border-radius: 3px; padding: 3px 6px; font-weight: 500; letter-spacing: .035em;
+}
+.workspace.viewport-studio .rig-teach i { border-width: 1px; box-shadow: 0 0 0 2px #e6ba8212; }
+.workspace.viewport-studio .rig-teach-leader { opacity: .4; }
+.workspace.viewport-studio .stage .hud.tl .sub { opacity: .85; }
+.workspace.viewport-studio .inset-frame { border-color: color-mix(in srgb, var(--accent) 38%, #30404c); }
+.model-gestures { display: none; }
+@media (max-width: 760px) {
+  .workspace.viewport-studio #model-tools { flex-wrap: wrap; }
+  .workspace.viewport-studio #model-tools #hud-switches { width: auto; flex: 0 0 auto; }
+  .workspace.viewport-studio:not(.rig-detail) #model-tools:has([data-view="outside"][aria-pressed="true"]) .model-gestures {
+    display: block; order: 2; flex: 0 0 100%; margin: 0; text-align: center;
+    color: #c4d1dc; font: 10px/1.35 var(--sans); letter-spacing: 0;
+  }
+}

@@ -17,6 +17,27 @@
 #rp-card #rp-credit { padding: 0; border: 0; text-transform: none; letter-spacing: 0; font: 10px/1.35 var(--sans); color: var(--muted); }
 .rp-image-status { position: absolute; margin: 0; padding: 12px; background: #080d10df; text-align: center; font-size: 12px; }
 .rp-image-frame > .btn { position: absolute; top: calc(50% + 30px); }
+.rp-detail-controls { display: flex; gap: 5px; flex-shrink: 0; }
+.rp-detail-controls .btn { flex: 1; min-width: 0; min-height: 32px; padding: 4px 6px; font-size: 10px; line-height: 1.2; }
+.rp-detail-controls .btn[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); background: #22332e; }
+.rp-detail-controls .btn:disabled { opacity: .5; }
+.rp-detail-crop { position: absolute; inset: 0; overflow: hidden; background: #050707; }
+.rp-detail-crop[hidden], .rp-detail-controls[hidden] { display: none; }
+.rp-crop-window { position: absolute; overflow: hidden; }
+#rp-card .rp-crop-window img { position: absolute; max-width: none; max-height: none; object-fit: fill; }
+.rp-detail-map { position: absolute; right: 8px; top: 8px; width: clamp(54px, 12%, 100px); border: 1px solid #dcece7; box-shadow: 0 2px 12px #000b; }
+#rp-card .rp-detail-map img { display: block; width: 100%; height: auto; aspect-ratio: auto; object-fit: contain; }
+.rp-detail-map span { position: absolute; box-sizing: border-box; border: 2px solid #defce8; background: #a8e7c518; }
+.rp-detail-badge { position: absolute; left: 8px; bottom: 8px; padding: 4px 6px; background: #07110ee6; color: #d7e6e0; font: 9px/1.3 var(--mono); }
+.rp-note-wrap { min-width: 0; min-height: 0; }
+.rp-read-explanation { display: none; }
+.rp-explanation-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100svh - 48px); box-sizing: border-box; margin: auto; padding: 22px; border: 1px solid #718f84; background: #101a18; color: #e4eee9; overflow: auto; }
+.rp-explanation-dialog[open] { display: grid; gap: 18px; }
+.rp-explanation-dialog:not([open]) { display: none; }
+.rp-explanation-dialog::backdrop { background: #000b; }
+.rp-explanation-dialog h2 { margin: 0; font-size: 22px; line-height: 1.2; }
+.rp-explanation-dialog p { margin: 0; font: 14px/1.6 var(--sans); }
+.rp-explanation-dialog .btn { min-height: 40px; }
 #rp-card .rp-side { grid-column: auto; padding: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; overflow: auto; scrollbar-width: thin; }
 #rp-card .rp-settings { font-size: 10px; line-height: 1.5; letter-spacing: .025em; color: var(--muted); }
 .rp-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -76,6 +97,9 @@
   .rp-facts span { display: none; }
   .rp-insight-title { display: none; }
   #rp-card .rp-note { font-size: 11px; line-height: 1.4; max-height: 47px; overflow: auto; }
+  .rp-note-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 78px; align-items: center; gap: 8px; }
+  #rp-card .rp-note-wrap .rp-note { overflow: hidden; }
+  .rp-read-explanation { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 3px 5px; font-size: 9px; line-height: 1.2; color: var(--accent); }
   .rp-actions { grid-template-columns: 1fr 1fr; }
   .rp-actions .btn { min-height: 38px; padding: 5px; font-size: 10px; }
   .rp-prediction { padding-top: 4px; margin-top: 0; }

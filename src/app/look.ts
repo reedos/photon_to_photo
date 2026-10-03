@@ -280,8 +280,8 @@ export function tuneStudioMaterial(mat: THREE.Material): THREE.Material {
     m.envMapIntensity = 1.0;
   } else if (/^(BrushedChrome|mountChrome)/i.test(n)) {
     m.color.set(0xc8c4b9);
-    m.roughness = 0.27;
-    m.envMapIntensity = 1.4;
+    m.roughness = 0.32;
+    m.envMapIntensity = 1.15;
   } else if (/^(GoldContact|lensContacts)/i.test(n)) {
     m.color.set(0xd4ad68);
     m.roughness = 0.3;
@@ -325,8 +325,8 @@ export function buildStudioEnvironment(renderer: THREE.Renderer): { texture: THR
     panels.push(m);
   };
   // camera frame: lens toward -z, y up, the reader usually in front-left (-x, -z)
-  panel(48, 16, [5, 5, 4.8], [-18, 34, -20]);     // the big soft key, above and in front
-  panel(10, 40, [3.8, 3.0, 2.1], [34, 8, 30]);     // warm metal rim, behind-right
+  panel(48, 16, [4, 4, 3.8], [-18, 34, -20]);     // softer key preserves the metal's highlight detail
+  panel(10, 40, [3.3, 2.7, 1.9], [34, 8, 30]);     // warm metal rim, behind-right
   panel(22, 8, [1.2, 1.65, 2.2], [-36, -10, 26]);  // cool glass kicker, behind-left and low
   panel(30, 6, [0.9, 1.0, 1.15], [0, -30, -18]);   // broad fill keeps underside controls readable
   const texture = pmrem.fromScene(env, 0.02).texture;
@@ -343,9 +343,9 @@ export function buildStudioEnvironment(renderer: THREE.Renderer): { texture: THR
  *  where the reader expects it (upper front-left); the rim comes from behind-right-high, the cool kicker from
  *  behind-left-low, so the silhouette's top and back edges light up against the void. */
 export function addStudioLights(group: THREE.Object3D, k = 1): THREE.Light[] {
-  const key = new THREE.DirectionalLight(0xf4f2ee, 2.6 * k); key.position.set(-160, 220, -200);
-  const fill = new THREE.DirectionalLight(0xd5e3f4, 0.85 * k); fill.position.set(200, 80, -60);
-  const rim = new THREE.DirectionalLight(0xf0d4a5, 3.0 * k); rim.position.set(140, 160, 240);
+  const key = new THREE.DirectionalLight(0xf4f2ee, 2.0 * k); key.position.set(-160, 220, -200);
+  const fill = new THREE.DirectionalLight(0xd5e3f4, 1.2 * k); fill.position.set(200, 80, -60);
+  const rim = new THREE.DirectionalLight(0xf0d4a5, 2.5 * k); rim.position.set(140, 160, 240);
   const kick = new THREE.DirectionalLight(0xbad8f5, 1.7 * k); kick.position.set(-220, -40, 180);
   const amb = new THREE.AmbientLight(0x2c2e31, 0.4 * k);
   group.add(key, fill, rim, kick, amb);

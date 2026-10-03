@@ -27,7 +27,7 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
   const head = new LineSegments2(headGeometry,headMaterial);
   head.name='animated-traced-light-head';head.frustumCulled=false;head.renderOrder=13;head.layers.set(layer);head.visible=false;owner.add(head);
   const bar = document.createElement('div'); bar.className = 'light-playback'; bar.hidden = true;
-  bar.innerHTML = `<button class="btn" type="button">Animate light</button><label>${label}<input type="range" min="0" max="1000" value="0" aria-label="Light travel progress"></label><span>Traced paths · illustrative timing</span>`;
+  bar.innerHTML = `<button class="btn" type="button" aria-pressed="false">▶ Play light</button><label><span class="playback-caption">${label}<small>Illustrative time · drag to inspect</small></span><input type="range" min="0" max="1000" value="0" aria-label="Light travel progress"></label><span>Computed paths<br>Slowed to reveal the journey</span>`;
   document.getElementById('model-experiments')!.before(bar);
   const button = bar.querySelector('button')!, range = bar.querySelector('input')!;
   let paths: { trail: Trail; color: THREE.Color; nm: number }[] = [], elapsed = 0, playing = false;
@@ -64,10 +64,10 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
     range.value = String(Math.round(1000 * elapsed / duration));
     range.setAttribute('aria-valuetext', `${Math.round(100 * elapsed / duration)} percent along the displayed paths; timing is illustrative`);
   }
-  function pause() { playing = false; button.textContent = elapsed >= duration ? 'Replay light' : elapsed > 0 ? 'Resume light' : 'Animate light'; }
+  function pause() { playing = false; button.setAttribute('aria-pressed', 'false'); button.textContent = elapsed >= duration ? '↻ Replay light' : elapsed > 0 ? '▶ Resume light' : '▶ Play light'; }
   button.onclick = () => {
     if (playing) pause();
-    else { if (elapsed >= duration) elapsed = 0; playing = true; button.textContent = 'Pause light'; }
+    else { if (elapsed >= duration) elapsed = 0; playing = true; button.textContent = 'Ⅱ Pause light'; button.setAttribute('aria-pressed', 'true'); }
   };
   range.oninput = () => { elapsed = Number(range.value) / 1000 * duration; pause(); paint(); };
   const onHidden = () => { if (document.hidden) pause(); };

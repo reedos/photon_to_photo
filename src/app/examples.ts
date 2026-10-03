@@ -10,6 +10,7 @@ import type { ExampleRenderRequest, ExampleRenderResult } from './example-worker
 import type { Store } from './store';
 import { chip } from './ui';
 import { emit } from './bus';
+import { mountPhotoDetails } from './photo-details';
 import '../styles/photo-study.css';
 
 export interface Example {
@@ -100,6 +101,7 @@ export function mountExamples(store: Store): void {
   const imageRetry = document.createElement('button'); imageRetry.type = 'button'; imageRetry.className = 'btn'; imageRetry.textContent = 'Retry photograph'; imageRetry.hidden = true;
   const imageFrame = document.createElement('div'); imageFrame.className = 'rp-image-frame';
   imageFrame.append(img, imageStatus, imageRetry); photo.prepend(imageFrame);
+  const photoDetails = mountPhotoDetails(img, imageFrame, note);
   img.decoding = 'async';
   img.onload = () => { imageStatus.hidden = true; imageRetry.hidden = true; imageFrame.setAttribute('aria-busy', 'false'); };
   img.onerror = () => { imageStatus.hidden = false; imageStatus.textContent = 'The photograph could not load.'; imageRetry.hidden = false; imageFrame.setAttribute('aria-busy', 'false'); };
@@ -211,6 +213,7 @@ export function mountExamples(store: Store): void {
     photoCount.textContent = `${examples.indexOf(ex) + 1} / ${examples.length}`;
     credit.textContent = ex.credit;
     note.textContent = ex.note;
+    photoDetails.setPhoto(ex.id, ex.note, ex.title);
     const lensName = (() => { try { return lensSummary(ex.lens).name; } catch { return ex.lens; } })();
     settings.textContent = `${lensName} · ISO ${ex.iso}`;
     facts.replaceChildren();
