@@ -6,7 +6,7 @@ import '../styles/ghosts.css';
 export function ghostView(ctx:PieceContext) {
   const launch=document.createElement('div');launch.className='ghost-launch';launch.hidden=true;
   launch.innerHTML='<button class="btn" type="button">Ghosts & coatings</button><span>Follow the light that reflects twice</span>';
-  document.getElementById('studio-exposure')!.before(launch);
+  document.getElementById('model-experiments')!.append(launch);
   const dialog=document.createElement('dialog');dialog.className='ghost-dialog';dialog.id='ghost-plate';dialog.setAttribute('aria-labelledby','ghost-title');
   dialog.innerHTML=`<header><div><span class="ghost-kicker">ONE REPRESENTATIVE GLASS PLATE</span><h2 id="ghost-title">Two reflections. A second path.</h2></div><button class="btn ghost-close">Close</button></header>
     <p class="ghost-lead">Most light passes through. A tiny part reflects off the back, then the front, and emerges again. A thin coating can reduce those reflections.</p>

@@ -96,6 +96,10 @@ try {
       }
       await page.addScriptTag({ content: axe });
       const violations = await page.evaluate(() => window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } }).then(r => r.violations));
+      if (violations.length) {
+        console.error(JSON.stringify({ width, piece, violations }, null, 2));
+        await page.screenshot({ path: `shots/selection/failure-${piece}-${width}.png` });
+      }
       assert.deepEqual(violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), [], `${piece}: accessibility`);
       await page.screenshot({ path: `shots/selection/${piece}-${width}.png` });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);

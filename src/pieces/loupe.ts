@@ -376,7 +376,7 @@ export const build: BuildPiece = (ctx) => {
   const sparkGroup = new THREE.Group();
   const photonControls = document.createElement('div'); photonControls.className = 'light-playback'; photonControls.hidden = true;
   photonControls.innerHTML = '<button class="btn" type="button">Animate photons</button><label>Arriving light<input type="range" min="0" max="1000" value="0" aria-label="Photon animation phase"></label><span>Illustrative packets · not real time</span>';
-  document.getElementById('studio-exposure')!.before(photonControls);
+  document.getElementById('model-experiments')!.before(photonControls);
   const photonButton = photonControls.querySelector('button')!, photonRange = photonControls.querySelector('input')!;
   const rainLaunch = document.createElement('button'); rainLaunch.type = 'button'; rainLaunch.className = 'btn rain-launch';
   rainLaunch.textContent = 'Photon rain & noise'; rainLaunch.hidden = true; photonControls.before(rainLaunch);

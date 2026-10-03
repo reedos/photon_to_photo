@@ -90,29 +90,16 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   dom.backendChip.prepend((() => { const d = document.createElement('i'); d.className = 'dot2'; return d; })());
 
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#080d14');
   const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 100000);
   camera.position.set(0, 25, 140);
   const controls = new OrbitControls(camera as unknown as THREE.Camera, dom.canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
 
-  // The wheel scrolls the page; Ctrl or Cmd with it (and a trackpad pinch, which arrives as ctrl+wheel) zooms. Without
-  // this a reader scrolling down the page gets stuck zooming the camera the moment the pointer crosses the view.
-  let wheelHinted = false;
-  dom.canvas.addEventListener('wheel', (e) => {
-    if (e.ctrlKey || e.metaKey) { e.preventDefault(); return; }   // OrbitControls zooms; the page must not
-    e.stopImmediatePropagation();
-    if (!wheelHinted) {
-      wheelHinted = true;
-      const t = document.getElementById('toast');
-      if (t) {
-        t.textContent = /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Hold Cmd and scroll to zoom' : 'Hold Ctrl and scroll to zoom';
-        t.classList.remove('select');
-        t.hidden = false;
-        window.setTimeout(() => { t.hidden = true; }, 2200);
-      }
-    }
-  }, { capture: true, passive: false });
+  // This is a fixed workspace: plain wheel and trackpad pinch belong to the model.
+  // OrbitControls consumes them only over the canvas; settings retain their own scroll.
+  controls.zoomSpeed = 0.8;
 
   // ---- procedural PMREM environment + key/fill lights (design/LOOK.md: "not a photographic HDRI") -------------
   // Factored into look.ts (09/28/2026, lens-exteriors workstream) so src/scene/lens-preview.ts's standalone
@@ -251,6 +238,26 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     manuallyMoved = true;
     if (activeId) built.get(activeId)?.onViewInteraction?.();
   });
+  function zoomBy(factor: number) {
+    if (dom.view.clientWidth === 0 || !activeId) return;
+    diveTo = null; manuallyMoved = true;
+    built.get(activeId)?.onViewInteraction?.();
+    controls.enableDamping = false; controls.update(); controls.enableDamping = true;
+    const offset = camera.position.clone().sub(controls.target);
+    const distance = Math.max(camera.near * 4, Math.min(camera.far * 0.8, offset.length() * factor));
+    camera.position.copy(controls.target).add(offset.setLength(distance));
+    controls.update(); start();
+  }
+  const zoomIn = () => zoomBy(0.8), zoomOut = () => zoomBy(1.25);
+  const zoomKeys = (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (['+', '=', '-', '_'].includes(event.key)) {
+      event.preventDefault(); zoomBy(event.key === '-' || event.key === '_' ? 1.25 : 0.8);
+    }
+  };
+  document.getElementById('zoom-in')?.addEventListener('click', zoomIn);
+  document.getElementById('zoom-out')?.addEventListener('click', zoomOut);
+  dom.canvas.addEventListener('keydown', zoomKeys);
 
   function startDive(to: CameraFrame) {
     if (![...to.position.toArray(), ...to.target.toArray()].every(Number.isFinite)) return;
@@ -294,8 +301,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   let renderWidth = 0, renderHeight = 0, renderRatio = 0;
   let sizeDirty = true;
   function applySize() {
-    const w = dom.view.clientWidth || 1;
-    const h = dom.view.clientHeight || 1;
+    const w = dom.view.clientWidth;
+    const h = dom.view.clientHeight;
+    if (!w || !h) return; // Keep the valid framebuffer while another workspace tab is active.
     const ratio = Math.min(window.devicePixelRatio || 1, pixelRatioCap());
     sizeDirty = false;
     if (renderWidth === w && renderHeight === h && renderRatio === ratio) return;
@@ -324,6 +332,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   intersectionObserver?.observe(dom.view);
   window.addEventListener('scroll', checkVisible, { passive: true });
   window.addEventListener('resize', checkVisible);
+  const workspaceView = () => { checkVisible(); sizeDirty = true; };
+  document.addEventListener('workspace-view', workspaceView);
 
   // A piece fetching its models veils the view with its progress and holds its pins back, so nothing piles up at the
   // origin before there is a model to pin (UI-21).
@@ -797,6 +807,10 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     },
 
     dispose() {
+      document.getElementById('zoom-in')?.removeEventListener('click', zoomIn);
+      document.getElementById('zoom-out')?.removeEventListener('click', zoomOut);
+      dom.canvas.removeEventListener('keydown', zoomKeys);
+      document.removeEventListener('workspace-view', workspaceView);
       running = false;
       void renderer.setAnimationLoop(null);
       stopLoading();

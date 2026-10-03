@@ -5,7 +5,7 @@ import '../styles/perspective.css';
 /** A separate ideal-camera experiment: never changes the selected production lens. */
 export function mountPerspectiveStudy(store:Store){
  const launch=document.createElement('button');launch.className='btn perspective-launch';launch.type='button';launch.textContent='Focal length & perspective';
- const launchRow=document.createElement('div');launchRow.className='perspective-launch-row';launchRow.append(launch);document.getElementById('studio-exposure')!.before(launchRow);
+ const launchRow=document.createElement('div');launchRow.className='perspective-launch-row';launchRow.append(launch);document.getElementById('model-experiments')!.append(launchRow);
  const sync=()=>launchRow.hidden=store.get().piece!=='camera';store.subscribe(sync);sync();
  const dialog=document.createElement('dialog');dialog.id='perspective-dialog';dialog.setAttribute('aria-labelledby','perspective-title');
  dialog.innerHTML=`<header><div><span>IDEAL CAMERA EXPERIMENT</span><h2 id="perspective-title">Move the camera. Change the story.</h2></div><button class="btn" id="perspective-close">Close</button></header>

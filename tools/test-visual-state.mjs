@@ -27,9 +27,9 @@ try {
   await page.goto(url+'?lens=n50');
   await page.waitForFunction(()=>window.p2p?.pieces.camera?.state().loaded);
   await page.waitForFunction(()=>document.querySelector('#finalimg-canvas').getAttribute('aria-busy')==='false');
-  assert.match(await page.locator('.rx-fire').innerText(),/fire shutter/i);
-  assert.equal(await page.locator('.rx-focus').isVisible(),true);
-  assert.equal(await page.locator('.rx-aperture').isVisible(),true);
+  assert.equal(await page.locator('#compact-fire').getAttribute('aria-label'),'Fire shutter');
+  assert.equal(await page.locator('#sc-focus').isVisible(),true);
+  assert.equal(await page.locator('#sc-fno').isVisible(),true);
   // A tap on the still-visible previous photo must not open a stale pixel during the debounce.
   const staleTap=await page.evaluate(()=>{
     window.p2p.set({iso:200});
@@ -49,7 +49,7 @@ try {
   await page.waitForFunction(()=>window.p2p.pieces.camera.state().lens==='z35');
   await page.evaluate(()=>window.p2p.pieces.camera.ready());
   await obsolete.abort();await page.waitForTimeout(250);
-  assert.equal(await page.locator('.rx-fire').isEnabled(),true);
+  assert.equal(await page.locator('#compact-fire').isEnabled(),true);
   assert.equal(await page.locator('#veil').evaluate(el=>el.classList.contains('err')),false);
   results.push('obsolete model failure leaves newer rig enabled');
   // A selected part's slow asset completion must not restore global camera detail chrome in Focus.
@@ -72,21 +72,24 @@ try {
     await page.evaluate(()=>window.p2p.piece('camera'));
     await page.evaluate(()=>window.p2p.pieces.camera.ready());
     await page.locator('#part-overview').click();
-    for(const control of ['.rx-fire','.rx-focus','.rx-aperture'])assert.equal(await page.locator(control).isVisible(),true);
-    await page.locator('.rx-focus').press('End');
-    await page.locator('.rx-focus').press('Home');
+    await page.locator('#tab-controls').click();
+    for(const control of ['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
+    await page.locator('#sc-focus').press('End');
+    await page.locator('#sc-focus').press('Home');
     assert.equal(await page.evaluate(()=>window.p2p.scenario().focusM*1000),await page.evaluate(()=>window.p2p.model().lens.closestFocusMm));
-    await page.locator('.rx-focus').press('End');
+    await page.locator('#sc-focus').press('End');
     assert.equal(await page.evaluate(()=>window.p2p.scenario().focusM),null);
-    let box=await page.locator('.rx-focus').boundingBox();
+    assert.equal(await page.locator('#sc-focus').getAttribute('aria-valuetext'),'infinity');
+    let box=await page.locator('#sc-focus').boundingBox();
     await page.mouse.click(box.x+box.width*.5,box.y+box.height*.5);
     assert.notEqual(await page.evaluate(()=>window.p2p.scenario().focusM),null);
-    await page.locator('.rx-aperture').press('End');
+    await page.locator('#sc-fno').press('End');
     assert.equal(await page.evaluate(()=>window.p2p.scenario().fno),22);
-    box=await page.locator('.rx-aperture').boundingBox();
+    assert.equal(await page.evaluate(()=>window.p2p.model().scenario.fno),22,'visible aperture slider updates the computed optical model');
+    box=await page.locator('#sc-fno').boundingBox();
     await page.mouse.click(box.x+box.width*.4,box.y+box.height*.5);
     assert.ok(await page.evaluate(()=>window.p2p.scenario().fno<22));
-    await page.locator('.rx-fire').press('Enter');
+    await page.locator('#compact-fire').press('Enter');
     assert.equal(await page.evaluate(()=>window.p2p.pieces.camera.exposure().status),'paused');
     await page.evaluate(()=>window.p2p.set({iso:window.p2p.scenario().iso===100?200:100}));
     await page.evaluate(()=>window.p2p.settle());
@@ -97,13 +100,13 @@ try {
     await page.locator('[data-view="cutaway"]').click();
     await page.evaluate(()=>window.p2p.settle());
     assert.equal(await page.locator('.rig-teach').count(),0);
-    for(const control of ['.rx-fire','.rx-focus','.rx-aperture'])assert.equal(await page.locator(control).isVisible(),true);
+    for(const control of ['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
     await page.locator('[data-view="outside"]').click();
     await page.evaluate(()=>window.p2p.settle());
     assert.equal(await page.locator('.rig-teach').count(),3);
     assert.ok((await page.locator('.pins .pin:visible').count())>=4);
     await page.screenshot({path:`shots/audit/visual-state/${width}-persistent-controls.png`});
-    results.push(`${width}px: permanent controls visible and operable by keyboard/pointer`);
+    results.push(`${width}px: toolbar Fire and Controls sliders visible and operable by keyboard/pointer`);
     for(const lens of (process.env.P2P_AUDIT_LENSES||'n50,m50,n500,z800,s35,z35,n500fl').split(',')) {
       await page.evaluate(lens=>{window.p2p.piece('camera');window.p2p.set({lens});},lens);
       await page.evaluate(()=>window.p2p.pieces.camera.ready());

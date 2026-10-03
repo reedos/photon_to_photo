@@ -28,7 +28,7 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
   head.name='animated-traced-light-head';head.frustumCulled=false;head.renderOrder=13;head.layers.set(layer);head.visible=false;owner.add(head);
   const bar = document.createElement('div'); bar.className = 'light-playback'; bar.hidden = true;
   bar.innerHTML = `<button class="btn" type="button">Animate light</button><label>${label}<input type="range" min="0" max="1000" value="0" aria-label="Light travel progress"></label><span>Traced paths · illustrative timing</span>`;
-  document.getElementById('studio-exposure')!.before(bar);
+  document.getElementById('model-experiments')!.before(bar);
   const button = bar.querySelector('button')!, range = bar.querySelector('input')!;
   let paths: { trail: Trail; color: THREE.Color; nm: number }[] = [], elapsed = 0, playing = false;
   let lastPaintMs = 0, lastSegments = 0, lastHeadSegments = 0;

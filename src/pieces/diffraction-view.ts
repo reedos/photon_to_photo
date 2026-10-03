@@ -7,7 +7,7 @@ import '../styles/diffraction.css';
 export function diffractionView(ctx: PieceContext, id: string) {
   const launch = document.createElement('div'); launch.className = 'diffraction-launch'; launch.hidden = true;
   launch.innerHTML = '<button class="btn" type="button">Waves & diffraction</button><span>Why stopping down spreads a point across pixels</span>';
-  document.getElementById('studio-exposure')!.before(launch);
+  document.getElementById('model-experiments')!.append(launch);
   const dialog = document.createElement('dialog'); dialog.className = 'diffraction-dialog'; dialog.id = `diffraction-${id}`;
   dialog.setAttribute('aria-labelledby', `${dialog.id}-title`);
   dialog.innerHTML = `<header><div><span class="diffraction-kicker">OPTICS · IDEAL CIRCULAR APERTURE</span><h2 id="${dialog.id}-title">A point becomes a pattern</h2></div><button class="btn diffraction-close" type="button">Close</button></header>

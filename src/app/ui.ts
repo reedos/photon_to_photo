@@ -299,7 +299,7 @@ export function mountUI(store: Store, stage: Stage): void {
   // ---- the view's buttons: Reset and Share live in the top-right column, and under the view on a phone ----------
   const phone = phoneQuery();
   const setHint = () => {
-    const zoom = phone?.matches ? 'pinch to zoom' : 'Ctrl + scroll to zoom';
+    const zoom = phone?.matches ? 'pinch to zoom' : 'Scroll to zoom';
     dom.hint.textContent = store.get().piece === 'camera'
       ? `Drag the focus ring or a dial to set it · drag elsewhere to orbit · ${zoom}`
       : `Drag to orbit · ${zoom}`;

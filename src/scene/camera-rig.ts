@@ -943,7 +943,7 @@ export const build: BuildPiece = (ctx) => {
   linkBtn.addEventListener('click', () => { if (linkTo) ctx.bus.emit('goto-piece', { piece: linkTo }); });
   function back() { openDetail(null); ctx.bus.emit('select-part', { id: null }); }
   const onKey = (e: KeyboardEvent) => {
-    if (!group.visible || canvas.inert || document.querySelector('dialog[open]')) return;
+    if (!group.visible || canvas.closest('[hidden], [inert]') || document.querySelector('dialog[open]')) return;
     const typing = (e.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable]');
     if (e.key === 'Escape' && detail) back();
     else if ((e.key === 'f' || e.key === 'F') && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) exposure.fire();

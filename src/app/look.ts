@@ -233,8 +233,8 @@ export function buildEnvironmentAndLights(renderer: THREE.WebGPURenderer, scene:
  *  so it gets the same material. Not a physics color: this is the housing's look, the rays stay exact. */
 export function opticalGlassMaterial(front = true): THREE.MeshPhysicalMaterial {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x0d1214, metalness: 0, roughness: 0.03, transparent: true, opacity: front ? 0.08 : 0.045,
-    clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 2.2, specularIntensity: 1,
+    color: front ? 0x28464e : 0x29404d, metalness: 0, roughness: 0.035, transparent: true, opacity: front ? 0.14 : 0.08,
+    clearcoat: 1, clearcoatRoughness: 0.035, envMapIntensity: 2.4, specularIntensity: 1,
     iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [250, 420],
     side: THREE.DoubleSide, depthWrite: false,
   });
@@ -262,18 +262,37 @@ export function edgeBandGeometry(r: number, z0: number, z1: number, a0 = 0, a1 =
   return g;
 }
 
-/** Satin black paint on the bodies and barrels: the GLB leaves its roughness at glTF's default of 1, which on a black
- *  stage reads as a flat silhouette. A satin 0.5 with a light clearcoat carries the softboxes' long highlights along
- *  curved panels, so the grip, the hump and the barrel separate (FID-8). */
+/** Presentation finishes, not measured reflectance: graphite paint, soft rubber, machined mounts and coated
+ * glass should remain distinguishable at the overview scale. Only known housing materials are tuned here;
+ * spectral rays, Bayer dyes and computed signal colors never pass through this palette. */
 export function tuneStudioMaterial(mat: THREE.Material): THREE.Material {
   const n = mat.name ?? '';
   const m = mat as THREE.MeshPhysicalMaterial;
-  if (/Paint/i.test(n) && 'roughness' in m) {
-    m.roughness = 0.5;
-    if ('clearcoat' in m) { m.clearcoat = 0.25; m.clearcoatRoughness = 0.35; }
+  if (!('roughness' in m) || !('color' in m)) return mat;
+  if (/Paint/i.test(n)) {
+    m.color.set(0x353c46);
+    m.roughness = 0.38;
+    if ('clearcoat' in m) { m.clearcoat = 0.25; m.clearcoatRoughness = 0.3; }
+    m.envMapIntensity = 1.5;
+  } else if (/Rubber/i.test(n)) {
+    m.color.set(0x242629);
+    m.roughness = 0.78;
+    m.envMapIntensity = 1.0;
+  } else if (/^(BrushedChrome|mountChrome)/i.test(n)) {
+    m.color.set(0xc8c4b9);
+    m.roughness = 0.27;
     m.envMapIntensity = 1.4;
-  } else if (/Rubber/i.test(n) && 'roughness' in m) {
-    m.envMapIntensity = 1.2;
+  } else if (/^(GoldContact|lensContacts)/i.test(n)) {
+    m.color.set(0xd4ad68);
+    m.roughness = 0.3;
+  } else if (/^irisBlade/i.test(n)) {
+    m.color.set(0x454d58);
+    m.roughness = 0.4;
+  } else if (/^(KnurlBlack|knurlPlastic|buttonSatin)/i.test(n)) {
+    m.color.set(0x2b2d32);
+    m.roughness = 0.48;
+  } else if (/^(engraving|indexWhite)/i.test(n)) {
+    m.color.set(0xd5cdbd);
   }
   return mat;
 }
@@ -288,7 +307,7 @@ export function buildStudioEnvironment(renderer: THREE.Renderer): { texture: THR
   const dome = new THREE.IcosahedronGeometry(50, 3);
   const p = dome.attributes.position;
   const cols = new Float32Array(p.count * 3);
-  const top = new THREE.Color(0x16181b), low = new THREE.Color(0x020202), mid = new THREE.Color(0x070708);
+  const top = new THREE.Color(0x242d39), low = new THREE.Color(0x050607), mid = new THREE.Color(0x11151b);
   for (let i = 0; i < p.count; i++) {
     const y = p.getY(i) / 50;
     const c = y > 0.3 ? mid.clone().lerp(top, THREE.MathUtils.smoothstep(y, 0.3, 1)) : mid.clone().lerp(low, THREE.MathUtils.smoothstep(-y, -0.3, 0.8));
@@ -307,9 +326,9 @@ export function buildStudioEnvironment(renderer: THREE.Renderer): { texture: THR
   };
   // camera frame: lens toward -z, y up, the reader usually in front-left (-x, -z)
   panel(48, 16, [5, 5, 4.8], [-18, 34, -20]);     // the big soft key, above and in front
-  panel(10, 40, [3.2, 3.0, 2.8], [34, 8, 30]);     // rim strip, behind-right
-  panel(22, 8, [1.1, 1.2, 1.35], [-36, -10, 26]);  // faintly cool kicker, behind-left and low
-  panel(30, 6, [0.5, 0.5, 0.5], [0, -30, -18]);    // faint bounce from the floor in front
+  panel(10, 40, [3.8, 3.0, 2.1], [34, 8, 30]);     // warm metal rim, behind-right
+  panel(22, 8, [1.2, 1.65, 2.2], [-36, -10, 26]);  // cool glass kicker, behind-left and low
+  panel(30, 6, [0.9, 1.0, 1.15], [0, -30, -18]);   // broad fill keeps underside controls readable
   const texture = pmrem.fromScene(env, 0.02).texture;
   return {
     texture,
@@ -325,9 +344,9 @@ export function buildStudioEnvironment(renderer: THREE.Renderer): { texture: THR
  *  behind-left-low, so the silhouette's top and back edges light up against the void. */
 export function addStudioLights(group: THREE.Object3D, k = 1): THREE.Light[] {
   const key = new THREE.DirectionalLight(0xf4f2ee, 2.6 * k); key.position.set(-160, 220, -200);
-  const fill = new THREE.DirectionalLight(0xdfe6ef, 0.55 * k); fill.position.set(200, 80, -60);
-  const rim = new THREE.DirectionalLight(0xe8dcc6, 3.0 * k); rim.position.set(140, 160, 240);
-  const kick = new THREE.DirectionalLight(0xd2dcea, 1.5 * k); kick.position.set(-220, -40, 180);
+  const fill = new THREE.DirectionalLight(0xd5e3f4, 0.85 * k); fill.position.set(200, 80, -60);
+  const rim = new THREE.DirectionalLight(0xf0d4a5, 3.0 * k); rim.position.set(140, 160, 240);
+  const kick = new THREE.DirectionalLight(0xbad8f5, 1.7 * k); kick.position.set(-220, -40, 180);
   const amb = new THREE.AmbientLight(0x2c2e31, 0.4 * k);
   group.add(key, fill, rim, kick, amb);
   return [key, fill, rim, kick, amb];

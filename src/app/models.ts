@@ -386,7 +386,7 @@ async function main() {
   loader = new GLTFLoader().setDRACOLoader(draco);
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000);
+  scene.background = new THREE.Color(0x080d14);
   scene.add(assembly);
   camera = new THREE.PerspectiveCamera(32, 1, 1, 5000);
   controls = new OrbitControls(camera as unknown as THREE.Camera, canvas);

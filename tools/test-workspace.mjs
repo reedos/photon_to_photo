@@ -18,7 +18,7 @@ try {
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
-    for (const selector of ['#kit-body', '#kit-lens', '#kit-scene', '#finalimg-canvas', '#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso', '.rx-fire']) {
+    for (const selector of ['#kit-body', '#kit-lens', '#kit-scene', '#finalimg-canvas', '#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso', '#compact-fire']) {
       const box = await page.locator(selector).boundingBox();
       assert.ok(box && box.y >= 0 && box.y + box.height <= height, `${selector} fits ${width}×${height}: ${JSON.stringify(box)}`);
     }
@@ -48,7 +48,7 @@ try {
     await page.locator('#steps [data-piece="camera"]').click();
     assert.equal(await page.locator('#studio-explain').isVisible(), true, 'overview does not hide the parts pane');
     await page.locator('#tab-controls').click();
-    await page.locator('.rx-fire').click();
+    await page.locator('#compact-fire').click();
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.exposure().status), 'paused');
     assert.equal(await page.locator('.rx-scrub').isVisible(), true);
     // A just-changed shot intentionally holds inspection until its current pixels arrive.

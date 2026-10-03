@@ -195,7 +195,8 @@ function thresholdDisk(img, geometryMask = false) {
       const r = img.data[i], g = img.data[i + 1], b = img.data[i + 2];
       const maxc = Math.max(r, g, b);
       const minc = Math.min(r, g, b);
-      if (geometryMask) { if (minc > 0) pts.push({ x, y }); continue; }
+      // White coverage adds to the measured studio background; a tinted backdrop itself is not coverage.
+      if (geometryMask) { if (r > bg[0] && g > bg[1] && b > bg[2]) pts.push({ x, y }); continue; }
       // Saturation (max-min), not raw brightness: the dim sensor-plate/pixel-grid background is only ~10-15
       // brightness units dimmer than a single faint splat at the disk's sparse periphery (both are grayish and
       // close in absolute level), which a brightness-only threshold can't reliably separate -- found while
