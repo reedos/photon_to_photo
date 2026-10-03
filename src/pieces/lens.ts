@@ -200,6 +200,7 @@ export const build: BuildPiece = (ctx) => {
       if (generation !== housingGeneration) return;
       // the schematic tube stays up; say why in the console rather than leave a silent gap
       console.error('lens.ts: the housing failed to load, keeping the schematic barrel', err);
+      housingFor = null; // allow a later update/re-entry to retry the same lens
       if (barrelHandle) barrelHandle.group.visible = true;
     });
   }
@@ -291,11 +292,11 @@ export const build: BuildPiece = (ctx) => {
       if (lensChanged) {
         lensId = model.lens.id;
         rebuildLensGeometry(model);
-        swapHousing(model.lens.id);
       } else {
         elementsHandle!.reposition(model);
       }
       lastModel = model;
+      swapHousing(model.lens.id);
       placeHousing(model);
       updateExtents(model);
       if (lensChanged && group.visible) ctx.dive(computeFrame(extents, ctx.camera.aspect));

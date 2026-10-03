@@ -136,9 +136,15 @@ export class Store {
     // sets it with its lens): a new lens or scene without one of its own goes back to the scene's own layout.
     const merged = { ...this.state.scenario, ...partial };
     if (partial.lens && bodyForLens(partial.lens) !== bodyForLens(this.state.scenario.lens) && !('sensor' in partial)) delete merged.sensor;
-    if (('lens' in partial || 'scene' in partial) && !('subjectM' in partial)) delete merged.subjectM;
-    const scenario = normalizeScenario(merged);
+    if (((partial.lens !== undefined && partial.lens !== this.state.scenario.lens)
+      || (partial.scene !== undefined && partial.scene !== this.state.scenario.scene)) && !('subjectM' in partial)) delete merged.subjectM;
+    const normalized = normalizeScenario(merged);
+    // Sliders can emit the same clamped value many times at their bounds. Preserve
+    // shot identity so those events neither rebuild geometry nor restart the photo.
+    const unchanged = JSON.stringify(normalized) === JSON.stringify(this.state.scenario);
+    const scenario = unchanged ? this.state.scenario : normalized;
     const nextPiece = piece ?? this.state.piece;
+    if (unchanged && nextPiece === this.state.piece) return;
     this.state = { scenario, piece: nextPiece, cameraPart: inspectionParent(nextPiece, this.state.cameraPart) };
     this.notify();
   }

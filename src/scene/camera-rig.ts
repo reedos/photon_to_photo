@@ -439,8 +439,10 @@ export const build: BuildPiece = (ctx) => {
   }
 
   // ---- the engine's numbers, applied to the models -----------------------------------------------------------
+  let opticsRevision = 0;
   function applyModel(model: Model) {
     if (!lensRoot || state.lens !== model.scenario.lens) return;
+    opticsRevision++;
     const surf = model.system.surfaces;
     const imageZ = surf[surf.length - 1].z;
     const flange = (bodyFacts as any)[state.body].mount.flangeMm as number;
@@ -1296,6 +1298,10 @@ export const build: BuildPiece = (ctx) => {
     group,
     probes: PROBES,
     update(model, scenario) {
+      const previous = lastModel?.scenario;
+      const opticsChanged = !previous || previous.lens !== model.scenario.lens
+        || previous.focusM !== model.scenario.focusM || previous.fno !== model.scenario.fno
+        || previous.format !== model.scenario.format;
       lastModel = model; lastScenario = scenario;
       exposure.syncModel();
       // the part names follow the lens's body now, not when its model finishes loading, so the parts list never shows
@@ -1303,7 +1309,10 @@ export const build: BuildPiece = (ctx) => {
       const bodyNow = bodyForLens(scenario.lens);
       if (bodyNow) for (const p of PROBES) p.label = partLabel(p.id as PartId, bodyNow);
       loading = ensureRig(scenario.lens);
-      applyModel(model);
+      // ISO, shutter duration and scene illumination change the exposure, not the
+      // lens geometry. Keep the existing iris/ray buffers in those cases. Explicit
+      // mirror, cutaway and async rig-load changes still call applyModel directly.
+      if (opticsChanged) applyModel(model);
       anchorProbes();
       if (detail && group.visible && !userMoved) fitDive(partFrame(detail));
     },
@@ -1346,7 +1355,7 @@ export const build: BuildPiece = (ctx) => {
       document.body.classList.remove('rig-detail');
     },
     hooks: {
-      state: () => ({ ...state, view, selected, raysOn, loaded: !!lensRoot || !!bodyRoot }),
+      state: () => ({ ...state, view, selected, raysOn, loaded: !!lensRoot || !!bodyRoot, opticsRevision }),
       ready: async () => { await loading; await inflight; return !!bodyRoot; },
       frameFor: () => { const f = frame(); return { position: f.position.toArray(), target: f.target.toArray() }; },
       /** Test hook: where the camera is, what it sees and what the chrome leaves free. */

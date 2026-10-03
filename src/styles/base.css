@@ -58,7 +58,9 @@ body.scrolled .topbar { border-bottom-color: var(--line-2); }
   .menu-btn { all: unset; box-sizing: border-box; cursor: pointer; margin-left: auto; display: inline-flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; border: 1px solid var(--line-2); font: 600 11px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
   .menu-btn span { width: 14px; height: 8px; border-block: 1.5px solid currentColor; }
   .menu-btn[aria-expanded="true"] { background: var(--ink); color: #000; }
-  .topnav { position: absolute; top: 100%; left: 0; right: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; padding: 8px var(--gutter) 16px; background: #05080b; border-bottom: 1px solid var(--line-2); box-shadow: 0 24px 48px rgba(0,0,0,.6); transform: translateY(-8px); opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; }
+  /* Hide a closed menu immediately, including when crossing the phone breakpoint.
+     A visibility transition leaves the former desktop links over the camera. */
+  .topnav { position: absolute; top: 100%; left: 0; right: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; padding: 8px var(--gutter) 16px; background: #05080b; border-bottom: 1px solid var(--line-2); box-shadow: 0 24px 48px rgba(0,0,0,.6); transform: translateY(-8px); opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s; }
   .topnav.open { transform: none; opacity: 1; visibility: visible; }
   .topnav a, .topnav button.navlink { height: 48px; padding: 0 4px; font-size: 12.5px; border-bottom: 1px solid var(--line); }
   .topnav a::after, .topnav button.navlink::after { left: 4px; right: auto; width: 24px; bottom: 10px; }

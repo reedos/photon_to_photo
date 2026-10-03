@@ -109,6 +109,29 @@ describe('queryFromState and scenarioFromQuery round-trip', () => {
 });
 
 describe('Store', () => {
+  it('ignores repeated normalized settings and retains shot identity on navigation', () => {
+    const store = new Store({ scenario: { fno: 22, motion: { speedMps: 2 } } });
+    const before = store.get();
+    let calls = 0;
+    store.subscribe(() => calls++);
+    for (let i = 0; i < 60; i++) store.set({ fno: 25 + i, motion: { speedMps: 2 } });
+    expect(calls).toBe(1);
+    expect(store.get()).toBe(before);
+    store.set({ fno: 22 }, 'loupe');
+    expect(calls).toBe(2);
+    expect(store.get().piece).toBe('loupe');
+    expect(store.get().scenario).toBe(before.scenario);
+    store.set({ motion: { speedMps: 3 } });
+    expect(calls).toBe(3);
+    expect(store.get().scenario.motion?.speedMps).toBe(3);
+  });
+
+  it('keeps a supplied subject distance when reselecting the same lens or scene', () => {
+    const store = new Store({ scenario: { lens: 'n500', scene: 'field', subjectM: 8.9 } });
+    const before = store.get();
+    store.set({ lens: 'n500', scene: 'field' });
+    expect(store.get()).toBe(before);
+  });
   it('changes the physical sensor with the camera body, retaining explicit overrides', () => {
     const store = new Store({ scenario: { lens: 'n50' } });
     expect(store.get().scenario.sensor).toBe('full-frame-d850');

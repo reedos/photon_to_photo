@@ -12,6 +12,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import facts from '../../public/models/bodies.json';
 import lensFacts from '../../public/models/lenses.json';
 import * as look from './look';
+import { sharedAssetLoader, materialHighlight } from './model-resources';
 
 type BodyId = 'dslr' | 'mirrorless';
 type ViewId = 'outside' | 'cutaway';
@@ -115,9 +116,8 @@ if (state.lens !== 'none' && !(state.lens && LENSES[state.lens]?.body === state.
 const canvas = $<HTMLCanvasElement>('gl');
 const viewEl = $('view');
 const veil = $('veil');
-const cache = new Map<string, THREE.Group>();
-const originals = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
 const HIGHLIGHT = new THREE.Color(0xe6ba82);
+const selectionHighlight = materialHighlight(HIGHLIGHT, 0.14);
 const assembly = new THREE.Group();          // the body and, when one is mounted, the lens
 let bodyRoot: THREE.Group | null = null;
 let lensRoot: THREE.Group | null = null;
@@ -202,25 +202,11 @@ function prepare(root: THREE.Group) {
 }
 
 function unhighlight() {
-  for (const [m, mat] of originals) m.material = mat;
-  originals.clear();
+  selectionHighlight.clear();
 }
 
 function highlight(obj: THREE.Object3D) {
-  obj.traverse((o) => {
-    const m = o as THREE.Mesh;
-    if (!m.isMesh || originals.has(m)) return;
-    originals.set(m, m.material);
-    const mats = (Array.isArray(m.material) ? m.material : [m.material]).map((src) => {
-      const k = (src as THREE.MeshStandardMaterial).clone();
-      if ('emissive' in k) {
-        k.emissive = HIGHLIGHT.clone();
-        k.emissiveIntensity = 0.14;
-      }
-      return k;
-    });
-    m.material = Array.isArray(m.material) ? mats : mats[0];
-  });
+  selectionHighlight.add(obj);
 }
 
 function select(name: string | null) {
@@ -312,15 +298,12 @@ function frame() {
   controls.update();
 }
 
-async function load(path: string): Promise<THREE.Group> {
-  const hit = cache.get(path);
-  if (hit) return hit;
+const load = sharedAssetLoader(async (path: string): Promise<THREE.Group> => {
   const gltf = await loader.loadAsync(new URL(path, location.href).href);
   const root = gltf.scene;
   prepare(root);
-  cache.set(path, root);
   return root;
-}
+});
 
 function lensButtons() {
   const seg = $('lens-seg');
@@ -411,8 +394,11 @@ async function main() {
   controls.dampingFactor = 0.08;
   lights();
 
+  let viewportWidth = 0, viewportHeight = 0;
   const resize = () => {
     const w = viewEl.clientWidth, h = viewEl.clientHeight;
+    if (w < 1 || h < 1 || (w === viewportWidth && h === viewportHeight)) return;
+    viewportWidth = w; viewportHeight = h;
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
     camera.updateProjectionMatrix();
@@ -446,7 +432,10 @@ async function main() {
 
   $('clear').addEventListener('click', () => select(null));
 
-  renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+  renderer.setAnimationLoop(() => {
+    if (document.hidden) return;
+    controls.update(); renderer.render(scene, camera);
+  });
   setView(state.view);
   await setRig(state.body, state.lens, true);
   (window as unknown as { p2pModels: unknown }).p2pModels = { scene, camera, renderer, state, ready: true };

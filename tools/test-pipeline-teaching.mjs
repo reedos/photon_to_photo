@@ -22,6 +22,21 @@ try{
   }
   assert.ok(await page.evaluate(()=>{const c=document.getElementById('pipeline-canvas'),v=window.p2p.render();return c.getContext('2d').getImageData(0,0,c.width,c.height).data.every((n,i)=>n===v.rgba[i]);}),'final remains actual renderer pixels');
   await page.locator('#pipeline-stage').selectOption('raw');await canvas.scrollIntoViewIfNeeded();
+  // Follow actual normal-motion playback, not just settled/scrubbed frames. Writing
+  // identical canvas dimensions reallocates and clears its backing store every RAF.
+  await page.evaluate(()=>{
+   const c=document.getElementById('pipeline-canvas');window.pipelineResizes=0;
+   for(const key of ['width','height']){
+    const property=Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype,key);
+    Object.defineProperty(c,key,{configurable:true,get(){return property.get.call(this)},set(value){window.pipelineResizes++;property.set.call(this,value)}});
+   }
+  });
+  const startProgress=Number(await page.locator('#pipeline-progress').inputValue());
+  await page.locator('#lesson-play').click();
+  await page.waitForFunction(start=>Number(document.getElementById('pipeline-progress').value)>start+35,startProgress);
+  await page.locator('#lesson-play').click();
+  assert.equal(await page.evaluate(()=>window.pipelineResizes),0,'normal-motion playback reuses the existing canvas buffer');
+  await page.evaluate(()=>{const c=document.getElementById('pipeline-canvas');delete c.width;delete c.height;});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
   await page.screenshot({path:`shots/pipeline-teaching/pipeline-${width}.png`});
   assert.deepEqual(errors,[]);await page.close();console.log(`pipeline teaching ${width}: passed`);

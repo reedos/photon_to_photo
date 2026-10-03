@@ -130,6 +130,18 @@ describe('camera sensitivities', () => {
 });
 
 describe('sensorFor', () => {
+  it('bounds continuous ISO history without changing rebuilt sensor values', () => {
+    const first = sensorFor('ff', 111.123);
+    const active = sensorFor('ff', 222.234);
+    for (let i = 0; i < 135; i++) {
+      sensorFor('ff', 333 + i / 100);
+      expect(sensorFor('ff', 222.234)).toBe(active);
+    }
+    const rebuilt = sensorFor('ff', 111.123);
+    expect(rebuilt).not.toBe(first);
+    expect(rebuilt.info).toEqual(first.info);
+    expect(rebuilt.spec.readNoise).toEqual(first.spec.readNoise);
+  });
   it('builds a full-frame sensor at ISO 100', () => {
     const { spec, info } = sensorFor('ff', 100);
     expect(spec.pitchUm).toBeCloseTo(3.76, 1);

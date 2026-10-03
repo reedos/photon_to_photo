@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { BlendedLineMaterial } from './blended-line-material';
 import { LineSegments2 } from 'three/addons/lines/webgpu/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import type { PieceContext } from './types';
@@ -9,20 +10,20 @@ import { ribbonTrail } from './light-ribbon';
 export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: string, layer = 0) {
   const geometry = new LineSegmentsGeometry();
   geometry.setPositions(new Float32Array(6)); geometry.setColors(new Float32Array(6));
-  const material = new THREE.Line2NodeMaterial({ vertexColors: true, linewidth: 2.4, transparent: true, opacity: .95, depthTest: false, depthWrite: false, toneMapped: false });
+  const material = new BlendedLineMaterial({ vertexColors: true, linewidth: 2.4, transparent: true, opacity: .95, depthTest: false, depthWrite: false, toneMapped: false });
   const mesh = new LineSegments2(geometry, material);
   mesh.name = 'animated-traced-light'; mesh.frustumCulled = false; mesh.renderOrder = 12; mesh.layers.set(layer); mesh.visible = false;
   owner.add(mesh);
   // Four bounded draws: soft halo, tapered ribbon, crisp core and a short moving head.
   // Normal alpha blending preserves wavelength hues rather than bleaching them additively.
-  const haloMaterial = new THREE.Line2NodeMaterial({ vertexColors:true, linewidth:16, transparent:true, opacity:.07, depthTest:false, depthWrite:false, toneMapped:false });
+  const haloMaterial = new BlendedLineMaterial({ vertexColors:true, linewidth:16, transparent:true, opacity:.07, depthTest:false, depthWrite:false, toneMapped:false });
   const halo = new LineSegments2(geometry,haloMaterial);
   halo.name='animated-traced-light-halo';halo.frustumCulled=false;halo.renderOrder=10.5;halo.layers.set(layer);halo.visible=false;owner.add(halo);
-  const ribbonMaterial = new THREE.Line2NodeMaterial({vertexColors:true,linewidth:6,transparent:true,opacity:.34,depthTest:false,depthWrite:false,toneMapped:false});
+  const ribbonMaterial = new BlendedLineMaterial({vertexColors:true,linewidth:6,transparent:true,opacity:.34,depthTest:false,depthWrite:false,toneMapped:false});
   const ribbon = new LineSegments2(geometry,ribbonMaterial);
   ribbon.name='animated-traced-light-ribbon';ribbon.frustumCulled=false;ribbon.renderOrder=11;ribbon.layers.set(layer);ribbon.visible=false;owner.add(ribbon);
   const headGeometry = new LineSegmentsGeometry();headGeometry.setPositions(new Float32Array(6));headGeometry.setColors(new Float32Array(6));
-  const headMaterial = new THREE.Line2NodeMaterial({vertexColors:true,linewidth:3.8,transparent:true,opacity:1,depthTest:false,depthWrite:false,toneMapped:false});
+  const headMaterial = new BlendedLineMaterial({vertexColors:true,linewidth:3.8,transparent:true,opacity:1,depthTest:false,depthWrite:false,toneMapped:false});
   const head = new LineSegments2(headGeometry,headMaterial);
   head.name='animated-traced-light-head';head.frustumCulled=false;head.renderOrder=13;head.layers.set(layer);head.visible=false;owner.add(head);
   const bar = document.createElement('div'); bar.className = 'light-playback'; bar.hidden = true;

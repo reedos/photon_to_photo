@@ -4,6 +4,7 @@
 // reaches the image plane already ends there, since TraceSystem's last surface IS the image/sensor plane
 // (trace.ts), so "rays continue from the last surface to the sensor plane" needs no extra segment here.
 import * as THREE from 'three/webgpu';
+import { BlendedLineMaterial } from '../blended-line-material';
 import { LineSegments2 } from 'three/addons/lines/webgpu/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import type { FanSet } from '../../engine/model-types';
@@ -41,7 +42,7 @@ export function buildRays(lookMod: typeof look): RaysHandle {
   // first update() call -- LineSegmentsGeometry throws on setPositions([]) with zero segments.
   geometry.setPositions(new Float32Array(6));
   geometry.setColors(new Float32Array(6));
-  const material = new THREE.Line2NodeMaterial({ vertexColors: true, linewidth: 1.6, toneMapped: false });
+  const material = new BlendedLineMaterial({ vertexColors: true, linewidth: 1.6, toneMapped: false });
   const mesh = new LineSegments2(geometry, material);
   mesh.frustumCulled = false;
   mesh.name = 'lens-ray-fan';

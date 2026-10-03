@@ -255,6 +255,24 @@ describe('exposure inspection', () => {
       replaceModel() { model = compute({ ...model.scenario, shutter: 1 / 125 }); } };
   }
 
+  it('leaves idle readout DOM untouched and refreshes after settings or availability change', () => {
+    withFakeGlobals(dom => {
+      const f = fixture(dom);
+      f.exp.tick(0, 0);
+      const label = dom.el('.rx-pp');
+      let text = label.textContent, writes = 0;
+      Object.defineProperty(label, 'textContent', { get: () => text, set: value => { text = value; writes++; } });
+      for (let i = 1; i <= 60; i++) f.exp.tick(i * 16, 16);
+      expect(writes).toBe(0);
+      f.replaceModel(); f.exp.tick(1000, 16);
+      expect(writes).toBe(1);
+      expect(dom.el('.rx-k').textContent).toContain('1/125');
+      f.exp.setEnabled(false); f.exp.tick(1016, 16);
+      expect(dom.el('.rx-focus').disabled).toBe(true);
+      f.exp.dispose();
+    });
+  });
+
   it('pauses every displayed quantity and resumes from that frame without counting paused wall time', () => {
     withFakeGlobals((dom) => {
       const f = fixture(dom); f.exp.fire();

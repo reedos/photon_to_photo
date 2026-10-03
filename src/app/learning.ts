@@ -88,7 +88,10 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     const ctx = canvas.getContext('2d')!, cctx = crop.getContext('2d')!;
     el('pipeline-region').hidden = !view;
     if (!view) { ctx.clearRect(0, 0, canvas.width, canvas.height); cctx.clearRect(0, 0, 128, 128); return; }
-    canvas.width = view.width; canvas.height = view.height;
+    // Assigning even the same dimensions clears and reallocates the backing store.
+    // The pipeline wipe repaints every frame; only resize when the photo changes size.
+    if (canvas.width !== view.width) canvas.width = view.width;
+    if (canvas.height !== view.height) canvas.height = view.height;
     if (cachedRenderId !== view.renderId) { pipelineCache.clear(); cachedRenderId = view.renderId; }
     const buffer = (id: PipelineStage) => {
       let image = pipelineCache.get(id);
@@ -296,4 +299,3 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   if (startTour) begin();
   else if (startLesson === 'readout' || startLesson === 'pipeline') openLesson(startLesson);
 }
-

@@ -37,6 +37,9 @@ function scenarioKey(s: Scenario): string {
 }
 
 const modelCache = new Map<string, Model>();
+// A focus-ring drag creates a distinct model at almost every pointer position.
+// Retain nearby/recent settings, not the entire history of an open tab (and worker).
+const MODEL_CACHE_LIMIT = 64;
 
 // ---- small shared geometry helpers --------------------------------------------------------------------------
 
@@ -158,7 +161,11 @@ function exactDofNearFar(
 export function compute(scenario: Scenario): Model {
   const key = scenarioKey(scenario);
   const cached = modelCache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    modelCache.delete(key);
+    modelCache.set(key, cached);
+    return cached;
+  }
 
   const realized = getRealizedLens(scenario.lens);
   const design = realized.design;
@@ -356,6 +363,7 @@ export function compute(scenario: Scenario): Model {
   };
 
   modelCache.set(key, model);
+  if (modelCache.size > MODEL_CACHE_LIMIT) modelCache.delete(modelCache.keys().next().value!);
   return model;
 }
 

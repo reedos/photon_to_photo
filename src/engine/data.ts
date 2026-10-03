@@ -538,6 +538,14 @@ export interface SensorBundle {
 }
 
 const sensorCache = new Map<string, SensorBundle>();
+// ISO accepts continuous values (including physical-dial drags). Keep a bounded
+// recent history rather than retaining QE closures for every ISO ever visited.
+const SENSOR_CACHE_LIMIT = 128;
+function cacheSensor(key: string, bundle: SensorBundle): SensorBundle {
+  sensorCache.set(key, bundle);
+  if (sensorCache.size > SENSOR_CACHE_LIMIT) sensorCache.delete(sensorCache.keys().next().value!);
+  return bundle;
+}
 
 /**
  * A SensorSpec + SensorInfo for one format at one ISO (see the section header above for why ISO is baked in).
@@ -549,15 +557,18 @@ export function sensorFor(format: FormatId, iso: number, sensorId?: string): Sen
   const id = sensorId ?? pick.sensorId;
   const key = `${format}:${id}@${iso}`;
   const cached = sensorCache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    sensorCache.delete(key);
+    sensorCache.set(key, cached);
+    return cached;
+  }
 
   // Finding S1: the lineup lenses' two real bodies (D850, Z8) each carry their own complete sensor + read-
   // noise bundle, sourced from their own file rather than data/sensors.json's free-form-primes stand-in.
   const body = BODY_SENSORS[id];
   if (body) {
     const bundle = buildBodySensorBundle(body, format, iso);
-    sensorCache.set(key, bundle);
-    return bundle;
+    return cacheSensor(key, bundle);
   }
 
   const rec = sensorsData.sensors.find((s) => s.id === id);
@@ -629,8 +640,7 @@ export function sensorFor(format: FormatId, iso: number, sensorId?: string): Sen
   };
 
   const bundle: SensorBundle = { spec, info };
-  sensorCache.set(key, bundle);
-  return bundle;
+  return cacheSensor(key, bundle);
 }
 
 export function defaultSensorId(format: FormatId): string {

@@ -298,16 +298,16 @@ export const build: BuildPiece = (ctx) => {
     // 2 micrometers next to a sub-millimeter frame.
     diskPlane.geometry = buildDiskPlaneGeometry(sensorX + 0.002, cx, cy, insetHalfExtentMm);
 
-    predictedRingGeom.dispose();
+    predictedRing.geometry.dispose();
     predictedRing.geometry = new THREE.BufferGeometry().setFromPoints(
       ringPoints(sensorX, cx, cy, bundle.predictedBlurMm / 2, 64, true),
     );
-    cocRingGeom.dispose();
+    cocRing.geometry.dispose();
     cocRing.geometry = new THREE.BufferGeometry().setFromPoints(
       ringPoints(sensorX, cx, cy, bundle.cocMm / 2, 64, false),
     );
 
-    pixelGridGeom.dispose();
+    pixelGrid.geometry.dispose();
     pixelGrid.geometry = new THREE.BufferGeometry();
     pixelGrid.geometry.setAttribute(
       'position',

@@ -510,7 +510,7 @@ export const build: BuildPiece = (ctx) => {
   let pendingPixel = false;
   let pixelError = '';
   const status = document.createElement('div');
-  status.className = 'lv-read';
+  status.className = 'lv-read lv-status';
   status.setAttribute('role', 'status');
   const statusText = document.createElement('p');
   const retry = document.createElement('button');
@@ -773,11 +773,23 @@ export const build: BuildPiece = (ctx) => {
   const readOut = (k: string) => read.querySelector<HTMLElement>(`[data-k="${k}"]`)!;
   const readWell = read.querySelector<HTMLElement>('.lv-read-well i')!;
 
+  let loadingState = '';
   function syncBackButton(): void {
+    const active = group.visible && !disposed;
     rainLaunch.hidden = !group.visible;
     const ready = !!currentPixel && matchingView(currentRender());
-    status.hidden = !group.visible || ready;
-    statusText.textContent = pixelError || (matchingView(currentRender()) ? 'Loading this pixel…' : 'Waiting for the photo with these camera settings…');
+    const waiting = active && !ready && !pixelError;
+    const label = matchingView(currentRender()) ? 'Loading this pixel…' : 'Preparing the photo for these camera settings…';
+    const nextLoading = waiting ? label : '';
+    if (nextLoading !== loadingState) {
+      loadingState = nextLoading;
+      ctx.bus.emit('piece-loading', { id: 'loupe', loading: waiting, label, progress: matchingView(currentRender()) ? 0.85 : 0.15 });
+    }
+    // The shared central veil explains pending work and holds numbered pins. An
+    // error replaces it with a centered, actionable message rather than an empty
+    // scene or an old pixel presented as if it belonged to the current settings.
+    status.hidden = !active || !pixelError;
+    statusText.textContent = pixelError;
     retry.hidden = !pixelError;
     retry.disabled = !matchingView(currentRender());
     photonControls.hidden = !group.visible || !ready;
@@ -785,7 +797,7 @@ export const build: BuildPiece = (ctx) => {
     photoMesh.visible = matchingView(currentRender());
     marker.visible = photoMesh.visible && targetX >= 0;
     const inWell = diveStage !== 'photo';
-    crumb.hidden = !inWell;
+    crumb.hidden = !inWell || !ready;
     read.hidden = !inWell || !currentPixel || pickedOnPhone;
     if (currentPixel) {
       crumbHere.textContent = `Row ${fmtInt(currentPixel.y)}, column ${fmtInt(currentPixel.x)} · ${CFA_NAME[currentPixel.cfa]} filter`;
@@ -941,7 +953,8 @@ export const build: BuildPiece = (ctx) => {
       currentModel = model;
       acceptRender(currentRender());
       syncBackButton();
-      ctx.badge.show(badgeText(1));
+      if (currentPixel && matchingView(currentRender())) ctx.badge.show(badgeText(1));
+      else ctx.badge.hide();
     },
 
     frame() {
@@ -979,7 +992,8 @@ export const build: BuildPiece = (ctx) => {
       const camDist = Math.max(0.01, ctx.camera.position.distanceTo(new THREE.Vector3(0, (Y_PHOTO + Y_GRID) / 2, 0)));
       const u = Math.max(0, Math.min(1, Math.log(PHOTO_DIST / camDist) / Math.log(PHOTO_DIST / WELL_DIST)));
       const mag = Math.round(1 + u * 2400); // an honest, monotonic "how exaggerated is this view right now"
-      ctx.badge.show(badgeText(mag));
+      if (currentPixel && matchingView(currentRender())) ctx.badge.show(badgeText(mag));
+      else ctx.badge.hide();
     },
 
     insets(): Inset[] {

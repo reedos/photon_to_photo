@@ -55,6 +55,21 @@ describe('compute(): normalization', () => {
     const b = compute(baseScenario());
     expect(a).toBe(b);
   });
+
+  it('bounds continuous-control history while retaining recently used settings', () => {
+    const firstScenario = baseScenario({ shutter: 0.123456 });
+    const first = compute(firstScenario);
+    const activeScenario = baseScenario({ shutter: 0.234567 });
+    const active = compute(activeScenario);
+    for (let i = 0; i < 70; i++) {
+      compute(baseScenario({ shutter: 0.3 + i / 10000 }));
+      expect(compute(activeScenario)).toBe(active);
+    }
+    const rebuilt = compute(firstScenario);
+    expect(rebuilt).not.toBe(first);
+    expect(rebuilt.exposure).toEqual(first.exposure);
+    expect(rebuilt.focus).toEqual(first.focus);
+  });
 });
 
 describe('compute(): golden — hyperfocal and DOF limits vs. hand-computed thin-lens values (p50, f/8, 3 m, FF)', () => {

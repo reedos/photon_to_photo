@@ -53,7 +53,7 @@ function buildOutline(loop: { r: number; z: number }[], mat: THREE.Material): TH
 
 /** The cut face of an element: the glass shown in section, a pale, slightly blue-green tint (a thick crown
  *  glass seen edge-on) at low opacity, so it reads as glass in a cutaway without hiding the rays or the far
- *  half of the stack. Not the element's optical surface -- that keeps the real transmissive material. */
+ *  half of the stack. The polished optical surfaces use a smoother, subtler alpha material. */
 function sectionGlassMaterial(dense: boolean): THREE.MeshPhysicalMaterial {
   return new THREE.MeshPhysicalMaterial({
     color: dense ? 0xd6e2cf : 0xc4dce6, metalness: 0, roughness: 0.18, transmission: 0,
@@ -85,18 +85,18 @@ function disposeBody(b: Body): void {
   b.outline.geometry.dispose();
 }
 
-/** Glass for the WebGL2 tier: transmission costs ~42 ms/frame per element there (docs/rendering-spike.md, spike
- *  c) -- a lens with a dozen-plus elements would blow the frame budget many times over. look.ts's glassMaterial()
- *  always sets transmission:1 (it has no cheap-tier branch), so this piece builds its own budget material for
- *  that tier instead: a Fresnel-ish rim via a low-opacity, higher-reflectivity MeshPhysicalMaterial with
- *  transmission off, same ior/tint inputs, so it still reads as "this element's own glass" rather than a flat
- *  fallback color. */
-function cheapGlassMaterial(ior: number, dense: boolean): THREE.MeshPhysicalMaterial {
+/** Stable cutaway glass on both backends. WebGPU's viewport-transmission sampler
+ * retains a destroyed framebuffer after navigating Camera → Optics and resizing,
+ * freezing the visible scene. Alpha coverage preserves the glass silhouette and
+ * reflective rim without that screen-space dependency. Traced refraction remains
+ * computed by the optical engine; this material only illustrates the cut surface. */
+function cutawayGlassMaterial(ior: number, dense: boolean): THREE.MeshPhysicalMaterial {
   return new THREE.MeshPhysicalMaterial({
     color: dense ? 0xe4ead8 : 0xdce9f0,
     transmission: 0,
     opacity: 0.14,
     transparent: true,
+    depthWrite: false,
     roughness: 0.06,
     metalness: 0,
     ior,
@@ -107,17 +107,12 @@ function cheapGlassMaterial(ior: number, dense: boolean): THREE.MeshPhysicalMate
 
 type PieceRenderer = { backend?: { isWebGPUBackend?: boolean } };
 
-function isWebGPUBackend(renderer: PieceRenderer): boolean {
-  return Boolean(renderer.backend?.isWebGPUBackend);
-}
-
-export function buildElements(model: Model, lookMod: typeof look, renderer: PieceRenderer): ElementsHandle {
+export function buildElements(model: Model, lookMod: typeof look, _renderer: PieceRenderer): ElementsHandle {
   const group = new THREE.Group();
   group.name = 'lens-elements';
   const realized = model.realized;
   const system = model.system.surfaces;
   const bodies: Body[] = [];
-  const webgpu = isWebGPUBackend(renderer);
   const outlineMat = new THREE.LineBasicMaterial({ color: 0xd4e4ec, transparent: true, opacity: 0.62 });
 
   const specs: { frontIdx: number; backIdx: number; kind: 'element' | 'plate'; elementIndex: number | null }[] = [];
@@ -134,15 +129,11 @@ export function buildElements(model: Model, lookMod: typeof look, renderer: Piec
 
     const nd = model.realized.design.surfaces[spec.frontIdx].nd ?? 1.52;
     const dense = nd > 1.65;
-    // Transmission glass is WebGPU-tier only (docs/PROTOTYPE.md: ~42 ms/frame per element on WebGL2, spike c) --
-    // look.ts's glassMaterial() has no cheap-tier branch of its own, so this piece picks the material here.
-    const glassMat = webgpu
-      ? lookMod.glassMaterial({ ior: nd, thickness: intraThickness, dense })
-      : cheapGlassMaterial(nd, dense);
+    const glassMat = cutawayGlassMaterial(nd, dense);
     const edgeMat = lookMod.edgeBlackMaterial();
     // The cut face is still the element's own glass (its true cross-section, not a paint) -- but it is an
     // artist's-cutaway convention, not a real polished air-glass surface, so it never got an AR coating; a
-    // second material with iridescence off (rather than glassMat's iridescence:1) keeps it from mirror-catching
+    // separate rougher section material keeps it from mirror-catching
     // the PMREM's bright band as one flat, uniformly-lit wedge -- the "uniform glow" look-cheap smell
     // (design/RUBRIC.md) this piece hit at exactly this camera angle before the fix.
     const capMat = sectionGlassMaterial(dense);

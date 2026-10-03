@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import { startPreview } from './preview.mjs';
 import { decodePng, pngPixel } from './accuracy/png.mjs';
 const server=process.env.P2P_URL?null:await startPreview();
+const requestedBackend=process.env.P2P_BACKEND||'webgpu';
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 mkdirSync('shots/light-ribbons',{recursive:true});
 const results=[];
@@ -28,7 +29,11 @@ try {
   for(const width of [1366,390]) {
     const page=await browser.newPage({viewport:{width,height:width>760?900:844},reducedMotion:'reduce'});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.goto(new URL('?piece=camera',process.env.P2P_URL||server.url).href);await page.waitForFunction(()=>window.p2p?.pieces.camera);
+    page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
+    const entry=new URL('?piece=camera',process.env.P2P_URL||server.url);
+    if(requestedBackend==='webgl2')entry.searchParams.set('gl','webgl2');
+    await page.goto(entry.href);await page.waitForFunction(()=>window.p2p?.pieces.camera);
+    assert.equal(await page.evaluate(()=>window.p2p.backend()),requestedBackend);
     await page.evaluate(()=>window.p2p.set({lens:'n50',fno:4,focusM:3}));
     for(const piece of ['lens','cone']){
       await page.evaluate(p=>window.p2p.piece(p),piece);await page.evaluate(()=>window.p2p.settle());

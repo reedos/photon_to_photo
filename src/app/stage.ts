@@ -243,6 +243,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   let diveMs = 0;
   let manuallyMoved = false;
   let resizeFrame = false;
+  // Pieces use unrelated scene units/origins. Entry (including its first model update)
+  // must establish the incoming frame before drawing; only moves within it can fly.
+  let enteringPiece = false;
   controls.addEventListener('start', () => {
     diveTo = null;
     manuallyMoved = true;
@@ -256,7 +259,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     controls.update();
     controls.enableDamping = true;
     manuallyMoved = false;
-    if (reducedMotion()) {
+    if (enteringPiece || reducedMotion()) {
       camera.position.copy(to.position);
       controls.target.copy(to.target);
       controls.update();
@@ -362,7 +365,10 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   // ---- render loop ------------------------------------------------------------------------------------------
   let running = false;
   let lastFrameTime = performance.now();
+  let suspendedAt: number | null = null;
   let settleResolvers: (() => void)[] = [];
+  const onVisibilityChange = () => { if (document.hidden) suspendedAt ??= performance.now(); };
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   /** The actual draw work, shared by the paused-off-screen ambient loop and settle()'s forced frame. */
   function drawFrame(now: number) {
@@ -422,6 +428,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     }
     syncInsetFrames(insets);
     projectLabelsAndPins(remeasured);
+    enteringPiece = false;
     if (!(activeId && loadingPieces.has(activeId))) dom.veil.classList.add('off');
     const resolvers = settleResolvers;
     settleResolvers = [];
@@ -432,7 +439,18 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (!running) return;
     // Explicit settle requests still draw off-screen. Share this one RAF with the ambient
     // loop: parallel forced frames can resize/reuse WebGPU targets twice in one frame.
-    if (!visible && !settleResolvers.length) return;
+    const covered = document.hidden || dom.canvas.inert || !!document.querySelector('dialog:modal');
+    if ((!visible || covered) && !settleResolvers.length) {
+      suspendedAt ??= now;
+      return;
+    }
+    if (suspendedAt !== null) {
+      // Keep a guided move at its last visible point, and do not treat time spent
+      // behind a lesson/dialog as a slow GPU frame or a giant animation step.
+      if (diveTo) diveStart += now - Math.max(suspendedAt, diveStart);
+      lastFrameTime = now;
+      suspendedAt = null;
+    }
     drawFrame(now);
   }
 
@@ -683,9 +701,14 @@ export async function createStage(dom: StageDom): Promise<Stage> {
         const ov = overlays.get(activeId);
         if (ov) ov.hidden = true;
       }
+      // Shared chrome belongs to the incoming level. Some levels have no badge,
+      // so leaving the previous text in place mislabels their size/light counts.
+      badge.hide();
+      labels.clear();
       const handle = ensureBuilt(id);
       activeId = id;
       selectedPin = null;
+      enteringPiece = true;
       handle.group.visible = true;
       handle.activate?.();
       const ov = overlays.get(id);
@@ -777,6 +800,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       running = false;
       void renderer.setAnimationLoop(null);
       stopLoading();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('scroll', checkVisible);
       window.removeEventListener('resize', checkVisible);
       resizeObserver?.disconnect();

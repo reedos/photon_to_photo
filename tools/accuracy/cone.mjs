@@ -263,7 +263,7 @@ async function main() {
     page.on('pageerror', (e) => consoleErrors.push(String(e)));
     page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 
-    await page.goto(url, { waitUntil: 'load' });
+    await page.goto(new URL('?piece=camera', url).href, { waitUntil: 'load' });
     await page.waitForFunction(() => Boolean(window.p2p), { timeout: 20000 });
     const backend = await page.evaluate(() => window.p2p.backend());
     check('backend is webgpu', backend === 'webgpu', `got "${backend}"`);

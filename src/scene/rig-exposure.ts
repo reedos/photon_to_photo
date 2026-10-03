@@ -585,7 +585,12 @@ export function createExposure(d: ExposureDeps) {
     }
   }
 
+  let paintedReadout: { model: Model; fraction: number; running: boolean; enabled: boolean; body: string; note: { key: string; text: string } | null } | null = null;
   function readout(m: Model) {
+    const body = d.body();
+    if (paintedReadout?.model === m && paintedReadout.fraction === shownFraction
+      && paintedReadout.running === running && paintedReadout.enabled === enabled
+      && paintedReadout.body === body && paintedReadout.note === eqNote) return;
     renderEq(m);
     const focus = q('.rx-focus') as HTMLInputElement;
     focus.value = String(focusStepFromMm(m.lens.closestFocusMm, m.lens.focalLength, m.scenario.focusM === null ? null : m.scenario.focusM * 1000));
@@ -631,6 +636,7 @@ export function createExposure(d: ExposureDeps) {
       : `${d.body() === 'dslr' ? 'Electronic live view: mirror raised, curtains held clear. ' : ''}Gold marks row reset; cyan marks readout. Full-frame scan ${(m.sensor.readoutS * 1000).toFixed(1)} ms.`)
       + ' Real light crosses the camera in under a nanosecond, so the dots fly at a much slower visual speed you can follow.';
     if (cap.textContent !== text) cap.textContent = text;
+    paintedReadout = { model: m, fraction: shownFraction, running, enabled, body, note: eqNote };
   }
 
   /** Holds the mirror up (or lets it down) outside a shot, e.g. while the sensor is being looked at. */
