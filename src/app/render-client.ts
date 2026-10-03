@@ -25,8 +25,10 @@ const pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) 
 
 function getWorker(): Worker {
   if (worker) return worker;
-  worker = new Worker(new URL('./render-worker.ts', import.meta.url), { type: 'module' });
-  worker.onmessage = (ev) => {
+  const job = new Worker(new URL('./render-worker.ts', import.meta.url), { type: 'module' });
+  worker = job;
+  job.onmessage = (ev) => {
+    if (worker !== job) return;
     const m = ev.data;
     const p = pending.get(m.id);
     if (!p) return;
@@ -38,8 +40,22 @@ function getWorker(): Worker {
         stages: m.stages, meta: m.meta, scenario: p.scenario! } satisfies RenderView);
     } else if (m.type === 'pixel') p.resolve(m.pixel);
   };
-  worker.onerror = (e) => { for (const [, p] of pending) p.reject(new Error(e.message)); pending.clear(); };
-  return worker;
+  const fail = (message: string) => {
+    if (worker !== job) return;
+    job.terminate(); worker = null;
+    current = null; // The pixel data lived in this worker; even a completed view can no longer serve the loupe.
+    for (const [, p] of pending) p.reject(new Error(message));
+    pending.clear();
+    for (const cb of failureListeners) cb();
+  };
+  job.onerror = (e) => { e.preventDefault(); fail(e.message || 'The photo worker stopped.'); };
+  job.onmessageerror = () => fail('The photo worker returned unreadable data.');
+  return job;
+}
+
+function send(id: number, msg: WorkerRequest, reject: (error: Error) => void) {
+  try { getWorker().postMessage(msg); }
+  catch (error) { pending.delete(id); reject(error instanceof Error ? error : new Error(String(error))); }
 }
 
 /** Renders the final image for a scenario off the main thread. Resolves to null if a newer request superseded it. */
@@ -49,13 +65,15 @@ export function requestRender(scenario: Scenario, width: number, height: number,
   const msg: WorkerRequest = { type: 'render', id, scenario, width, height, seed };
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject, scenario });
-    getWorker().postMessage(msg);
+    send(id, msg, reject);
   });
 }
 
 // The latest finished render, for anything that shows or measures it (the final-image panel, the loupe, gates).
 let current: RenderView | null = null;
 const listeners = new Set<(v: RenderView) => void>();
+const failureListeners = new Set<() => void>();
+export function onRenderFailure(cb: () => void): () => void { failureListeners.add(cb); return () => failureListeners.delete(cb); }
 export function currentRender(): RenderView | null { return current; }
 export function onRender(cb: (v: RenderView) => void): () => void { listeners.add(cb); return () => listeners.delete(cb); }
 export function publishRender(v: RenderView): void { current = v; for (const cb of listeners) cb(v); }
@@ -66,6 +84,6 @@ export function pixelAt(renderId: number, x: number, y: number): Promise<PixelIn
   const msg: WorkerRequest = { type: 'pixel', id, renderId, x, y };
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    getWorker().postMessage(msg);
+    send(id, msg, reject);
   });
 }

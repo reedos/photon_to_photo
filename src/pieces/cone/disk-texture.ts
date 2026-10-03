@@ -55,7 +55,8 @@ export function buildDiskTexture(
   const rPx = CANVAS_PX / 55; // ~5.8px at 320px -- wide enough for neighboring landing points to overlap and merge
 
   for (const p of landing) {
-    const c = lookMod.wavelengthToThreeColor(p.nm);
+    // Canvas CSS colors are encoded sRGB; the Three material helper returns linear working-space values.
+    const c = lookMod.wavelengthToThreeColor(p.nm).convertLinearToSRGB();
     const px = ((p.x - cx) / halfExtentMm) * (CANVAS_PX / 2) + CANVAS_PX / 2;
     // Canvas rows grow downward; CanvasTexture's default flipY then puts canvas row 0 (top, larger model y) at
     // v=1 on a default-UV PlaneGeometry (local +Y, up) -- so "model y up" must map to "small canvas py" here.

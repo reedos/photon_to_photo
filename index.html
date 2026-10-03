@@ -152,8 +152,9 @@
       </div>
     </div>
     <div class="sc-group sc-format">
-      <span class="lab">Format</span>
+      <span class="lab">Format / crop</span>
       <div class="sc-seg" id="sc-format" role="group" aria-label="Sensor format"></div>
+      <p class="control-help">On these full-frame bodies, smaller formats crop the sensor. Pixel pitch and noise stay the same; readout timing uses the full-frame value.</p>
     </div>
     <div class="sc-group sc-format">
       <span class="lab">Scene</span>
@@ -174,11 +175,12 @@
     </div>
     <div class="finalimg-card">
       <div class="finalimg-canvas-wrap">
-        <canvas id="finalimg-canvas" width="600" height="400" aria-label="The rendered photo for the current settings. Tap to open the loupe."></canvas>
+        <canvas id="finalimg-canvas" width="600" height="400" tabindex="0" role="button" aria-label="Inspect the rendered photo. Click a spot, or press Enter to inspect its center."></canvas>
       </div>
       <div class="finalimg-side">
         <p class="finalimg-scale" id="finalimg-scale"></p>
         <p class="finalimg-cap" id="finalimg-cap">Rendering the photo for these settings&hellip;</p>
+        <button type="button" class="btn" id="finalimg-retry" hidden>Retry photo</button>
       </div>
     </div>
   </section>

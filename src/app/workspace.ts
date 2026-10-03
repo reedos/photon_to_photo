@@ -78,6 +78,7 @@ export function buildWorkspace(): void {
   photoDetails.innerHTML = '<summary>Photo details</summary>';
   photoDetails.append(photo.querySelector('.finalimg-side')!);
   photo.append(photoDetails);
+  photoDetails.before(el('finalimg-retry'));
   const photoHint = document.createElement('p');
   photoHint.className = 'photo-hint';
   photoHint.textContent = 'Tap the photo to inspect a pixel';

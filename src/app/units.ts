@@ -45,7 +45,8 @@ export function fmtShutter(t: number): string {
   if (!Number.isFinite(t) || t <= 0) return '0 s';
   const near = MARKED_T.reduce((a, m) => (Math.abs(Math.log(m / t)) < Math.abs(Math.log(a / t)) ? m : a), MARKED_T[0]);
   const v = Math.abs(near - t) / t < 0.05 ? near : t;
-  return v < 1 ? `1/${Math.round(1 / v)} s` : `${Number(v.toFixed(3))} s`;
+  const denominator = Math.round(1 / v);
+  return v < 1 && Math.abs(1 / v - denominator) < 1e-8 ? `1/${denominator} s` : `${Number(v.toFixed(3))} s`;
 }
 
 export function fmtPitch(um: number): string {

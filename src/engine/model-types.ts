@@ -57,7 +57,7 @@ export interface Model {
     objectZ: number | null;     // the in-focus object plane's z in system coordinates
     workingFno: number;         // N (1 + |m| / pupilMag)
     magnification: number;
-    hyperfocalMm: number;
+    hyperfocalMm: number; // Legacy simplified approximation; omits pupil offsets/focus geometry. Not a UI sharpness guarantee.
     nearMm: number;             // DOF limits from the sensor
     farMm: number;              // Infinity allowed
     cocMm: number;              // the circle of confusion used (assumed rule, see figs.coc)

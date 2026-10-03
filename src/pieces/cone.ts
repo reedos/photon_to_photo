@@ -135,6 +135,7 @@ export const build: BuildPiece = (ctx) => {
   sparseRays.name = 'sparse-rays';
 
   let diskTex: DiskTexture | null = null;
+  let maskTexture: THREE.CanvasTexture | null = null;
   const diskPlaneMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide });
   diskPlaneMat.toneMapped = false;
   const diskPlane = new THREE.Mesh(new THREE.BufferGeometry(), diskPlaneMat);
@@ -530,6 +531,24 @@ export const build: BuildPiece = (ctx) => {
         controls.set(pointDistMm, fieldFrac);
         if (lastModel) rebuild(lastModel);
       },
+      /** Accuracy capture: preserve the real texture's coverage and geometry, isolating them from spectral
+       * brightness and annotations. The normal spectral texture is restored when disabled. */
+      geometryMask(enabled: boolean) {
+        maskTexture?.dispose(); maskTexture = null;
+        if (!diskTex) return;
+        if (enabled) {
+          const source = diskTex.texture.image as HTMLCanvasElement;
+          const mask = document.createElement('canvas'); mask.width = source.width; mask.height = source.height;
+          const context = mask.getContext('2d')!;
+          const pixels = source.getContext('2d')!.getImageData(0, 0, source.width, source.height);
+          for (let i = 0; i < pixels.data.length; i += 4) pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = 255;
+          context.putImageData(pixels, 0, 0);
+          maskTexture = new THREE.CanvasTexture(mask); maskTexture.colorSpace = THREE.SRGBColorSpace;
+          diskPlaneMat.map = maskTexture;
+        } else diskPlaneMat.map = diskTex.texture;
+        diskPlaneMat.needsUpdate = true;
+        predictedRing.visible = cocRing.visible = pixelGrid.visible = !enabled;
+      },
       hull(pts: { x: number; y: number }[]) {
         return convexHullIndices(pts);
       },
@@ -590,6 +609,7 @@ export const build: BuildPiece = (ctx) => {
         if (Array.isArray(mat)) mat.forEach((m) => m.dispose()); else mat.dispose();
       }
       diskTex?.dispose();
+      maskTexture?.dispose();
       ctx.labels.remove('cone-hud');
     },
   };

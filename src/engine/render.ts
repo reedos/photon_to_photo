@@ -328,6 +328,9 @@ export interface RenderSetup {
   spec: SensorSpec;
   pixelScale: number;
   blockPitchMm: number;
+  sampleScale: number;
+  offsetX: number;
+  offsetY: number;
   sceneObj: ReturnType<typeof getScene>;
   efl: number;
   workingFno: number;
@@ -337,14 +340,17 @@ export interface RenderSetup {
   movingBillboardIds: string[];
 }
 
-export function renderSetup(model: Model, width: number): RenderSetup {
+export function renderSetup(model: Model, width: number, height = Math.round(width * 2 / 3)): RenderSetup {
   const { spec } = sensorFor(model.scenario.format, model.scenario.iso, model.scenario.sensor);
   const pitchMm = spec.pitchUm / 1000;
 
-  let pixelScale = Math.round(model.sensor.widthPx / width);
-  if (pixelScale < 2) pixelScale = 2;
-  if (pixelScale % 2 !== 0) pixelScale += 1; // even, so a block is a whole number of 2x2 Bayer quads
-  const blockPitchMm = pitchMm * pixelScale;
+  // Fit a centered window of the requested aspect inside the active sensor. Spatial sample spacing is
+  // continuous; round only the Bayer block used to approximate averaged noise, never the field of view.
+  const sampleScale = Math.min(model.sensor.widthPx / width, model.sensor.heightPx / height);
+  const pixelScale = Math.max(2, 2 * Math.floor(sampleScale / 2));
+  const blockPitchMm = pitchMm * sampleScale;
+  const offsetX = (model.sensor.widthPx - width * sampleScale) / 2;
+  const offsetY = (model.sensor.heightPx - height * sampleScale) / 2;
 
   const cctK = model.scenario.cct ?? sceneDefaultCctK(model.scenario.scene);
   const lux = model.scenario.lux ?? sceneDefaultLux(model.scenario.scene);
@@ -356,6 +362,7 @@ export function renderSetup(model: Model, width: number): RenderSetup {
     spec,
     pixelScale,
     blockPitchMm,
+    sampleScale, offsetX, offsetY,
     sceneObj,
     efl: model.cardinal.efl,
     workingFno: model.focus.workingFno,
@@ -371,8 +378,9 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
   const notes: string[] = [];
   const { width, height, seed } = req;
 
-  const { spec, pixelScale, blockPitchMm, sceneObj, efl, workingFno, exposureS, iso, motion, movingBillboardIds } = renderSetup(model, width);
+  const { spec, pixelScale, blockPitchMm, sampleScale, offsetX, offsetY, sceneObj, efl, workingFno, exposureS, iso, motion, movingBillboardIds } = renderSetup(model, width, height);
   notes.push(`pixelScale=${pixelScale} (each rendered pixel stands for a ${pixelScale}x${pixelScale} block of real sensor pixels)`);
+  notes.push(`centered sensor window ${width * blockPitchMm}x${height * blockPitchMm} mm; sample spacing ${sampleScale} sensor pixels; Bayer blocks approximate local averaging`);
 
   const unitOutline: [number, number][] = model.iris.outline.map(([x, y]) => [x / model.iris.radius, y / model.iris.radius]);
   const kernelCache = new Map<number, KernelCell[]>();
@@ -525,9 +533,10 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
 
   // ---- pixel(x, y): a fresh, full-statistics single real pixel at the block's center -------------------
   function pixel(bx: number, by: number) {
+    if (!Number.isInteger(bx) || !Number.isInteger(by) || bx < 0 || bx >= width || by < 0 || by >= height) throw new RangeError('Rendered pixel is outside the photo.');
     const idx = by * width + bx;
-    const realX = Math.floor((bx + 0.5) * pixelScale);
-    const realY = Math.floor((by + 0.5) * pixelScale);
+    const realX = Math.min(model.sensor.widthPx - 1, Math.floor(offsetX + (bx + 0.5) * sampleScale));
+    const realY = Math.min(model.sensor.heightPx - 1, Math.floor(offsetY + (by + 0.5) * sampleScale));
     const cfa = cfaColorAt('RGGB', realX, realY);
     const ci = cfa === 'R' ? 0 : cfa === 'G' ? 1 : 2;
 

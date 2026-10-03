@@ -1,6 +1,6 @@
 import type { Store } from './store';
 import type { Scenario } from '../engine/types';
-import { currentRender, onRender, type RenderView } from './render-client';
+import { currentRender, onRender, onRenderFailure, type RenderView } from './render-client';
 import { EXPERIMENTS, sameShot } from './learning-model';
 import { formatShutter } from './store';
 import { compute } from './engine-api';
@@ -98,4 +98,5 @@ export function mountComparison(store: Store): void {
     oldScenario = state.scenario; refresh();
   });
   onRender(refresh);
+  onRenderFailure(refresh);
 }

@@ -29,7 +29,8 @@ async function main() {
     args: ['--use-angle=d3d11', '--enable-unsafe-webgpu', '--ignore-gpu-blocklist'],
   });
   try {
-    const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, colorScheme: 'dark' });
+    // Pixel samples and projected coordinates must describe the same camera pose, not successive dive frames.
+    const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, colorScheme: 'dark', reducedMotion: 'reduce' });
     const consoleErrors = [];
     page.on('pageerror', (e) => consoleErrors.push(String(e)));
     page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
@@ -102,7 +103,7 @@ async function main() {
     }
     const luminance = (nm) => expectedByNm.get(nm).reduce((a, b) => a + b, 0);
     const MIN_LUMINANCE = 150; // out of 765 (255*3) -- excludes near-black bins like the ~718nm one from this build
-    candidates = candidates.sort((a, b) => {
+    candidates = candidates.filter(r => luminance(r.nm) >= MIN_LUMINANCE).sort((a, b) => {
       const brightA = luminance(a.nm) >= MIN_LUMINANCE, brightB = luminance(b.nm) >= MIN_LUMINANCE;
       if (brightA !== brightB) return brightA ? -1 : 1;
       return Math.abs(a.nm - 555) - Math.abs(b.nm - 555);

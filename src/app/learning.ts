@@ -1,6 +1,6 @@
 import type { Store, AppState } from './store';
 import { compute } from './engine-api';
-import { currentRender, onRender, type RenderView } from './render-client';
+import { currentRender, onRender, onRenderFailure, type RenderView } from './render-client';
 import { TOUR, PIPELINE, pipelinePixels, rowWindow, sameShot, type PipelineStage } from './learning-model';
 import { sensorFor } from '../engine/data';
 import { analogGain, readout, maxDn } from '../engine/sensor';
@@ -155,7 +155,8 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   function animate(now: number) {
     if (!animating) return;
     if (document.hidden || lesson.hidden || document.querySelector('dialog[open]')) { pauseLesson(); return; }
-    animationTime = Math.min(duration(), animationTime + Math.min(100, now - lastFrame)); lastFrame = now;
+    // A frame timestamp can precede the click's performance.now() within the same refresh interval.
+    animationTime = Math.min(duration(), animationTime + Math.max(0, Math.min(100, now - lastFrame))); lastFrame = now;
     paintAnimation();
     if (animationTime >= duration()) pauseLesson(); else animation = requestAnimationFrame(animate);
   }
@@ -268,6 +269,7 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     previous = state; lessonModel = compute(state.scenario); showInsights(); refresh();
   });
   onRender(refresh);
+  onRenderFailure(refresh);
   if (startTour) begin();
   else if (startLesson === 'readout' || startLesson === 'pipeline') openLesson(startLesson);
 }

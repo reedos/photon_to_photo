@@ -508,8 +508,9 @@ function buildBodySensorBundle(body: BodySensorJson, format: FormatId, iso: numb
     name: rec.cameraName,
     format: FORMATS[format],
     pitchUm,
-    widthPx: rec.pixelCount.effectiveH.v,
-    heightPx: rec.pixelCount.effectiveV.v,
+    // Smaller formats are centered crops of this body, retaining its real pixel pitch and noise model.
+    widthPx: Math.min(rec.pixelCount.effectiveH.v, 2 * Math.floor(FORMATS[format].w * 1000 / pitchUm / 2)),
+    heightPx: Math.min(rec.pixelCount.effectiveV.v, 2 * Math.floor(FORMATS[format].h * 1000 / pitchUm / 2)),
     fullWellE,
     readNoiseE: rnE,
     unityGainIso,
@@ -540,13 +541,13 @@ const sensorCache = new Map<string, SensorBundle>();
 
 /**
  * A SensorSpec + SensorInfo for one format at one ISO (see the section header above for why ISO is baked in).
- * `sensorId`/`iso` together key the cache: realistic scenarios re-request the same handful of (format, ISO)
- * pairs, so this avoids re-interpolating Claff's curve and rebuilding the QE closures on every call.
+ * Format, sensor ID and ISO key the cache: realistic scenarios re-request the same handful of combinations
+ * so this avoids re-interpolating Claff's curve and rebuilding the QE closures on every call.
  */
 export function sensorFor(format: FormatId, iso: number, sensorId?: string): SensorBundle {
   const pick = SENSOR_BY_FORMAT[format];
   const id = sensorId ?? pick.sensorId;
-  const key = `${id}@${iso}`;
+  const key = `${format}:${id}@${iso}`;
   const cached = sensorCache.get(key);
   if (cached) return cached;
 

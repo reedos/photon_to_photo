@@ -424,7 +424,8 @@ export const build: BuildPiece = (ctx) => {
       /** The exact-color check (accuracy gate #2): the sRGB the SAME function the rays are colored from would
        *  produce for `nm`, 0-255 per channel, for the Node-side script to compare a sampled pixel against. */
       wavelengthSrgb255(nm: number) {
-        const c = ctx.look.wavelengthToThreeColor(nm);
+        // Three stores material RGB in linear working space; screenshots contain encoded sRGB.
+        const c = ctx.look.wavelengthToThreeColor(nm).convertLinearToSRGB();
         return [Math.round(c.r * 255), Math.round(c.g * 255), Math.round(c.b * 255)];
       },
     },

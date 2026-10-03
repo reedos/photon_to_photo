@@ -7,6 +7,7 @@
 //   node tools/accuracy/cone.mjs
 import { createRequire } from 'node:module';
 import { inflateSync } from 'node:zlib';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { startPreview } from '../preview.mjs';
 
 const require = createRequire(import.meta.url);
@@ -178,7 +179,7 @@ function backgroundOf(img) {
   const med = (a) => a.sort((p, q) => p - q)[a.length >> 1];
   return [med(rs), med(gs), med(bs)];
 }
-function thresholdDisk(img) {
+function thresholdDisk(img, geometryMask = false) {
   const bg = backgroundOf(img);
   const pts = [];
   // Margins exclude the inset frame's own DOM chrome (stage.ts's `.inset-frame`): a 1px CSS border all round
@@ -194,6 +195,7 @@ function thresholdDisk(img) {
       const r = img.data[i], g = img.data[i + 1], b = img.data[i + 2];
       const maxc = Math.max(r, g, b);
       const minc = Math.min(r, g, b);
+      if (geometryMask) { if (minc > 0) pts.push({ x, y }); continue; }
       // Saturation (max-min), not raw brightness: the dim sensor-plate/pixel-grid background is only ~10-15
       // brightness units dimmer than a single faint splat at the disk's sparse periphery (both are grayish and
       // close in absolute level), which a brightness-only threshold can't reliably separate -- found while
@@ -203,7 +205,10 @@ function thresholdDisk(img) {
       // saturation but very bright) is still caught by the brightness OR.
       const colored = maxc - minc > 24;
       const veryBright = maxc > 140;
-      const offBackground = Math.max(Math.abs(r - bg[0]), Math.abs(g - bg[1]), Math.abs(b - bg[2])) > 18;
+      const delta = [r - bg[0], g - bg[1], b - bg[2]];
+      // Neutral sensor/grid edges (including darker ones) are not blur. A faint spectral splat must add
+      // light and change chroma relative to the measured background, not merely differ in gray level.
+      const offBackground = Math.max(...delta) > 18 && Math.max(...delta) - Math.min(...delta) > 6;
       if (!colored && !veryBright && !offBackground) continue;
       if (closeToAny(r, g, b, RING_COLORS, 14)) continue; // exclude the two annotation rings
       pts.push({ x, y });
@@ -219,9 +224,10 @@ function check(name, pass, detail) {
   if (pass) console.log(line); else { console.error(line); failed = true; }
 }
 
-async function capture(page, dom, scenario, pointDistMm, fieldFrac) {
+async function capture(page, dom, scenario, pointDistMm, fieldFrac, geometryMask = false) {
   await page.evaluate((s) => window.p2p.set(s), scenario);
   await page.evaluate(([d, f]) => window.p2p.pieces.cone.setPoint(d, f), [pointDistMm, fieldFrac]);
+  if (geometryMask) await page.evaluate(() => window.p2p.pieces.cone.geometryMask(true));
   await page.evaluate(() => window.p2p.settle());
   await page.evaluate(() => window.p2p.gpuIdle());
   await page.waitForTimeout(120);
@@ -235,7 +241,10 @@ async function capture(page, dom, scenario, pointDistMm, fieldFrac) {
     height: rect.height,
   };
   const png = await page.screenshot({ clip });
+  mkdirSync('shots/accuracy-cone', { recursive: true });
+  writeFileSync(`shots/accuracy-cone/${scenario.lens}-f${scenario.fno}-field${fieldFrac}.png`, png);
   const img = decodePNG(png);
+  if (geometryMask) await page.evaluate(() => window.p2p.pieces.cone.geometryMask(false));
   return { probe, img };
 }
 
@@ -339,8 +348,11 @@ async function main() {
 
     // ---- case 4: frame corner cat's eye -- pixel aspect vs the engine's own landing-point aspect -------------
     {
-      const { probe, img } = await capture(page, null, { lens: 'p50', fno: 1.4, focusM: 3, format: 'ff' }, 1500, 1.0);
-      const hull = convexHull(thresholdDisk(img));
+      // The production texture's alpha coverage includes the very dim violet/red endpoints too. Isolate
+      // that coverage for geometry measurement so gray pixel-grid edges or spectral brightness do not
+      // masquerade as geometric stretching. Earlier cases still inspect the normal colored rendering.
+      const { probe, img } = await capture(page, null, { lens: 'p50', fno: 1.4, focusM: 3, format: 'ff' }, 1500, 1.0, true);
+      const hull = convexHull(thresholdDisk(img, true));
       const xs = hull.map((p) => p.x), ys = hull.map((p) => p.y);
       const pxW = Math.max(...xs) - Math.min(...xs);
       const pxH = Math.max(...ys) - Math.min(...ys);

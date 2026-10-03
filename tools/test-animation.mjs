@@ -8,7 +8,13 @@ mkdirSync('shots/animation', { recursive: true });
 try {
   for (const width of [1366, 390]) {
     const page = await browser.newPage({ viewport: { width, height: width > 760 ? 768 : 844 }, reducedMotion: 'reduce' });
-    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    const errors = []; page.on('pageerror', e => errors.push(e.stack || String(e)));
+    // Simulate a frame timestamp slightly earlier than a click in the same refresh interval.
+    // Playback must stay nonnegative instead of indexing PIPELINE[-1] and stopping forever.
+    await page.addInitScript(() => {
+      const frame = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = callback => frame(timestamp => callback(timestamp - 25));
+    });
     await page.goto(process.env.P2P_URL || server.url);
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.waitForFunction(() => !document.getElementById('pin-photo').disabled, { timeout: 120000 });

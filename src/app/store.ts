@@ -3,7 +3,8 @@
 // queryFromState) are the tested surface; the Store class is a thin pub-sub wrapper plus the URL side effect,
 // guarded so it is safe to import from a non-browser environment (vitest's default node test environment).
 import type { FormatId, Scenario } from '../engine/types';
-import { normalizeScenario } from './engine-api';
+import { bodyForLens, normalizeScenario } from './engine-api';
+import { sensorFor } from '../engine/data';
 import { cameraPart, inspectionParent, type CameraPart } from './inspection';
 
 // 'camera' is docs/PANE.md's one pane (the whole camera and lens); the three first-pass pieces stay as its details
@@ -33,7 +34,8 @@ function parseShutter(raw: string): number | undefined {
 
 export function formatShutter(t: number): string {
   if (!Number.isFinite(t) || t <= 0) return '0';
-  return t < 1 ? `1/${Math.round(1 / t)}` : `${Number(t.toFixed(3))}`;
+  const denominator = Math.round(1 / t);
+  return t < 1 && Math.abs(1 / t - denominator) < 1e-8 ? `1/${denominator}` : `${Number(t.toFixed(3))}`;
 }
 
 // ---- focus: meters, or "inf" for infinity (Scenario.focusM = null) -------------------------------------------
@@ -46,7 +48,7 @@ function parseFocus(raw: string): number | null | undefined {
 }
 
 function formatFocus(m: number | null): string {
-  return m === null ? 'inf' : `${Number(m.toFixed(3))}`;
+  return m === null ? 'inf' : String(m);
 }
 
 const VALID_PIECES = new Set<PieceId>(PIECE_IDS);
@@ -74,6 +76,17 @@ export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>
   if (motion) { const v = Number(motion); if (Number.isFinite(v)) scenario.motion = { speedMps: v }; }
   const subject = params.get('subject');
   if (subject) { const v = Number(subject); if (Number.isFinite(v) && v > 0) scenario.subjectM = v; }
+  const shutterType = params.get('shutterType');
+  if (shutterType === 'mechanical' || shutterType === 'electronic') scenario.shutterType = shutterType;
+  for (const key of ['lux', 'cct'] as const) {
+    const raw = params.get(key), value = Number(raw);
+    if (raw && Number.isFinite(value) && (key === 'lux' ? value >= 0 : value > 0)) scenario[key] = value;
+  }
+  const sensor = params.get('sensor');
+  if (sensor) {
+    try { sensorFor(scenario.format ?? 'ff', scenario.iso ?? 100, sensor); scenario.sensor = sensor; }
+    catch { /* Unknown sensors in shared links fall back to the selected body. */ }
+  }
   const pieceRaw = params.get('piece');
   const piece = pieceRaw && VALID_PIECES.has(pieceRaw as PieceId) ? (pieceRaw as PieceId) : undefined;
   return { scenario, piece, cameraPart: cameraPart(params.get('part')) };
@@ -83,14 +96,19 @@ export function scenarioFromQuery(search: string): { scenario: Partial<Scenario>
 export function queryFromState(state: AppState): string {
   const p = new URLSearchParams();
   p.set('lens', state.scenario.lens);
-  p.set('fno', String(Number(state.scenario.fno.toFixed(2))));
+  p.set('fno', String(state.scenario.fno));
   p.set('focus', formatFocus(state.scenario.focusM));
-  p.set('shutter', formatShutter(state.scenario.shutter));
-  p.set('iso', String(Math.round(state.scenario.iso)));
+  // Presentation labels may round to marked stops; a share link must retain the actual exposure.
+  p.set('shutter', String(state.scenario.shutter));
+  p.set('iso', String(state.scenario.iso));
   p.set('format', state.scenario.format);
   p.set('scene', state.scenario.scene);
   if (state.scenario.motion) p.set('motion', String(state.scenario.motion.speedMps));
-  if (state.scenario.subjectM !== undefined) p.set('subject', String(Number(state.scenario.subjectM.toFixed(2))));
+  if (state.scenario.subjectM !== undefined) p.set('subject', String(state.scenario.subjectM));
+  p.set('shutterType', state.scenario.shutterType);
+  for (const key of ['sensor', 'lux', 'cct'] as const) {
+    if (state.scenario[key] !== undefined) p.set(key, String(state.scenario[key]));
+  }
   p.set('piece', state.piece);
   if (state.cameraPart) p.set('part', state.cameraPart);
   return `?${p.toString()}`;
@@ -117,6 +135,7 @@ export class Store {
     // A subject distance belongs to the layout it was set with (the real-photo panel's "Match these settings"
     // sets it with its lens): a new lens or scene without one of its own goes back to the scene's own layout.
     const merged = { ...this.state.scenario, ...partial };
+    if (partial.lens && bodyForLens(partial.lens) !== bodyForLens(this.state.scenario.lens) && !('sensor' in partial)) delete merged.sensor;
     if (('lens' in partial || 'scene' in partial) && !('subjectM' in partial)) delete merged.subjectM;
     const scenario = normalizeScenario(merged);
     const nextPiece = piece ?? this.state.piece;
@@ -152,7 +171,9 @@ export class Store {
 
   private notify(): void {
     if (inBrowser) {
-      const url = queryFromState(this.state);
+      const url = new URL(queryFromState(this.state), window.location.href);
+      if (new URLSearchParams(window.location.search).get('gl') === 'webgl2') url.searchParams.set('gl', 'webgl2');
+      url.hash = window.location.hash;
       window.history.replaceState(null, '', url);
     }
     for (const fn of this.listeners) fn(this.state);

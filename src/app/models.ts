@@ -338,7 +338,9 @@ function lensButtons() {
   }
 }
 
+let rigGeneration = 0;
 async function setRig(body: BodyId, lens: string | null, keepPart = false) {
+  const generation = ++rigGeneration;
   state.body = body;
   state.lens = lens && lens !== 'none' && LENSES[lens]?.body === body ? lens : lens === 'none' ? 'none' : DEFAULT_LENS[body];
   document.querySelectorAll<HTMLButtonElement>('[data-body]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.body === body)));
@@ -346,10 +348,9 @@ async function setRig(body: BodyId, lens: string | null, keepPart = false) {
   veil.classList.remove('off', 'err');
   const lf = state.lens !== 'none' ? LENSES[state.lens!] : null;
   $('veil-msg').textContent = `Loading the ${body === 'dslr' ? 'DSLR' : 'mirrorless'} body${lf ? ` and the ${lf.focalLength} mm lens` : ''}`;
-  const want = { body, lens: state.lens };
   try {
     const [b, l] = await Promise.all([load(`./models/${body}.glb`), lf ? load(`./models/lenses/${state.lens}.glb`) : Promise.resolve(null)]);
-    if (state.body !== want.body || state.lens !== want.lens) return;          // a later tap won
+    if (generation !== rigGeneration) return; // a later tap won, even if it returned to the same kit
     unhighlight();
     assembly.clear();
     bodyRoot = b; lensRoot = l;
@@ -363,6 +364,7 @@ async function setRig(body: BodyId, lens: string | null, keepPart = false) {
     select(keepPart ? state.part : null);
     veil.classList.add('off');
   } catch (e) {
+    if (generation !== rigGeneration) return;
     veil.classList.add('err');
     $('veil-msg').textContent = `Could not load the model: ${(e as Error).message}`;
   }
@@ -414,6 +416,7 @@ async function main() {
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
     camera.updateProjectionMatrix();
+    if (bodyRoot) frame();
   };
   new ResizeObserver(resize).observe(viewEl);
   resize();
@@ -451,6 +454,10 @@ async function main() {
 
 $('topnav').innerHTML = siteNavigation('models');
 mountSiteNavigation();
+$('model-retry').addEventListener('click', () => {
+  if (loader) void setRig(state.body, state.lens, true);
+  else location.reload();
+});
 main().catch((e) => {
   veil.classList.remove('off');
   veil.classList.add('err');

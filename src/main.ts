@@ -24,6 +24,7 @@ async function main() {
   const startTour = new URLSearchParams(location.search).get('tour') === '1';
   const startLesson = new URLSearchParams(location.search).get('lesson');
   buildWorkspace();
+  byId('veil-reload').addEventListener('click', () => location.reload());
   const dom: StageDom = {
     canvas: byId('gl'),
     view: byId('view'),
@@ -58,5 +59,9 @@ main().catch((err) => {
   // cause this early, and tools/shot.mjs's "zero console errors" gate should catch anything unexpected here too.
   console.error('main.ts: failed to start', err);
   const veil = document.getElementById('veil');
-  if (veil) veil.textContent = 'Failed to start -- see the console.';
+  if (veil) {
+    veil.classList.remove('off'); veil.classList.add('err');
+    const message = document.getElementById('veil-msg');
+    if (message) message.textContent = 'The 3D view could not start. Reload to try again, or use another browser with hardware acceleration enabled.';
+  }
 });

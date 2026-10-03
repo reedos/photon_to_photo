@@ -167,7 +167,10 @@ export function normalizeScenario(input: Partial<Scenario>): Scenario {
     ? { speedMps: input.motion.speedMps }
     : undefined;
   const subjectM = input.subjectM !== undefined && Number.isFinite(input.subjectM) && input.subjectM > 0 ? input.subjectM : undefined;
-  return { lens, fno, shutter, iso, focusM, format, shutterType, scene, lux: input.lux, cct: input.cct, sensor, motion, subjectM };
+  const lux = input.lux !== undefined && Number.isFinite(input.lux) && input.lux >= 0 ? input.lux : undefined;
+  // The spectral model uses the CIE daylight locus, whose supported range is 4000–25000 K.
+  const cct = input.cct !== undefined && Number.isFinite(input.cct) ? clamp(input.cct, 4000, 25000) : undefined;
+  return { lens, fno, shutter, iso, focusM, format, shutterType, scene, lux, cct, sensor, motion, subjectM };
 }
 
 export function compute(scenarioInput: Partial<Scenario>): Model {

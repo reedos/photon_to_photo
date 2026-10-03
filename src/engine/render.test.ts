@@ -196,7 +196,7 @@ describe('renderImage: golden — determinism by seed', () => {
 interface FlatSample { bx: number; by: number; ch: 'R' | 'G' | 'B'; meanE: number }
 
 function findFlatBackdropPixels(model: ReturnType<typeof compute>, width: number, height: number): FlatSample[] {
-  const setup = renderSetup(model, width);
+  const setup = renderSetup(model, width, height);
   const out: FlatSample[] = [];
   const margin = 6;
   for (let by = margin; by < height - margin; by++) {

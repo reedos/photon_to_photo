@@ -217,8 +217,9 @@ describe('renderImage', () => {
     expect(img.meta.notes.join(' ')).not.toMatch(/STUB/);
     // pixel() describes one REAL sensor pixel inside rendered pixel (4, 4)'s block, in sensor coordinates
     const p = img.pixel(4, 4);
-    expect(p.x).toBeGreaterThanOrEqual(4 * img.pixelScale);
-    expect(p.x).toBeLessThan(5 * img.pixelScale);
+    const scale = Math.min(m.sensor.widthPx / 16, m.sensor.heightPx / 12);
+    expect(p.x).toBe(Math.floor((m.sensor.widthPx - 16 * scale) / 2 + 4.5 * scale));
+    expect(p.y).toBe(Math.floor((m.sensor.heightPx - 12 * scale) / 2 + 4.5 * scale));
     expect(p.fullWell).toBe(m.sensor.fullWellE);
   });
 });

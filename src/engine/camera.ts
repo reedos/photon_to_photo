@@ -32,7 +32,7 @@ const GRAY_PATCH_REFLECTANCE = 0.18; // the standard photographic "18% gray" ref
 function scenarioKey(s: Scenario): string {
   return JSON.stringify([
     s.lens, s.fno, s.shutter, s.iso, s.focusM, s.format, s.sensor ?? null, s.shutterType, s.scene, s.lux ?? null,
-    s.cct ?? null, s.motion?.speedMps ?? null,
+    s.cct ?? null, s.motion?.speedMps ?? null, s.subjectM ?? null,
   ]);
 }
 

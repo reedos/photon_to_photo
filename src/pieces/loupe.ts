@@ -634,8 +634,10 @@ export const build: BuildPiece = (ctx) => {
 
   function scheduleDiveToWell(): void {
     if (diveTimer !== null) window.clearTimeout(diveTimer);
+    if (!group.visible) { diveTimer = null; return; }
     diveStage = 'photo';
     diveTimer = window.setTimeout(() => {
+      if (!group.visible) { diveTimer = null; return; }
       diveStage = 'well';
       ctx.dive(wellFrame());
       syncBackButton();
@@ -712,6 +714,7 @@ export const build: BuildPiece = (ctx) => {
 
   const offBusTap = ctx.bus.on('loupe-tap', (e) => setTarget(e.x, e.y, e.renderId));
   const offRender = onRender((view) => {
+    if (!group.visible) return;
     paintPhoto(view);
     if (targetX < 0) {
       // The FIRST render to ever finish, arriving after this piece was already shown with no target -- e.g. a
@@ -869,6 +872,9 @@ export const build: BuildPiece = (ctx) => {
         const last = ctx.bus.lastLoupeTap();
         if (last) setTarget(last.x, last.y, last.renderId);
         else if (view) setTarget(Math.floor(view.width / 2), Math.floor(view.height / 2), view.renderId);
+      } else if (view && view.renderId !== targetRenderId) {
+        targetRenderId = view.renderId;
+        refreshPixel();
       } else if (currentPixel) {
         applyPixel(); // scenario changed under an existing target: recolor/refill from the (refetched) pixel
       }
@@ -1127,7 +1133,7 @@ export const build: BuildPiece = (ctx) => {
     const worldY = patchV * 500;
     const worldZ = 3000;
 
-    const setup = renderSetup(model, view.width);
+    const setup = renderSetup(model, view.width, view.height);
     const { bx, by } = projectToRenderedPixel(setup.efl, setup.blockPitchMm, view.width, view.height, worldX, worldY, worldZ);
 
     // R=8 (a 17x17 box, comfortably inside this patch's own ~22px content width at the default scenario,

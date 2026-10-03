@@ -23,6 +23,7 @@ try {
     }
     await page.locator('#kit-body').selectOption('mirrorless');
     assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'm50');
+    assert.equal(await page.evaluate(() => window.p2p.model().scenario.sensor), 'full-frame-z8');
     await page.locator('#kit-lens').selectOption('z800');
     assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'z800');
     await page.locator('#kit-scene').selectOption('bench');

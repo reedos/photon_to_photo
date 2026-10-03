@@ -197,7 +197,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (!handle) {
       const build = builders.get(id);
       if (!build) throw new Error(`stage.ts: no piece registered for "${id}"`);
-      handle = build({ renderer, look, labels, badge, camera, scene, overlay: pieceOverlay(id), dive: (to) => startDive(to), bus });
+      handle = build({ renderer, look, labels, badge, camera, scene, overlay: pieceOverlay(id), dive: (to) => {
+        if (activeId === id) startDive(to);
+      }, bus });
       handle.group.visible = false;
       scene.add(handle.group);
       built.set(id, handle);
@@ -644,11 +646,11 @@ export async function createStage(dom: StageDom): Promise<Stage> {
         if (ov) ov.hidden = true;
       }
       const handle = ensureBuilt(id);
+      activeId = id;
       handle.group.visible = true;
       handle.activate?.();
       const ov = overlays.get(id);
       if (ov) ov.hidden = false;
-      activeId = id;
       selectedPin = null;
       dom.hudTitle.textContent = title;
       dom.hudSub.textContent = upperKeepMicro(sub);

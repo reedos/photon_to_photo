@@ -44,6 +44,9 @@ describe('scenarioFromQuery', () => {
 describe('formatShutter', () => {
   it('formats sub-second times as a fraction', () => {
     expect(formatShutter(1 / 250)).toBe('1/250');
+    expect(formatShutter(0.6)).toBe('0.6');
+    expect(formatShutter(0.8)).toBe('0.8');
+    expect(formatShutter(16 / 60)).toBe('0.267');
   });
   it('formats one second and above as a decimal', () => {
     expect(formatShutter(2)).toBe('2');
@@ -52,6 +55,16 @@ describe('formatShutter', () => {
 });
 
 describe('queryFromState and scenarioFromQuery round-trip', () => {
+  it('retains exact exposure, distances, sensor and illumination overrides', () => {
+    const original = new Store({ scenario: { lens: 'm50', fno: 2 ** (5 / 6), shutter: 16 / 60,
+      iso: 123.5, focusM: 3.123456789, subjectM: 8.123456789, shutterType: 'electronic',
+      sensor: 'full-frame-d850', lux: 987.654, cct: 5456.78 } });
+    const restored = new Store(scenarioFromQuery(queryFromState(original.get())));
+    expect(restored.get()).toEqual(original.get());
+  });
+  it('ignores an invalid sensor rather than breaking startup', () => {
+    expect(scenarioFromQuery('?sensor=not-a-sensor&shutterType=invalid&lux=NaN&cct=-10').scenario).toEqual({});
+  });
   it('reproduces the same normalized scenario after a full round trip', () => {
     const store = new Store({ scenario: { lens: 'p85', fno: 2.8, focusM: 1.5, shutter: 1 / 500, iso: 800, format: 'apsc' } });
     const qs = queryFromState(store.get());
@@ -96,6 +109,18 @@ describe('queryFromState and scenarioFromQuery round-trip', () => {
 });
 
 describe('Store', () => {
+  it('changes the physical sensor with the camera body, retaining explicit overrides', () => {
+    const store = new Store({ scenario: { lens: 'n50' } });
+    expect(store.get().scenario.sensor).toBe('full-frame-d850');
+    store.set({ lens: 'm50' });
+    expect(store.get().scenario.sensor).toBe('full-frame-z8');
+    store.set({ lens: 'z800' });
+    expect(store.get().scenario.sensor).toBe('full-frame-z8');
+    store.set({ lens: 'n50', sensor: 'full-frame-z8' });
+    expect(store.get().scenario.sensor).toBe('full-frame-z8');
+    store.set({ lens: 'p50' });
+    expect(store.get().scenario.sensor).toBeUndefined();
+  });
   it('normalizes on construction and on every set()', () => {
     const store = new Store({ scenario: { lens: 'p50', fno: 0.5 } });
     expect(store.get().scenario.fno).toBeGreaterThanOrEqual(1); // clamped up to the lens's own max aperture

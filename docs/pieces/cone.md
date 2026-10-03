@@ -86,6 +86,13 @@ reported truthfully as `webgl2`.
 
 ## Recording (`tools/choreo/cone.mjs`)
 
+October 2 audit: spectral colors written into the canvas now convert from Three's linear working space back
+to encoded sRGB. The geometry gate's corner-shape capture uses `geometryMask(true)` to render the production
+texture's unchanged alpha coverage in white, without pixel-grid or ring annotations. It compares that coverage
+against every traced landing point, at the existing 5% aspect tolerance and one-splat padding bound, then restores
+the normal spectral texture. Normal-color diameter and visible-disk checks still run separately. This prevents
+neutral grid edges or almost-black spectral endpoints from being mistaken for geometric stretching.
+
 8s: the point walks 0.8 m through the 3 m focus distance to 20 m on axis (0-4.5s, the disk shrinks to a point and
 grows again), then moves to the frame corner at a fixed defocus (4.5-6s, field 0->1, the cat's eye appears), then
 the aperture stops from f/1.4 to f/5.6 at a fixed defocus (6-8s). `tools/record.mjs tools/choreo/cone.mjs --base

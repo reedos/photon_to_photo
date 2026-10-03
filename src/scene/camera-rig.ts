@@ -18,7 +18,7 @@ import { buildRays } from '../pieces/lens/rays';
 import { marginalAwareFans } from '../pieces/lens/marginal-rays';
 import { bodyForLens, compute, distanceForRingAngle, pointBundle, focusRingAngle, focusRingThrow, lensSummary, type BodyId } from '../app/engine-api';
 import { createExposure } from './rig-exposure';
-import { THIRD_STOP_FNO, THIRD_STOP_SHUTTER } from '../app/stops';
+import { apertureSteps, THIRD_STOP_SHUTTER } from '../app/stops';
 import { LENS_FACTS as LENSES, partCard, partLabel, type PartId } from '../app/rig-cards';
 import bodyFacts from '../../public/models/bodies.json';
 
@@ -835,7 +835,7 @@ export const build: BuildPiece = (ctx) => {
     }
     return null;
   }
-  const fnoSteps = (m: Model) => THIRD_STOP_FNO.filter((n) => n >= lensSummary(m.scenario.lens).maxFno - 1e-9);
+  const fnoSteps = (m: Model) => apertureSteps(lensSummary(m.scenario.lens).maxFno);
   const nearest = (arr: number[], v: number) => { let b = 0; for (let i = 1; i < arr.length; i++) if (Math.abs(arr[i] - v) < Math.abs(arr[b] - v)) b = i; return b; };
 
   function onDown(e: PointerEvent) {

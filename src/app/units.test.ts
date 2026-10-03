@@ -35,6 +35,10 @@ describe('units', () => {
     expect(fmtShutter(2)).toBe('2 s');
     expect(fmtShutter(2 / 125)).toBe('1/60 s');
     expect(fmtShutter(1 / 1000)).toBe('1/1000 s');
+    expect(fmtShutter(0.3)).toBe('0.3 s');
+    expect(fmtShutter(0.6)).toBe('0.6 s');
+    expect(fmtShutter(0.8)).toBe('0.8 s');
+    expect(fmtShutter(16 / 60)).toBe('0.267 s');
   });
 
   it('uppercases captions without turning µ into a Greek capital', () => {

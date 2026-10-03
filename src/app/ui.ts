@@ -6,7 +6,7 @@ import type { Model } from '../engine/model-types';
 import type { FormatId, Scenario } from '../engine/types';
 import { bodyForLens, compute, defaultFocusM, lensSummary, LINEUP, LONG_LENS_MM, sceneIds, sceneTargets, type BodyId } from './engine-api';
 import { motionPartial, motionSpeedOf } from './motion';
-import { currentRender, publishRender, requestRender, type RenderView } from './render-client';
+import { currentRender, onRenderFailure, publishRender, requestRender, type RenderView } from './render-client';
 import { emit, on } from './bus';
 import { type AppState, type PieceId, type Store } from './store';
 import { cameraPart, PART_LABELS } from './inspection';
@@ -18,7 +18,7 @@ import { fmtDistance, fmtFno, fmtShutter, fmtPitch, fmtDims, fmtNum, fmtRange } 
 // ---- standard photographic third-stop control steps ------------------------------------------------------
 // UI control-step conventions (every digital camera's aperture/shutter/ISO dial uses this spacing), not a physics
 // claim about the lens or sensor; no evidence chip applies to a control's step size.
-import { THIRD_STOP_FNO, THIRD_STOP_SHUTTER, THIRD_STOP_ISO } from './stops';
+import { apertureSteps, THIRD_STOP_SHUTTER, THIRD_STOP_ISO } from './stops';
 // Focus distance: log scale from the lens's closest focus (mm) to infinity; infinity is the slider's top step.
 
 
@@ -51,7 +51,7 @@ const PIECES: { id: PieceId; n: number; title: string; short: string; color: str
 export function chip(ev: string, src?: string): string {
   const SHORT: Record<string, string> = { spec: 'Spec', vendor: 'Vendor', reported: 'Reported', derived: 'Calc.', assumed: 'Assumed' };
   const TITLE: Record<string, string> = { spec: 'From a published specification', vendor: "From the maker's own figures", reported: 'Reported by a third party',
-    derived: 'Calculated by the engine from backed inputs', assumed: 'Rests on a stated assumption (an 18% gray scene)' };
+    derived: 'Calculated by the engine from backed inputs', assumed: 'Based on a stated modeling assumption' };
   const title = `${TITLE[ev] ?? ''}${src ? `: ${src}` : ''}`.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   return `<span class="chip ${ev}" title="${title}">${SHORT[ev] ?? ev}</span>`;
 }
@@ -221,7 +221,7 @@ export function mountUI(store: Store, stage: Stage): void {
     el.style.setProperty('--pct', `${(Number(el.value) / max) * 100}%`);
   };
   dom.scFno.addEventListener('input', () => {
-    const fnoSteps = THIRD_STOP_FNO.filter((n) => n >= lensSummary(store.get().scenario.lens).maxFno - 1e-9);
+    const fnoSteps = apertureSteps(lensSummary(store.get().scenario.lens).maxFno);
     store.set({ fno: fnoSteps[Number(dom.scFno.value)] ?? fnoSteps[0] });
   });
   dom.scShutter.addEventListener('input', () => store.set({ shutter: THIRD_STOP_SHUTTER[Number(dom.scShutter.value)] }));
@@ -311,7 +311,6 @@ export function mountUI(store: Store, stage: Stage): void {
   const placeDock = () => { if (phone?.matches) br?.append(dom.dock); else rail?.append(dom.dock); };
   placeDock();
   phone?.addEventListener('change', placeDock);
-  document.getElementById('veil-reload')?.addEventListener('click', () => location.reload());
 
   dom.resetView.addEventListener('click', () => {
     if (store.get().piece === 'camera' && selectedPartId) stage.selectPin(selectedPartId);
@@ -410,10 +409,11 @@ export function mountUI(store: Store, stage: Stage): void {
     const speedMps = motionSpeedOf(scenario);
     for (const btn of dom.scMotion.children) (btn as HTMLElement).setAttribute('aria-pressed', String(Number((btn as HTMLElement).dataset.speed) === speedMps));
 
-    const fnoSteps = THIRD_STOP_FNO.filter((n) => n >= model.lens.maxFno - 1e-9);
+    const fnoSteps = apertureSteps(model.lens.maxFno);
     dom.scFno.max = String(Math.max(0, fnoSteps.length - 1));
     dom.scFno.value = String(nearestIndex(fnoSteps, scenario.fno));
     dom.scFnoV.textContent = fmtFno(scenario.fno);
+    dom.scFno.setAttribute('aria-valuetext', dom.scFnoV.textContent);
 
     dom.scFocus.value = String(focusStepFromMm(model.lens.closestFocusMm, model.lens.focalLength, scenario.focusM === null ? null : scenario.focusM * 1000));
     dom.scFocusV.textContent = fmtDistance(model.focus.distanceMm);
@@ -421,15 +421,17 @@ export function mountUI(store: Store, stage: Stage): void {
 
     dom.scShutter.value = String(nearestIndex(THIRD_STOP_SHUTTER, scenario.shutter));
     dom.scShutterV.textContent = fmtShutter(scenario.shutter);
+    dom.scShutter.setAttribute('aria-valuetext', dom.scShutterV.textContent);
 
     dom.scIso.value = String(nearestIndex(THIRD_STOP_ISO, scenario.iso));
     dom.scIsoV.textContent = `ISO ${Math.round(scenario.iso)}`;
+    dom.scIso.setAttribute('aria-valuetext', dom.scIsoV.textContent);
     for (const el of [dom.scFno, dom.scFocus, dom.scShutter, dom.scIso]) setPct(el);
 
     // value, label and chip on one line each; the qualifier goes on a quiet line under them (UI-18)
     dom.kpis.innerHTML = [
       [fmtNum(model.exposure.ev100, 1), 'EV100', chip('derived'), 'exposure value at ISO 100'],
-      [fmtDistance(model.focus.hyperfocalMm), 'Hyperfocal', chip('derived'), 'focus here, sharp to infinity'],
+      [`${fmtNum(model.focus.cocMm * 1000, 2)} µm`, 'Sharpness criterion', chip('assumed', 'format diagonal / 1500'), 'acceptable blur diameter for depth of field'],
       [fmtRange(model.focus.nearMm, model.focus.farMm), 'Depth of field', chip('derived'), `focused at ${fmtDistance(model.focus.distanceMm)}`],
       [`${fmtNum(model.diffraction.airyRadiusUm, 2)} µm`, 'Airy radius', chip('derived'), `${fmtNum(model.diffraction.airyRadiusPx, 2)} of a pixel`],
       [fmtNum(model.exposure.photonsMidGray, 0), 'Photons/px', chip('assumed'), 'on an 18% gray patch'],
@@ -542,7 +544,18 @@ export function mountUI(store: Store, stage: Stage): void {
   // thumbnail in the view is the same render, scaled down.
   let renderTimer = 0;
   let renderGeneration = 0;
+  const retryPhoto = byId<HTMLButtonElement>('finalimg-retry');
+  retryPhoto.onclick = () => renderFinalImage(compute(store.get().scenario));
+  onRenderFailure(() => {
+    dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
+    dom.dock.classList.remove('rendering');
+    dom.finalimgCanvas.setAttribute('aria-busy', 'false');
+    dom.finalimgCap.textContent = 'The photo renderer stopped. Retry to restore this photo and its pixel inspection.';
+    retryPhoto.hidden = false;
+  });
   function renderFinalImage(model: Model) {
+    retryPhoto.hidden = true;
+    dom.finalimgCanvas.setAttribute('aria-busy', 'true');
     const generation = ++renderGeneration;
     window.clearTimeout(renderTimer);
     dom.finalimgCanvas.closest('.finalimg-card')?.classList.add('rendering');
@@ -555,12 +568,16 @@ export function mountUI(store: Store, stage: Stage): void {
         view = await requestRender(model.scenario, w, h, 1);
       } catch (err) {
         if (generation !== renderGeneration) return;
-        dom.finalimgCap.textContent = 'The photo could not be rendered for these settings. Change a setting to try again.';
+        dom.finalimgCap.textContent = 'The photo could not be rendered. Retry to keep these settings.';
+        dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
+        dom.finalimgCanvas.setAttribute('aria-busy', 'false');
+        retryPhoto.hidden = false;
         dom.dock.classList.remove('rendering');
         console.error('ui.ts: render failed', err);
         return;
       }
       if (!view || generation !== renderGeneration) return; // includes changes still inside the debounce interval
+      dom.finalimgCanvas.setAttribute('aria-busy', 'false');
       const ctx = dom.finalimgCanvas.getContext('2d');
       if (!ctx) return;
       const imageData = ctx.createImageData(view.width, view.height);

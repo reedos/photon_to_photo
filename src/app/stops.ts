@@ -2,6 +2,10 @@
 // (src/scene/camera-rig.ts). UI conventions (every camera's aperture/shutter/ISO dial uses this spacing), not a
 // physics claim: no evidence chip applies to a control's step size.
 export const THIRD_STOP_FNO = [1, 1.1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.5, 2.8, 3.2, 3.5, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10, 11, 13, 14, 16, 18, 20, 22];
+/** Include the prescription's exact widest opening even when its marked stop is rounded. */
+export function apertureSteps(maximum: number): number[] {
+  return [maximum, ...THIRD_STOP_FNO.filter(n => n > maximum * 1.04)];
+}
 export const THIRD_STOP_SHUTTER = [
   1 / 8000, 1 / 6400, 1 / 5000, 1 / 4000, 1 / 3200, 1 / 2500, 1 / 2000, 1 / 1600, 1 / 1250, 1 / 1000, 1 / 800,
   1 / 640, 1 / 500, 1 / 400, 1 / 320, 1 / 250, 1 / 200, 1 / 160, 1 / 125, 1 / 100, 1 / 80, 1 / 60, 1 / 50,
