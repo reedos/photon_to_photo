@@ -4,6 +4,9 @@ import { pointBundle } from './engine-api';
 import { pipelinePixels, PIPELINE } from './learning-model';
 import type { RenderView } from './render-client';
 import { shotMoment, SHOT_STAGES } from './shot-model';
+import type { Example } from './examples';
+import { photoSubject } from './photo-shot';
+import { fmtShutter } from './units';
 
 // The hero and the physical scene share the same silhouette and pigment regions.
 // Screen colors here are an illustration; only the final buffers are a rendered photograph.
@@ -30,9 +33,9 @@ function along(r:Route,t:number):Point {
   const d=Math.max(0,Math.min(1,t))*r.total;let i=1;while(i<r.lengths.length-1&&r.lengths[i]<d)i++;
   const f=(d-r.lengths[i-1])/(r.lengths[i]-r.lengths[i-1]||1),a=r.points[i-1],b=r.points[i];return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
 }
-export function createShotVisual(canvas:HTMLCanvasElement,model:Model) {
+export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real?:{example:Example;image:HTMLImageElement}) {
   const ctx=canvas.getContext('2d')!, bird=birdSprite();
-  const paths=[0,.35].flatMap(fieldFrac=>pointBundle(model,{pointDistMm:20000,fieldFrac,nms:[460,550,650],rays:9}).paths);
+  const paths=[0,.35].flatMap(fieldFrac=>pointBundle(model,{pointDistMm:real?(real.example.focusM??1e6)*1000:20000,fieldFrac,nms:[460,550,650],rays:9}).paths);
   const surfaces=model.system.surfaces,min=surfaces[0].z,max=surfaces.at(-1)!.z,scale=750/(max-min);
   const X=(z:number)=>150+(z-min)*scale,Y=(v:number)=>295-v*scale;
   const traced=paths.map(path=>({nm:path.nm,points:path.pts.filter(q=>q[2]>=min-15&&q[2]<=max+1).map(q=>[X(q[2]),Y(q[1])] as Point)})).filter(p=>p.points.length>1).map(p=>({...p,route:route(p.points)}));
@@ -56,6 +59,33 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model) {
     }ctx.restore();
   }
   function panel(x:number,y:number,w:number,h:number,color:string) {ctx.fillStyle='#091923dd';ctx.fillRect(x,y,w,h);ctx.strokeStyle=color+'80';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);}
+  function photograph(x:number,y:number,w:number,h:number,alpha=1) {
+    if(!real)return {x,y,w,h};
+    const im=real.image,scale=Math.min(w/im.naturalWidth,h/im.naturalHeight);
+    const iw=im.naturalWidth*scale,ih=im.naturalHeight*scale,left=x+(w-iw)/2,top=y+(h-ih)/2;
+    ctx.save();ctx.globalAlpha*=alpha;ctx.drawImage(im,left,top,iw,ih);ctx.restore();
+    return {x:left,y:top,w:iw,h:ih};
+  }
+  function photoFinal(p:number,color:string) {
+    if(!real)return;
+    // The scan is a presentation reveal of the supplied JPEG, not fabricated RAW processing.
+    const box=photograph(24,20,952,470,.14),reveal=Math.min(1,p/.48);
+    ctx.save();ctx.beginPath();ctx.rect(box.x,box.y,box.w*reveal,box.h);ctx.clip();photograph(24,20,952,470);ctx.restore();
+    if(reveal<1){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=24;line(box.x+box.w*reveal,box.y,box.x+box.w*reveal,box.y+box.h,'#cbb6ff',3);ctx.restore();}
+    text('YOUR PHOTOGRAPH · SUPPLIED JPEG',30,539,21,'#d9c9ff',true);
+    // The full composition remains visible. Detail is temporarily overlaid, then gives
+    // way to a calm unobstructed hold (including on a direct seek to the end).
+    const detail=Math.max(0,Math.min(1,(p-.50)/.10,(.87-p)/.09));
+    if(detail>0){
+      const at=photoSubject(real.example),im=real.image,side=Math.min(im.naturalWidth,im.naturalHeight)*.20;
+      const sx=Math.max(0,Math.min(im.naturalWidth-side,im.naturalWidth*at.x-side/2));
+      const sy=Math.max(0,Math.min(im.naturalHeight-side,im.naturalHeight*at.y-side/2));
+      ctx.save();ctx.globalAlpha=detail;const dx=775,dy=285,dw=195;
+      const px=box.x+(sx/im.naturalWidth)*box.w,py=box.y+(sy/im.naturalHeight)*box.h,pw=side/im.naturalWidth*box.w,ph=side/im.naturalHeight*box.h;
+      ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.strokeRect(px,py,pw,ph);line(px+pw,py+ph,dx,dy,color);
+      panel(dx-5,dy-32,dw+10,dw+37,color);ctx.drawImage(im,sx,sy,side,side,dx,dy,dw,dw);text('Photo detail',dx,dy-10,20,color,true);ctx.restore();
+    }
+  }
   function optics(progress:number) {
     for(const s of surfaces){const x=X(s.z),r=s.sd*scale;ctx.fillStyle=s.kind==='image'?'#5ce1c6':'#47cfff18';ctx.strokeStyle='#9de4ff70';ctx.lineWidth=1.2;
       ctx.beginPath();ctx.ellipse(x,295,s.kind==='refract'?5:2,r,0,0,Math.PI*2);ctx.fill();ctx.stroke();}
@@ -79,22 +109,24 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model) {
     ctx.globalAlpha=.12;for(let x=0;x<1000;x+=40)line(x,0,x,560,'#70dfff');for(let y=0;y<560;y+=40)line(0,y,1000,y,'#70dfff');ctx.globalAlpha=1;
     const motionTime=Math.min(p,.94); // A short, quiet landing before each handoff.
     if(stage===0){
-      landscape(30,55,430,390,-190*(1-p));
+      const photoBox=real?photograph(25,55,440,390):null;
+      if(!real)landscape(30,55,430,390,-190*(1-p));
       panel(485,55,485,390,'#47cfff');
       ctx.save();ctx.translate(495,140);ctx.scale(.47,.47);optics(motionTime);ctx.restore();
       // Representative reflected-light paths in a diagram, not scene-scale optical tracing.
-      const source:Point=[245-190*(1-p),250];
+      const anchor=real?photoSubject(real.example):null;
+      const source:Point=photoBox&&anchor?[photoBox.x+anchor.x*photoBox.w,photoBox.y+anchor.y*photoBox.h]:[245-190*(1-p),250];
       for(let i=0;i<7;i++)flow(route([source,[465,180+i*23],[570,237+i*10]]),motionTime*1.7+i*.13,i%3===0?'#ffcf86':'#78d8fa',2,.65);
-      for(const [x,y,dx,dy] of [[160,160,1,1],[330,160,-1,1],[160,355,1,-1],[330,355,-1,-1]]){line(x,y,x+dx*20,y,'#8ffff0',2);line(x,y,x,y+dy*20,'#8ffff0',2);}
+      if(!real)for(const [x,y,dx,dy] of [[160,160,1,1],[330,160,-1,1],[160,355,1,-1],[330,355,-1,-1]]){line(x,y,x+dx*20,y,'#8ffff0',2);line(x,y,x,y+dy*20,'#8ffff0',2);}
       text('A MOMENT IN THE WORLD',45,38,21,color);text('REFLECTED LIGHT ENTERS THE LENS',510,38,21,'#47cfff');
-      text('6 m/s  •  20 m away',45,495,25,color);text('Scene-to-lens paths schematic',510,495,21);
+      text(real?'YOUR PHOTO · SCENE REFERENCE':'6 m/s  •  20 m away',30,495,23,color,true);text('Scene-to-lens paths schematic',510,495,21);
     } else if(stage===1){
       optics(motionTime);
-      text('THROUGH THE REAL LENS DESIGN',260,95,24,color);text('Surface shapes schematic · ray paths computed',140,490,20);
+      text(real?'REPRESENTATIVE LENS · COMPUTED RAYS':'THROUGH THE REAL LENS DESIGN',220,95,23,color);text('Surface shapes schematic · ray paths computed',140,490,20);
     } else if(stage===2){
-      const displacement=model.motion!.speedMps*model.scenario.shutter*1000;
-      landscape(210,20,580,255,p*displacement/900*(580*.68));
-      text('ONE ROW’S EXPOSURE · TIME EXPANDED',230,52,20,color);
+      const displacement=(model.motion?.speedMps??0)*model.scenario.shutter*1000;
+      if(real)photograph(210,20,580,255);else landscape(210,20,580,255,p*displacement/900*(580*.68));
+      text(real?'EXPOSURE INTERVAL · TIME EXPANDED':'ONE ROW’S EXPOSURE · TIME EXPANDED',210,52,20,color);
       // An electronic timing gate is a diagram; there is no physical curtain here.
       const open=p>0&&p<1,gateX=530,gateY=375;
       for(let i=0;i<9;i++){
@@ -109,12 +141,12 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model) {
       panel(852,310,40,144,'#5ce1c6');
       text('LIGHT',130,485,22,'#47cfff',true);text(open?'EXPOSURE ENABLED':p<.5?'WAITING TO EXPOSE':'CHARGE HELD',410,490,22,color);text('SENSOR',815,488,22,'#5ce1c6',true);
       line(210,292,790,292,'#253646',5);line(210,292,210+580*p,292,color,5);
-      text(`${(displacement*p).toFixed(1)} mm subject travel`,300,538,22,color);
+      text(real?`${fmtShutter(real.example.shutter)} · recorded exposure`:`${(displacement*p).toFixed(1)} mm subject travel`,260,538,22,color,true);
     } else if(stage===3){
       // A green-filter reference pixel cutaway. Optical packets and charge markers have separate weights.
       panel(215,168,340,37,'#5ce1c6');panel(235,256,300,86,'#47cfff');
       ctx.fillStyle='#5ce1c622';ctx.beginPath();ctx.ellipse(385,118,175,40,0,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle='#a2efff88';ctx.stroke();
-      const generated=model.exposure.electronsMidGray*p,fill=Math.min(1,generated/model.sensor.fullWellE);
+      const generated=model.exposure.electronsMidGray*p,fill=real ? .55*p : Math.min(1,generated/model.sensor.fullWellE);
       for(let i=0;i<12;i++){
         const phase=motionTime*1.6+i*.0833;
         flow(route([[235+i*27,25],[245+i*25,116],[320+i*12,183],[385,284]]),phase,i%3===0?'#ffce78':i%3===1?'#8fccff':'#88efb7',1,.32);
@@ -138,29 +170,31 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model) {
       for(let i=0;i<45*p;i++){const x=755+fract(i*.618)*155,y=215+fract(i*.414)*120;ctx.fillStyle='#aaffde';ctx.globalAlpha=.25+.65*fract(i*.79);ctx.fillRect(x,y,3,3);}ctx.globalAlpha=1;
       text('MICROLENS',235,91,19,undefined,true);text('GREEN FILTER',265,194,19,undefined,true);text('PHOTODIODE',275,244,19,'#5ce1c6',true);
       text('WEIGHTED CHARGE PACKETS',380,414,18,'#9dffe6');text('CHARGE WELL',725,152,21,color,true);
-      text(`${Math.round(generated).toLocaleString()} expected e−`,650,476,24,color,true);
-      text(`${(100*fill).toFixed(2)}% of full well · cloud schematic`,570,520,18);
+      text(real?'Charge accumulates':`${Math.round(generated).toLocaleString()} expected e−`,650,476,24,color,true);
+      text(real?'SCHEMATIC CHARGE':`${(100*fill).toFixed(2)}% of full well · cloud schematic`,570,520,18,undefined,!!real);
     } else if(stage===4){
       const rows=32,cols=48,ox=70,oy=90,cw=11,ch=11,active=Math.min(rows-1,Math.floor(p*rows));
       // A labeled display lift reveals structure without altering native raw codes or the final photo.
       for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
         const sx=Math.min(599,Math.floor(c/cols*300)*2+c%2),sy=Math.min(399,Math.floor(r/rows*200)*2+r%2),i=(sy*600+sx)*4;
         const gain=4,passed=r<=active;
-        ctx.fillStyle=passed&&rawCells?`rgb(${Math.min(255,rawCells[i]*gain)} ${Math.min(255,rawCells[i+1]*gain)} ${Math.min(255,rawCells[i+2]*gain)})`:'#122432';ctx.fillRect(ox+c*cw,oy+r*ch,cw-1,ch-1);
+        ctx.fillStyle=real&&passed?['#ba6463','#55b79e','#55b79e','#668cc9'][(r%2)*2+c%2]:passed&&rawCells?`rgb(${Math.min(255,rawCells[i]*gain)} ${Math.min(255,rawCells[i+1]*gain)} ${Math.min(255,rawCells[i+2]*gain)})`:'#122432';ctx.fillRect(ox+c*cw,oy+r*ch,cw-1,ch-1);
       }
       const yy=oy+active*ch+ch*.5;ctx.save();ctx.shadowBlur=12;ctx.shadowColor=color;line(ox-5,yy,ox+cols*cw+5,yy,color,3);ctx.restore();
       panel(700,170,200,175,'#5ce1c6');text('ADC → CODE',714,202,20,color,true);
       const sampleX=300,sampleY=Math.min(399,Math.floor(active/rows*200)*2+active%2),dn=raw?.[sampleY*600+sampleX]??0;
       ctx.strokeStyle='#e7fff8';ctx.lineWidth=2;ctx.strokeRect(ox+24*cw,oy+active*ch,cw-1,ch-1);
       flow(route([[600,yy],[642,yy],[642,252],[700,252]]),motionTime*4,'#9dffe6',3,1,true);
-      text(String(dn)+' DN',735,245,26,undefined,true);
-      for(let bit=0;bit<model.sensor.bits;bit++){ctx.fillStyle=dn&(1<<bit)?'#9dffe6':'#25403d';ctx.fillRect(714+(bit%7)*25,270+Math.floor(bit/7)*28,18,18);}
+      text(real?'SIGNAL → DATA':String(dn)+' DN',real?710:735,245,real?19:26,undefined,true);
+      const bitCols=real?6:7;
+      for(let bit=0;bit<(real?12:model.sensor.bits);bit++){ctx.fillStyle=(real?(bit+active)%3:dn&(1<<bit))?'#9dffe6':'#25403d';ctx.fillRect(714+(bit%bitCols)*(real?28:25),270+Math.floor(bit/bitCols)*28,18,18);}
       flow(route([[900,255],[940,255],[940,435],[745,435]]),motionTime*3,'#b69cff',4,.9,true);
       for(let i=0;i<10;i++){const len=20+fract(i*.618)*100;ctx.fillStyle='#b69cff';ctx.globalAlpha=.2+.5*fract(motionTime*3+i*.1);ctx.fillRect(735,365+i*7,len,3);}ctx.globalAlpha=1;
-      text('WHOLE SENSOR · ACTUAL RAW SAMPLES',180,45,24,color);
-      text(`${(model.sensor.readoutS*1000*p).toFixed(1)} / ${(model.sensor.readoutS*1000).toFixed(1)} ms scan`,120,488,25,color);
-      text('Mosaic display ×4 · native codes unchanged · routes schematic',120,534,19);
+      text(real?'ILLUSTRATIVE SENSOR READOUT':'WHOLE SENSOR · ACTUAL RAW SAMPLES',180,45,24,color,!!real);
+      text(real?'Row by row · signal becomes data':`${(model.sensor.readoutS*1000*p).toFixed(1)} / ${(model.sensor.readoutS*1000).toFixed(1)} ms scan`,120,488,25,color);
+      text(real?'Schematic mosaic · original RAW unavailable':'Mosaic display ×4 · native codes unchanged · routes schematic',120,534,19,undefined,!!real);
     } else {
+      if(real){photoFinal(p,color);return 'Your photograph, the result';}
       const phase=p*5,index=Math.min(4,Math.floor(phase)),wipe=p===1?1:Math.min(1,fract(phase)/.68),im=frames[index];
       if(im){
         const x=135,y=12,iw=730,ih=487;
@@ -175,7 +209,7 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model) {
         dot(x,534,6,i<=index?'#cfbaff':'#29404e');text(labels[i],x-25,520,18,i===index?'#d9f8ff':'#93b4c5',true);
       }
     }
-    if(stage>0&&stage<5){landscape(20,20,150,95);text('Same bird',28,137,17);}
+    if(stage>0&&stage<5){if(real)photograph(20,20,150,95);else landscape(20,20,150,95);text(real?'Your photograph':'Same bird',28,137,17);}
     return stage===5?PIPELINE[Math.min(4,Math.floor(p*5))][1]:null;
   }
   return {draw,setPhoto};

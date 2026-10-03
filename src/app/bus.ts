@@ -10,6 +10,7 @@
 type Events = { 'loupe-tap': { x: number; y: number; renderId: number }; 'scenario-set': Partial<import('../engine/types').Scenario>;
   'pause-exposure': Record<string, never>;
   'pause-tour': Record<string, never>;
+  'play-photo': { example: import('./examples').Example; source: HTMLElement };
   'goto-piece': { piece: 'camera' | 'lens' | 'cone' | 'loupe' }; 'select-part': { id: string | null };
   'piece-loading': { id: string; loading: boolean; progress?: number; label?: string; error?: string }; 'layer': { id: 'rays'; on: boolean } };
 type Name = keyof Events;

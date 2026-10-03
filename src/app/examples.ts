@@ -1,13 +1,15 @@
 // The real-photo comparison panel (workflow brief, "A real-photo comparison panel"): reads public/examples/
 // examples.json, hidden whenever it's empty. Never the engine's input -- BRIEF.md's synthetic-scenes-only rule is
 // about what the engine renders, and this only ever compares the engine's own output at a real shot's settings
-// against that real shot's own photo, side by side. The only place real photos enter this app.
+// against that real shot's own photo, side by side. These records also launch the photo journey;
+// its JPEG is a scene reference and final reveal, never input to the physics renderer.
 import { lensSummary } from './engine-api';
 import type { Scenario } from '../engine/types';
 import { fmtDistance, fmtFno, fmtRange, fmtShutter } from './units';
 import type { ExampleRenderRequest, ExampleRenderResult } from './example-worker';
 import type { Store } from './store';
 import { chip } from './ui';
+import { emit } from './bus';
 
 export interface Example {
   id: string;
@@ -25,7 +27,7 @@ export interface Example {
 
 interface ExamplesFile { examples: Example[] }
 
-async function loadExamples(): Promise<Example[]> {
+export async function loadExamples(): Promise<Example[]> {
   try {
     const res = await fetch('examples/examples.json');
     if (!res.ok) return [];
@@ -42,7 +44,7 @@ function byId<T extends HTMLElement>(id: string): T {
   return el as T;
 }
 
-function exampleScenario(ex: Example): Partial<Scenario> {
+export function exampleScenario(ex: Example): Partial<Scenario> {
   // The engine's own subject stands where the real shot was focused, so the two frames are compared at the same
   // subject distance (scenes.ts's sceneFor); a photo without a recorded distance keeps the scene's own layout.
   return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, focusM: ex.focusM, subjectM: ex.focusM ?? undefined };
@@ -57,6 +59,10 @@ export function mountExamples(store: Store): void {
   const note = byId('rp-note');
   const specs = byId('rp-specs');
   const matchBtn = byId<HTMLButtonElement>('rp-match');
+  const playBtn = document.createElement('button');
+  playBtn.type = 'button'; playBtn.className = 'btn'; playBtn.id = 'rp-play';
+  playBtn.textContent = 'Play this photo'; playBtn.disabled = true;
+  matchBtn.after(playBtn);
   const settings = byId('rp-settings');
   const status = byId('rp-render-status');
   const retry = byId<HTMLButtonElement>('rp-retry');
@@ -147,6 +153,9 @@ export function mountExamples(store: Store): void {
     note.textContent = ex.note;
     const lensName = (() => { try { return lensSummary(ex.lens).name; } catch { return ex.lens; } })();
     settings.textContent = `${lensName} · ${fmtFno(ex.fno)} · ${fmtShutter(ex.shutter)} · ISO ${ex.iso} · focus ${fmtDistance(ex.focusM === null ? null : ex.focusM * 1000)}`;
+    playBtn.disabled = false;
+    playBtn.setAttribute('aria-label', `Play this photo: ${ex.title}`);
+    playBtn.onclick = () => emit('play-photo', { example: ex, source: playBtn });
     matchBtn.onclick = () => {
       store.set(exampleScenario(ex));
       document.getElementById('scenario')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
