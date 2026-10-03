@@ -1,4 +1,5 @@
 import { selectionFrame } from './selection-frame';
+import '../styles/photon-rain.css';
 // Set piece 9, the loupe: docs/BRIEF.md #9, design/LOOK.md "9. The loupe," docs/PROTOTYPE.md's loupe section.
 // Everything drawn here is computed: the photo is the render worker's own rgba (render-client.ts), the target
 // pixel's numbers come from pixelAt() (a real sampled PixelState), the ray bundle from pointBundle() (a real
@@ -377,6 +378,19 @@ export const build: BuildPiece = (ctx) => {
   photonControls.innerHTML = '<button class="btn" type="button">Animate photons</button><label>Arriving light<input type="range" min="0" max="1000" value="0" aria-label="Photon animation phase"></label><span>Illustrative packets · not real time</span>';
   document.getElementById('studio-exposure')!.before(photonControls);
   const photonButton = photonControls.querySelector('button')!, photonRange = photonControls.querySelector('input')!;
+  const rainLaunch = document.createElement('button'); rainLaunch.type = 'button'; rainLaunch.className = 'btn rain-launch';
+  rainLaunch.textContent = 'Photon rain & noise'; rainLaunch.hidden = true; photonControls.before(rainLaunch);
+  let rainView: ReturnType<typeof import('../app/photon-rain').createPhotonRain> | null = null;
+  rainLaunch.onclick = async () => {
+    if (!currentModel || rainLaunch.disabled) return;
+    pausePhotons(); rainLaunch.disabled = true;
+    try {
+      const { createPhotonRain } = await import('../app/photon-rain');
+      if (disposed || !group.visible) return;
+      rainView ??= createPhotonRain(); rainView.open(currentModel, rainLaunch);
+    } catch (error) { console.error('Photon rain could not open', error); rainLaunch.textContent = 'Retry photon rain'; }
+    finally { rainLaunch.disabled = false; }
+  };
   let photonPlaying = false, photonTime = 0;
   const pausePhotons = () => { photonPlaying = false; photonButton.textContent = 'Animate photons'; };
   photonButton.onclick = () => { if (photonPlaying) pausePhotons(); else { photonPlaying = true; photonButton.textContent = 'Pause photons'; } };
@@ -760,6 +774,7 @@ export const build: BuildPiece = (ctx) => {
   const readWell = read.querySelector<HTMLElement>('.lv-read-well i')!;
 
   function syncBackButton(): void {
+    rainLaunch.hidden = !group.visible;
     const ready = !!currentPixel && matchingView(currentRender());
     status.hidden = !group.visible || ready;
     statusText.textContent = pixelError || (matchingView(currentRender()) ? 'Loading this pixel…' : 'Waiting for the photo with these camera settings…');
@@ -999,6 +1014,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     deactivate() {
+      rainLaunch.hidden = true; rainView?.close();
       pausePhotons(); photonControls.hidden = true;
       invalidatePixel(); status.hidden = true;
       window.removeEventListener('keydown', onKeydown);
@@ -1118,7 +1134,7 @@ export const build: BuildPiece = (ctx) => {
 
     dispose() {
       disposed = true; invalidatePixel(); status.remove(); offFailure();
-      offPhotonPause(); document.removeEventListener('visibilitychange', hiddenPhotons); photonControls.remove();
+      offPhotonPause(); document.removeEventListener('visibilitychange', hiddenPhotons); photonControls.remove(); rainLaunch.remove(); rainView?.dispose();
       offBusTap();
       offRender();
       window.removeEventListener('keydown', onKeydown);

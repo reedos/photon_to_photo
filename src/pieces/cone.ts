@@ -6,6 +6,7 @@ import { selectionFrame } from './selection-frame';
 // numbers the engine returned (see src/pieces/cone/coords.ts's module doc for the scene-space convention).
 import * as THREE from 'three/webgpu';
 import { lightPlayback } from './light-playback';
+import { diffractionView } from './diffraction-view';
 import type { BuildPiece, Inset, PartCard } from './types';
 import type { Bundle, Model } from '../engine/model-types';
 import { pointBundle } from '../app/engine-api';
@@ -62,6 +63,7 @@ export const build: BuildPiece = (ctx) => {
   const group = new THREE.Group();
   group.name = 'piece-cone';
   const flight = lightPlayback(ctx, group, 'Toward the sensor', 1);
+  const diffraction = diffractionView(ctx, 'cone');
 
   // ---- persistent objects (geometry/material/texture swapped in place on rebuild(), never the containers -----
   // glassMaterial()'s own transmission:1 (LOOK.md: real optical glass) reads as nearly invisible against this
@@ -396,6 +398,7 @@ export const build: BuildPiece = (ctx) => {
   return {
     group,
     update(model) {
+      diffraction.update(model);
       const lensChanged = !lastModel || lastModel.lens.id !== model.lens.id || lastModel.sensor.format.id !== model.sensor.format.id;
       rebuild(model);
       if (lensChanged && group.visible) ctx.dive(this.frame());
@@ -505,7 +508,9 @@ export const build: BuildPiece = (ctx) => {
     },
     tick(dt) { flight.tick(dt); },
     hooks: {
+      diffraction: diffraction.state,
       light: flight.state,
+      lightRibbon: flight.probe,
       /** Names and screen-space bounds of what this piece draws (layout checks in the screenshot tools). */
       debugObjects() {
         ctx.camera.updateMatrixWorld(true);
@@ -563,12 +568,14 @@ export const build: BuildPiece = (ctx) => {
       return probe ? selectionFrame(this.frame(), group.localToWorld(probe.anchor.clone())) : this.frame();
     },
     activate() {
+      diffraction.activate();
       flight.activate();
       // The main camera is shared across pieces (stage.ts); enable the context layer only while this piece
       // owns it (see the CONTEXT_LAYER comment above), and disable it again in deactivate() below.
       ctx.camera.layers.enable(1);
     },
     deactivate() {
+      diffraction.deactivate();
       flight.deactivate();
       // A pending slider rebuild would otherwise hide another inspection's shared scale badge.
       window.clearTimeout(debounceTimer);
@@ -583,6 +590,7 @@ export const build: BuildPiece = (ctx) => {
       ctx.camera.layers.disable(1);
     },
     dispose() {
+      diffraction.dispose();
       flight.dispose();
       controls.dispose();
       guard.dispose();

@@ -13,6 +13,10 @@ import { lensDesign, lensIds, D850_SENSOR_ID, Z8_SENSOR_ID } from '../engine/dat
 import { sceneIds, sceneFor } from '../engine/scenes';
 
 export { FORMATS };
+export { perspectiveStudy } from '../engine/perspective';
+// Diffraction views share the engine's Airy solution and pixel integrator.
+export { airyRadius, airyIntensity, psfOnPixels } from '../engine/diffraction';
+export { ghostPlate, platePowers, FILM_INDEX, PLATE_INDEX, type PlateSettings } from '../engine/ghost-plate';
 // Re-exported so the Settings scene switch (ui.ts) can list what's actually registered (docs/PANE.md contract:
 // 'field' joins 'bench' once the scenes stream's own edit to scenes.ts lands) without reaching past this file.
 export { sceneIds };

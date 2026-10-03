@@ -12,7 +12,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce', isMobile: width < 760, hasTouch: width < 760 });
     const errors = []; page.on('pageerror', e => errors.push(String(e)));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
-    await page.goto(url); await page.waitForFunction(() => window.p2p?.pieces.camera);
+    await page.goto(new URL('?piece=camera',url).href); await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     await page.waitForFunction(() => !document.getElementById('pin-photo').disabled, { timeout: 60000 });
     const shot = await page.evaluate(() => window.p2p.scenario());

@@ -9,7 +9,7 @@ const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use
 const axe=readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'),'utf8');
 mkdirSync('shots/shot/verified',{recursive:true});
 try{
- const page=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'no-preference'}),errors=[];
+ const page=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'reduce'}),errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
  await page.goto(`${url}?lens=n50&part=sensor&lux=7300&cct=4200`);await page.waitForFunction(()=>window.p2p?.pieces.camera);
@@ -19,9 +19,12 @@ try{
  assert.equal(await page.locator('#shot-dialog').evaluate(d=>d.open),false,'close cancels loading');
  await page.locator('.shot-launch').click();
  const seek=async t=>page.locator('#shot-time').evaluate((el,t)=>{el.value=String(t);el.dispatchEvent(new Event('input',{bubbles:true}));},t);
- await seek(8);await page.waitForSelector('#shot-dialog[data-ready="true"]',{timeout:120000});
- assert.equal(await page.locator('#shot-dialog').getAttribute('data-playing'),'false','loading must not override a user seek');
- console.log('fast render ms',await page.locator('#shot-dialog').getAttribute('data-render-ms'));
+ await page.waitForSelector('#shot-dialog[data-ready="true"]',{timeout:120000});
+ assert.equal(await page.locator('#shot-dialog').getAttribute('data-playing'),'false','reduced motion pauses on opening');
+ await seek(8);
+ assert.equal(await page.locator('#shot-source').inputValue(),'photo:flycatcher');
+ assert.equal(await page.locator('#shot-source option').count(),6);
+ assert.equal(await page.locator('#shot-preset').count(),0);
  assert.equal(Number(await page.locator('#shot-time').inputValue()),8);
  const image=()=>page.locator('#shot-canvas').evaluate(c=>c.toDataURL());
  for(let i=0;i<6;i++){
@@ -40,11 +43,20 @@ try{
   }
   await page.screenshot({path:`shots/shot/verified/desktop-${i}.png`});
  }
- const fast=await image();await page.locator('#shot-preset').selectOption('slow');await page.waitForSelector('#shot-dialog[data-ready="true"]',{timeout:120000});
- console.log('slow render ms',await page.locator('#shot-dialog').getAttribute('data-render-ms'));
- await seek(28);assert.notEqual(await image(),fast,'shutter choice visibly changes the photograph');
- await page.screenshot({path:'shots/shot/verified/desktop-slow.png'});
- assert.match(await page.locator('#shot-measures').innerText(),/48 mm/);
+ await seek(9.76);
+ assert.equal(await page.locator('#shot-canvas').getAttribute('data-capture-phase'),'expose');
+ const gap=await page.locator('#shot-canvas').evaluate(c=>+c.dataset.captureFront-+c.dataset.captureRear);
+ assert.ok(Math.abs(gap-.0625)<1e-6,'1/4000 exposure makes a slit 1/16 of sensor height at 4ms transit');
+ const mechanical=await image();
+ await page.locator('#shot-mechanism').selectOption('electronic');
+ assert.notEqual(await image(),mechanical,'electronic scan uses no black mechanical curtain');
+ await page.screenshot({path:'shots/shot/verified/electronic.png'});
+ await page.locator('#shot-mechanism').selectOption('mechanical');
+ await seek(17);assert.equal(await page.locator('#shot-canvas').getAttribute('data-assembled-rows'),'8');
+ const early=await image();await seek(19);
+ assert.equal(await page.locator('#shot-canvas').getAttribute('data-assembled-rows'),'24');
+ assert.notEqual(await image(),early,'image rows build with readout');
+ await page.emulateMedia({reducedMotion:'no-preference'});
  await page.locator('#shot-speed').selectOption('2');await seek(26);await page.locator('#shot-play').click();
  await page.waitForSelector('#shot-dialog[data-playing="false"]');assert.equal(Number(await page.locator('#shot-time').inputValue()),28,'completion holds');
  await page.locator('#shot-replay').click();await page.waitForFunction(()=>+document.getElementById('shot-time').value>.2);await page.locator('#shot-play').click();
@@ -78,6 +90,6 @@ try{
  await page.waitForFunction(()=>document.querySelector('.view-menu summary')===document.activeElement);
  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.shot-launch').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');assert.equal(await page.locator('#shot-dialog').getAttribute('data-playing'),'false');
  await page.locator('#shot-use').click();
- const applied=await page.evaluate(()=>window.p2p.scenario());assert.equal(applied.scene,'flight');assert.equal(applied.lux,10000);assert.equal(applied.cct,5500);assert.equal(applied.shutter,1/125);
- assert.deepEqual(errors,[]);console.log('shot player: desktop/mobile, exact scrubbing, buffer distinction, timing, state isolation, focus, reduced motion, axe passed');
+ const applied=await page.evaluate(()=>window.p2p.scenario());assert.equal(applied.shutter,1/4000);assert.equal(applied.iso,1400);
+ assert.deepEqual(errors,[]);console.log('shot player: desktop/mobile, exact scrubbing, photo assembly and shutter distinction, timing, state isolation, focus, reduced motion, axe passed');
 }finally{await browser.close();await server?.close();}

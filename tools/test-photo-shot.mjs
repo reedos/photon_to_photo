@@ -14,7 +14,7 @@ try {
  page.setDefaultTimeout(120000);
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('ERR_FAILED'))errors.push(m.text());});
- await page.goto(url);await page.waitForFunction(()=>window.p2p&&document.querySelectorAll('.rp-pick').length===6);
+ await page.goto(new URL('?piece=camera',url).href);await page.waitForFunction(()=>window.p2p&&document.querySelectorAll('.rp-pick').length===6);
  const before=await page.evaluate(()=>window.p2p.scenario());
  const seek=t=>page.locator('#shot-time').evaluate((el,t)=>{el.value=String(t);el.dispatchEvent(new Event('input',{bubbles:true}));},t);
  for(const width of [1366,390,320]){

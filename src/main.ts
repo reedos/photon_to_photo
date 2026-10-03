@@ -1,69 +1,41 @@
-// Bootstraps the app shell: creates the store (seeded from the URL), the stage (async -- awaits the
-// WebGPU/WebGL2 renderer's own init()), registers the three set pieces, mounts the UI and installs the
-// window.p2p test hooks. See docs/app-shell.md.
-import { createStore } from './app/store';
-import { createStage, type StageDom } from './app/stage';
-import { buildWorkspace, mountWorkspace } from './app/workspace';
-import { mountUI } from './app/ui';
-import { mountExamples } from './app/examples';
-import { mountLearning } from './app/learning';
-import { mountComparison } from './app/comparison';
-import { mountShotLauncher } from './app/shot-launch';
-import { installHooks } from './app/hooks';
-import { build as buildCamera } from './scene/camera-rig';
-import { build as buildLens } from './pieces/lens';
-import { build as buildCone } from './pieces/cone';
-import { build as buildLoupe } from './pieces/loupe';
+// The first photograph paints before the camera renderer or physics bundles are loaded.
+import { mountPhotoOpening, shouldShowPhotoOpening } from './app/photo-opening';
+import examplesFile from '../public/examples/examples.json';
 
-function byId<T extends HTMLElement>(id: string): T {
-  const el = document.getElementById(id);
-  if (!el) throw new Error(`main.ts: index.html is missing #${id}`);
-  return el as T;
+let entered = false;
+try { entered = sessionStorage.getItem('p2p.entered') === '1' || sessionStorage.getItem('p2p.return') !== null; } catch { /* Direct links still work without storage. */ }
+
+let starting: Promise<void> | undefined;
+let removeOpening: (() => void) | undefined;
+function enterCamera(photoId?: string): Promise<void> {
+  return starting ??= (async () => {
+    removeOpening?.();
+    document.body.classList.remove('entry-pending', 'photo-opening-active');
+    document.getElementById('photo-opening')!.hidden = true;
+    document.getElementById('top')!.hidden = false;
+    try {
+      const { startApp, showStartupFailure } = await import('./app-start');
+      try { await startApp(); } catch (error) { showStartupFailure(error); return; }
+      try { sessionStorage.setItem('p2p.entered', '1'); } catch { /* Optional session convenience. */ }
+      const example = examplesFile.examples.find(photo => photo.id === photoId);
+      if (example) {
+        const { emit } = await import('./app/bus');
+        emit('play-photo', { example, source: document.querySelector<HTMLElement>('.shot-launch')! });
+      } else if (!location.hash || location.hash === '#stage-section') {
+        document.getElementById('gl')?.focus({ preventScroll: true });
+      }
+    } catch (error) {
+      console.error('main.ts: failed to load the camera', error);
+      const veil = document.getElementById('veil')!;
+      veil.classList.remove('off'); veil.classList.add('err');
+      document.getElementById('veil-msg')!.textContent = 'The camera could not load. Reload to try again.';
+      document.getElementById('veil-reload')!.onclick = () => location.reload();
+    }
+  })();
 }
 
-async function main() {
-  const startTour = new URLSearchParams(location.search).get('tour') === '1';
-  const startLesson = new URLSearchParams(location.search).get('lesson');
-  buildWorkspace();
-  byId('veil-reload').addEventListener('click', () => location.reload());
-  const dom: StageDom = {
-    canvas: byId('gl'),
-    view: byId('view'),
-    pins: byId('pins'),
-    veil: byId('veil'),
-    hudTitle: byId('hud-title'),
-    hudSub: byId('hud-sub'),
-    scaleLabel: byId('scale-label'),
-    scaleBar: byId('scale-bar'),
-    scaleBadge: byId('scale-badge'),
-    backendChip: byId('backend-chip'),
-  };
-
-  const store = createStore();
-  const stage = await createStage(dom);
-
-  stage.registerPiece('camera', buildCamera);
-  stage.registerPiece('lens', buildLens);
-  stage.registerPiece('cone', buildCone);
-  stage.registerPiece('loupe', buildLoupe);
-
-  mountUI(store, stage);
-  mountWorkspace(store);
-  mountExamples(store);
-  mountLearning(store, startTour, startLesson);
-  mountComparison(store);
-  mountShotLauncher(store);
-  installHooks(store, stage);
+if (shouldShowPhotoOpening(location.search, location.hash, entered)) {
+  removeOpening = mountPhotoOpening(photo => enterCamera(photo));
+} else {
+  void enterCamera(new URLSearchParams(location.search).get('photo') ?? undefined);
 }
-
-main().catch((err) => {
-  // Surfaced loudly rather than left as a silently blank page -- WebGPU/WebGL init failures are the most likely
-  // cause this early, and tools/shot.mjs's "zero console errors" gate should catch anything unexpected here too.
-  console.error('main.ts: failed to start', err);
-  const veil = document.getElementById('veil');
-  if (veil) {
-    veil.classList.remove('off'); veil.classList.add('err');
-    const message = document.getElementById('veil-msg');
-    if (message) message.textContent = 'The 3D view could not start. Reload to try again, or use another browser with hardware acceleration enabled.';
-  }
-});

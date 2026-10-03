@@ -25,6 +25,15 @@ export const PIPELINE = [
 ] as const;
 export type PipelineStage = typeof PIPELINE[number][0];
 
+/** Visual cues complement the technical buffer descriptions without changing the image. */
+export const PIPELINE_GUIDE: Record<PipelineStage,string> = {
+  raw: 'In the enlarged sample, each site carries only its filter’s red, green or blue channel. Missing channels are not black objects in the scene.',
+  demosaic: 'The same sample now has three color channels per site. The two missing channels are estimated from neighboring samples.',
+  wb: 'Watch neutral areas: different channel gains compensate for the modeled light color.',
+  ccm: 'Compare the color patches. A matrix maps the camera’s color responses into the display color space.',
+  tone: 'The image brightens as linear-light values receive sRGB display encoding. No extra light has been captured.',
+};
+
 /** Intermediate values are displayed directly, without secretly applying the final encoding twice. */
 export function pipelinePixels(view: RenderView, stage: PipelineStage): Uint8ClampedArray {
   if (stage === 'tone') return view.rgba.slice();

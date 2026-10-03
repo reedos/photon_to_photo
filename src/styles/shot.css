@@ -82,3 +82,19 @@
  .shot-explanation .shot-story { margin:6px 0; }
  .shot-notes { margin-top:4px; }
 }
+/* Keep the full transport and photo actions visible on narrow phones. */
+@media(max-width:400px){
+ #shot-step { white-space:nowrap; }
+ .shot-explanation .shot-story h3 { font-size:15px; }
+ .shot-explanation #shot-measures span { font-size:10px;line-height:1.35;padding:5px 6px; }
+ .shot-explanation #shot-measures b { font-size:12px; }
+ .shot-transport { flex-wrap:nowrap;gap:4px; }
+ #shot-dialog .shot-transport .btn { font-size:10px;padding:5px;letter-spacing:0; }
+ .shot-scrub { flex:1;min-width:30px; }
+ #shot-clock { font-size:9px; }
+ #shot-dialog #shot-speed { width:44px;min-width:0;padding:4px;font-size:11px; }
+ .shot-footer-actions { display:grid;grid-template-columns:1fr 1.7fr;gap:6px; }
+ #shot-dialog .shot-footer-actions .btn { font-size:10px;white-space:normal;letter-spacing:0;padding:5px; }
+ #shot-status { font-size:10px;line-height:1.35; }
+ #shot-dialog[data-stage="2"] .shot-follow { grid-column:auto; }
+}

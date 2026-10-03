@@ -4,7 +4,7 @@ const pages = ['story', 'evidence', 'method', 'glossary', 'parts'] as const;
 const names = { story: 'The story', evidence: 'Evidence', method: 'Method', glossary: 'Glossary', parts: 'Parts' };
 
 export function siteNavigation(current = 'visualizer'): string {
-  return `<a class="navlink" href="${current === 'visualizer' ? '#stage-section' : './index.html'}" data-return-view ${current === 'visualizer' ? 'aria-current="page"' : ''}>Visualizer</a>`
+  return `<a class="navlink" href="${current === 'visualizer' ? '#stage-section' : './index.html?piece=camera'}" data-return-view ${current === 'visualizer' ? 'aria-current="page"' : ''}>Visualizer</a>`
     + pages.map(page => `<a class="navlink" href="./reference.html?page=${page}" ${current === page ? 'aria-current="page"' : ''}>${names[page]}</a>`).join('')
     + `<a class="navlink" href="./models.html" ${current === 'models' ? 'aria-current="page"' : ''}>Models</a>`;
 }
@@ -39,7 +39,7 @@ export function mountSiteNavigation(workspace = false): void {
   }, true);
   if (!workspace) {
     try {
-      const query = sessionStorage.getItem('p2p.return');
+      const query = sessionStorage.getItem('p2p.return') || '?piece=camera';
       if (query?.startsWith('?')) document.querySelectorAll<HTMLAnchorElement>('[data-return-view]').forEach(a => a.href = './index.html' + query);
     } catch { /* use the default view */ }
   }

@@ -6,6 +6,8 @@ import { selectionFrame } from './selection-frame';
 // docs/pieces/lens.md for what each visual is computed from and this piece's known limits.
 import * as THREE from 'three/webgpu';
 import { lightPlayback } from './light-playback';
+import { diffractionView } from './diffraction-view';
+import { ghostView } from './ghost-view';
 import type { BuildPiece, CameraFrame, Inset } from './types';
 import type { Model } from '../engine/model-types';
 import type { RayStatus } from '../engine/types';
@@ -77,6 +79,8 @@ export const build: BuildPiece = (ctx) => {
   const group = new THREE.Group();
   group.name = 'piece-lens';
   const flight = lightPlayback(ctx, group, 'Through the glass');
+  const diffraction = diffractionView(ctx, 'lens');
+  const ghosts = ghostView(ctx);
 
   let lensId: string | null = null;
   let elementsHandle: ElementsHandle | null = null;
@@ -282,6 +286,7 @@ export const build: BuildPiece = (ctx) => {
     group,
 
     update(model) {
+      diffraction.update(model);
       const lensChanged = model.lens.id !== lensId;
       if (lensChanged) {
         lensId = model.lens.id;
@@ -354,11 +359,15 @@ export const build: BuildPiece = (ctx) => {
     },
 
     activate() {
+      diffraction.activate();
+      ghosts.activate();
       flight.activate();
       if (extents) ctx.dive(computeFrame(extents, ctx.camera.aspect));
     },
 
     deactivate() {
+      diffraction.deactivate();
+      ghosts.deactivate();
       flight.deactivate();
       selectedId = null;
       scaleBar.hidden = true;
@@ -373,7 +382,10 @@ export const build: BuildPiece = (ctx) => {
     },
 
     hooks: {
+      diffraction: diffraction.state,
+      ghosts: ghosts.state,
       light: flight.state,
+      lightRibbon: flight.probe,
       /** Where the shared camera is now and where this piece wants it (framing checks in the screenshot tools). */
       camera() {
         const f = computeFrame(extents, ctx.camera.aspect);
@@ -428,6 +440,8 @@ export const build: BuildPiece = (ctx) => {
     },
 
     dispose() {
+      diffraction.dispose();
+      ghosts.dispose();
       ++housingGeneration;
       flight.dispose();
       elementsHandle?.dispose();

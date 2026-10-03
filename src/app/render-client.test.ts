@@ -88,4 +88,43 @@ describe('photo worker recovery', () => {
     const retry=requestRender(DEFAULT_SCENARIO,10,10),w=FakeWorker.instances[1],m=w.postMessage.mock.calls[0][0];
     w.onmessage!({data:{type:'render',id:m.id}});expect(await retry).not.toBeNull();
   });
+
+  it.each([false, true])('hands the initial render to the UI once (already finished: %s)', async finished => {
+    const { prewarmInitialRender, requestRender, currentRender } = await import('./render-client');
+    prewarmInitialRender(DEFAULT_SCENARIO, 600, 400);
+    const worker = FakeWorker.instances[0], message = worker.postMessage.mock.calls[0][0];
+    if (finished) worker.onmessage!({ data: { type: 'render', id: message.id, width: 600, height: 400 } });
+    // Object key ordering is not a different shot.
+    const reordered = Object.fromEntries(Object.entries(DEFAULT_SCENARIO).reverse()) as typeof DEFAULT_SCENARIO;
+    const painted = requestRender(reordered, 600, 400);
+    expect(worker.postMessage).toHaveBeenCalledTimes(1);
+    if (!finished) worker.onmessage!({ data: { type: 'render', id: message.id, width: 600, height: 400 } });
+    expect(await painted).toMatchObject({ width: 600, scenario: DEFAULT_SCENARIO });
+    expect(currentRender()).toBeNull(); // Only the UI may publish after painting.
+    const next = requestRender(DEFAULT_SCENARIO, 600, 400);
+    expect(worker.postMessage).toHaveBeenCalledTimes(2);
+    worker.onmessage!({ data: { type: 'render', id: worker.postMessage.mock.calls[1][0].id } });
+    await next;
+  });
+
+  it('supersedes a prewarmed shot if the UI requests different settings or size', async () => {
+    const { prewarmInitialRender, requestRender } = await import('./render-client');
+    prewarmInitialRender(DEFAULT_SCENARIO, 600, 400);
+    const worker = FakeWorker.instances[0];
+    const current = requestRender({ ...DEFAULT_SCENARIO, iso: 800 }, 300, 200);
+    worker.onmessage!({ data: { type: 'render', id: worker.postMessage.mock.calls[0][0].id } });
+    const last = worker.postMessage.mock.calls[1][0];
+    expect(last.width).toBe(300); expect(last.scenario.iso).toBe(800);
+    worker.onmessage!({ data: { type: 'render', id: last.id, width: 300, height: 200 } });
+    expect(await current).toMatchObject({ width: 300, scenario: { iso: 800 } });
+  });
+
+  it('restarts cleanly if the prewarmed worker crashes before the UI mounts', async () => {
+    const { prewarmInitialRender, requestRender } = await import('./render-client');
+    prewarmInitialRender(DEFAULT_SCENARIO, 600, 400);
+    FakeWorker.instances[0].onerror!({ message: 'startup crash', preventDefault() {} });
+    const retried = requestRender(DEFAULT_SCENARIO, 600, 400), worker = FakeWorker.instances[1];
+    worker.onmessage!({ data: { type: 'render', id: worker.postMessage.mock.calls[0][0].id, width: 600 } });
+    expect(await retried).toMatchObject({ width: 600 });
+  });
 });

@@ -25,6 +25,9 @@ type RenderMessage = Extract<WorkerRequest, { type: 'render' }>;
 let activeRender = 0;
 let queuedRender: RenderMessage | null = null;
 const pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void; scenario?: Scenario }>();
+let initialRender: { key: string; promise: Promise<RenderView | null> } | null = null;
+const renderKey = (scenario: Scenario, width: number, height: number, seed: number) =>
+  JSON.stringify([width, height, seed, Object.entries(scenario).sort(([a], [b]) => a.localeCompare(b))]);
 
 function dispatchRender(message: RenderMessage) {
   const entry = pending.get(message.id);
@@ -61,6 +64,7 @@ function getWorker(): Worker {
     if (worker !== job) return;
     job.terminate(); worker = null;
     activeRender = 0; queuedRender = null;
+    initialRender = null;
     current = null; // The pixel data lived in this worker; even a completed view can no longer serve the loupe.
     for (const [, p] of pending) p.reject(new Error(message));
     pending.clear();
@@ -78,6 +82,10 @@ function send(id: number, msg: WorkerRequest, reject: (error: Error) => void): b
 
 /** Renders the final image for a scenario off the main thread. Resolves to null if a newer request superseded it. */
 export function requestRender(scenario: Scenario, width: number, height: number, seed = 1): Promise<RenderView | null> {
+  // Startup can begin this exact render while the GPU initializes. Hand it to the first
+  // matching UI request once; ordinary edits retain the existing latest-wins behavior.
+  const prepared = initialRender; initialRender = null;
+  if (prepared?.key === renderKey(scenario, width, height, seed)) return prepared.promise;
   const id = nextId++;
   latestRender = id;
   const msg: WorkerRequest = { type: 'render', id, scenario, width, height, seed };
@@ -89,6 +97,15 @@ export function requestRender(scenario: Scenario, width: number, height: number,
     if (activeRender) queuedRender = msg;
     else dispatchRender(msg);
   });
+}
+
+/** Overlap the first photo with graphics initialization; no result is published before the UI paints it. */
+export function prewarmInitialRender(scenario: Scenario, width: number, height: number, seed = 1): void {
+  const promise = requestRender(scenario, width, height, seed);
+  initialRender = { key: renderKey(scenario, width, height, seed), promise };
+  // A worker failure may happen before the UI exists. The same rejection remains available
+  // to its consumer, while this handler prevents an unhandled startup rejection.
+  void promise.catch(() => {});
 }
 
 // The latest finished render, for anything that shows or measures it (the final-image panel, the loupe, gates).

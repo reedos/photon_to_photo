@@ -1,0 +1,27 @@
+.diffraction-launch { display:flex;align-items:center;gap:12px;padding:7px 16px;background:#0b141d;border-top:1px solid #274659; }
+.diffraction-launch[hidden] { display:none; }.diffraction-launch span { font-size:12px;color:#abc5d5; }.diffraction-launch .btn { color:#80ddeb;min-height:36px; }
+.diffraction-dialog { box-sizing:border-box;width:min(1000px,calc(100vw - 24px));max-width:none;max-height:calc(100svh - 24px);padding:22px;background:#09131d;border:1px solid #3e697c;border-radius:16px;color:#e8f6ff;overflow:auto; }
+.diffraction-dialog::backdrop { background:#000a;backdrop-filter:blur(7px); }
+.diffraction-dialog header { display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px; }.diffraction-dialog h2 { font-size:25px;margin:4px 0; }.diffraction-kicker { font-size:10px;color:#8dcbd6;letter-spacing:1px; }
+.diffraction-layout { display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,1fr);gap:24px;align-items:start; }.diffraction-layout figure { margin:0;min-width:0; }.diffraction-plot { position:relative;background:#04090f;border:1px solid #294858; }
+.diffraction-pattern { display:block;width:100%;aspect-ratio:1; }.diffraction-scale { position:absolute;bottom:8px;left:8px;background:#07101eeb;color:#dfefff;font-size:11px;padding:4px 6px; }
+.diffraction-radius { position:absolute;top:8px;left:8px;background:#07101eeb;color:#dfefff;font-size:11px;padding:4px 6px; }
+.diffraction-layout figcaption { font-size:11px;text-align:center;color:#b2c6d7;margin:6px 0 12px; }.diffraction-waves { display:block;width:100%;height:auto;border:1px solid #253c4d;box-sizing:border-box; }.diffraction-wave-controls { display:flex;align-items:center;gap:12px;margin-top:6px; }.diffraction-wave-controls span { font-size:10px;color:#99adbd;line-height:1.4; }.diffraction-dialog .btn { min-height:40px; }.diffraction-play { white-space:nowrap; }
+.diffraction-takeaway { font-size:17px;line-height:1.5;margin:0 0 18px; }.diffraction-dialog aside>label:not(.diffraction-ring) { display:block;margin:12px 0;font-size:13px;color:#c5deec; }.diffraction-dialog output { float:right;color:#8ff0df; }.diffraction-dialog input[type=range] { display:block;width:100%;min-height:32px;accent-color:#79e5d3; }.diffraction-modes { display:flex;gap:7px;flex-wrap:wrap;margin:12px 0; }.diffraction-modes [aria-pressed=true] { border-color:#80e2d8;color:#9ffff1;background:#153a3c; }.diffraction-ring { display:flex;align-items:center;gap:8px;font-size:12px;min-height:36px; }
+.diffraction-stats { display:grid;grid-template-columns:1fr 1fr;gap:8px; }.diffraction-stats>div { padding:9px;background:#12232f;border-radius:6px; }.diffraction-stats dt { font-size:10px;color:#a7c2d5; }.diffraction-stats dd { margin:6px 0 0;color:#e7fffa;font-size:18px; }.diffraction-stats small { display:block;font-size:10px;color:#b0c8d8;margin-top:3px; }
+.diffraction-dialog details { font-size:12px;line-height:1.5;color:#afc7d8;margin-top:12px; }.diffraction-dialog summary { cursor:pointer;min-height:32px; }.diffraction-evidence { color:#859eae;font-size:10px; }.diffraction-dialog :focus-visible { outline:2px solid #a5ffef;outline-offset:3px; }
+@media(max-width:600px){ .diffraction-launch { padding:5px 10px; }.diffraction-launch span { font-size:10px; }.diffraction-dialog { width:calc(100vw - 12px);max-height:calc(100svh - 12px);padding:12px; }.diffraction-dialog h2 { font-size:20px; }.diffraction-kicker { font-size:9px;letter-spacing:0; }.diffraction-layout { grid-template-columns:1fr;gap:14px; }.diffraction-takeaway { font-size:14px;margin-bottom:8px; }.diffraction-waves { height:65px; }.diffraction-wave-controls { gap:7px; }.diffraction-wave-controls .btn { padding:5px 8px;font-size:10px; }.diffraction-dialog header { position:sticky;top:-12px;background:#09131df5;z-index:2;padding:4px 0; }.diffraction-dialog header .btn { padding:6px 10px; } }
+.diffraction-control-note{font-size:11px;line-height:1.4;color:#b2c6d7}
+@media(max-width:600px){
+ .diffraction-layout{display:flex;flex-direction:column;gap:8px}
+ .diffraction-layout figure,.diffraction-layout aside{display:contents}
+ .diffraction-layout>*{width:100%;box-sizing:border-box}
+ .diffraction-takeaway{order:0;font-size:12px}
+ .diffraction-dialog aside>label:not(.diffraction-ring){order:1;margin:0;width:100%}
+ .diffraction-control-note{order:2;margin:0;font-size:10px}
+ .diffraction-plot{order:3;width:100%}
+ .diffraction-layout figcaption{order:4;margin:0}
+ .diffraction-modes{order:5;margin:0}.diffraction-ring{order:6}
+ .diffraction-stats{order:7}.diffraction-waves{order:8}.diffraction-wave-controls{order:9}
+ .diffraction-dialog details{order:10}.diffraction-evidence{order:11}
+}

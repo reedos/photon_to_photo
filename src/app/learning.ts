@@ -1,7 +1,8 @@
 import type { Store, AppState } from './store';
 import { compute } from './engine-api';
 import { currentRender, onRender, onRenderFailure, type RenderView } from './render-client';
-import { TOUR, PIPELINE, pipelinePixels, rowWindow, sameShot, type PipelineStage } from './learning-model';
+import { TOUR, PIPELINE, PIPELINE_GUIDE, pipelinePixels, rowWindow, sameShot, type PipelineStage } from './learning-model';
+import { pipelineSample } from './pipeline-sample';
 import { sensorFor } from '../engine/data';
 import { analogGain, readout, maxDn } from '../engine/sensor';
 import '../styles/learning.css';
@@ -40,9 +41,10 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     </div>
     <div id="pipeline-lesson" hidden><label class="lesson-control">Processing stage<select id="pipeline-stage">${PIPELINE.map(([id, title], i) => `<option value="${id}">${i + 1}. ${title}</option>`).join('')}</select></label>
       <div id="pipeline-route" aria-label="Processing sequence">${PIPELINE.map(([id, title], i) => `<button class="btn" data-stage="${id}" aria-label="${title}">${i + 1}<span>${['Raw', 'Color', 'Balance', 'Matrix', 'Display'][i]}</span></button>`).join('')}</div>
-      <div class="pipeline-picture"><canvas id="pipeline-canvas" width="600" height="400" role="img" aria-label="Current shot at the selected processing stage"></canvas><canvas id="pipeline-crop" width="128" height="128" role="img" aria-label="Enlarged center sample of the selected processing stage"></canvas><i id="pipeline-wipe" hidden></i></div>
+      <div class="pipeline-picture"><canvas id="pipeline-canvas" width="600" height="400" role="button" tabindex="0" aria-label="Choose a sample in the pipeline image. Click a spot or use arrow keys; Enter centers the sample."></canvas><i id="pipeline-region" aria-hidden="true"></i><canvas id="pipeline-crop" width="128" height="128" role="img" aria-label="Enlarged selected sample of the processing stage"></canvas><span class="pipeline-crop-label" aria-hidden="true">16 × 16 samples</span><i id="pipeline-wipe" hidden></i></div>
+      <div class="pipeline-sample-tools"><span>Tap the image to move the enlarged sample. Arrow keys move it; Enter centers it.</span><button type="button" class="btn" id="pipeline-center">Center sample</button></div>
       <label class="lesson-control" for="pipeline-progress">Processing journey<input id="pipeline-progress" type="range" min="0" max="1000" value="0"></label>
-      <p id="pipeline-description" role="status"></p><p class="lesson-note">Full frame + enlarged center sample. Intermediate stages are shown as stored, without display encoding; they can look dark. Each sample represents a block of sensor pixels.</p>
+      <p class="pipeline-look"><b>Look for</b><span id="pipeline-look-for"></span></p><p id="pipeline-description" role="status"></p><p class="lesson-note">Synthetic shot · actual model buffers. Intermediate stages are shown as stored, without display encoding; they can look dark. Each sample represents a block of sensor pixels.</p>
     </div><p id="lesson-shot" class="lesson-note" role="status"></p>`;
   el('view').append(lesson);
   const shortcuts = document.createElement('div'); shortcuts.className = 'lesson-shortcuts';
@@ -57,6 +59,7 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   let animation = 0, animating = false, animationTime = 0, lastFrame = 0;
   const pipelineCache = new Map<string, HTMLCanvasElement>();
   let cachedRenderId = -1;
+  let sampleX=.5,sampleY=.5;
   const duration = () => mode === 'readout' ? 8000 : 15000;
   function pauseLesson() {
     animating = false; cancelAnimationFrame(animation);
@@ -79,9 +82,11 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     const stage = el<HTMLSelectElement>('pipeline-stage').value as PipelineStage;
     const desc = PIPELINE.find(([id]) => id === stage)!;
     if (el('pipeline-description').textContent !== desc[2]) el('pipeline-description').textContent = desc[2];
+    el('pipeline-look-for').textContent=PIPELINE_GUIDE[stage];
     for (const button of el('pipeline-route').querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.stage === stage));
     const canvas = el<HTMLCanvasElement>('pipeline-canvas'), crop = el<HTMLCanvasElement>('pipeline-crop');
     const ctx = canvas.getContext('2d')!, cctx = crop.getContext('2d')!;
+    el('pipeline-region').hidden = !view;
     if (!view) { ctx.clearRect(0, 0, canvas.width, canvas.height); cctx.clearRect(0, 0, 128, 128); return; }
     canvas.width = view.width; canvas.height = view.height;
     if (cachedRenderId !== view.renderId) { pipelineCache.clear(); cachedRenderId = view.renderId; }
@@ -101,8 +106,13 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el('pipeline-wipe').hidden = reveal >= 1;
     el('pipeline-wipe').style.left = `${reveal * 100}%`;
     cctx.imageSmoothingEnabled = false;
-    cctx.drawImage(canvas, Math.floor(view.width / 2) - 8, Math.floor(view.height / 2) - 8, 16, 16, 0, 0, 128, 128);
-    canvas.setAttribute('aria-label', `Your shot: ${desc[1]}`);
+    const sample=pipelineSample(view.width,view.height,sampleX,sampleY);
+    cctx.drawImage(canvas,sample.x,sample.y,sample.width,sample.height,0,0,128,128);
+    const marker=el('pipeline-region');
+    marker.style.left=`${100*sample.x/view.width}%`;marker.style.top=`${100*sample.y/view.height}%`;
+    marker.style.width=`${100*sample.width/view.width}%`;marker.style.height=`${100*sample.height/view.height}%`;
+    el('pipeline-crop').setAttribute('aria-label',`${desc[1]}: enlarged ${sample.width} by ${sample.height} sample at column ${sample.x+1}, row ${sample.y+1}`);
+    canvas.setAttribute('aria-label', `Your shot: ${desc[1]}. Click a spot or use arrow keys to move the enlarged sample. Enter centers it.`);
   }
   function paintReadout() {
     const model = lessonModel, sc = model.scenario;
@@ -243,6 +253,19 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   }
   el('pipeline-stage').onchange = () => pickStage(el<HTMLSelectElement>('pipeline-stage').value as PipelineStage);
   for (const button of el('pipeline-route').querySelectorAll('button')) button.onclick = () => pickStage(button.dataset.stage as PipelineStage);
+  el('pipeline-canvas').onclick=event=>{
+    const box=el('pipeline-canvas').getBoundingClientRect();
+    sampleX=(event.clientX-box.left)/box.width;sampleY=(event.clientY-box.top)/box.height;
+    pause();pauseLesson();paintAnimation();
+  };
+  el('pipeline-canvas').onkeydown=event=>{
+    const view=rendered();if(!view||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter',' '].includes(event.key))return;
+    event.preventDefault();event.stopPropagation();
+    if(event.key==='Enter'||event.key===' '){sampleX=.5;sampleY=.5;}
+    else {sampleX=Math.max(0,Math.min(1,sampleX+(event.key==='ArrowLeft'?-4:event.key==='ArrowRight'?4:0)/view.width));sampleY=Math.max(0,Math.min(1,sampleY+(event.key==='ArrowUp'?-4:event.key==='ArrowDown'?4:0)/view.height));}
+    pause();pauseLesson();paintAnimation();
+  };
+  el('pipeline-center').onclick=()=>{sampleX=.5;sampleY=.5;pause();pauseLesson();paintAnimation();};
   for (const id of ['scan-progress', 'charge-level']) el(id).oninput = () => { pause(); pauseLesson(); paintReadout(); };
   el('pipeline-progress').oninput = () => { pause(); pauseLesson(); animationTime = Number(el<HTMLInputElement>('pipeline-progress').value) * 15; paintAnimation(); };
   el('lesson-play').onclick = () => {
@@ -273,3 +296,4 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   if (startTour) begin();
   else if (startLesson === 'readout' || startLesson === 'pipeline') openLesson(startLesson);
 }
+
