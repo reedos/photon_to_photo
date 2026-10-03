@@ -42,6 +42,18 @@ recipe explanation. Restore my shot restores all starting settings. Pins intenti
 
 ## Release checks
 
+The real-photo comparison is deferred until its panel intersects the viewport. A separate worker computes both
+its synthetic image and physics figures, so it cannot block camera startup, supersede the live shot, or evict the
+live worker's loupe pixels. Selection changes, leaving the panel, hiding the document, and page navigation cancel
+unfinished work. Three completed predictions are cached; failures expose a retry control. Full example photos
+are also deferred until the panel is visible.
+
+`tools/test-examples.mjs` checks deferred startup, main-thread responsiveness, selection cancellation, caching,
+worker-failure recovery, live-shot isolation, and desktop/phone layout. Set `P2P_BASELINE_URL` to an earlier build
+to verify exact prediction pixel hashes and physics figures before publishing. Startup profiling found the old
+offscreen first example blocked the main thread for about 6.6 seconds; deferring it removes that work from startup
+without changing the optical model, image resolution, or materials.
+
 The physics and animation pass adds expandable notes at all eight tour stops: photon energy, Snell refraction,
 aperture/working f-number and diffraction, focus/CoC, QE and shot noise, row timing/ADC, color processing, and
 motion blur. Live quantities come from the current model. Examples cover portraits, landscapes, birds, indoor
