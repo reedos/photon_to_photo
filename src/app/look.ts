@@ -399,8 +399,24 @@ export function applySurfaceFinish(mat: THREE.Material, k = 1): void {
  *  pentaprism read as dark optical glass, not holes (the export's full-transmission glass renders black here). */
 let SILICON: THREE.MeshPhysicalMaterial | null = null;
 let DARK_GLASS: THREE.MeshPhysicalMaterial | null = null;
+const STUDIO_COVER_GLASS = new WeakMap<THREE.Material, THREE.MeshPhysicalMaterial>();
 export function studioReplacement(mat: THREE.Material): THREE.Material | null {
   const n = mat.name ?? '';
+  if ((n === 'filterGlass' || n === 'evfGlass') && mat instanceof THREE.MeshPhysicalMaterial) {
+    let glass = STUDIO_COVER_GLASS.get(mat);
+    if (!glass) {
+      // Like the lens glass, these thin covers use alpha in the studio view. Three's transmission
+      // framebuffer sampler can retain a destroyed texture after the camera viewport changes size.
+      // Keep the authored coating/roughness; the ray engine owns optical transmission separately.
+      glass = mat.clone();
+      glass.transmission = 0;
+      glass.transparent = true;
+      glass.opacity = n === 'filterGlass' ? 0.22 : 0.42;
+      glass.depthWrite = false;
+      STUDIO_COVER_GLASS.set(mat, glass);
+    }
+    return glass;
+  }
   if (n === 'PixelArray') {
     SILICON ??= new THREE.MeshPhysicalMaterial({ name: 'PixelArray', color: 0x1f2233, roughness: 0.22, metalness: 0.55,
       iridescence: 1, iridescenceIOR: 1.8, iridescenceThicknessRange: [260, 640], envMapIntensity: 1.6, side: THREE.DoubleSide });

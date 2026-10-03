@@ -5,8 +5,7 @@
 //     (data/hardware/dslr.json timing.shutterLag, reported); no maker publishes the mirror's own share, so the
 //     mirror is drawn moving inside that measured window and the caption says so;
 //   - curtain travel: 4 ms (data/hardware/body.json shutter.curtainTravelMs, derived from the 1/250 s sync);
-//   - electronic readout: 3.6 ms full frame for the Z8 (data/z8.json sensor.readout.electronicFullFrameMs, reported,
-//     low confidence);
+//   - electronic readout: the selected sensor's model.sensor.readoutS (including the D850's silent live-view mode);
 //   - photons: model.exposure.photonsMidGray per pixel for an 18 % gray scene, times the pixel count for the sensor.
 // Each time scale is badged. The photons' flight is drawn at one fixed visual speed: light crosses the camera in about
 // half a nanosecond, which no slow-motion factor that also shows the shutter could make visible, and the badge says so.
@@ -14,17 +13,17 @@ import * as THREE from 'three/webgpu';
 import type { Model } from '../engine/model-types';
 import type { ScaleBadge } from '../pieces/types';
 import type { Scenario } from '../engine/types';
-import { fmtFno, fmtPow10, fmtRange, fmtSci, fmtShutter as fmtShutterS } from '../app/units';
+import { fmtDistance, fmtFno, fmtPow10, fmtRange, fmtSci, fmtShutter as fmtShutterS } from '../app/units';
+import { FOCUS_STEPS, focusStepFromMm, focusStepValue } from '../app/focus-control';
+import { apertureSteps } from '../app/stops';
 import { equalExposureStep } from '../app/exposure-eq';
 import { badgeJoin } from '../pieces/phone-frame';
 import { motionOf } from '../app/motion';
 import dslrHw from '../../data/hardware/dslr.json';
 import bodyHw from '../../data/hardware/body.json';
-import z8 from '../../data/z8.json';
 
 const RELEASE_LAG_MS = (dslrHw as any).timing.shutterLag.v as number;                    // 76, reported
 const CURTAIN_MS = (bodyHw as any).shutter.curtainTravelMs.v as number;                   // 4, derived
-const READOUT_MS = (z8 as any).sensor.readout.electronicFullFrameMs.v as number;          // 3.6, reported (low confidence)
 const FLIGHT_MS = 420;            // visual flight time of a drawn photon, front of the scene to the sensor
 const TARGET_EXPOSURE_MS = 2600;  // the exposure segment plays in about this long, at a 1-2-5 factor
 const TARGET_RELEASE_MS = 900;
@@ -69,7 +68,12 @@ export function createExposure(d: ExposureDeps) {
   hud.className = 'rig-exposure';
   hud.setAttribute('data-fired', 'false');
   hud.innerHTML = `
-    <div class="rx-head"><span class="rx-k">Exposure</span><button type="button" class="btn rx-fire" title="Fire the shutter (F)">Play exposure <kbd>F</kbd></button></div>
+    <div class="rx-head">
+      <button type="button" class="btn rx-fire" title="Fire the shutter (F)">Fire shutter <kbd>F</kbd></button>
+      <label class="rx-control"><span>Drag to focus <output class="rx-focus-value"></output></span><input class="rx-focus" type="range" min="0" max="${FOCUS_STEPS - 1}" step="1" aria-label="Focus distance"></label>
+      <label class="rx-control"><span>Adjust aperture <output class="rx-aperture-value"></output></span><input class="rx-aperture" type="range" min="0" step="1" aria-label="Aperture"></label>
+    </div>
+    <span class="rx-k">Exposure</span>
     <div class="rx-row rx-pprow"><span>Photons per pixel <small>18% gray</small></span><b class="rx-pp">0</b></div>
     <div class="rx-row rx-total"><span>Whole sensor</span><b class="rx-all">0</b></div>
     <div class="rx-well"><i></i></div>
@@ -94,6 +98,16 @@ export function createExposure(d: ExposureDeps) {
   d.overlay.appendChild(hud);
   const q = (s: string) => hud.querySelector(s) as HTMLElement;
   q('.rx-fire').addEventListener('click', () => fire());
+  q('.rx-focus').addEventListener('input', (event) => {
+    const m = d.model(); if (!m || !enabled) return;
+    const distance = focusStepValue(m.lens.closestFocusMm, m.lens.focalLength, Number((event.target as HTMLInputElement).value));
+    d.set?.({ focusM: distance === null ? null : distance / 1000 });
+  });
+  q('.rx-aperture').addEventListener('input', (event) => {
+    const m = d.model(); if (!m || !enabled) return;
+    const steps = apertureSteps(m.lens.maxFno);
+    d.set?.({ fno: steps[Number((event.target as HTMLInputElement).value)] ?? steps[0] });
+  });
   q('.rx-eq-open').addEventListener('click', () => equalStep(-1));
   q('.rx-eq-close').addEventListener('click', () => equalStep(1));
   q('.rx-pause').addEventListener('click', () => { if (paused || !running) resume(); else pause(); });
@@ -201,6 +215,7 @@ export function createExposure(d: ExposureDeps) {
   let mirrorUp = 0;             // radians the hinge turns to lift the mirror (sign found from the model's geometry)
   const base = new Map<string, THREE.Vector3>();
   let scan: THREE.Mesh | null = null;
+  let readScan: THREE.Mesh | null = null;
 
   function rigMechanism() {
     const mirror = d.node('mirror');
@@ -228,14 +243,19 @@ export function createExposure(d: ExposureDeps) {
       if (o && !base.has(n)) base.set(n, o.position.clone());
     }
     const px = d.node('pixelArray');
-    if (px && !scan && d.body() === 'mirrorless') {
+    if (px && !scan) {
       const b = new THREE.Box3().setFromObject(px);
       scan = new THREE.Mesh(new THREE.PlaneGeometry(b.max.x - b.min.x, 0.5),
         new THREE.MeshBasicMaterial({ color: 0xe6ba82, transparent: true, opacity: 0.9, toneMapped: false, depthWrite: false }));
-      scan.position.set(0, b.max.y, 0.4);
+      scan.position.set((b.min.x + b.max.x) / 2, b.max.y, b.max.z + 0.4);
       scan.visible = false;
       scan.name = 'readout-line';
       d.group.add(scan);
+      readScan = scan.clone();
+      readScan.material = (scan.material as THREE.MeshBasicMaterial).clone();
+      (readScan.material as THREE.MeshBasicMaterial).color.set(0x67ded1);
+      readScan.name = 'charge-read-line';
+      d.group.add(readScan);
     }
   }
   function sampleTopZ(o: THREE.Object3D): number {
@@ -295,11 +315,13 @@ export function createExposure(d: ExposureDeps) {
     (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true);
   const totalVisualMs = () => segs.reduce((sum, seg) => sum + seg.realMs * seg.factor, 0);
   const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+  const mechanical = (m: Model, body = shotBody) => body === 'dslr' && m.scenario.shutterType !== 'electronic';
+  const traverseMs = (m: Model) => mechanical(m) ? CURTAIN_MS : m.sensor.readoutS * 1000;
 
   function plan(m: Model): Seg[] {
-    const dslr = shotBody === 'dslr';
+    const dslr = mechanical(m);
     const shutterMs = m.scenario.shutter * 1000;
-    const expReal = shutterMs + (dslr ? CURTAIN_MS : READOUT_MS);
+    const expReal = shutterMs + traverseMs(m);
     const s: Seg[] = [];
     if (dslr) s.push({ name: 'release', realMs: RELEASE_LAG_MS, factor: niceFloor(TARGET_RELEASE_MS / RELEASE_LAG_MS) });
     s.push({ name: 'exposure', realMs: expReal, factor: niceFloor(TARGET_EXPOSURE_MS / expReal) });
@@ -325,6 +347,7 @@ export function createExposure(d: ExposureDeps) {
     if (pivot) pivot.rotation.x = heldUp ? mirrorUp : 0;
     if (base.size) curtainPose(0, 0);
     if (scan) scan.visible = false;
+    if (readScan) readScan.visible = false;
     setMirror(heldUp);
   }
 
@@ -341,10 +364,10 @@ export function createExposure(d: ExposureDeps) {
     const fireButton = q('.rx-fire') as HTMLButtonElement;
     fireButton.disabled = !enabled || (running && !paused);
     fireButton.setAttribute('data-armed', String(running && !paused));
-    const fireLabel = hasShot ? 'Replay' : 'Play exposure';
+    const fireLabel = 'Fire shutter';
     const fireHtml = fireLabel + ' <kbd>F</kbd>';
     if (fireButton.innerHTML !== fireHtml) fireButton.innerHTML = fireHtml;
-    fireButton.title = hasShot ? 'Replay the exposure (F)' : 'Play the exposure (F)';
+    fireButton.title = hasShot ? 'Fire again to replay the exposure (F)' : 'Fire the shutter (F)';
     const pauseButton = q('.rx-pause') as HTMLButtonElement;
     pauseButton.hidden = !running;
     pauseButton.disabled = !enabled || !hasShot;
@@ -461,7 +484,7 @@ export function createExposure(d: ExposureDeps) {
       const exposureSeg = segs.find((seg) => seg.name === 'exposure')!;
       const release = segs.find((seg) => seg.name === 'release');
       const openStart = (release ? release.realMs * release.factor : 0) +
-        (shotBody === 'dslr' ? CURTAIN_MS : READOUT_MS) / 2 * exposureSeg.factor;
+        traverseMs(shotModel) / 2 * exposureSeg.factor;
       const openDuration = shotModel.scenario.shutter * 1000 * exposureSeg.factor;
       // Emission ordinal -> exact birth time. Reconstruct only dots still in flight, independent of tick
       // size/history. Backwards seeking restores the same wavelengths, positions and count without re-sampling.
@@ -495,8 +518,9 @@ export function createExposure(d: ExposureDeps) {
     const m = shotModel;
     if (!m) return;
     const position = segmentAt(elapsedVis);
-    const dslr = shotBody === 'dslr';
+    const dslr = mechanical(m);
     if (scan) scan.visible = false;
+    if (readScan) readScan.visible = false;
     if (!position) {
       shownFraction = 1;
       restoreMechanism();
@@ -519,12 +543,19 @@ export function createExposure(d: ExposureDeps) {
         if (dslr) {
           curtainPose(Math.min(1, local / CURTAIN_MS), clamp01((local - shutterMs) / CURTAIN_MS));
         } else if (scan) {
+          // Electronic DSLR playback begins in live view: mirror already raised, curtains held clear.
+          // Reset and read fronts overlap when the per-row shutter interval is shorter than the scan.
+          curtainPose(1, 0);
           const px = new THREE.Box3().setFromObject(d.node('pixelArray')!);
-          const phase = local < READOUT_MS ? local / READOUT_MS : local >= shutterMs ? Math.min(1, (local - shutterMs) / READOUT_MS) : -1;
-          scan.visible = phase >= 0 && phase <= 1;
-          scan.position.y = px.max.y - phase * (px.max.y - px.min.y);
+          const travel = traverseMs(m);
+          for (const [line, elapsed] of [[scan, local], [readScan, local - shutterMs]] as const) {
+            if (!line) continue;
+            const phase = travel > 0 ? elapsed / travel : elapsed === 0 ? 0 : -1;
+            line.visible = phase >= 0 && phase <= 1;
+            line.position.y = px.max.y - clamp01(phase) * (px.max.y - px.min.y);
+          }
         }
-        const open0 = (dslr ? CURTAIN_MS : READOUT_MS) / 2;
+        const open0 = traverseMs(m) / 2;
         shownFraction = clamp01((local - open0) / shutterMs);
       } else {
         shownFraction = 1;
@@ -556,6 +587,20 @@ export function createExposure(d: ExposureDeps) {
 
   function readout(m: Model) {
     renderEq(m);
+    const focus = q('.rx-focus') as HTMLInputElement;
+    focus.value = String(focusStepFromMm(m.lens.closestFocusMm, m.lens.focalLength, m.scenario.focusM === null ? null : m.scenario.focusM * 1000));
+    const aperture = q('.rx-aperture') as HTMLInputElement;
+    const stops = apertureSteps(m.lens.maxFno);
+    aperture.max = String(stops.length - 1);
+    aperture.value = String(stops.reduce((best, value, i) => Math.abs(value - m.scenario.fno) < Math.abs(stops[best] - m.scenario.fno) ? i : best, 0));
+    const focusText = fmtDistance(m.focus.distanceMm), apertureText = fmtFno(m.scenario.fno);
+    q('.rx-focus-value').textContent = focusText;
+    q('.rx-aperture-value').textContent = apertureText;
+    focus.setAttribute('aria-valuetext', focusText); aperture.setAttribute('aria-valuetext', apertureText);
+    for (const input of [focus, aperture]) {
+      input.disabled = !enabled || !d.set;
+      input.style.setProperty('--pct', `${Number(input.value) / Math.max(1, Number(input.max)) * 100}%`);
+    }
     const f = shownFraction;
     const pp = m.exposure.photonsMidGray * f;
     q('.rx-k').textContent = `Exposure · ${fmtShutter(m.scenario.shutter)}`;
@@ -582,7 +627,8 @@ export function createExposure(d: ExposureDeps) {
     // shown only while the shot plays (R1-08); the dots' own speed is disclosed here (Astra-6 C4)
     const cap = q('.rx-cap');
     cap.hidden = !running;
-    const text = (d.body() === 'dslr' ? 'Playback reveals the mirror and the curtains.' : 'Playback reveals the rows resetting and reading out.')
+    const text = (mechanical(m, d.body()) ? 'Playback reveals the mirror and the curtains.'
+      : `${d.body() === 'dslr' ? 'Electronic live view: mirror raised, curtains held clear. ' : ''}Gold marks row reset; cyan marks readout. Full-frame scan ${(m.sensor.readoutS * 1000).toFixed(1)} ms.`)
       + ' Real light crosses the camera in under a nanosecond, so the dots fly at a much slower visual speed you can follow.';
     if (cap.textContent !== text) cap.textContent = text;
   }
@@ -608,7 +654,8 @@ export function createExposure(d: ExposureDeps) {
       pivot.removeFromParent(); pivot = null;
     }
     base.clear();
-    if (scan) { scan.removeFromParent(); scan = null; }
+    if (readScan) { readScan.removeFromParent(); (readScan.material as THREE.Material).dispose(); readScan = null; }
+    if (scan) { scan.removeFromParent(); scan.geometry.dispose(); (scan.material as THREE.Material).dispose(); scan = null; }
   }
 
   return {

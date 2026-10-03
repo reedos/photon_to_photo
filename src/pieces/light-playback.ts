@@ -12,6 +12,11 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
   const mesh = new LineSegments2(geometry, material);
   mesh.name = 'animated-traced-light'; mesh.frustumCulled = false; mesh.renderOrder = 12; mesh.layers.set(layer); mesh.visible = false;
   owner.add(mesh);
+  // A wider, dimmer copy gives moving light the same layered glow as the shot player.
+  // Both draws share the exact traced geometry and wavelength colors.
+  const haloMaterial = new THREE.Line2NodeMaterial({ vertexColors:true, linewidth:12, transparent:true, opacity:.16, depthTest:false, depthWrite:false, toneMapped:false });
+  const halo = new LineSegments2(geometry,haloMaterial);
+  halo.name='animated-traced-light-halo';halo.frustumCulled=false;halo.renderOrder=11;halo.layers.set(layer);halo.visible=false;owner.add(halo);
   const bar = document.createElement('div'); bar.className = 'light-playback'; bar.hidden = true;
   bar.innerHTML = `<button class="btn" type="button">Animate light</button><label>${label}<input type="range" min="0" max="1000" value="0" aria-label="Light travel progress"></label><span>Traced paths · illustrative timing</span>`;
   document.getElementById('studio-exposure')!.before(bar);
@@ -26,7 +31,7 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
         p.push(...a, ...b); c.push(color.r, color.g, color.b, color.r, color.g, color.b);
       }
     }
-    mesh.visible = p.length > 0;
+    mesh.visible = halo.visible = p.length > 0;
     if (p.length) {
       const position = geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute;
       const color = geometry.getAttribute('instanceColorStart') as THREE.InterleavedBufferAttribute;
@@ -58,11 +63,11 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
     },
     tick(dt: number) {
       if (!playing || document.hidden || ctx.renderer.domElement.inert || document.querySelector('dialog[open]')) { if (playing) pause(); return; }
-      elapsed = Math.min(duration, elapsed + Math.min(dt, 100)); paint(); if (elapsed === duration) pause();
+      elapsed = Math.min(duration, elapsed + Math.max(0,Math.min(dt, 100))); paint(); if (elapsed === duration) pause();
     },
     activate() { bar.hidden = false; },
     deactivate() { pause(); bar.hidden = true; },
     state: () => ({ playing, progress: elapsed / duration, paths: paths.length }),
-    dispose() { off(); document.removeEventListener('visibilitychange', onHidden); bar.remove(); geometry.dispose(); material.dispose(); },
+    dispose() { off(); document.removeEventListener('visibilitychange', onHidden); bar.remove(); geometry.dispose(); material.dispose(); haloMaterial.dispose(); },
   };
 }

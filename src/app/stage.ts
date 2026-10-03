@@ -259,6 +259,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (reducedMotion()) {
       camera.position.copy(to.position);
       controls.target.copy(to.target);
+      controls.update();
+      camera.updateMatrixWorld(true);
       diveTo = null;
       return;
     }
@@ -286,17 +288,22 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     return tier === 'phone' ? 1.5 : tier === 'mid' ? 2 : Math.min(2.5, window.devicePixelRatio || 1);
   }
   let forceMeasure = true;   // set on resize: the insets and the lens shift are measured again on the next frame
+  let renderWidth = 0, renderHeight = 0, renderRatio = 0;
+  let sizeDirty = true;
   function applySize() {
     const w = dom.view.clientWidth || 1;
     const h = dom.view.clientHeight || 1;
+    const ratio = Math.min(window.devicePixelRatio || 1, pixelRatioCap());
+    sizeDirty = false;
+    if (renderWidth === w && renderHeight === h && renderRatio === ratio) return;
+    renderWidth = w; renderHeight = h; renderRatio = ratio;
     camera.aspect = w / h;
     resizeFrame = true;
     forceMeasure = true;
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap()));
-    renderer.setSize(w, h, false);
+    renderer.setDrawingBufferSize(w, h, ratio);
   }
-  const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => applySize()) : null;
+  const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => { sizeDirty = true; }) : null;
   resizeObserver?.observe(dom.view);
   applySize();
 
@@ -317,27 +324,23 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
   // A piece fetching its models veils the view with its progress and holds its pins back, so nothing piles up at the
   // origin before there is a model to pin (UI-21).
-  const loadingPieces = new Map<string, { progress?: number; label?: string }>();
+  const loadingPieces = new Map<string, { progress?: number; label?: string; error?: string }>();
   const veilMsg = document.getElementById('veil-msg');
   const veilBar = document.getElementById('veil-bar');
-  bus.on('piece-loading', (e) => {
+  const stopLoading = bus.on('piece-loading', (e) => {
     if (e.error) {
-      dom.veil.classList.remove('off');
-      dom.veil.classList.add('err');
-      if (veilMsg) veilMsg.textContent = e.error;
-      loadingPieces.set(e.id, { label: e.error });
-      return;
-    }
-    if (e.loading) loadingPieces.set(e.id, { progress: e.progress, label: e.label });
+      loadingPieces.set(e.id, { error: e.error });
+    } else if (e.loading) loadingPieces.set(e.id, { progress: e.progress, label: e.label });
     else loadingPieces.delete(e.id);
     syncVeil();
   });
   function syncVeil() {
     const l = activeId ? loadingPieces.get(activeId) : undefined;
     dom.pins.classList.toggle('held', !!l);
+    dom.veil.classList.toggle('err', !!l?.error);
+    dom.veil.classList.toggle('off', !l);
     if (l) {
-      dom.veil.classList.remove('off');
-      if (veilMsg && l.label) veilMsg.textContent = l.label;
+      if (veilMsg) veilMsg.textContent = l.error ?? l.label ?? 'Loading the view';
       if (veilBar) veilBar.style.width = `${Math.round((l.progress ?? 0.05) * 100)}%`;
     }
   }
@@ -352,7 +355,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (slowFrames > 90 && tier !== 'phone') {
       tier = tier === 'high' ? 'mid' : 'phone';
       slowFrames = 0;
-      applySize();
+      sizeDirty = true;
     }
   }
 
@@ -363,9 +366,16 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
   /** The actual draw work, shared by the paused-off-screen ambient loop and settle()'s forced frame. */
   function drawFrame(now: number) {
+    // A forced frame can run before ResizeObserver delivers a layout change. Keep the
+    // drawing buffer in sync before computing inset rectangles from the new CSS size.
     const dt = now - lastFrameTime;
     lastFrameTime = now;
     governQuality(dt);
+    if (sizeDirty || renderWidth !== (dom.view.clientWidth || 1) || renderHeight !== (dom.view.clientHeight || 1)) applySize();
+    // Fit the camera and project the pins with the same current chrome measurements.
+    // Measuring after rendering leaves a frame with mismatched picture/pin projections.
+    const remeasured = forceMeasure || now - lastMeasure >= 280;
+    measure(now);
     tickDive(now);
     controls.update();
     const active = activeId ? built.get(activeId) : null;
@@ -374,6 +384,12 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       if (active?.selectionFrame && !manuallyMoved) startDive(selectedFrame(active, active.frame()));
     }
     active?.tick?.(dt, now);
+    // Insets share renderer state, including its intermediate output passes. Restore the
+    // whole viewport and scissor rectangle before drawing the next main view.
+    const viewWidth = dom.view.clientWidth || 1, viewHeight = dom.view.clientHeight || 1;
+    renderer.setScissorTest(false);
+    renderer.setScissor(0, 0, viewWidth, viewHeight);
+    renderer.setViewport(0, 0, viewWidth, viewHeight);
     renderer.render(scene, camera);
     const insets = active?.insets?.() ?? [];
     if (insets.length) {
@@ -400,11 +416,12 @@ export async function createStage(dom: StageDom): Promise<Stage> {
         renderer.render(inset.scene ?? scene, inset.camera);
       }
       r.setScissorTest(false);
+      r.setScissor(0, 0, w, h);
       r.setViewport(0, 0, w, h);
       r.autoClear = autoClear;
     }
     syncInsetFrames(insets);
-    projectLabelsAndPins(now);
+    projectLabelsAndPins(remeasured);
     if (!(activeId && loadingPieces.has(activeId))) dom.veil.classList.add('off');
     const resolvers = settleResolvers;
     settleResolvers = [];
@@ -413,13 +430,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
   function frame(now: number) {
     if (!running) return;
-    requestAnimationFrame(frame);
-    // Off-screen pause (design/LOOK.md-adjacent perf rule, docs/PROTOTYPE.md's "pause when the view is off
-    // screen") applies only to this ambient loop. settle() below forces its own frame regardless of `visible`:
-    // a caller that explicitly asks "is my update on screen yet" is not asking the idle loop's question, and
-    // gating it the same way made p2p.settle() hang forever whenever the stage started below the fold (e.g. a
-    // screenshot tool that never scrolls) -- found running tools/shot.mjs against this same page.
-    if (!visible) return;
+    // Explicit settle requests still draw off-screen. Share this one RAF with the ambient
+    // loop: parallel forced frames can resize/reuse WebGPU targets twice in one frame.
+    if (!visible && !settleResolvers.length) return;
     drawFrame(now);
   }
 
@@ -427,7 +440,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (running) return;
     running = true;
     lastFrameTime = performance.now();
-    requestAnimationFrame(frame);
+    // Three advances node/material frame caches immediately before this callback.
+    // A separate browser RAF can otherwise render new-size targets with old bindings.
+    void renderer.setAnimationLoop(frame);
   }
 
   // ---- view insets: the fitted camera centers the model in the part of the view the chrome leaves free ---------------
@@ -503,10 +518,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   // ---- pins: projected every frame, then laid out so no two labels and no label and the chrome overlap (UI-02) -------
   const labelSize = new Map<string, { w: number; h: number }>();
   const overlaps = (a: Rect, b: Rect) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
-  function projectLabelsAndPins(now = performance.now()) {
+  function projectLabelsAndPins(remeasured: boolean) {
     camera.updateMatrixWorld(true); // required before any project() call -- rendering spike gotcha 3
-    const remeasured = forceMeasure || now - lastMeasure >= 280;
-    measure(now);
     const w = dom.view.clientWidth || 1;
     const h = dom.view.clientHeight || 1;
     for (const el of labelEls.values()) {
@@ -699,6 +712,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
     resetView() {
       if (!activeId) return;
+      forceMeasure = true;
+      measure(performance.now());
       const handle = built.get(activeId);
       if (handle) {
         if (selectedPin && !handle.selectionFrame) handle.select?.(selectedPin);
@@ -709,10 +724,15 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
     selectPin(id) {
       selectedPin = id;
+      forceMeasure = true;
+      measure(performance.now());
       const handle = activeId ? built.get(activeId) : undefined;
       handle?.select?.(id);
       if (handle?.selectionFrame) startDive(selectedFrame(handle, handle.frame()));
       for (const [pid, el] of pinEls) el.classList.toggle('on', pid === id);
+      // Selection also opens/closes the part card later in this event. Measure that
+      // resulting layout on the next draw instead of waiting for the idle throttle.
+      forceMeasure = true;
     },
 
     backend() { return backendKind; },
@@ -726,10 +746,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     },
 
     settle() {
-      start(); // keeps the ambient loop running too, so it doesn't stop right after this forced frame
       return new Promise<void>((resolve) => {
         settleResolvers.push(resolve);
-        requestAnimationFrame(drawFrame); // forced, unconditional on `visible` -- see frame()'s comment above
+        start();
       });
     },
 
@@ -756,6 +775,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
     dispose() {
       running = false;
+      void renderer.setAnimationLoop(null);
+      stopLoading();
       window.removeEventListener('scroll', checkVisible);
       window.removeEventListener('resize', checkVisible);
       resizeObserver?.disconnect();

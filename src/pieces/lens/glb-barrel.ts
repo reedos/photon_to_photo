@@ -42,7 +42,10 @@ function loadRaw(lensId: string): Promise<THREE.Group> {
   const path = `./${fact.glb.replace(/^public\//, '')}`;
   let p = cache.get(path);
   if (!p) {
-    p = getLoader().loadAsync(new URL(path, location.href).href).then((g) => g.scene as unknown as THREE.Group);
+    p = getLoader().loadAsync(new URL(path, location.href).href).then((g) => g.scene as unknown as THREE.Group).catch(error => {
+      cache.delete(path);
+      throw error;
+    });
     cache.set(path, p);
   }
   return p;

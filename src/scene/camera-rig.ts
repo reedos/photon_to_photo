@@ -197,7 +197,7 @@ export const build: BuildPiece = (ctx) => {
         const details = document.createElement('details');
         details.className = 'exposure-details';
         details.innerHTML = '<summary>Exposure details & equal exposure</summary>';
-        for (const node of exposure.el.querySelectorAll('.rx-pprow, .rx-total, .rx-well, .rx-sub, .rx-motion, .rx-tl, .rx-eq, .rx-cap, .rx-time')) details.append(node);
+        for (const node of exposure.el.querySelectorAll('.rx-k, .rx-pprow, .rx-total, .rx-well, .rx-sub, .rx-motion, .rx-tl, .rx-eq, .rx-cap, .rx-time')) details.append(node);
         exposure.el.append(details);
       }
     }
@@ -254,7 +254,10 @@ export const build: BuildPiece = (ctx) => {
       progress.set(path, 0);
       p = loader.loadAsync(new URL(path, location.href).href, (e: ProgressEvent) => {
         if (e.lengthComputable && e.total > 0) { progress.set(path, e.loaded / e.total); reportProgress(); }
-      }).then((g) => { progress.set(path, 1); return prepare(g.scene); });
+      }).then((g) => { progress.set(path, 1); return prepare(g.scene); }).catch((error) => {
+        cache.delete(path);
+        throw error;
+      });
       cache.set(path, p);
     }
     return p;
@@ -366,12 +369,18 @@ export const build: BuildPiece = (ctx) => {
   }
 
   let inflight: Promise<void> = Promise.resolve();
+  let rigGeneration = 0;
   function ensureRig(lensId: string): Promise<void> {
     const body = bodyForLens(lensId);
     const key = `${body ?? 'dslr'}:${body ? lensId : 'none'}`;
     if (key === rigKey) return inflight;
     rigKey = key;
-    inflight = loadRig(lensId, key).catch((err) => {
+    const generation = ++rigGeneration;
+    exposure.setEnabled(false);
+    ctx.bus.emit('piece-loading', { id: 'camera', loading: true, label: 'Loading the camera' });
+    inflight = loadRig(lensId, generation).catch((err) => {
+      if (generation !== rigGeneration) return;
+      rigKey = '';
       console.error('camera-rig: the models did not load', err);
       // nothing to fire or trade under a failed view (R1-10)
       exposure.setEnabled(false);
@@ -379,12 +388,12 @@ export const build: BuildPiece = (ctx) => {
     });
     return inflight;
   }
-  async function loadRig(lensId: string, want: string) {
+  async function loadRig(lensId: string, generation: number) {
     const body = bodyForLens(lensId);
     const fact = body ? LENSES[lensId] : null;
     if (!everLoaded) reportProgress();
     const [b, l] = await Promise.all([load(`./models/${body ?? 'dslr'}.glb`), fact ? load(`./${fact.glb.replace(/^public\//, '')}`) : Promise.resolve(null)]);
-    if (rigKey !== want) return;                    // a later choice won
+    if (generation !== rigGeneration) return;      // a later choice won, including A → B → A
     unhighlight();
     exposure.reset();
     mirrorGeom = null;
@@ -406,13 +415,10 @@ export const build: BuildPiece = (ctx) => {
     anchorProbes();
     if (lastModel) applyModel(lastModel);
     placeGround();
-    // compile the new materials before the veil lifts, so WebGPU does not show an empty stage while it builds pipelines
-    try {
-      const r = ctx.renderer as unknown as { compileAsync?: (o: THREE.Object3D, c: THREE.Camera, s: THREE.Scene) => Promise<void> };
-      await r.compileAsync?.(group, ctx.camera, ctx.scene);
-    } catch { /* drawing compiles on demand anyway */ }
-    if (rigKey !== want) return;
-    if (!everLoaded) { everLoaded = true; ctx.bus.emit('piece-loading', { id: 'camera', loading: false }); }
+    // The stage renders/compiles on demand. A speculative compileAsync here races that shared
+    // renderer's frame-buffer target when a new body or inspection changes tone mapping or size.
+    everLoaded = true;
+    ctx.bus.emit('piece-loading', { id: 'camera', loading: false });
     // A shared part link or lens/body change may select a part before the GLB arrives.
     // Reapply it to the new meshes and frame that part, not the whole camera.
     if (detail) openDetail(detail);
@@ -681,9 +687,9 @@ export const build: BuildPiece = (ctx) => {
   }
 
   // the cards live in src/app/rig-cards.ts, where every number's evidence is tested (R1-07)
-  const cardState = () => ({ body: (state.body || 'dslr') as 'dslr' | 'mirrorless', ringAngle: state.ringAngle, elementShift: state.elementShift });
+  const cardState = (model: Model) => ({ body: bodyForLens(model.scenario.lens) ?? 'dslr', ringAngle: state.ringAngle, elementShift: state.elementShift });
   const probe = (id: PartId, parts: string[]): PieceProbe & { parts: string[] } =>
-    ({ id, label: partLabel(id, 'dslr'), anchor: new THREE.Vector3(), parts, card: (m: Model) => partCard(id, m, cardState()) });
+    ({ id, label: partLabel(id, 'dslr'), anchor: new THREE.Vector3(), parts, card: (m: Model) => partCard(id, m, cardState(m)) });
   const PROBES: (PieceProbe & { parts: string[] })[] = [
     probe('lens', ['barrel', 'barrelCut']),
     probe('focusRing', ['focusRing', 'distanceScale']),
@@ -842,7 +848,6 @@ export const build: BuildPiece = (ctx) => {
   const nearest = (arr: number[], v: number) => { let b = 0; for (let i = 1; i < arr.length; i++) if (Math.abs(arr[i] - v) < Math.abs(arr[b] - v)) b = i; return b; };
 
   function onDown(e: PointerEvent) {
-    teach.stop();
     const p = pick(e);
     if (!p || !lastModel) return;
     e.stopImmediatePropagation();
@@ -971,7 +976,7 @@ export const build: BuildPiece = (ctx) => {
       epRing.position.set(0, 0, model.cardinal.ep.z - imageZ);
       epRing.scale.set(r, r, 1);
       // the label sits just above the ring's top, clear of the line
-      ctx.labels.set('rig-ep', { world: new THREE.Vector3(0, r * 1.06, model.cardinal.ep.z - imageZ), text: `Entrance pupil ⌀ ${(2 * r).toFixed(1)} mm`, kind: 'hud' });
+      if (group.visible) ctx.labels.set('rig-ep', { world: new THREE.Vector3(0, r * 1.06, model.cardinal.ep.z - imageZ), text: `Entrance pupil ⌀ ${(2 * r).toFixed(1)} mm`, kind: 'hud' });
     } else ctx.labels.remove('rig-ep');
     bundleGroup.visible = raysOn && detail === 'focusRing';
     if (bundleGroup.visible) {
@@ -1083,7 +1088,7 @@ export const build: BuildPiece = (ctx) => {
     // the sensor, the shutter and the focus cone are seen with the mirror swung up out of the way
     if (!exposure.running()) exposure.liftMirror(id === 'sensor' || id === 'shutter' || id === 'focusRing' || id === 'glass');
     crumb.hidden = !p;
-    document.body.classList.toggle('rig-detail', !!p);
+    document.body.classList.toggle('rig-detail', !!p && group.visible);
     (crumb.querySelector('.rc-here') as HTMLElement).textContent = p?.label ?? '';
     linkTo = id === 'sensor' ? 'loupe' : id === 'focusRing' ? 'cone' : id === 'lens' || id === 'glass' ? 'lens' : null;
     linkBtn.hidden = !linkTo;
@@ -1105,28 +1110,21 @@ export const build: BuildPiece = (ctx) => {
     ctx.dive(f);
   }
 
-  // ---- first visit: mark the three controls on the model in place (UI-04) --------------------------------------------
-  // The focus ring, the front dial and the shutter button can be dragged or pressed, which nothing else teaches. On a
-  // reader's first visit each gets an amber ring and a label for a few seconds, or until the first press anywhere
-  // on the view. Remembered per browser; if storage is unavailable the marks simply show again next time.
-  const TEACH_KEY = 'p2p.camera.taught.v1';
+  // Persistent overview affordances, backed by the orientation-independent controls in the exposure strip.
+  // They pause for part inspections and exposure playback, then return without a hover or first-visit timer.
   const teach = (() => {
     const marks: { node: string; text: string; side: string; el: HTMLElement }[] = [];
-    let until = 0;
     let on = false;
-    const seen = () => { try { return localStorage.getItem(TEACH_KEY) === '1'; } catch { return false; } };
-    const remember = () => { try { localStorage.setItem(TEACH_KEY, '1'); } catch { /* private window: show again next time */ } };
+    let lastLayoutKey = '', lastLayoutAt = -Infinity;
     return {
       start() {
-        if (on || seen() || detail) return;
+        if (on || view !== 'outside' || detail || exposure.running() || !group.visible || !bodyRoot) return;
         on = true;
-        until = performance.now() + 5200;
-        // the pins step back while the marks show, so no tag lands on a pin (R1-09)
-        document.body.classList.add('rig-teaching');
+        lastLayoutKey = ''; lastLayoutAt = -Infinity;
         // each label leans its own way (the dial and the button sit close together on the grip; on a phone they
         // take opposite sides of it)
         const narrow = (ctx.overlay.clientWidth || 1000) < 560;
-        for (const [node, text, side] of [['focusRing', 'Drag · focus', 'down'], ['commandDialFront', 'Drag · aperture', 'left'], ['shutterButton', 'Press · fire', narrow ? 'right' : 'up']] as const) {
+        for (const [node, text, side] of [['focusRing', 'Drag to focus', 'down'], ['commandDialFront', 'Adjust aperture', 'left'], ['shutterButton', 'Fire shutter', narrow ? 'right' : 'up']] as const) {
           const el = document.createElement('div');
           el.className = `rig-teach ${side}`;
           el.innerHTML = `<i></i><b class="rig-teach-leader" aria-hidden="true"></b><span>${text}</span>`;
@@ -1137,18 +1135,36 @@ export const build: BuildPiece = (ctx) => {
       stop() {
         if (!on) return;
         on = false;
-        remember();
-        document.body.classList.remove('rig-teaching');
-        for (const m of marks) { const el = m.el; el.classList.add('gone'); window.setTimeout(() => el.remove(), 520); }
+        for (const m of marks) m.el.remove();
         marks.length = 0;
       },
       tick() {
+        // A cutaway removes physical controls; its persistent native strip remains the interaction target.
+        if (view !== 'outside') { this.stop(); return; }
+        if (!on) this.start();
         if (!on) return;
-        if (performance.now() > until) { this.stop(); return; }
         const w = ctx.overlay.clientWidth || 1, h = ctx.overlay.clientHeight || 1;
+        const now = performance.now();
+        const layoutKey = [w, h, state.lens, lastModel?.scenario.focusM, lastModel?.scenario.fno,
+          ...ctx.camera.position.toArray(), ...ctx.camera.quaternion.toArray(), ...ctx.camera.projectionMatrix.elements].join('|');
+        // Orbiting controls track immediately; an idle camera only rechecks late-arriving HUD layout
+        // four times a second instead of searching all phone label slots on every animation frame.
+        if (layoutKey === lastLayoutKey && now - lastLayoutAt < 250) return;
+        lastLayoutKey = layoutKey; lastLayoutAt = now;
+        // The stage ticks overlays before rendering, so a just-completed camera dive has not yet
+        // refreshed matrixWorldInverse. Do not cache a projection from its previous position.
+        ctx.camera.updateMatrixWorld(true);
         // each label takes the first side that keeps it inside the view and off the labels placed before it
         type R = { l: number; t: number; r: number; b: number };
         const taken: R[] = [];
+        const overlayOrigin = ctx.overlay.getBoundingClientRect();
+        // Keep all numbered part pins available: the teaching labels yield when a pin needs the space.
+        for (const el of ctx.overlay.parentElement!.querySelectorAll<HTMLElement>('.pin, .hud.tl, .hud.tr, .hud.br, .hud.bl')) {
+          if (!el.offsetWidth || !el.offsetHeight || getComputedStyle(el).visibility === 'hidden') continue;
+          const rect = el.getBoundingClientRect();
+          taken.push({ l: rect.left - overlayOrigin.left - 3, t: rect.top - overlayOrigin.top - 3,
+            r: rect.right - overlayOrigin.left + 3, b: rect.bottom - overlayOrigin.top + 3 });
+        }
         const narrow = w <= 760;
         if (narrow) {
           // Keep phone text outside the projected rig, including while the camera settles into its frame.
@@ -1243,7 +1259,9 @@ export const build: BuildPiece = (ctx) => {
           };
           const hit = (a: R) => a.l < 4 || a.t < 4 || a.r > w - 4 || a.b > h - 4 || taken.some((q) => a.l < q.r && q.l < a.r && a.t < q.b && q.t < a.b);
           const order = [m.side, 'down', 'up', 'left', 'right'].filter((v, k, arr) => arr.indexOf(v) === k);
-          const side = order.find((sd) => !hit(rect[sd])) ?? m.side;
+          const side = order.find((sd) => !hit(rect[sd]));
+          label.hidden = !side;
+          if (!side) continue;
           taken.push(rect[side]);
           for (const sd of ['down', 'up', 'left', 'right']) m.el.classList.toggle(sd, sd === side);
         }
@@ -1293,13 +1311,13 @@ export const build: BuildPiece = (ctx) => {
     onViewInteraction() { userMoved = true; },
     tick(dt: number, now: number) {
       exposure.tick(now, dt);
-      teach.tick();
-      fitClip();
       // the chrome moved (the phone's sheet opened, the rail filled in) since the last fit: fly to the fit again,
       // unless the reader has taken the camera over since
       const ins = ctx.camera.userData.insets as Record<string, number> | undefined;
       const sig = ins ? `${ins.left}|${ins.top}|${ins.right}|${ins.bottom}|${ins.width}|${ins.height}` : '';
-      if (sig !== insetSig) { const first = !insetSig; insetSig = sig; if (!first && lastFit && !userMoved) ctx.dive(lastFit()); }
+      if (sig !== insetSig) { insetSig = sig; if (lastFit && !userMoved) ctx.dive(lastFit()); }
+      fitClip();
+      teach.tick();
     },
     select(id: string | null) { openDetail(id); },
     activate() {
@@ -1316,6 +1334,8 @@ export const build: BuildPiece = (ctx) => {
     },
     deactivate() {
       exposure.pause();
+      ctx.labels.remove('rig-ep');
+      ctx.badge.hide();
       if (savedTone !== null) { r.toneMapping = savedTone; r.toneMappingExposure = savedExposure; }
       if (savedEnv !== undefined) ctx.scene.environment = savedEnv;
       viewSwitch.hidden = true;
@@ -1359,6 +1379,7 @@ export const build: BuildPiece = (ctx) => {
       ringTo: (angle: number) => (lastModel ? distanceForRingAngle(lastModel, angle) : undefined),
     },
     dispose() {
+      ++rigGeneration;
       rays.dispose();
       exposure.dispose();
       offLayer();

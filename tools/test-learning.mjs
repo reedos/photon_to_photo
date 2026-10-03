@@ -11,6 +11,7 @@ try {
   for (const [width, height] of [[1440, 900], [1366, 768], [390, 844], [320, 740]]) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce', isMobile: width < 760, hasTouch: width < 760 });
     const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(url); await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     await page.waitForFunction(() => !document.getElementById('pin-photo').disabled, { timeout: 60000 });

@@ -10,6 +10,7 @@ mkdirSync('shots/learning', { recursive: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 }, reducedMotion: 'reduce' });
   const errors = []; page.on('pageerror', e => errors.push(String(e)));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(`${url}?gl=webgl2`); await page.waitForFunction(() => window.p2p?.pieces.camera);
   await page.evaluate(() => window.p2p.pieces.camera.ready());
   assert.equal(await page.evaluate(() => window.p2p.backend()), 'webgl2');

@@ -9,6 +9,7 @@ try {
   for (const width of [1366, 390]) {
     const page = await browser.newPage({ viewport: { width, height: width > 760 ? 768 : 844 }, reducedMotion: 'reduce' });
     const errors = []; page.on('pageerror', e => errors.push(e.stack || String(e)));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     // Simulate a frame timestamp slightly earlier than a click in the same refresh interval.
     // Playback must stay nonnegative instead of indexing PIPELINE[-1] and stopping forever.
     await page.addInitScript(() => {

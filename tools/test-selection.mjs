@@ -14,6 +14,7 @@ try {
   for (const width of [1366, 390]) {
     const page = await browser.newPage({ viewport: { width, height: width > 760 ? 768 : 844 }, reducedMotion: 'no-preference' });
     const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(`${url}?lens=n50&part=sensor`);
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
@@ -74,7 +75,7 @@ try {
           assert.ok(Math.abs(point.x - point.w / 2) < 3 && Math.abs(point.y - point.h / 2) < 3, `${piece}/${id}: view centers selected geometry ${JSON.stringify(point)}`);
         }
         const before = await page.evaluate(() => window.p2p.framing());
-        await page.locator('.view-menu summary').click(); await page.locator('#reset-view').click();
+        await page.locator('#reset-view').click();
         if (await page.locator('.view-menu').getAttribute('open') !== null) await page.locator('.view-menu summary').click();
         await settled();
         const after = await page.evaluate(() => window.p2p.framing());

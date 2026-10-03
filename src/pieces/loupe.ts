@@ -19,7 +19,8 @@ import type { Fig, RayPath } from '../engine/types';
 import { pointBundle } from '../app/engine-api';
 import { traceableBins } from './lens/valid-bins';
 import { badgeJoin, isPhone } from './phone-frame';
-import { currentRender, onRender, pixelAt, type PixelInfo, type RenderView } from '../app/render-client';
+import { currentRender, onRender, onRenderFailure, pixelAt, type PixelInfo, type RenderView } from '../app/render-client';
+import { sameShot } from '../app/learning-model';
 import { cfaColorAt } from '../engine/pipeline';
 import { projectToRenderedPixel, renderSetup } from '../engine/render';
 
@@ -160,7 +161,17 @@ function makeMicrolens(look: import('./types').PieceContext['look']): THREE.Mesh
   // A real plano-convex dome: the flat base is the sphere's equator, so scale a hemisphere's height to h.
   const geo = new THREE.SphereGeometry(r, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2);
   geo.scale(1, h / r, 1);
-  const mesh = new THREE.Mesh(geo, look.microlensMaterial());
+  const mat = look.microlensMaterial();
+  // This enlarged teaching cutaway uses the same stable alpha treatment as its well walls and
+  // neighboring domes. A viewport-transmission sampler can retain a destroyed framebuffer when
+  // switching into Pixel or resizing. The engine's microlens collection and spectral values are separate.
+  mat.transmission = 0;
+  mat.transparent = true;
+  mat.opacity = 0.16;
+  mat.depthWrite = false;
+  mat.clearcoat = 1;
+  mat.clearcoatRoughness = 0.02;
+  const mesh = new THREE.Mesh(geo, mat);
   mesh.position.y = MICROLENS_BASE_Y;
   return mesh;
 }
@@ -312,11 +323,14 @@ export const build: BuildPiece = (ctx) => {
   const microlens = makeMicrolens(ctx.look);
   gridGroup.add(microlens);
 
-  // The target's own dye: LOOK.md's tint, less transmissive than the table's 0.7-0.85 so its color still reads
-  // over the dark photodiode right under it (at 0.78 it showed the silicon through it and read near-black).
+  // The target dye uses LOOK.md's tint with illustrative alpha coverage, like the other cutaway
+  // covers. Display opacity is not the spectral transmission used for photon/electron calculations.
   const targetDye = (ch: 'R' | 'G' | 'B') => {
     const m = ctx.look.cfaDyeMaterial(ch);
-    m.transmission = 0.3;
+    m.transmission = 0;
+    m.transparent = true;
+    m.opacity = 0.7;
+    m.depthWrite = false;
     m.roughness = 0.3;
     m.clearcoat = 0.5;
     return m;
@@ -477,6 +491,33 @@ export const build: BuildPiece = (ctx) => {
   let fetchSeq = 0;
   let diveTimer: number | null = null;
   let paintedRenderId = -1;
+  let wantsWell = true;
+  let disposed = false;
+  let pendingPixel = false;
+  let pixelError = '';
+  const status = document.createElement('div');
+  status.className = 'lv-read';
+  status.setAttribute('role', 'status');
+  const statusText = document.createElement('p');
+  const retry = document.createElement('button');
+  retry.type = 'button'; retry.className = 'btn'; retry.textContent = 'Retry pixel';
+  retry.onclick = () => acceptRender(currentRender());
+  status.append(statusText, retry); ctx.overlay.appendChild(status);
+
+  function matchingView(view: RenderView | null): view is RenderView {
+    return !!view && !!currentModel && sameShot(view.scenario, currentModel.scenario);
+  }
+  function cancelDive(): void {
+    if (diveTimer !== null) window.clearTimeout(diveTimer);
+    diveTimer = null;
+  }
+  function invalidatePixel(): void {
+    fetchSeq++; pendingPixel = false; currentPixel = null; currentBundlePaths = [];
+    cancelDive(); pausePhotons();
+    badge = { n: 1, dotsDrawn: 0, photonsMean: 0 };
+    bundleGeo.setDrawRange(0, 0);
+    syncBackButton();
+  }
 
   function resizePhoto(view: RenderView | null): void {
     if (!view) return;
@@ -611,6 +652,7 @@ export const build: BuildPiece = (ctx) => {
     bundleGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     bundleGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     bundleGeo.computeBoundingSphere();
+    bundleGeo.setDrawRange(0, positions.length / 3);
   }
 
   function applyPixel(): void {
@@ -624,40 +666,62 @@ export const build: BuildPiece = (ctx) => {
   }
 
   function refreshPixel(): void {
-    if (targetRenderId < 0 || targetX < 0 || targetY < 0) return;
+    if (disposed || !group.visible || !matchingView(currentRender()) || targetRenderId < 0 || targetX < 0 || targetY < 0) return;
     const seq = ++fetchSeq;
+    pendingPixel = true; pixelError = ''; currentPixel = null; syncBackButton();
     pixelAt(targetRenderId, targetX, targetY).then((info) => {
-      if (seq !== fetchSeq) return; // superseded by a newer target
+      if (disposed || !group.visible || seq !== fetchSeq || !matchingView(currentRender())) return;
+      pendingPixel = false;
       currentPixel = info;
       applyPixel();
-    }).catch((err) => console.error('loupe.ts: pixelAt failed', err));
+      if (wantsWell && diveStage === 'photo') scheduleDiveToWell();
+    }).catch(() => {
+      if (disposed || seq !== fetchSeq) return;
+      pendingPixel = false; pixelError = 'This pixel could not load. Retry, or change a camera setting to render a new photo.';
+      syncBackButton();
+    });
   }
 
   function scheduleDiveToWell(): void {
-    if (diveTimer !== null) window.clearTimeout(diveTimer);
-    if (!group.visible) { diveTimer = null; return; }
-    diveStage = 'photo';
+    cancelDive();
+    if (!group.visible || !currentPixel || !wantsWell) return;
     diveTimer = window.setTimeout(() => {
-      if (!group.visible) { diveTimer = null; return; }
+      if (!group.visible || !currentPixel || !wantsWell || disposed) { diveTimer = null; return; }
       diveStage = 'well';
       ctx.dive(wellFrame());
       syncBackButton();
       diveTimer = null;
-    }, 480);
+    }, window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 480);
   }
 
   function setTarget(x: number, y: number, renderId: number): void {
-    targetX = x;
-    targetY = y;
-    targetRenderId = renderId;
+    const view = currentRender();
+    if (!matchingView(view) || view.renderId !== renderId) return;
+    invalidatePixel(); wantsWell = true;
+    targetX = Math.max(0, Math.min(view.width - 1, Math.round(x)));
+    targetY = Math.max(0, Math.min(view.height - 1, Math.round(y)));
+    targetRenderId = view.renderId;
     marker.visible = true;
     refreshPixel();
     syncCrumb();
-    scheduleDiveToWell();
+  }
+
+  function acceptRender(view: RenderView | null): void {
+    if (disposed || !group.visible || !matchingView(view)) { syncBackButton(); return; }
+    if (view.renderId !== paintedRenderId) paintPhoto(view);
+    if (targetX < 0) {
+      const last = ctx.bus.lastLoupeTap();
+      setTarget(last?.x ?? Math.floor(view.width / 2), last?.y ?? Math.floor(view.height / 2), view.renderId);
+    } else if (targetRenderId !== view.renderId || (!currentPixel && !pendingPixel)) {
+      invalidatePixel();
+      targetX = Math.max(0, Math.min(view.width - 1, targetX));
+      targetY = Math.max(0, Math.min(view.height - 1, targetY));
+      targetRenderId = view.renderId; syncCrumb(); refreshPixel();
+    }
   }
 
   function goBackToPhoto(): void {
-    if (diveTimer !== null) { window.clearTimeout(diveTimer); diveTimer = null; }
+    cancelDive(); wantsWell = false;
     diveStage = 'photo';
     ctx.dive(PHOTO_FRAME);
     ctx.bus.emit('select-part', { id: null });
@@ -696,6 +760,15 @@ export const build: BuildPiece = (ctx) => {
   const readWell = read.querySelector<HTMLElement>('.lv-read-well i')!;
 
   function syncBackButton(): void {
+    const ready = !!currentPixel && matchingView(currentRender());
+    status.hidden = !group.visible || ready;
+    statusText.textContent = pixelError || (matchingView(currentRender()) ? 'Loading this pixel…' : 'Waiting for the photo with these camera settings…');
+    retry.hidden = !pixelError;
+    retry.disabled = !matchingView(currentRender());
+    photonControls.hidden = !group.visible || !ready;
+    gridGroup.visible = ready;
+    photoMesh.visible = matchingView(currentRender());
+    marker.visible = photoMesh.visible && targetX >= 0;
     const inWell = diveStage !== 'photo';
     crumb.hidden = !inWell;
     read.hidden = !inWell || !currentPixel || pickedOnPhone;
@@ -715,26 +788,11 @@ export const build: BuildPiece = (ctx) => {
   }
 
   const offBusTap = ctx.bus.on('loupe-tap', (e) => setTarget(e.x, e.y, e.renderId));
-  const offRender = onRender((view) => {
-    if (!group.visible) return;
-    paintPhoto(view);
-    if (targetX < 0) {
-      // The FIRST render to ever finish, arriving after this piece was already shown with no target -- e.g. a
-      // script or a direct nav to the loupe piece before the render worker's own ~2 s first pass completes.
-      // update()'s own "default to center" branch only runs at piece-show time and never retries, so without
-      // this it can leave the piece permanently untargeted: no dive, no pins, and -- ctx.dive/insets() both
-      // gate on targetX>=0 -- no breadcrumb inset ever rendered either (critic, "breadcrumb-empty": reproduced
-      // directly by navigating straight to this piece and confirming render() resolves while state().targetX
-      // stays -1 forever). Mirror update()'s own fallback here so a render finishing late still initializes it.
-      const last = ctx.bus.lastLoupeTap();
-      if (last) setTarget(last.x, last.y, last.renderId);
-      else setTarget(Math.floor(view.width / 2), Math.floor(view.height / 2), view.renderId);
-    } else if (view.renderId !== targetRenderId) {
-      // A new render finished for a scenario change while a target was already set: same pixel coordinates,
-      // fresh physics (photon counts, defocus etc. all changed with the scenario) -- refetch, don't reuse.
-      targetRenderId = view.renderId;
-      refreshPixel();
-    }
+  const offRender = onRender(acceptRender);
+  const offFailure = onRenderFailure(() => {
+    if (disposed) return;
+    invalidatePixel(); pixelError = 'The photo worker stopped. Change a camera setting to render a new photo.';
+    syncBackButton();
   });
 
   // ---- probes -------------------------------------------------------------------------------------------------
@@ -862,23 +920,12 @@ export const build: BuildPiece = (ctx) => {
     group,
 
     update(model, _scenario) {
-      currentModel = model;
-      const view = currentRender();
-      // build() may run after a render already finished (the piece is built lazily on first show) -- onRender()
-      // only fires for FUTURE renders, so the already-published one has to be painted here, once, by id.
-      if (view && view.renderId !== paintedRenderId) paintPhoto(view);
-      if (targetX < 0) {
-        // First show with no tap yet (nav to the loupe directly): default to the frame's center, per
-        // design/LOOK.md/docs/PROTOTYPE.md ("on activate with a default target at the center of the subject").
-        const last = ctx.bus.lastLoupeTap();
-        if (last) setTarget(last.x, last.y, last.renderId);
-        else if (view) setTarget(Math.floor(view.width / 2), Math.floor(view.height / 2), view.renderId);
-      } else if (view && view.renderId !== targetRenderId) {
-        targetRenderId = view.renderId;
-        refreshPixel();
-      } else if (currentPixel) {
-        applyPixel(); // scenario changed under an existing target: recolor/refill from the (refetched) pixel
+      if (currentModel && !sameShot(currentModel.scenario, model.scenario)) {
+        invalidatePixel(); pixelError = '';
       }
+      currentModel = model;
+      acceptRender(currentRender());
+      syncBackButton();
       ctx.badge.show(badgeText(1));
     },
 
@@ -895,7 +942,7 @@ export const build: BuildPiece = (ctx) => {
       // director, "pin-overlap": at the pre-tap grid-overview frame every one of these anchors' 3D separation
       // collapses to the same on-screen point at that extreme zoom-out, rendering as one fused, illegible label
       // block regardless of how far apart the anchors are in local units).
-      const showPins = diveStage === 'well';
+      const showPins = diveStage === 'well' && !!currentPixel;
       for (const p of probes) {
         const real = realAnchors.get(p.id);
         if (real) p.anchor.copy(showPins ? real : PIN_HIDE);
@@ -921,7 +968,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     insets(): Inset[] {
-      if (targetX < 0 || pickedOnPhone) return [];
+      if (targetX < 0 || pickedOnPhone || !matchingView(currentRender())) return [];
       return [{
         id: 'loupe-breadcrumb',
         camera: insetCam,
@@ -933,6 +980,10 @@ export const build: BuildPiece = (ctx) => {
 
     select(id) {
       pickedOnPhone = !!id && isPhone();
+      if (id) {
+        wantsWell = true;
+        if (currentPixel && diveStage === 'photo') scheduleDiveToWell();
+      }
       syncBackButton();
     },
     selectionFrame(id) {
@@ -943,17 +994,18 @@ export const build: BuildPiece = (ctx) => {
     },
 
     activate() {
-      photonControls.hidden = false;
       syncBackButton();
       window.addEventListener('keydown', onKeydown);
     },
 
     deactivate() {
       pausePhotons(); photonControls.hidden = true;
+      invalidatePixel(); status.hidden = true;
       window.removeEventListener('keydown', onKeydown);
       pickedOnPhone = false;
       if (diveTimer !== null) { window.clearTimeout(diveTimer); diveTimer = null; }
     },
+    onViewInteraction() { cancelDive(); wantsWell = false; },
 
     hooks: {
       photons: () => ({ playing: photonPlaying, phase: photonTime / SPARK_FALL_MS }),
@@ -973,7 +1025,7 @@ export const build: BuildPiece = (ctx) => {
       },
 
       state() {
-        return { diveStage, targetX, targetY, targetRenderId, hasPixel: currentPixel !== null };
+        return { diveStage, targetX, targetY, targetRenderId, hasPixel: currentPixel !== null, pendingPixel, pixelError, paintedRenderId };
       },
 
       debugCamera() {
@@ -1065,6 +1117,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     dispose() {
+      disposed = true; invalidatePixel(); status.remove(); offFailure();
       offPhotonPause(); document.removeEventListener('visibilitychange', hiddenPhotons); photonControls.remove();
       offBusTap();
       offRender();

@@ -12,6 +12,7 @@ try {
   for (const [width, height] of [[1440, 900], [1366, 768], [390, 844], [320, 740]]) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce', isMobile: width < 760, hasTouch: width < 760 });
     const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(`${url}?piece=camera&lens=n50&focus=1.5&iso=400`);
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
@@ -51,7 +52,7 @@ try {
     await page.evaluate(() => window.p2p.pieces.camera.ready()); assert.equal(await detail(), 'sensor');
     await page.evaluate(() => window.p2p.settle());
     const beforeReset = await page.evaluate(() => window.p2p.pieces.camera.camDebug().pos);
-    await page.locator('.view-menu summary').click(); await page.locator('#reset-view').click();
+    await page.locator('#reset-view').click();
     await page.evaluate(() => window.p2p.settle());
     assert.deepEqual(await page.evaluate(() => window.p2p.pieces.camera.camDebug().pos), beforeReset, 'reset retains the current part framing');
     assert.equal(await page.locator('#parts button:visible').count(), ids.length);

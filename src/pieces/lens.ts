@@ -148,6 +148,7 @@ export const build: BuildPiece = (ctx) => {
   // the inset's footprint for the pin pass, and its "1 square = 1 pixel" note when the grid is drawn
   const guard = insetGuard(ctx.overlay);
   let selectedId: string | null = null;
+  let housingGeneration = 0;
   let extents: Extents | null = null;
 
   function viewSize(): { w: number; h: number } {
@@ -169,18 +170,19 @@ export const build: BuildPiece = (ctx) => {
     const marginFront = Math.max(15, totalLength * 0.08);
     const marginBack = Math.max(8, totalLength * 0.03);
     barrelHandle = buildBarrel(elementsHandle.maxOd(), frontZ - marginFront, sensorZ + marginBack, ctx.look);
-    barrelHandle.group.visible = !hasGlb(model.lens.id);
+    barrelHandle.group.visible = true;
     group.add(barrelHandle.group);
   }
 
   function swapHousing(id: string) {
     if (housingFor === id) return;
     housingFor = id;
+    const generation = ++housingGeneration;
     if (housing) { group.remove(housing.root); housing.dispose(); housing = null; }
     if (!hasGlb(id)) { if (barrelHandle) barrelHandle.group.visible = true; return; }
     loadGlbBarrel(id, ctx.look).then((h) => {
       if (!h) return;
-      if (housingFor !== id) { h.dispose(); return; }
+      if (generation !== housingGeneration) { h.dispose(); return; }
       housing = h;
       group.add(h.root);
       if (barrelHandle) barrelHandle.group.visible = false;
@@ -191,6 +193,7 @@ export const build: BuildPiece = (ctx) => {
         if (group.visible) ctx.dive(computeFrame(extents, ctx.camera.aspect));
       }
     }).catch((err) => {
+      if (generation !== housingGeneration) return;
       // the schematic tube stays up; say why in the console rather than leave a silent gap
       console.error('lens.ts: the housing failed to load, keeping the schematic barrel', err);
       if (barrelHandle) barrelHandle.group.visible = true;
@@ -425,6 +428,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     dispose() {
+      ++housingGeneration;
       flight.dispose();
       elementsHandle?.dispose();
       barrelHandle?.dispose();

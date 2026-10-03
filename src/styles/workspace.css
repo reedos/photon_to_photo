@@ -65,8 +65,14 @@
 #studio-exposure { border-top: 1px solid var(--line); max-height: 38vh; overflow: auto; }
 .workspace #studio-exposure .rig-exposure { position: static; width: auto; max-width: none; margin: 0; padding: 10px 16px; border: 0; border-radius: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; background: #13171b; }
 .workspace #studio-exposure .rig-exposure[hidden] { display: none; }
-.workspace .rx-head { grid-column: 1; margin: 0; gap: 16px; justify-content: flex-start; }
-.workspace .rx-fire { min-height: 36px; }
+.workspace .rx-head { grid-column: 1; margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center; }
+.workspace .rx-fire { min-height: 44px; }
+.workspace .rx-control { display: grid; min-width: 0; gap: 0; color: var(--ink); font-size: 11px; }
+.workspace .rx-control > span { display: flex; justify-content: space-between; gap: 4px; flex-wrap: wrap; }
+.workspace .rx-control output { color: var(--accent); font-variant-numeric: tabular-nums; }
+.workspace .rx-control input { display: block; width: 100%; min-width: 0; height: 40px; margin: 0; accent-color: var(--accent); }
+.workspace .rx-control input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.workspace .rig-teach i { animation: none; }
 .workspace .rx-status { grid-column: 1; font-size: 10px; }
 .workspace .exposure-details { grid-column: 2; grid-row: 1 / span 3; min-width: 190px; max-width: 320px; }
 .workspace .exposure-details summary { padding: 10px 0; }
@@ -98,12 +104,14 @@
   .workspace .hud.tl .ttl { font-size: 18px; }
   .workspace .hud.tl .sub { max-width: 210px; font-size: 10px; }
   .workspace .hud.tr { top: 10px; right: 10px; }
-  .workspace .rig-teach span { font-size: 9px; letter-spacing: 0; padding: 4px 5px; }
+  .workspace .rig-teach span { font-size: 10px; letter-spacing: 0; padding: 4px 5px; }
   .workspace .hud-btns-phone { padding: 4px 10px; display: flex; align-items: center; gap: 10px; }
   .workspace .hud-btns-phone .hint { font-size: 9px; padding: 0; text-align: left; }
   .workspace .hud-btns-phone .hud-btns { border: 0; flex-shrink: 0; }
   .workspace .hud-btns-phone .hud-row { display: flex; gap: 6px; }
   .workspace .hud-btns-phone .btn { min-height: 36px; padding: 0 5px; font-size: 9px; border: 1px solid var(--line); }
+  .workspace .part-nav #part-prev span, .workspace .part-nav #part-next span { display: none; }
+  .workspace .part-nav #reset-view { padding-inline: 8px; white-space: nowrap; }
   .studio-sidebar { display: grid; grid-template-columns: minmax(95px, .85fr) minmax(0, 1.6fr); grid-template-rows: 39px auto; overflow: visible; border-left: 0; border-top: 1px solid var(--line); }
   .workspace .finalimg { grid-column: 1; grid-row: 1 / span 2; padding: 10px; border-right: 1px solid var(--line); }
   .workspace .finalimg .sc-head { display: block; }
@@ -124,7 +132,9 @@
   .studio-advanced { margin-top: 8px; }
   .workspace .kpis { grid-template-columns: 1fr; }
   .workspace #studio-exposure .rig-exposure { padding: 7px 10px; grid-template-columns: 1fr; gap: 0; }
-  .workspace .rx-head { justify-content: space-between; }
+  .workspace .rx-head { grid-template-columns: 78px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .workspace .rx-fire { padding: 0 5px; font-size: 10px; white-space: normal; }
+  .workspace .rx-control { font-size: 10px; }
   .workspace .rx-status { display: none; }
   .workspace .exposure-details { grid-column: 1; grid-row: auto; max-width: none; }
   .workspace .exposure-details summary { padding: 4px 0; font-size: 10px; }

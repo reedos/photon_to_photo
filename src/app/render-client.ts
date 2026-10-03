@@ -21,7 +21,21 @@ export type PixelInfo = PixelState & { objectPoint: [number, number, number]; de
 let worker: Worker | null = null;
 let nextId = 1;
 let latestRender = 0;
+type RenderMessage = Extract<WorkerRequest, { type: 'render' }>;
+let activeRender = 0;
+let queuedRender: RenderMessage | null = null;
 const pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void; scenario?: Scenario }>();
+
+function dispatchRender(message: RenderMessage) {
+  const entry = pending.get(message.id);
+  if (!entry) return;
+  activeRender = message.id;
+  if (!send(message.id, message, entry.reject)) { activeRender = 0; drainRender(); }
+}
+function drainRender() {
+  if (activeRender || !queuedRender) return;
+  const next = queuedRender; queuedRender = null; dispatchRender(next);
+}
 
 function getWorker(): Worker {
   if (worker) return worker;
@@ -33,16 +47,20 @@ function getWorker(): Worker {
     const p = pending.get(m.id);
     if (!p) return;
     pending.delete(m.id);
-    if (m.type === 'error') { p.reject(new Error(m.error)); return; }
-    if (m.type === 'render') {
-      if (m.id !== latestRender) { p.resolve(null); return; } // superseded while it rendered
-      p.resolve({ renderId: m.id, width: m.width, height: m.height, pixelScale: m.pixelScale, rgba: m.rgba, raw: m.raw,
+    const finishedRender = m.id === activeRender;
+    if (finishedRender) activeRender = 0;
+    if (m.type === 'error') { p.reject(new Error(m.error)); }
+    else if (m.type === 'render') {
+      if (m.id !== latestRender) p.resolve(null); // superseded while it rendered
+      else p.resolve({ renderId: m.id, width: m.width, height: m.height, pixelScale: m.pixelScale, rgba: m.rgba, raw: m.raw,
         stages: m.stages, meta: m.meta, scenario: p.scenario! } satisfies RenderView);
     } else if (m.type === 'pixel') p.resolve(m.pixel);
+    if (finishedRender) drainRender();
   };
   const fail = (message: string) => {
     if (worker !== job) return;
     job.terminate(); worker = null;
+    activeRender = 0; queuedRender = null;
     current = null; // The pixel data lived in this worker; even a completed view can no longer serve the loupe.
     for (const [, p] of pending) p.reject(new Error(message));
     pending.clear();
@@ -53,9 +71,9 @@ function getWorker(): Worker {
   return job;
 }
 
-function send(id: number, msg: WorkerRequest, reject: (error: Error) => void) {
-  try { getWorker().postMessage(msg); }
-  catch (error) { pending.delete(id); reject(error instanceof Error ? error : new Error(String(error))); }
+function send(id: number, msg: WorkerRequest, reject: (error: Error) => void): boolean {
+  try { getWorker().postMessage(msg); return true; }
+  catch (error) { pending.delete(id); reject(error instanceof Error ? error : new Error(String(error))); return false; }
 }
 
 /** Renders the final image for a scenario off the main thread. Resolves to null if a newer request superseded it. */
@@ -64,8 +82,12 @@ export function requestRender(scenario: Scenario, width: number, height: number,
   latestRender = id;
   const msg: WorkerRequest = { type: 'render', id, scenario, width, height, seed };
   return new Promise((resolve, reject) => {
+    // A worker cannot interrupt synchronous CPU rendering. Keep only the newest waiting shot,
+    // rather than making every slider/body change render before the user's final choice.
+    if (queuedRender) { pending.get(queuedRender.id)?.resolve(null); pending.delete(queuedRender.id); }
     pending.set(id, { resolve, reject, scenario });
-    send(id, msg, reject);
+    if (activeRender) queuedRender = msg;
+    else dispatchRender(msg);
   });
 }
 

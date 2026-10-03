@@ -34,7 +34,7 @@ function fakeDom() {
     if (!elements.has(key)) {
       const listeners = new Map<string, (event: any) => void>();
       elements.set(key, {
-        style: {}, textContent: '', hidden: false, attributes: {} as Record<string, string>,
+        style: { setProperty() {} }, textContent: '', hidden: false, attributes: {} as Record<string, string>,
         querySelector: (s: string) => el(s), addEventListener(type: string, fn: (event: any) => void) { listeners.set(type, fn); },
         removeAttribute(name: string) { delete this.attributes[name]; },
         setAttribute(name: string, value: string) { this.attributes[name] = value; }, remove() {},
@@ -62,6 +62,38 @@ function withFakeGlobals(run: (dom: ReturnType<typeof fakeDom>) => void) {
     globalThis.document = oldDoc; globalThis.performance = oldPerf;
   }
 }
+
+describe('orientation-independent camera controls', () => {
+  for (const lens of ['n50', 'm50', 'n500', 'z800']) {
+    it(`${lens}: focus and aperture controls remain usable without finding a mesh`, () => {
+      withFakeGlobals(dom => {
+        let model = compute({ lens });
+        const exp = createExposure({ group: new THREE.Group(), overlay: dom.overlay,
+          badge: { show() {}, hide() {} } as any, body: () => 'dslr', model: () => model,
+          node: () => undefined, paths: () => [],
+          set: partial => { model = compute({ ...model.scenario, ...partial }); },
+        });
+        exp.tick(0, 0);
+        const focus = dom.el('.rx-focus'), aperture = dom.el('.rx-aperture');
+        focus.value = '0'; focus.dispatch('input');
+        expect(model.scenario.focusM! * 1000).toBeCloseTo(model.lens.closestFocusMm, 5);
+        focus.value = '127'; focus.dispatch('input');
+        expect(model.scenario.focusM).toBeNull();
+        aperture.value = '0'; aperture.dispatch('input');
+        expect(model.scenario.fno).toBeCloseTo(model.lens.maxFno, 8);
+        aperture.value = aperture.max; aperture.dispatch('input');
+        expect(model.scenario.fno).toBe(22);
+        exp.tick(1, 1);
+        expect(dom.el('.rx-aperture-value').textContent).toBe('f/22');
+        // A loading or failed rig cannot silently adjust the shot through these controls.
+        exp.setEnabled(false);
+        aperture.value = '0'; aperture.dispatch('input');
+        expect(model.scenario.fno).toBe(22);
+        exp.dispose();
+      });
+    });
+  }
+});
 
 describe('shutter curtain coverage and timing (Astra-6 C2)', () => {
   let scene: THREE.Group;
@@ -344,6 +376,49 @@ describe('exposure inspection', () => {
       expect(scan.visible).toBe(false);
       expect(dom.el('.rx-fire').disabled).toBe(true);
       exp.dispose(); pixelArray.geometry.dispose(); (pixelArray.material as THREE.Material).dispose();
+    });
+  });
+
+  it('DSLR electronic exposure holds the mirror and curtains clear while reset and read sweep for the selected sensor time', () => {
+    withFakeGlobals((dom) => {
+      const model = compute({ lens: 'n500', shutterType: 'electronic', shutter: 1 / 2000 });
+      const scene = body.clone(true), group = new THREE.Group(); group.add(scene);
+      let mirrorUp = false;
+      const exp = createExposure({ group, overlay: dom.overlay, badge: { show() {}, hide() {} } as any,
+        body: () => 'dslr', model: () => model, node: (n) => scene.getObjectByName(n), paths: () => [],
+        onMirror: up => { mirrorUp = up; } });
+      exp.fire();
+      const travel = model.sensor.readoutS * 1000, shutter = model.scenario.shutter * 1000;
+      expect(travel).toBe(64);
+      expect(exp.state().segs).toHaveLength(1);
+      expect(exp.state().segs[0].name).toBe('exposure');
+      expect(exp.state().segs[0].realMs).toBeCloseTo(travel + shutter, 12);
+      const box = (n: string) => new THREE.Box3().setFromObject(scene.getObjectByName(n)!);
+      const sensor = box('pixelArray'), height = sensor.max.y - sensor.min.y;
+      const pose = () => ['shutterCurtainFront', 'shutterCurtainRear', 'mirror'].map(n => {
+        scene.updateMatrixWorld(true); return scene.getObjectByName(n)!.matrixWorld.toArray();
+      });
+      expect(mirrorUp).toBe(true);
+      expect(box('shutterCurtainFront').max.y).toBeLessThanOrEqual(sensor.min.y + 1e-5);
+      expect(box('shutterCurtainRear').min.y).toBeGreaterThanOrEqual(sensor.max.y - 1e-5);
+      const clearPose = pose();
+      const at = (ms: number) => exp.seek(ms / (travel + shutter));
+      at(travel / 2);
+      expect(exp.state().shownFraction).toBeCloseTo(0, 12);
+      at(travel / 2 + shutter / 2);
+      expect(exp.state().shownFraction).toBeCloseTo(0.5, 12);
+      expect(pose()).toEqual(clearPose);
+      const reset = group.getObjectByName('readout-line')!, read = group.getObjectByName('charge-read-line')!;
+      expect(reset.visible && read.visible).toBe(true);
+      expect(read.position.y - reset.position.y).toBeCloseTo(height * shutter / travel, 10);
+      expect((reset.position.y + read.position.y) / 2).toBeCloseTo(sensor.getCenter(new THREE.Vector3()).y, 10);
+      at(travel / 2 + shutter);
+      expect(exp.state().shownFraction).toBeCloseTo(1, 12);
+      expect(dom.el('.rx-cap').textContent).toMatch(/64\.0 ms/);
+      exp.reset();
+      expect(mirrorUp).toBe(false);
+      expect(group.getObjectByName('charge-read-line')).toBeUndefined();
+      exp.dispose();
     });
   });
 });

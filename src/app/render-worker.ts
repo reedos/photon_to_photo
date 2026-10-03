@@ -19,7 +19,9 @@ self.onmessage = (ev: MessageEvent<WorkerRequest>) => {
       const model = compute(msg.scenario);
       const r = renderImage(model, { width: msg.width, height: msg.height, seed: msg.seed });
       results.set(msg.id, r);
-      for (const k of [...results.keys()]) if (k < msg.id - 3) results.delete(k);
+      // Pixel queries share the request counter. Retain by render count, not request-id distance,
+      // so inspecting pixels cannot unexpectedly evict the displayed photo on the next render.
+      while (results.size > 4) results.delete(results.keys().next().value!);
       const rgba = r.rgba.slice();
       const raw = r.raw.slice();
       const stages: Record<string, Float32Array> = {};

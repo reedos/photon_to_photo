@@ -8,6 +8,8 @@ The player owns a frozen, normalized scenario and an isolated worker. It never c
 
 Play/Pause, Restart, chapter buttons, keyboard-accessible scrubbing and half/normal/double speed share one deterministic timeline. Reduced-motion users start paused. Hidden tabs pause. Seeking while the worker is loading cancels pending autoplay. Completion holds the final image. Worker errors expose Retry; closing terminates pending work. Fast and slow renders are cached independently for the lifetime of the player.
 
+The interaction-audit update adds **Follow: All processes / Light / Charge / Image data**. Each process has a color and a bounded timeline that holds its final chapter. Selecting a chapter outside that range returns to All processes. Short captions lead with the causal lesson; **How this is modeled** pauses playback and reveals the detailed assumptions. Desktop explanations sit beside a larger visual; phone diagrams retain essential mechanism labels and named chapter buttons.
+
 Desktop and phone layouts keep primary controls visible. Essential numbers appear in HTML cards; small screens omit canvas annotations. Keyboard focus returns to the launcher or the visible View menu summary.
 
 ## Physics and image provenance
@@ -34,3 +36,5 @@ Independent read-only reviewers examined usability, physics and visual appeal du
 The renderer now precomputes spectral irradiance and sixteen shifted scenes per render. Sampling times and arithmetic order are unchanged. Regression checks compare cached and uncached samples across shutters/illuminants and check highlights/misses. A separate before/after comparison found exact equality in seeded raw, RGBA and all intermediate buffers for both presets at 60 × 40. No global cache can leak illumination between shots.
 
 Release validation: 1,182 unit tests passed (four existing skips), typecheck/build passed, standalone render timing budget passed, player gate passed at 1366/390/320, animated selection gate passed at 1366/390, and the loupe optical/noise gate passed on WebGPU plus WebGL2 fallback. Full playback visited all six chapters and completed at double speed in 14.15 seconds. Reviewers cleared all material source/static-visual findings; physical-device and human screen-reader testing remain separate.
+
+That paragraph records the original player release. The subsequent rendering, interaction and visual-review results are in [the interaction audit](INTERACTION-AUDIT-2026-10-03.md).

@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { birdShot,shotMoment,SHOT_DURATION } from './shot-model';
+import { birdShot,shotMoment,SHOT_DURATION,SHOT_TRACKS } from './shot-model';
 import { compute } from './engine-api';
 import { sceneFor, sceneSubjectDistanceMm } from '../engine/scenes';
 import { flightCoverage } from '../engine/flight-pattern';
@@ -26,5 +26,11 @@ describe('one consistent gliding-bird exposure',()=>{
     expect(shotMoment(8)).toEqual({time:8,stage:2,progress:0});
     expect(shotMoment(99)).toEqual({time:SHOT_DURATION,stage:5,progress:1});
     expect(shotMoment(NaN)).toEqual(shotMoment(0));
+  });
+  it('holds the selected process at its own endpoint instead of jumping into the next process',()=>{
+    expect(shotMoment(SHOT_TRACKS.light.end,SHOT_TRACKS.light.end)).toEqual({time:12,stage:2,progress:1});
+    expect(shotMoment(SHOT_TRACKS.charge.end,SHOT_TRACKS.charge.end)).toEqual({time:16,stage:3,progress:1});
+    expect(shotMoment(12)).toEqual({time:12,stage:3,progress:0});
+    expect(shotMoment(16)).toEqual({time:16,stage:4,progress:0});
   });
 });

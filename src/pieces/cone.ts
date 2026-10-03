@@ -570,6 +570,8 @@ export const build: BuildPiece = (ctx) => {
     },
     deactivate() {
       flight.deactivate();
+      // A pending slider rebuild would otherwise hide another inspection's shared scale badge.
+      window.clearTimeout(debounceTimer);
       // Own hygiene for switching away from this piece: stage.ts does not clear a piece's HUD labels or the
       // scale badge on its own when another piece is shown (only pin buttons are resynced), so a piece that
       // wants to leave nothing behind removes what it set. See docs/pieces/cone.md, "Known limits" for the

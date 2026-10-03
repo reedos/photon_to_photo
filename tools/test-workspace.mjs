@@ -13,6 +13,7 @@ try {
       isMobile: width < 760, hasTouch: width < 760 });
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(`${url}?piece=camera&lens=n50`);
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
@@ -50,6 +51,8 @@ try {
     await page.locator('.rx-fire').click();
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.exposure().status), 'paused');
     assert.equal(await page.locator('.rx-scrub').isVisible(), true);
+    // A just-changed shot intentionally holds inspection until its current pixels arrive.
+    await page.waitForFunction(() => document.getElementById('finalimg-canvas').getAttribute('aria-disabled') === 'false', null, { timeout: 90000 });
     await page.locator('#finalimg-canvas').focus();
     await page.locator('#finalimg-canvas').press('Enter');
     assert.equal(new URL(page.url()).searchParams.get('piece'), 'loupe');

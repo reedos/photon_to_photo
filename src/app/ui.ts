@@ -306,7 +306,10 @@ export function mountUI(store: Store, stage: Stage): void {
   };
   const placeButtons = () => {
     const actions = document.getElementById('studio-actions');
-    if (actions) { actions.append(dom.hudBtns); dom.hudBtnsPhone.append(dom.hint); }
+    if (actions) {
+      actions.append(dom.hudBtns); dom.hudBtnsPhone.append(dom.hint);
+      document.getElementById('part-position')?.before(dom.resetView);
+    }
     else if (phone?.matches) { dom.hudBtnsPhone.append(dom.hudBtns, dom.hint); }
     else { dom.hudTr.append(dom.hudBtns, dom.hint); }
     setHint();
@@ -347,11 +350,14 @@ export function mountUI(store: Store, stage: Stage): void {
 
   // A tap on the final image opens the loupe at that rendered pixel (the loupe piece hears it on the bus).
   dom.finalimgCanvas.addEventListener('click', (ev) => {
+    // The previous photo remains visible while its replacement is computed. Its pixels no longer
+    // describe the current controls, so wait for a successful render before opening an inspection.
+    if (dom.finalimgCanvas.getAttribute('aria-disabled') === 'true') return;
     const view = currentRender();
+    if (!view) return;
     const r = dom.finalimgCanvas.getBoundingClientRect();
     store.setPiece('loupe');
     dom.stageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (!view) return;
     const x = Math.min(view.width - 1, Math.max(0, Math.floor(((ev.clientX - r.left) / r.width) * view.width)));
     const y = Math.min(view.height - 1, Math.max(0, Math.floor(((ev.clientY - r.top) / r.height) * view.height)));
     emit('loupe-tap', { x, y, renderId: view.renderId });
@@ -555,8 +561,17 @@ export function mountUI(store: Store, stage: Stage): void {
   let renderTimer = 0;
   let renderGeneration = 0;
   const retryPhoto = byId<HTMLButtonElement>('finalimg-retry');
+  function setPhotoInspection(enabled: boolean, hint: string) {
+    dom.finalimgCanvas.setAttribute('aria-disabled', String(!enabled));
+    dom.finalimgCanvas.tabIndex = enabled ? 0 : -1;
+    dom.finalimgCanvas.setAttribute('aria-label', enabled
+      ? 'Your photo. Click a pixel, or press Enter to inspect the center.' : hint);
+    const help = document.querySelector('.photo-hint');
+    if (help) help.textContent = hint;
+  }
   retryPhoto.onclick = () => renderFinalImage(compute(store.get().scenario));
   onRenderFailure(() => {
+    setPhotoInspection(false, 'Retry the photo to inspect a pixel');
     dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
     dom.dock.classList.remove('rendering');
     dom.finalimgCanvas.setAttribute('aria-busy', 'false');
@@ -564,6 +579,7 @@ export function mountUI(store: Store, stage: Stage): void {
     retryPhoto.hidden = false;
   });
   function renderFinalImage(model: Model) {
+    setPhotoInspection(false, 'Updating the photo…');
     retryPhoto.hidden = true;
     dom.finalimgCanvas.setAttribute('aria-busy', 'true');
     const generation = ++renderGeneration;
@@ -578,6 +594,7 @@ export function mountUI(store: Store, stage: Stage): void {
         view = await requestRender(model.scenario, w, h, 1);
       } catch (err) {
         if (generation !== renderGeneration) return;
+        setPhotoInspection(false, 'Retry the photo to inspect a pixel');
         dom.finalimgCap.textContent = 'The photo could not be rendered. Retry to keep these settings.';
         dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
         dom.finalimgCanvas.setAttribute('aria-busy', 'false');
@@ -593,6 +610,7 @@ export function mountUI(store: Store, stage: Stage): void {
       const imageData = ctx.createImageData(view.width, view.height);
       imageData.data.set(view.rgba);
       ctx.putImageData(imageData, 0, 0);
+      setPhotoInspection(true, 'Tap the photo to inspect a pixel');
       dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
       const dctx = dom.dockCanvas.getContext('2d');
       if (dctx) { dctx.imageSmoothingQuality = 'high'; dctx.drawImage(dom.finalimgCanvas, 0, 0, dom.dockCanvas.width, dom.dockCanvas.height); }
@@ -656,6 +674,12 @@ export function mountUI(store: Store, stage: Stage): void {
   // the camera's own controls (the focus ring, the command dials) set the scenario through the bus
   on('scenario-set', (p) => store.set(p));
   on('goto-piece', (e) => store.setPiece(e.piece));
+  on('piece-loading', (event) => {
+    // Asset-backed cards read the loaded rig's focus-ring/glass state. Refresh after an async
+    // body/lens swap, even when no further scenario change follows its completion.
+    const state = store.get();
+    if (!event.loading && !event.error && event.id === state.piece) renderPanel(compute(state.scenario), state.piece);
+  });
   on('select-part', (e) => {
     if (e.id === selectedPartId) return;
     selectedPartId = e.id;
