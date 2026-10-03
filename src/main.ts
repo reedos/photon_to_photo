@@ -8,6 +8,7 @@ import { mountUI } from './app/ui';
 import { mountExamples } from './app/examples';
 import { mountLearning } from './app/learning';
 import { mountComparison } from './app/comparison';
+import { mountShotLauncher } from './app/shot-launch';
 import { installHooks } from './app/hooks';
 import { build as buildCamera } from './scene/camera-rig';
 import { build as buildLens } from './pieces/lens';
@@ -51,6 +52,7 @@ async function main() {
   mountExamples(store);
   mountLearning(store, startTour, startLesson);
   mountComparison(store);
+  mountShotLauncher(store);
   installHooks(store, stage);
 }
 

@@ -182,6 +182,7 @@ export function mountUI(store: Store, stage: Stage): void {
   // doesn't know, so picking Field before that stream's edit to scenes.ts lands is a safe no-op, not a crash.
   const SCENES: { id: string; label: string; sub: string }[] = [
     { id: 'bench', label: 'Tabletop', sub: 'Close, still' },
+    { id: 'flight', label: 'Bird glide', sub: 'Lateral flight' },
     { id: 'field', label: 'Field', sub: 'Far, open' },
   ];
   for (const s of SCENES) {

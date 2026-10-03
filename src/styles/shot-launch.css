@@ -1,0 +1,2 @@
+.shot-launch { position:absolute;right:14px;bottom:14px;z-index:4;min-height:38px;padding:8px 14px!important;border-color:#ffb14e88!important;background:#182330ee!important;color:#ffcf8d!important;box-shadow:0 3px 24px #0006; }
+.shot-launch[hidden] { display:none; }

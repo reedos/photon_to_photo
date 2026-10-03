@@ -141,6 +141,7 @@ function defaultSceneId(lensId: string): string {
  *  'dusk', bench's own low-light twin) falls back to the pre-existing long/short-lens rule above. */
 function defaultFocusForScene(sceneId: string, lensId: string): number {
   if (sceneId === 'field') return 30;
+  if (sceneId === 'flight') return 20;
   if (sceneId === 'bench') return 3;
   return defaultFocusM(lensId);
 }

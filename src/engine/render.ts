@@ -9,7 +9,7 @@ import type { SensorSpec } from './sensor';
 
 import { BINS, V_LAMBDA, sensorFor, colorCheckerReflectance, COLOR_CHECKER_NAMES } from './data';
 import { getScene, sceneFor, daylightAt, sceneDefaultLux, sceneDefaultCctK } from './scenes';
-import { radiance, shiftBillboards } from './scene';
+import { radiance, shiftBillboards, illuminantSpectralIrradiance } from './scene';
 import { exitPupilBlurDiameterMm } from './camera';
 import { airyRadius } from './diffraction';
 import { imageIrradiance, photonEnergy } from './exposure';
@@ -128,6 +128,7 @@ function traceSource(
   sceneObj: ReturnType<typeof getScene>,
   spec: SensorSpec,
   exposureS: number,
+  preparedIrradiance?: readonly number[],
 ): SourceSample {
   const halfW = width / 2;
   const halfH = height / 2;
@@ -143,7 +144,7 @@ function traceSource(
   const dir: Vec3 = normalize3([-sensorXmm / efl, -sensorYmm / efl, 1]);
   const origin: Vec3 = [0, 0, 0];
 
-  const hit = radiance(sceneObj, origin, dir, BINS, V_LAMBDA);
+  const hit = radiance(sceneObj, origin, dir, BINS, V_LAMBDA, preparedIrradiance);
   const cosTheta = dir[2];
   const depthMm = hit.depthMm ?? MISS_DEPTH_MM;
   const objectPoint: Vec3 = [origin[0] + dir[0] * depthMm, origin[1] + dir[1] * depthMm, origin[2] + dir[2] * depthMm];
@@ -207,16 +208,17 @@ function traceSourceWithMotion(
   exposureS: number,
   motion: { speedMps: number } | undefined,
   movingBillboardIds: readonly string[],
+  prepared?: { irradiance: readonly number[]; scenes: ReturnType<typeof getScene>[] },
 ): SourceSample {
   if (!motion || motion.speedMps === 0 || movingBillboardIds.length === 0) {
-    return traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS);
+    return traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, prepared?.irradiance);
   }
   const samples: SourceSample[] = [];
   for (let i = 0; i < MOTION_TIME_SAMPLES; i++) {
     const t = ((i + 0.5) / MOTION_TIME_SAMPLES) * exposureS;
     const dxMm = motion.speedMps * 1000 * t; // m/s * 1000 mm/m * s -> mm
-    const shifted = shiftBillboards(sceneObj, movingBillboardIds, dxMm);
-    samples.push(traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, shifted, spec, exposureS));
+    const shifted = prepared?.scenes[i] ?? shiftBillboards(sceneObj, movingBillboardIds, dxMm);
+    samples.push(traceSource(bx, by, width, height, blockPitchMm, efl, workingFno, shifted, spec, exposureS, prepared?.irradiance));
   }
   return averageSourceSamples(samples);
 }
@@ -338,6 +340,7 @@ export interface RenderSetup {
   iso: number;
   motion: { speedMps: number } | undefined;
   movingBillboardIds: string[];
+  prepared: { irradiance: number[]; scenes: ReturnType<typeof getScene>[] };
 }
 
 export function renderSetup(model: Model, width: number, height = Math.round(width * 2 / 3)): RenderSetup {
@@ -357,6 +360,10 @@ export function renderSetup(model: Model, width: number, height = Math.round(wid
   const baseScene = sceneFor(model.scenario.scene, model.scenario.subjectM);
   const illuminantShape = daylightAt(cctK);
   const sceneObj = { ...baseScene, illuminant: { spectrum: illuminantShape, lux } };
+  // Render-local exact caches: no spectral resampling, rounding, or changed temporal sample order.
+  const irradiance = illuminantSpectralIrradiance(illuminantShape,lux,BINS,V_LAMBDA);
+  const prepared = { irradiance:BINS.centers.map(irradiance), scenes:Array.from({length:MOTION_TIME_SAMPLES},(_,i)=>
+    shiftBillboards(sceneObj,sceneObj.movingBillboardIds??[],(model.scenario.motion?.speedMps??0)*1000*(((i+.5)/MOTION_TIME_SAMPLES)*model.scenario.shutter))) };
 
   return {
     spec,
@@ -364,6 +371,7 @@ export function renderSetup(model: Model, width: number, height = Math.round(wid
     blockPitchMm,
     sampleScale, offsetX, offsetY,
     sceneObj,
+    prepared,
     efl: model.cardinal.efl,
     workingFno: model.focus.workingFno,
     exposureS: model.scenario.shutter,
@@ -378,7 +386,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
   const notes: string[] = [];
   const { width, height, seed } = req;
 
-  const { spec, pixelScale, blockPitchMm, sampleScale, offsetX, offsetY, sceneObj, efl, workingFno, exposureS, iso, motion, movingBillboardIds } = renderSetup(model, width, height);
+  const { spec, pixelScale, blockPitchMm, sampleScale, offsetX, offsetY, sceneObj, efl, workingFno, exposureS, iso, motion, movingBillboardIds, prepared } = renderSetup(model, width, height);
   notes.push(`pixelScale=${pixelScale} (each rendered pixel stands for a ${pixelScale}x${pixelScale} block of real sensor pixels)`);
   notes.push(`centered sensor window ${width * blockPitchMm}x${height * blockPitchMm} mm; sample spacing ${sampleScale} sensor pixels; Bayer blocks approximate local averaging`);
 
@@ -409,13 +417,13 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
   // At field silhouettes, integrate four spatial samples BEFORE blur, retaining each sample's own depth.
   // Averaging foreground and background depths would invent a false blur disk along bird/branch edges.
   // Three cached center rows identify boundaries cheaply; interiors retain the single-sample fast path.
-  const edgeSampling = model.scenario.scene === 'field';
+  const edgeSampling = model.scenario.scene === 'field' || model.scenario.scene === 'flight';
   const centerRows = new Map<number, SourceSample[]>();
   const centerRow = (y: number) => {
     const rowY = Math.max(0, Math.min(height - 1, y));
     let row = centerRows.get(rowY);
     if (!row) {
-      row = Array.from({ length: width }, (_, x) => traceSourceWithMotion(x, rowY, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds));
+      row = Array.from({ length: width }, (_, x) => traceSourceWithMotion(x, rowY, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds, prepared));
       centerRows.set(rowY, row);
     }
     return row;
@@ -427,9 +435,9 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
     const above = edgeSampling ? centerRow(by - 1) : null;
     const below = edgeSampling ? centerRow(by + 1) : null;
     for (let bx = 0; bx < width; bx++) {
-      const center = row ? row[bx] : traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds);
+      const center = row ? row[bx] : traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds, prepared);
       const boundary = row && [row[Math.max(0, bx - 1)], row[Math.min(width - 1, bx + 1)], above![bx], below![bx]].some(s => s.hitId !== center.hitId);
-      const samples = boundary ? [-0.25, 0.25].flatMap(dy => [-0.25, 0.25].map(dx => traceSourceWithMotion(bx + dx, by + dy, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds))) : [center];
+      const samples = boundary ? [-0.25, 0.25].flatMap(dy => [-0.25, 0.25].map(dx => traceSourceWithMotion(bx + dx, by + dy, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds, prepared))) : [center];
       if (boundary) sampledEdges++;
       for (const src of samples) {
         // exitPupilBlurDiameterMm's pointDistMm is the object's AXIAL distance from the sensor (the distance to
@@ -455,7 +463,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
     }
     centerRows.delete(by - 1);
   }
-  if (edgeSampling) notes.push(`field silhouette antialiasing: four depth-preserving subpixel samples at ${sampledEdges} boundary pixels; fine features smaller than the sampling grid remain approximate`);
+  if (edgeSampling) notes.push(`${model.scenario.scene} silhouette antialiasing: four depth-preserving subpixel samples at ${sampledEdges} boundary pixels; fine features smaller than the sampling grid remain approximate`);
   if (kernelClamped) notes.push(`some source pixels' blur exceeded the ${MAX_KERNEL_RADIUS_PX}-rendered-pixel kernel cap and render slightly sharper than the true physics there (see e4.md)`);
 
   // ---- point highlights: splat directly, by projection, not by hoping a per-pixel primary ray hits them ----
@@ -546,7 +554,7 @@ export function renderImage(model: Model, req: RenderRequest): RenderResult {
     // the well-fill level shown still reflects real defocus/diffraction mixing from neighboring points, not
     // just this one sharp sample. See e4.md, "render.ts", for why this is a documented approximation (the
     // spectral SHAPE shown is this point's own; only the TOTAL is blur-corrected).
-    const src = traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds);
+    const src = traceSourceWithMotion(bx, by, width, height, blockPitchMm, efl, workingFno, sceneObj, spec, exposureS, motion, movingBillboardIds, prepared);
     const sharpChannelE = src.channelElectronsSharp[ci];
     const blurredChannelE = destChannel[idx * 3 + ci];
     const scale = sharpChannelE > 1e-12 ? blurredChannelE / sharpChannelE : 0;

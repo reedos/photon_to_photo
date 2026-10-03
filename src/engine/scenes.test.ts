@@ -8,8 +8,8 @@ import { exitPupilBlurDiameterMm } from './camera';
 import type { Scenario } from './types';
 
 describe('scene ids', () => {
-  it('lists bench, dusk and field', () => {
-    expect(sceneIds().sort()).toEqual(['bench', 'dusk', 'field']);
+  it('lists bench, dusk, field and flight', () => {
+    expect(sceneIds().sort()).toEqual(['bench', 'dusk', 'field', 'flight']);
   });
 
   it('default lux matches each scene', () => {

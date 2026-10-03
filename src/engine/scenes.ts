@@ -7,6 +7,7 @@ import type { Vec3 } from './types';
 import type { Billboard, PointHighlight, Scene } from './scene';
 import { siemensStarReflectance, daylightSpd } from './scene';
 import { fieldBirdCoverage, fieldBirdReflectance, fieldBranchCoverage, fieldBranchReflectance } from './field-patterns';
+import { flightCoverage, flightReflectance } from './flight-pattern';
 import { COLOR_CHECKER_NAMES, colorCheckerReflectance, DAYLIGHT_LAMBDAS, DAYLIGHT_S0, DAYLIGHT_S1, DAYLIGHT_S2, tableSpectrum } from './data';
 
 // ---- illuminant: daylight at an arbitrary CCT, built from the real CIE S0/S1/S2 basis ----------------------
@@ -331,12 +332,23 @@ function field(): Scene {
   };
 }
 
-export const SCENES: Record<string, () => Scene> = { bench, dusk, field };
+function flight(): Scene {
+  return {
+    billboards: [
+      { id: 'flight-subject', center: [0,0,20000], normal: [0,0,-1], up: [0,1,0], widthMm: 900, heightMm: 650, coverage: flightCoverage, reflectanceAt: flightReflectance },
+      dappledFoliageBillboard('flight-background', [0,0,80000], 150000,100000),
+    ],
+    pointHighlights: [],
+    illuminant: { spectrum: daylightAt(5500), lux: 10000 }, movingBillboardIds: ['flight-subject'],
+  };
+}
+export const SCENES: Record<string, () => Scene> = { bench, dusk, field, flight };
 
 export function sceneDefaultLux(sceneId: string): number {
   if (sceneId === 'bench') return BENCH_LUX;
   if (sceneId === 'dusk') return DUSK_LUX;
   if (sceneId === 'field') return FIELD_LUX;
+  if (sceneId === 'flight') return 10000;
   throw new Error(`scenes.ts: sceneDefaultLux: unknown scene id "${sceneId}"`);
 }
 
@@ -351,6 +363,7 @@ export function sceneDefaultCctK(_sceneId: string): number {
  * not necessarily the scenario's current focus distance.
  */
 export function sceneSubjectDistanceMm(sceneId: string, subjectM?: number | null): number {
+  if (sceneId === 'flight') return Math.min(60000, Math.max(2000, subjectM && Number.isFinite(subjectM) ? subjectM*1000 : 20000));
   if (sceneId === 'bench' || sceneId === 'dusk' || sceneId === 'field') return subjectScale(sceneId, subjectM) * sceneRefSubjectMm(sceneId);
   throw new Error(`scenes.ts: sceneSubjectDistanceMm: unknown scene id "${sceneId}"`);
 }
@@ -392,6 +405,7 @@ function subjectScale(sceneId: string, subjectM?: number | null): number {
  */
 export function sceneFor(sceneId: string, subjectM?: number | null): Scene {
   const scene = getScene(sceneId);
+  if (sceneId === 'flight') return { ...scene, billboards: scene.billboards.map(b => b.id === 'flight-subject' ? { ...b, center: [0,0,sceneSubjectDistanceMm(sceneId,subjectM)] as Vec3 } : b) };
   const k = subjectScale(sceneId, subjectM);
   if (k === 1) return scene;
   const near = new Set(NEAR_GROUP[sceneId] ?? []);

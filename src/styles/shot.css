@@ -1,0 +1,34 @@
+/* The player loads only after an explicit request. Keep its visual stage dominant. */
+#shot-dialog { width:min(1000px,calc(100vw - 28px)); max-height:calc(100svh - 24px); padding:16px 22px 12px; border:1px solid #365469; border-radius:18px; background:#0b1520; color:#e5eff4; box-shadow:0 24px 120px #000b; overflow:auto; --shot-color:#ffb14e; }
+#shot-dialog::backdrop { background:#01060ddd; backdrop-filter:blur(9px); }
+#shot-dialog header { display:flex;justify-content:space-between;align-items:center;gap:12px; }
+#shot-dialog h2 { font-size:23px;margin:3px 0 8px; }
+.shot-eyebrow,.shot-footnote { font-size:11px;color:#a5b6c7; }
+.shot-options { display:flex;gap:16px;align-items:center;justify-content:space-between;margin:5px 0 10px;font-size:12px;color:#b6c9d9; }
+.shot-options label { display:flex;align-items:center;gap:10px; }
+#shot-dialog select { background:#132636;color:#e7f4ff;border:1px solid #496178;border-radius:7px;padding:7px;min-height:36px; }
+#shot-canvas { display:block;width:100%;aspect-ratio:1000/560;max-height:43svh;object-fit:contain;background:#050b13;border-radius:10px; }
+.shot-story { display:flex;gap:18px;margin:12px 0 8px;align-items:start;min-height:54px; }
+.shot-story>div { flex:0 0 31%; } #shot-step { font-size:11px;color:var(--shot-color); } .shot-story h3 { font-size:17px;margin:2px 0;color:var(--shot-color); } .shot-story p { font-size:13px;line-height:1.5;margin:0;color:#c0ced9; }
+#shot-measures { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px;color:#adc0ce; }
+#shot-measures span { padding:7px 9px;background:#162532;border-radius:6px; } #shot-measures b { display:block;color:#ebf8ff;font-size:15px; }
+.shot-chapters { display:flex;gap:6px;margin:10px 0; }.shot-chapters button { flex:1;white-space:nowrap; }
+#shot-dialog .btn { min-height:36px; padding:6px 10px; } .shot-chapters [aria-current=true] { color:var(--shot-color);border-color:var(--shot-color);background:#20333f; }
+.shot-transport { display:flex;align-items:center;gap:8px; } .shot-scrub { flex:1;min-width:35px; } #shot-time { width:100%;accent-color:var(--shot-color);min-height:36px; } #shot-clock { white-space:nowrap;font-size:11px;font-variant-numeric:tabular-nums; }
+#shot-dialog footer { margin-top:9px;display:flex;align-items:center;gap:10px;justify-content:space-between; } #shot-status { font-size:11px;color:#b4c8d7;max-width:60%; } #shot-use { white-space:nowrap; } .shot-footnote { margin:8px 0 0;line-height:1.4; }
+#shot-dialog :focus-visible { outline:2px solid #80dbff;outline-offset:3px; }
+@media(max-width:600px){
+  #shot-dialog { width:calc(100vw - 12px);max-height:calc(100svh - 12px);padding:12px; }
+  .shot-eyebrow { font-size:10px; } #shot-dialog h2 { font-size:21px; }
+  .shot-options { flex-wrap:wrap;gap:5px; } .shot-options label { width:100%; } .shot-options select { flex:1;min-width:0; }
+  #shot-canvas { max-height:34svh; } .shot-story { display:block;margin:9px 0;min-height:100px; } .shot-story>div { display:flex;gap:8px;align-items:center;margin-bottom:4px; } .shot-story h3 { font-size:16px; } .shot-story p { font-size:12px;line-height:1.4; }
+  #shot-measures { grid-template-columns:repeat(2,1fr);gap:5px; } #shot-measures span { padding:5px 8px; } #shot-measures b { display:inline;font-size:13px;margin-right:4px; }
+  .shot-chapters { gap:5px;margin:8px 0; }.shot-chapters span { display:none; }.shot-transport { flex-wrap:wrap;gap:6px; }
+  #shot-dialog .btn { padding:6px 8px; } .shot-scrub { flex-basis:calc(100% - 235px); } #shot-dialog footer { flex-wrap:wrap; } #shot-status { max-width:100%; } .shot-footnote { font-size:10px; }
+}
+@media(prefers-reduced-motion:reduce){ #shot-dialog::backdrop { backdrop-filter:none; } }
+#shot-dialog .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0; }
+@media(min-width:601px) and (max-height:850px){ #shot-dialog { padding-top:10px;padding-bottom:8px; } #shot-canvas { max-height:36svh; } .shot-story { margin:8px 0;min-height:48px; } .shot-chapters { margin:7px 0; } }
+#shot-dialog { max-width:none;box-sizing:border-box; } #shot-dialog .btn:disabled { opacity:.45;cursor:wait; }
+#shot-dialog .shot-chapters .btn { transition:none; }
+@media(max-width:600px){ #shot-dialog .shot-eyebrow { display:none; } #shot-dialog h2 { margin:0; } #shot-canvas { aspect-ratio:2.15; } .shot-story { min-height:85px; } #shot-dialog footer { margin-top:6px; } }

@@ -275,7 +275,7 @@ export interface RadianceResult {
  *
  * For a point highlight hit: its own emitted radiance, unattenuated (it is a light source, not a reflector).
  */
-export function radiance(scene: Scene, rayOrigin: Vec3, rayDir: Vec3, bins: Bins, vLambda: (nm: number) => number): RadianceResult {
+export function radiance(scene: Scene, rayOrigin: Vec3, rayDir: Vec3, bins: Bins, vLambda: (nm: number) => number, preparedIrradiance?: readonly number[]): RadianceResult {
   const dir = normalize(rayDir);
   let bestT = Infinity;
   let hitBillboard: { bb: Billboard; u: number; v: number } | null = null;
@@ -304,8 +304,8 @@ export function radiance(scene: Scene, rayOrigin: Vec3, rayDir: Vec3, bins: Bins
   }
   if (hitBillboard) {
     const reflectance = hitBillboard.bb.reflectanceAt(hitBillboard.u, hitBillboard.v);
-    const irradiance = illuminantSpectralIrradiance(scene.illuminant.spectrum, scene.illuminant.lux, bins, vLambda);
-    const radianceByBin = bins.centers.map((nm) => (reflectance(nm) * irradiance(nm)) / Math.PI);
+    const irradiance = preparedIrradiance ? null : illuminantSpectralIrradiance(scene.illuminant.spectrum, scene.illuminant.lux, bins, vLambda);
+    const radianceByBin = bins.centers.map((nm,i) => (reflectance(nm) * (preparedIrradiance ? preparedIrradiance[i] : irradiance!(nm))) / Math.PI);
     return { radianceByBin, depthMm: bestT, hitId: hitBillboard.bb.id };
   }
   return { radianceByBin: bins.centers.map(() => 0), depthMm: null, hitId: null };

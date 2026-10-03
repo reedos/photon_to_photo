@@ -451,7 +451,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     const shown = (el: Element) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
     // chrome the pins and their labels must stay clear of
     exclusion = [];
-    const sel = '.hud.tl > *, .hud.tr > *, .hud.br > *, .hud.bl > *, .hud.rail > *, .piece-overlay:not([hidden]) > *, .toast';
+    const sel = '.hud.tl > *, .hud.tr > *, .hud.br > *, .hud.bl > *, .hud.rail > *, .piece-overlay:not([hidden]) > *, .toast, .shot-launch';
     for (const el of dom.view.querySelectorAll(sel)) {
       if (el.classList.contains('hint') || el.classList.contains('hud-slot') || !shown(el)) continue;
       if (el.classList.contains('rig-teach') || el.classList.contains('rig-tip') || el.classList.contains('rig-note') || el.classList.contains('mode-slotted')) continue;
