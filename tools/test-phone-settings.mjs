@@ -12,7 +12,12 @@ async function capture(name){
  const state=await page.evaluate(()=>({viewport:[innerWidth,innerHeight],document:[document.documentElement.scrollWidth,document.documentElement.scrollHeight],view:document.querySelector('#gl').getBoundingClientRect().toJSON(),drawer:document.querySelector('#phone-settings').open,parts:document.querySelector('#studio-explain').checkVisibility()}));
  report.samples.push({name,...state}); await page.screenshot({path:`${output}/${name}.png`});
  assert.deepEqual(state.document,state.viewport,`${name}: no page overflow`);
- assert.equal(state.parts,true,`${name}: Parts dock keeps its layout`);
+ assert.equal(state.parts,!state.drawer,`${name}: Parts dock returns when Settings closes`);
+ if(state.drawer) {
+  assert.ok(state.view.height >= (state.viewport[0]===390?380:190),`${name}: the live model remains visible (${state.view.height}px)`);
+  const dialog=await page.locator('#phone-settings').boundingBox();
+  assert.ok(state.view.bottom<=dialog.y+1,`${name}: Settings does not cover the model`);
+ }
  if(!state.drawer) for(const selector of ['#part-next','#part-prev','#zoom-in','#zoom-out','#tab-controls','#tab-explain','#inspector-size']) assert.equal(await page.locator(selector).evaluate(el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===hit||el.contains(hit);}),true,`${name}: ${selector} reachable`);
 }
 try{
@@ -31,6 +36,12 @@ try{
   await page.locator('#tab-controls').click();await page.locator('#phone-settings').waitFor({state:'visible'});
   assert.equal(await page.evaluate(()=>document.activeElement.id),'phone-settings-close');
   await capture(`${width}-drawer`);
+  await page.waitForFunction(()=>!window.p2p.framing().moving);
+  const modelBefore=await page.locator('#gl').screenshot();
+  const aperture=await page.evaluate(()=>window.p2p.scenario().fno);
+  await page.locator('#sc-fno').focus();await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(before=>window.p2p.scenario().fno>before,aperture);await page.waitForTimeout(500);
+  assert.notDeepEqual(await page.locator('#gl').screenshot(),modelBefore,'the model renders aperture changes while Settings is open');
   await page.keyboard.press('Shift+Tab');assert.equal(await page.evaluate(()=>document.querySelector('#phone-settings').contains(document.activeElement)),true,'native focus stays in drawer');
   const iso=await page.evaluate(()=>window.p2p.scenario().iso);
   await page.locator('#sc-iso').focus();await page.keyboard.press('ArrowRight');assert.ok(await page.evaluate(before=>window.p2p.scenario().iso>before,iso));

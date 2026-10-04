@@ -129,6 +129,7 @@ export const build: BuildPiece = (ctx) => {
   const irisLitMat = new THREE.MeshStandardMaterial({ color: 0x5a5f68, metalness: 0.5, roughness: 0.34, emissive: 0x2a2d33, side: THREE.DoubleSide });
   const iris = new THREE.Mesh(new THREE.BufferGeometry(), irisMat);
   iris.name = 'live-iris';
+  iris.visible = false; // No position buffer exists until the first optical model is applied.
   group.add(iris);
   // each blade's edge, drawn over the lit annulus in the iris mode so the blades read as blades, not a flat disk
   const bladeEdges = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x08090b, transparent: true, opacity: 0.9 }));
@@ -210,7 +211,7 @@ export const build: BuildPiece = (ctx) => {
   phoneMq?.addEventListener('change', placePanel);
 
 
-  const draco = new DRACOLoader().setDecoderPath(new URL('./draco/', location.href).href).setDecoderConfig({ type: 'js' });
+  const draco = new DRACOLoader().setDecoderPath(new URL('./draco/', location.href).href);
   const loader = new GLTFLoader().setDRACOLoader(draco);
   const cache = new Map<string, Promise<THREE.Group>>();
   let bodyRoot: THREE.Group | null = null;
@@ -413,8 +414,10 @@ export const build: BuildPiece = (ctx) => {
     note.hidden = !!l;
     note.textContent = l ? '' : 'This lens has no 3D model: pick one of the lineup lenses above';
     applyView();
-    anchorProbes();
     if (lastModel) applyModel(lastModel);
+    // The loaded lens and live iris must share the new optical geometry before
+    // their world anchors are measured (including cached A → B → A returns).
+    anchorProbes();
     placeGround();
     // The stage renders/compiles on demand. A speculative compileAsync here races that shared
     // renderer's frame-buffer target when a new body or inspection changes tone mapping or size.
@@ -484,6 +487,7 @@ export const build: BuildPiece = (ctx) => {
     shape.holes.push(hole);
     iris.geometry.dispose();
     iris.geometry = new THREE.ShapeGeometry(shape, 48);
+    iris.visible = true;
     iris.position.z = stopZ;
     state.irisRadius = model.iris.radius;
     {
@@ -1205,7 +1209,6 @@ export const build: BuildPiece = (ctx) => {
             taken.push({ l: r.left - origin.left - 4, t: r.top - origin.top - 4, r: r.right - origin.left + 4, b: r.bottom - origin.top + 4 });
           }
         }
-        const centers: { x: number; y: number; n: string }[] = [];
         for (const m of marks) {
           const o = assembly.getObjectByName(m.node);
           if (!o) { m.el.style.display = 'none'; continue; }
@@ -1221,22 +1224,12 @@ export const build: BuildPiece = (ctx) => {
             at.x += toCam.x * r; at.y += toCam.y * r;
           }
           const p = at.project(ctx.camera);
-          let x = ((p.x + 1) / 2) * w, y = ((1 - p.y) / 2) * h;
-          // Two controls can land this close on the grip (the front dial and the shutter button). Hiding one ring
-          // and stacking both labels on the other left a reader unable to tell which fires and which sets the
-          // aperture (R3-03): nudge this one's ring a little further along the line away from the other instead, so
-          // both stay visible and each keeps its own label.
-          const near = centers.find((c) => c.n === 'commandDialFront' && Math.hypot(c.x - x, c.y - y) < 40);
-          if (m.node === 'shutterButton' && near) {
-            const dx = x - near.x, dy = y - near.y;
-            const len = Math.hypot(dx, dy);
-            const [ux, uy] = len > 1 ? [dx / len, dy / len] : [0, -1];
-            x += ux * 30; y += uy * 30;
-          }
+          const x = ((p.x + 1) / 2) * w, y = ((1 - p.y) / 2) * h;
+          // Rings locate physical controls. Only the attached text may move to
+          // avoid collisions; displacing a ring makes it point at empty space.
           m.el.style.display = p.z < 1 ? '' : 'none';
           m.el.style.left = `${x}px`;
           m.el.style.top = `${y}px`;
-          centers.push({ x, y, n: m.node });
           // A fixed phone offset still covers the body or barrel; place text in free space (R3-FID-3).
           const label = m.el.querySelector('span')!;
           const leader = m.el.querySelector<HTMLElement>('.rig-teach-leader')!;

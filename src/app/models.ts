@@ -382,7 +382,7 @@ async function main() {
   chip.title = webgpu ? 'Rendering with WebGPU' : 'Rendering with WebGL2 (WebGPU needs a secure context; plain HTTP on the tailnet is not one)';
 
   // the lenses are Draco-compressed; the plain-JS decoder, since the review server's CSP does not allow WebAssembly
-  const draco = new DRACOLoader().setDecoderPath(new URL('./draco/', location.href).href).setDecoderConfig({ type: 'js' });
+  const draco = new DRACOLoader().setDecoderPath(new URL('./draco/', location.href).href);
   loader = new GLTFLoader().setDRACOLoader(draco);
 
   scene = new THREE.Scene();

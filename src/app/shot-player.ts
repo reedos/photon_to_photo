@@ -161,7 +161,7 @@ export function createShotPlayer(store:Store) {
     if(dialog.open&&photoGeneration===generation&&readyImage)el('view-photo').focus({preventScroll:true});
   });
   dialog.addEventListener('keydown',e=>e.stopPropagation());
-  dialog.addEventListener('close',()=>{if(dialog.open)return;if(photoDialog.open)photoDialog.close();pause();cancelLoad();const target=opener?.getClientRects().length&&!opener.closest('details:not([open])')?opener:document.querySelector<HTMLElement>('.view-menu summary');target?.focus({preventScroll:true});});
+  dialog.addEventListener('close',()=>{if(dialog.open)return;if(photoDialog.open)photoDialog.close();pause();cancelLoad();const target=opener?.getClientRects().length&&!opener.closest('details:not([open])')?opener:document.querySelector<HTMLElement>('#workspace-model');target?.focus({preventScroll:true});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&dialog.open){autoIntent=false;pause();}});
   reduced.addEventListener('change',()=>{visual?.setReducedMotion(reduced.matches);if(reduced.matches&&dialog.open)pause();else if(dialog.open)draw();});
   new ResizeObserver(()=>{if(dialog.open)draw();}).observe(el('canvas'));

@@ -16,12 +16,18 @@ export function buildSensor(lookMod: typeof look): SensorHandle {
   group.name = 'lens-sensor';
 
   const plateMat = lookMod.sensorArrayMaterial();
+  // A restrained presentation fill makes the silicon read as a surface at this
+  // scale; it is not a color-filter diagram or a measured reflectance claim.
+  plateMat.color.set(0x3b536b);
+  plateMat.emissive.set(0x122030);
+  plateMat.emissiveIntensity = 0.3;
+  plateMat.roughness = 0.3;
   const plate = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.3), plateMat);
   plate.frustumCulled = false;
 
   // The format's own rectangle, outlined so the plate reads as the 36 x 24 mm (or whatever format) chip it is,
   // not a dark shape lost in the void (R1-12).
-  const edgeMat = new THREE.LineBasicMaterial({ color: 0xc9ced4, transparent: true, opacity: 0.75 });
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0xc9ced4, transparent: true, opacity: 0.5 });
   edgeMat.toneMapped = false;
   const edgeGeo = new THREE.BufferGeometry();
   const edge = new THREE.Line(edgeGeo, edgeMat);

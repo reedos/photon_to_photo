@@ -40,7 +40,18 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
   sample.getContext('2d')!.drawImage(real.image,0,0,36,32);
   const jpegSamples=sample.getContext('2d')!.getImageData(0,0,36,32).data;
   function line(x:number,y:number,X:number,Y:number,color:string,width=1) {ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X,Y);ctx.stroke();}
-  function text(value:string,x:number,y:number,size=20,color='#dcedf2',essential=false) {if(handoffRendering||canvas.clientWidth<600&&!essential)return;ctx.font=`${canvas.clientWidth<600?Math.max(30,size):size}px system-ui`;ctx.fillStyle=color;ctx.fillText(value,x,y);}
+  function text(value:string,x:number,y:number,size=20,color='#dcedf2',essential=false) {
+    if(handoffRendering||canvas.clientWidth<600&&!essential)return;
+    const transform=ctx.getTransform(),displayScale=canvas.clientWidth/canvas.width*Math.hypot(transform.a,transform.b);
+    const fontSize=Math.max(size,13/Math.max(displayScale,.001));
+    ctx.save();ctx.font=`${fontSize}px system-ui`;
+    const metrics=ctx.measureText(value),align=ctx.textAlign;
+    const left=align==='center'?x-metrics.width/2:align==='right'||align==='end'?x-metrics.width:x;
+    const padX=6/Math.max(displayScale,.001),padY=3/Math.max(displayScale,.001);
+    const ascent=metrics.actualBoundingBoxAscent||fontSize*.8,descent=metrics.actualBoundingBoxDescent||fontSize*.2;
+    ctx.fillStyle='rgba(3, 9, 15, .62)';ctx.fillRect(left-padX,y-ascent-padY,metrics.width+padX*2,ascent+descent+padY*2);
+    ctx.fillStyle=color;ctx.fillText(value,x,y);ctx.restore();
+  }
   function dot(x:number,y:number,r:number,color:string) {ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
   // Every signal follows a complete, stable path. Position is solely a function of the scrubber.
   function flow(r:Route,t:number,color:string,count=3,strength=1,square=false) {

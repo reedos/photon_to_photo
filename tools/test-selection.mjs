@@ -80,7 +80,6 @@ try {
         }
         const before = await page.evaluate(() => window.p2p.framing());
         await page.locator('#reset-view').click();
-        if (await page.locator('.view-menu').getAttribute('open') !== null) await page.locator('.view-menu summary').click();
         await settled();
         const after = await page.evaluate(() => window.p2p.framing());
         assert.deepEqual(after.target, before.target, `${piece}: reset keeps selected part`);

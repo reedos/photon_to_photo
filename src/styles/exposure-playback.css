@@ -20,3 +20,40 @@
   .rig-exposure .rx-pause { min-height: 44px; }
   .rig-exposure .rx-scrub { height: 44px; }
 }
+
+/* In the workspace the playback row replaces information in a fixed inspector.
+   Keep its footprint, and the live status line, reserved before a shot as well. */
+.workspace.viewport-studio #studio-exposure .rig-exposure .rx-playback-head { min-height: 36px; }
+.workspace.viewport-studio #studio-exposure .rig-exposure .rx-playback[hidden] {
+  display: grid !important;
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+}
+.workspace.viewport-studio #studio-exposure .rig-exposure .rx-playback[hidden]::before {
+  content: 'Fire shutter to inspect exposure timing';
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  visibility: visible;
+  color: var(--muted);
+  font: 11px/1.5 var(--sans);
+}
+.workspace.viewport-studio #studio-exposure .rig-exposure .rx-status {
+  min-height: 2.9em;
+}
+.workspace.viewport-studio #studio-exposure .rig-exposure .rx-status:empty {
+  display: block !important;
+  visibility: hidden;
+}
+
+/* The playback scale badge was landing on the cutaway's lower-left ray fan.
+   Put that transient badge in the open lower-right corner while it is active. */
+.workspace.viewport-studio .stage:has(#studio-exposure .rig-exposure:is([data-playback="playing"], [data-playback="paused"])) #view .hud.bl:has(#scale-badge:not([hidden])) {
+  left: auto;
+  right: 12px;
+  justify-items: end;
+  max-width: min(50%, 560px);
+  text-align: right;
+}

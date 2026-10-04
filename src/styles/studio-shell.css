@@ -45,6 +45,13 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio .finalimg { padding: 10px 14px; }
 .workspace.viewport-studio .finalimg-canvas-wrap { aspect-ratio: auto; }
 .workspace.viewport-studio #finalimg-canvas { --photo-height: clamp(78px, 17dvh, 160px); position: static; width: min(100%, calc(var(--photo-height) * 1.5)); height: auto; margin-inline: auto; background: #080e14; }
+.workspace.viewport-studio .studio-sidebar[data-pane="parts"] .finalimg { display: block; padding: 10px 14px; }
+.workspace.viewport-studio .step .t, .workspace.viewport-studio .step.deep .t { font: 600 13px/1.2 var(--sans); }
+.studio-share { flex: none; margin-left: auto; }
+.studio-share .hud-row { display: flex; }
+.studio-share #share-btn { min-height: 36px; font-size: 11px; }
+.level-why { flex: none; margin: 0; padding: 5px 16px; color: var(--muted); background: #0d151e; border-bottom: 1px solid var(--line); font: 12px/1.4 var(--sans); }
+@media (max-width: 599px) and (max-height: 650px) { .level-why { display: none; } }
 .workspace.viewport-studio .finalimg .photo-hint { display: none; }
 .workspace.viewport-studio .finalimg .photo-details > summary { padding-block: 4px; }
 .workspace.viewport-studio .scenario { padding: 12px 14px; overflow: auto; overscroll-behavior: contain; }
@@ -59,6 +66,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio #model-experiments { order: 5; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); flex: 0 0 auto; }
 .workspace.viewport-studio #model-experiments:not(:has(> :not([hidden]))) { display: none; }
 .workspace.viewport-studio #model-experiments > .perspective-launch-row { grid-column: 1 / -1; }
+.workspace.viewport-studio #model-experiments:not(:has(> :not([hidden]) ~ :not([hidden]))) > :not([hidden]) { grid-column: 1 / -1; }
 .workspace.viewport-studio #model-experiments > div { min-width: 0; padding: 5px 10px; gap: 6px; }
 .workspace.viewport-studio #model-experiments .btn { font-size: 10px; padding-inline: 9px; }
 .workspace.viewport-studio #model-experiments span { font-size: 10px; }
@@ -155,6 +163,19 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio.model-expanded .stage .body { grid-template-rows: minmax(0,1fr); }
 }
 @media (max-width: 599px) {
+  .workspace.viewport-studio.phone-settings-open .wrap { padding-bottom: min(40dvh,300px); }
+  .workspace.viewport-studio.phone-settings-open :is(.studio-kit,#model-tools,.studio-sidebar,.hud-btns-phone,#model-experiments,.light-playback,.rain-launch) { display: none!important; }
+  body.workspace.viewport-studio.phone-settings-layout.phone-settings-open .stage .body { grid-template-rows: minmax(0,1fr); }
+  .phone-settings-open .level-why { display: none; }
+  body #phone-settings { height: min(40dvh,300px); max-height: min(40dvh,300px); }
+  body #phone-settings::backdrop { background: transparent; }
+  body #phone-settings > header { padding: 8px 12px; }
+  body #phone-settings h2 { font-size: 15px; }
+  body #phone-settings header p { font-size: 10px; }
+  .phone-settings-scroll { padding: 0 12px 12px; }
+  .phone-settings-scroll > section { padding-block: 10px; }
+  #phone-settings .sc-controls { gap: 8px; }
+  .workspace.viewport-studio .studio-sidebar[data-pane="parts"] .finalimg { padding: 7px; }
   .workspace.viewport-studio .studio-kit { position: relative; padding: 3px 8px; gap: 8px; z-index: 7; }
   #equipment-toggle { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 3px 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
   #equipment-summary { min-width: 0; font: 11px/1.35 var(--sans); overflow-wrap: anywhere; }

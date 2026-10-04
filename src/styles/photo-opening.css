@@ -1,6 +1,7 @@
 body.entry-pending #top { display:none; }
 .photo-opening { width:min(1280px,100%); margin:auto; padding:calc(var(--bar) + 52px) 40px 36px; }
 .photo-opening[hidden] { display:none; }
+.opening-copy h1 { text-wrap: balance; }
 .opening-grid { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.2fr); align-items:center; gap:clamp(28px,5vw,76px); }
 .opening-copy { min-width:0; }
 .opening-copy .eyebrow { color:var(--accent); font-size:11px; line-height:1.7; }

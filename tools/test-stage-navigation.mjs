@@ -90,9 +90,7 @@ try {
     await page.mouse.up();
     await settle();
     assert.notDeepEqual((await framing()).position, picked.position, `${piece} responds to orbit`);
-    if (!await page.locator('.view-menu').evaluate(el => el.open)) await page.locator('.view-menu summary').click();
     await page.locator('#reset-view').click();
-    if (await page.locator('.view-menu').evaluate(el => el.open)) await page.locator('.view-menu summary').click();
     await settle();
     closeEnough(await framing(), picked, `${piece} reset restores the selected part`);
     await page.setViewportSize({ width: 390, height: 844 });

@@ -42,8 +42,15 @@ try{
    assert.ok(equivalent,`chapter ${i}: scrub changed ${changed} channels by up to ${max}`);
   }
   await page.screenshot({path:`shots/shot/verified/desktop-${i}.png`});
- }
- await seek(9.76);
+  }
+  await page.locator('[data-shot-chapter="3"]').click();await seek(14);
+  const chargeLabelBacking=await page.locator('#shot-canvas').evaluate(canvas=>{
+   const ctx=canvas.getContext('2d'),scale=canvas.width/1000,x=Math.round((570-2)*scale),y=Math.round((520-10)*scale);
+   return [...ctx.getImageData(x,y,1,1).data];
+  });
+  assert.ok(chargeLabelBacking[0]<35&&chargeLabelBacking[1]<45&&chargeLabelBacking[2]<60,
+   `schematic charge label has a dark backing chip at the label edge: ${chargeLabelBacking}`);
+  await seek(9.76);
  assert.equal(await page.locator('#shot-canvas').getAttribute('data-capture-phase'),'expose');
  const gap=await page.locator('#shot-canvas').evaluate(c=>+c.dataset.captureFront-+c.dataset.captureRear);
  assert.ok(Math.abs(gap-.0625)<1e-6,'1/4000 exposure makes a slit 1/16 of sensor height at 4ms transit');
@@ -84,10 +91,27 @@ try{
   const violations=await page.evaluate(async()=>{const r=await axe.run(document.querySelector('#shot-dialog'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa']}});return r.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}));});
   assert.deepEqual(violations,[]);await page.screenshot({path:`shots/shot/verified/${width}.png`});
  }
+ const retinaContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,reducedMotion:'reduce'});
+ try{
+  const retina=await retinaContext.newPage();retina.on('pageerror',e=>errors.push(String(e)));
+  retina.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
+  await retina.goto(`${url}?lens=n50&part=sensor&lux=7300&cct=4200`);
+  await retina.waitForFunction(()=>window.p2p?.pieces.camera);await retina.evaluate(()=>window.p2p.pieces.camera.ready());
+  await retina.locator('.shot-launch').click();await retina.waitForSelector('#shot-dialog[data-ready="true"]',{timeout:120000});
+  await retina.locator('[data-shot-chapter="3"]').click();
+  await retina.locator('#shot-time').evaluate(el=>{el.value='14';el.dispatchEvent(new Event('input',{bubbles:true}));});
+  const retinaChip=await retina.locator('#shot-canvas').evaluate(canvas=>{
+   const ctx=canvas.getContext('2d'),scale=canvas.width/1000,x=Math.round((570-2)*scale),y=Math.round((520-10)*scale);
+   return {ratio:canvas.width/canvas.getBoundingClientRect().width,pixel:[...ctx.getImageData(x,y,1,1).data]};
+  });
+  assert.ok(retinaChip.ratio>1.8,`phone canvas uses a high-DPR backing store: ${retinaChip.ratio}`);
+  assert.ok(retinaChip.pixel[0]<35&&retinaChip.pixel[1]<45&&retinaChip.pixel[2]<60,
+   `high-DPR phone schematic label has a dark backing chip: ${retinaChip.pixel}`);
+ }finally{await retinaContext.close();}
  await page.keyboard.press('Escape');assert.equal(await page.locator('#shot-dialog').evaluate(d=>d.open),false);
  assert.deepEqual(await page.evaluate(()=>({scenario:window.p2p.scenario(),selected:window.p2p.framing().selected,query:location.search})),before,'closing preserves selected part and every setting');
- await page.setViewportSize({width:1366,height:768});await page.locator('.view-menu summary').click();await page.getByRole('button',{name:'Play the shot',exact:true}).click();await page.locator('#shot-close').click();
- await page.waitForFunction(()=>document.querySelector('.view-menu summary')===document.activeElement);
+ await page.setViewportSize({width:1366,height:768});await page.locator('.shot-launch').click();await page.locator('#shot-close').click();
+ await page.waitForFunction(()=>document.querySelector('.shot-launch')===document.activeElement);
  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.shot-launch').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');assert.equal(await page.locator('#shot-dialog').getAttribute('data-playing'),'false');
  await page.locator('#shot-use').click();
  const applied=await page.evaluate(()=>window.p2p.scenario());assert.equal(applied.shutter,1/4000);assert.equal(applied.iso,1400);

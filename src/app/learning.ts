@@ -14,18 +14,21 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElem
 
 export function mountLearning(store: Store, startTour = false, startLesson: string | null = null): void {
   const launch = document.createElement('button');
-  launch.className = 'btn learn-launch'; launch.id = 'learn-launch'; launch.textContent = 'Learn';
+  launch.className = 'btn learn-launch'; launch.id = 'learn-launch'; launch.textContent = matchMedia('(max-width: 760px)').matches ? 'Tour' : 'Guided tour';
   launch.setAttribute('aria-expanded', 'false'); launch.setAttribute('aria-controls', 'journey');
-  document.querySelector('.view-menu')!.before(launch);
+  document.querySelector('#studio-actions')!.before(launch);
   const phone = matchMedia('(max-width: 760px)');
-  const placeLaunch = () => phone.matches ? el('steps').append(launch) : document.querySelector('.view-menu')!.before(launch);
+  const placeLaunch = () => {
+    if (phone.matches) { el('steps').append(launch); launch.textContent = 'Tour'; }
+    else { document.querySelector('#studio-actions')!.before(launch); launch.textContent = 'Guided tour'; }
+  };
   placeLaunch(); phone.addEventListener('change', placeLaunch);
   const journey = document.createElement('section');
   journey.id = 'journey'; journey.hidden = true; journey.setAttribute('aria-label', 'Follow the light');
-  journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p></div>
+  journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p><p id="journey-caption" role="status"></p><details id="journey-more"><summary>More</summary><p id="journey-more-text"></p><details id="journey-physics"><summary>Physics & practical use</summary><p id="journey-equation"></p><p id="journey-live"></p><p id="journey-use"></p></details></details></div>
     <nav aria-label="Tour controls"><button class="btn" id="journey-prev" aria-label="Previous tour stop">‹</button><button class="btn" id="journey-play">Play</button><button class="btn" id="journey-next" aria-label="Next tour stop">Next ›</button><button class="btn" id="journey-restart">Restart</button><button class="btn" id="journey-close" aria-label="Close tour">×</button></nav>`;
   el('viewer').prepend(journey);
-  journey.querySelector('.journey-copy')!.insertAdjacentHTML('beforeend', '<details id="journey-physics"><summary>Physics & practical use</summary><p id="journey-equation"></p><p id="journey-live"></p><p id="journey-use"></p></details>');
+  phone.addEventListener('change', () => { el<HTMLDetailsElement>('journey-more').open = !phone.matches; });
   const lesson = document.createElement('section');
   lesson.id = 'sensor-lesson'; lesson.hidden = true; lesson.setAttribute('aria-label', 'Sensor to photo');
   lesson.innerHTML = `<header><div><span class="journey-label">Inside your camera · Sensor → Photo</span><h2 id="lesson-title">Read the sensor</h2></div><button class="btn" id="lesson-close">← Camera</button></header>
@@ -220,7 +223,10 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     index = Math.max(0, Math.min(TOUR.length - 1, next)); const stop = TOUR[index];
     entering = true; hideLesson(); store.setPiece(stop.piece); store.setCameraPart(stop.part); entering = false;
     if (stop.lesson) openLesson(stop.lesson);
-    el<HTMLSelectElement>('journey-stop').value = String(index); el('journey-text').textContent = stop.text;
+    el<HTMLSelectElement>('journey-stop').value = String(index);
+    el('journey-text').textContent = stop.text; el('journey-caption').textContent = stop.text; el('journey-more-text').textContent = stop.text;
+    el<HTMLDetailsElement>('journey-more').open = !phone.matches;
+    el<HTMLDetailsElement>('journey-physics').open = false;
     showInsights();
     el<HTMLButtonElement>('journey-prev').disabled = index === 0;
     el('journey-next').textContent = index === TOUR.length - 1 ? 'Finish ✓' : 'Next ›';
@@ -290,7 +296,11 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     if (!entering && state !== previous) {
       pause(); pauseLesson();
       if (state.piece !== previous.piece || state.cameraPart !== previous.cameraPart) hideLesson();
-      if (!journey.hidden && (state.piece !== previous.piece || state.cameraPart !== previous.cameraPart)) el('journey-text').textContent = 'Exploring freely. Next returns to the guided journey; Restart begins at the scene.';
+      if (!journey.hidden && (state.piece !== previous.piece || state.cameraPart !== previous.cameraPart)) {
+        const text = 'Exploring freely. Next returns to the guided journey; Restart begins at the scene.';
+        el('journey-text').textContent = text; el('journey-caption').textContent = text; el('journey-more-text').textContent = text;
+        el<HTMLDetailsElement>('journey-more').open = !phone.matches;
+      }
     }
     previous = state; lessonModel = compute(state.scenario); showInsights(); refresh();
   });

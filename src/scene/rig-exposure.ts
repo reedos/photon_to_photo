@@ -204,6 +204,7 @@ export function createExposure(d: ExposureDeps) {
   const mat = new THREE.PointsMaterial({ size: 5, sizeAttenuation: false, vertexColors: true, transparent: true,
     depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
   const dots = new THREE.Points(geo, mat);
+  dots.visible = false;
   dots.frustumCulled = false;
   dots.name = 'photons';
   d.group.add(dots);
@@ -394,7 +395,7 @@ export function createExposure(d: ExposureDeps) {
     const wasRunning = running;
     running = false; paused = false; shotModel = null;
     segs = []; elapsedVis = 0; dotBudget = 0; shownFraction = 1;
-    visibleDots = 0; geo.setDrawRange(0, 0); pathCache = [];
+    visibleDots = 0; dots.visible = false; geo.setDrawRange(0, 0); pathCache = [];
     restoreMechanism();
     d.badge.hide();
     hud.setAttribute('data-fired', 'false');
@@ -509,6 +510,7 @@ export function createExposure(d: ExposureDeps) {
       }
     }
     visibleDots = n;
+    dots.visible = n > 0;
     geo.setDrawRange(0, n);
     geo.attributes.position.needsUpdate = true;
     geo.attributes.color.needsUpdate = true;

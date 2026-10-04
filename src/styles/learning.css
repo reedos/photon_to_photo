@@ -22,12 +22,22 @@
 #pipeline-route .btn span { display: block; font: 10px/1.4 var(--sans); white-space: normal; }
 #pipeline-route [aria-pressed="true"] { background: #273b47; border-color: #9acfe7; color: #e0f3ff; }
 #pipeline-wipe { position: absolute; top: 0; bottom: 0; width: 2px; background: #d5f4ff; box-shadow: 0 0 14px 3px #87cee9; pointer-events: none; }
-#journey { padding: 10px 16px; background: #1b2025; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 16px; }
-.journey-copy { min-width: 0; flex: 1; }
+#journey { box-sizing: border-box; height: 132px; min-height: 132px; padding: 10px 16px; background: #1b2025; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 16px; overflow: hidden; }
+.journey-copy { min-width: 0; height: 100%; flex: 1; display: flex; flex-direction: column; overflow: auto; }
 .journey-label { display: block; color: var(--accent); font: 10px var(--mono); letter-spacing: .04em; margin-bottom: 4px; }
 #journey select { width: 100%; border: 0; padding: 2px 20px 2px 0; color: var(--ink); background: #1b2025; font: 600 14px var(--sans); }
 #journey p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+#journey-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+#journey-caption { display: none; }
+#journey-more { display: contents; }
+#journey-more > summary, #journey-more-text { display: none; }
+#journey-physics { flex: none; max-height: 42px; overflow: auto; }
+.workspace.viewport-studio .stage:has(#journey:not([hidden])) .inspection-context { display: none !important; }
+@media (min-width: 761px) {
+  .workspace.viewport-studio .stage:has(#journey:not([hidden])) .body { height: calc(100svh - 186px); }
+}
 #journey nav { display: flex; flex-wrap: wrap; justify-content: end; gap: 4px; max-width: 230px; }
+#journey nav { flex: none; }
 #journey nav .btn { padding: 0 10px; min-height: 36px; }
 #journey .btn:disabled, #compare-dialog .btn:disabled, .photo-actions .btn:disabled { opacity: .45; cursor: default; }
 .photo-actions { display: flex; gap: 5px; margin: 0 0 6px; }
@@ -116,10 +126,26 @@
   #pipeline-route .btn span { font-size: 10px; }
   .workspace .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .learn-launch { padding-inline: 9px; font-size: 10px; align-self: stretch; min-height: 40px; border-width: 0 0 0 1px; }
-  #journey { padding: 8px 10px; display: block; }
-  #journey nav { max-width: none; margin-top: 6px; justify-content: start; }
-  #journey p { font-size: 11px; }
-  #journey select { font-size: 12px; }
+  .workspace.viewport-studio #journey { max-height: none; overflow: visible; }
+  #journey { position: relative; z-index: 8; height: 78px; min-height: 78px; padding: 4px 8px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; overflow: visible; }
+  .journey-copy { height: 34px; flex: none; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 20px 14px; gap: 0 7px; overflow: visible; }
+  .journey-label { display: none; }
+  #journey select { grid-column: 1 / -1; grid-row: 1; height: 20px; min-height: 20px; padding: 0 18px 0 0; font-size: 11px; }
+  #journey-text { display: none; }
+  #journey #journey-caption { display: -webkit-box; grid-column: 1; grid-row: 2; min-width: 0; margin: 0; color: var(--muted); font-size: 10px; line-height: 14px; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+  #journey-more { display: block; grid-column: 2; grid-row: 2; position: static; min-width: 0; }
+  #journey-more > summary { display: block; min-height: 30px; padding: 0; color: var(--accent); font-size: 11px; line-height: 30px; cursor: pointer; }
+  #journey-more:not([open]) > summary { position: absolute; right: 8px; bottom: 4px; box-sizing: border-box; min-width: 46px; height: 30px; padding: 0 8px; border: 1px solid var(--line-2); text-align: center; }
+  #journey-more-text { display: none; }
+  #journey-more[open] { position: absolute; top: calc(100% + 2px); left: 8px; right: 8px; z-index: 20; box-sizing: border-box; max-height: 35dvh; overflow: auto; padding: 8px 10px; border: 1px solid var(--line-2); background: #1b2025; box-shadow: 0 8px 20px #0009; }
+  #journey-more[open] > summary { position: sticky; top: -8px; z-index: 1; background: #1b2025; }
+  #journey-more[open] > p { position: static; max-height: none; overflow: visible; padding: 0; border: 0; background: transparent; box-shadow: none; font-size: 11px; }
+  #journey-physics { display: block; position: static; max-height: none; padding: 0; overflow: visible; background: transparent; margin-top: 8px; }
+  #journey-more[open] #journey-more-text { display: block; }
+  #journey nav { box-sizing: border-box; width: 100%; max-width: none; height: 30px; min-height: 30px; margin: 0; padding-right: 54px; justify-content: flex-start; flex-wrap: nowrap; gap: 4px; }
+  #journey nav .btn { min-height: 30px; height: 30px; padding: 0 8px; font-size: 10px; }
+  .workspace.viewport-studio:has(#journey:not([hidden])) .level-why { display: none; }
+  .workspace.viewport-studio .viewer:has(#journey:not([hidden])) .view { height: 320px; min-height: 320px; flex: 0 0 320px; }
   .photo-actions { flex-wrap: wrap; }
   .photo-actions .btn { min-height: 36px; padding: 0 5px; }
   .workspace .view:has(#sensor-lesson:not([hidden])) { height: clamp(380px, 56svh, 550px); }
@@ -132,6 +158,16 @@
   .compare-pictures { gap: 8px; }
   .compare-pictures figcaption { font-size: 9px; }
   #compare-dialog footer .btn { flex: 1; }
+}
+@media (min-width: 761px) {
+  .workspace.viewport-studio:has(#journey:not([hidden])) .level-why { display: none; }
+}
+/* At short phone heights the fixed tour frame would push the part-navigation
+   row below the viewport. Let the frame yield the space needed by navigation. */
+@media (max-width: 760px) and (max-height: 700px) {
+  .workspace.viewport-studio .viewer:has(#journey:not([hidden])) .view {
+    height: auto; min-height: 100px; flex: 1 1 100px;
+  }
 }
 #pipeline-canvas:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
 #pipeline-region[hidden] { display:none; }

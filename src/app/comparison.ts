@@ -2,12 +2,11 @@ import type { Store } from './store';
 import type { Scenario } from '../engine/types';
 import { currentRender, onRender, onRenderFailure, type RenderView } from './render-client';
 import { EXPERIMENTS, sameShot } from './learning-model';
-import { formatShutter } from './store';
 import { compute } from './engine-api';
 import { emit } from './bus';
+import { formatComparisonCaption } from './comparison-caption';
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-const caption = (s: Scenario) => `${s.lens} · ${s.scene} · f/${s.fno} · ${formatShutter(s.shutter)} s · ISO ${s.iso} · focus ${s.focusM ?? '∞'}${s.focusM === null ? '' : ' m'}`;
 type Snapshot = Pick<RenderView, 'scenario' | 'rgba' | 'width' | 'height'>;
 
 export function mountComparison(store: Store): void {
@@ -47,8 +46,8 @@ export function mountComparison(store: Store): void {
     el('compare-status').textContent = !view ? 'Rendering current settings…' : expectedA ? 'Preparing experiment A…' : pinned ? 'A stays pinned · B follows your settings' : 'Your current photo is ready to pin';
     if (!dialog.open) return;
     draw('compare-a', pinned); draw('compare-b', view);
-    el('compare-a-caption').textContent = pinned ? caption(pinned.scenario) : 'No pinned photo yet.';
-    el('compare-b-caption').textContent = view ? caption(view.scenario) : 'Updating your shot…';
+    el('compare-a-caption').textContent = pinned ? formatComparisonCaption(pinned.scenario) : 'No pinned photo yet.';
+    el('compare-b-caption').textContent = view ? formatComparisonCaption(view.scenario) : 'Updating your shot…';
     const labels: [keyof Scenario, string][] = [['lens', 'lens'], ['scene', 'scene'], ['fno', 'aperture'], ['focusM', 'focus'], ['shutter', 'shutter'], ['iso', 'ISO'], ['format', 'format'], ['motion', 'motion'], ['subjectM', 'subject distance'], ['lux', 'illumination'], ['cct', 'light color'], ['sensor', 'sensor']];
     const changed = pinned && view ? labels.filter(([k]) => JSON.stringify(pinned!.scenario[k]) !== JSON.stringify(view.scenario[k])).map(([, label]) => label) : [];
     el('compare-difference').textContent = pinned && view ? (changed.length ? `Changed: ${changed.join(', ')}.` : 'Same settings. Change a control to see the difference.') : '';

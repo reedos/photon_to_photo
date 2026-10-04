@@ -14,6 +14,7 @@ import { adjacentPart, insideView, VIEW_LABELS } from './part-navigation';
 import { FOCUS_STEPS, focusStepValue, focusStepFromMm } from './focus-control';
 import type { Stage } from './stage';
 import { fmtDistance, fmtFno, fmtShutter, fmtPitch, fmtDims, fmtNum, fmtRange } from './units';
+import { apertureClampNotice } from './equipment-feedback';
 
 // ---- standard photographic third-stop control steps ------------------------------------------------------
 // UI control-step conventions (every digital camera's aperture/shutter/ISO dial uses this spacing), not a physics
@@ -461,7 +462,7 @@ export function mountUI(store: Store, stage: Stage): void {
   function subFor(model: Model, id: PieceId): string {
     if (id === 'camera') return `${model.lens.focalLength} mm ${fmtFno(model.scenario.fno)} · focus ${fmtDistance(model.focus.distanceMm)} · ${fmtShutter(model.scenario.shutter)}`;
     if (id === 'lens') return `${model.lens.focalLength} mm ${fmtFno(model.lens.markedFno)} · ${model.lens.elements} elements`;
-    if (id === 'cone') return `focus ${fmtDistance(model.focus.distanceMm)} · CoC ${fmtNum(model.focus.cocMm, 3)} mm`;
+    if (id === 'cone') return `focus ${fmtDistance(model.focus.distanceMm)} · blur criterion ${fmtNum(model.focus.cocMm, 3)} mm`;
     return `${fmtPitch(model.sensor.pitchUm)} pitch · ${fmtDims(model.sensor.widthPx, model.sensor.heightPx)}`;
   }
 
@@ -567,7 +568,7 @@ export function mountUI(store: Store, stage: Stage): void {
     dom.finalimgCanvas.setAttribute('aria-disabled', String(!enabled));
     dom.finalimgCanvas.tabIndex = enabled ? 0 : -1;
     dom.finalimgCanvas.setAttribute('aria-label', enabled
-      ? 'Your photo. Click a pixel, or press Enter to inspect the center.' : hint);
+      ? 'Calculated photo. Click a pixel, or press Enter to inspect the center.' : hint);
     const help = document.querySelector('.photo-hint');
     if (help) help.textContent = hint;
   }
@@ -645,6 +646,8 @@ export function mountUI(store: Store, stage: Stage): void {
 
   let renderedState: AppState | null = null;
   function render(state: AppState) {
+    const apertureNotice = apertureClampNotice(renderedState, state);
+    if (apertureNotice) toast(apertureNotice, false, 6000);
     const { scenario, piece } = state;
     const shotChanged = !renderedState || renderedState.scenario !== scenario;
     const viewChanged = !renderedState || renderedState.piece !== piece;

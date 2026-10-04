@@ -779,7 +779,7 @@ export const build: BuildPiece = (ctx) => {
   // One evidence chip for the whole reading (R2-08): every row is worked out by the engine for this pixel, the
   // same "Calc." the part cards give these numbers.
   read.innerHTML = `<div class="lv-read-h"><p class="lv-ctl-k">This pixel</p><span class="chip derived" title="Calculated by the engine for this pixel">Calc.</span></div>
-    <div class="lv-read-row"><span>Photons, mean</span><b data-k="photons"></b></div>
+    <div class="lv-read-row"><span title="Expected photon arrivals; actual arrivals vary">Expected photons</span><b data-k="photons"></b></div>
     <div class="lv-read-row"><span>Electrons</span><b data-k="electrons"></b></div>
     <div class="lv-read-well" aria-hidden="true"><i></i></div>
     <div class="lv-read-row"><span>Well filled</span><b data-k="fill"></b></div>
@@ -818,9 +818,10 @@ export const build: BuildPiece = (ctx) => {
       crumbHere.textContent = `Row ${fmtInt(currentPixel.y)}, column ${fmtInt(currentPixel.x)} · ${CFA_NAME[currentPixel.cfa]} filter`;
       const frac = Math.max(0, Math.min(1, currentPixel.electrons / currentPixel.fullWell));
       readOut('photons').textContent = fmtInt(currentPixel.photonsMean);
-      readOut('electrons').textContent = `${fmtInt(currentPixel.electrons)} e⁻`;
+      readOut('electrons').textContent = fmtInt(currentPixel.electrons);
       readOut('fill').textContent = `${fmtNum(frac * 100, 1)}%`;
-      readOut('dn').textContent = `${fmtInt(currentPixel.dn)} DN`;
+      readOut('dn').textContent = fmtInt(currentPixel.dn);
+      readOut('dn').title = 'Digital output code after gain and analog-to-digital conversion';
       readWell.style.width = `${(frac * 100).toFixed(1)}%`;
     }
   }

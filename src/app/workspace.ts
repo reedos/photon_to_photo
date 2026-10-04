@@ -39,9 +39,11 @@ export function buildWorkspace(): void {
   toolbar.innerHTML = `<button type="button" id="equipment-toggle" aria-expanded="false" aria-controls="equipment-controls"><span id="equipment-summary">Camera equipment</span><b>Edit</b></button>
     <div id="equipment-controls"><label>Camera<select id="kit-body" aria-label="Camera body"></select></label>
     <label>Lens<select id="kit-lens" aria-label="Lens"></select></label>
-    <label>Scene<select id="kit-scene" aria-label="Scene"></select></label></div>
-    <details class="view-menu"><summary aria-label="View menu">•••</summary><div id="studio-actions"></div></details>`;
+    <label>Photo scene<select id="kit-scene" aria-label="Calculated photo scene" title="Changes the calculated photo, not the inspection model"></select></label></div>
+    <div class="studio-share" id="studio-actions"></div>`;
   stage.prepend(toolbar);
+  const why = document.createElement('p'); why.id = 'level-why'; why.className = 'level-why';
+  el('steps').after(why);
   const equipmentToggle = el('equipment-toggle');
   const setEquipmentOpen = (open: boolean) => {
     toolbar.classList.toggle('equipment-open', open);
@@ -149,14 +151,14 @@ export function buildWorkspace(): void {
   const photoCanvas = el('finalimg-canvas');
   photoCanvas.tabIndex = 0;
   photoCanvas.setAttribute('role', 'button');
-  photoCanvas.setAttribute('aria-label', 'Your photo. Click a pixel, or press Enter to inspect the center.');
+  photoCanvas.setAttribute('aria-label', 'Calculated photo. Click a pixel, or press Enter to inspect the center.');
   photoCanvas.addEventListener('keydown', event => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     const box = photoCanvas.getBoundingClientRect();
     photoCanvas.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 }));
   });
-  photo.querySelector('.sc-head')!.innerHTML = '<h2 id="fi-h">Your photo</h2><span>Updates as you adjust</span>';
+  photo.querySelector('.sc-head')!.innerHTML = '<h2 id="fi-h">Photo model</h2><span>Calculated from your settings</span>';
   const photoDetails = document.createElement('details');
   photoDetails.className = 'photo-details';
   photoDetails.innerHTML = '<summary>Photo details</summary>';
@@ -171,7 +173,7 @@ export function buildWorkspace(): void {
   stage.querySelector('.body')!.append(sidebar);
   const settingsDrawer = document.createElement('dialog');
   settingsDrawer.id = 'phone-settings'; settingsDrawer.setAttribute('aria-labelledby', 'phone-settings-title');
-  settingsDrawer.innerHTML = '<header><div><h2 id="phone-settings-title">Advanced settings</h2><p>Equipment, exposure, focus and model view</p></div><button type="button" class="btn" id="phone-settings-close" autofocus>Close</button></header><div class="phone-settings-scroll"><section id="phone-equipment"><h3>Equipment</h3></section><section id="phone-model-view"><h3>Model view</h3></section><section id="phone-exposure"><h3 id="phone-exposure-title">Exposure & focus</h3></section></div>';
+  settingsDrawer.innerHTML = '<header><div><h2 id="phone-settings-title">Camera settings</h2><p>See the model update as you adjust</p></div><button type="button" class="btn" id="phone-settings-close" autofocus>Close</button></header><div class="phone-settings-scroll"><section id="phone-exposure"><h3 id="phone-exposure-title">Exposure & focus</h3></section><section id="phone-equipment"><h3>Equipment</h3></section><section id="phone-model-view"><h3>Model view</h3></section></div>';
   document.body.append(settingsDrawer);
   el('topnav').innerHTML = siteNavigation();
 }
@@ -180,7 +182,6 @@ export function buildWorkspace(): void {
 export function mountWorkspace(store: Store): void {
   mountSiteNavigation(true);
   el('share-btn').textContent = 'Share this view';
-  el('studio-actions').insertAdjacentHTML('beforeend', '<a class="btn" href="#rp-card">Explore real photos</a><a class="btn" href="./reference.html?page=story">How to explore</a>');
   const viewTabs = [el('workspace-model'), el('workspace-photos')];
   [...viewTabs, el('expand-model')].forEach(button => { (button as HTMLButtonElement).disabled = false; });
   const viewPanels = [el('stage-section'), el('photo-study-panel')];
@@ -242,17 +243,22 @@ export function mountWorkspace(store: Store): void {
   });
   function openSettings(source: HTMLElement, equipment = false) {
     if (!phone.matches || drawer.open) return;
-    drawerLauncher = source; drawer.showModal();
+    drawerLauncher = source; document.body.classList.add('phone-settings-open'); drawer.showModal();
+    window.dispatchEvent(new Event('resize'));
     emit('pause-exposure', {});
     el('equipment-toggle').setAttribute('aria-expanded', String(equipment));
     equipmentToggleLabel(el('equipment-summary').textContent || '');
     el('tab-controls').setAttribute('aria-expanded', 'true');
     (equipment ? el('kit-body') : el('phone-settings-close')).focus({ preventScroll: true });
-    el('phone-settings').querySelector('.phone-settings-scroll')!.scrollTop = 0;
+    const scroll = el('phone-settings').querySelector<HTMLElement>('.phone-settings-scroll')!;
+    scroll.scrollTop = equipment ? el('phone-equipment').offsetTop - scroll.offsetTop : 0;
   }
   function closeSettings(restoreFocus = true) { if (drawer.open) { restoreDrawerFocus = restoreFocus; drawer.close(); } }
   el('phone-settings-close').addEventListener('click', () => closeSettings());
   drawer.addEventListener('close', () => {
+    if (drawer.open) return;
+    document.body.classList.remove('phone-settings-open');
+    window.dispatchEvent(new Event('resize'));
     el('equipment-toggle').setAttribute('aria-expanded', 'false');
     equipmentToggleLabel(el('equipment-summary').textContent || '');
     el('tab-controls').setAttribute('aria-expanded', 'false');
@@ -342,6 +348,12 @@ export function mountWorkspace(store: Store): void {
   phone.addEventListener('change', applyPhoneLayout); applyPhoneLayout();
   let lastPart: string | null = null;
   store.subscribe(state => {
+    el('level-why').textContent = {
+      camera: 'Try the shutter, aperture or focus ring. Watch how each changes the calculated photo.',
+      lens: 'Each glass surface bends light. Follow the colors to see where they meet.',
+      cone: 'One distance is sharp. Change focus to see nearby and distant points spread into blur.',
+      loupe: 'Light becomes charge, then a number. Select a pixel to follow its simulated signal.',
+    }[state.piece];
     for (const { name, select, group } of selectors) {
       const buttons = Array.from(group.querySelectorAll('button'));
       const options = buttons.map(button => ({ value: button.dataset[name]!, label: name === 'lens' ? Array.from(button.childNodes).map(node => node.textContent).join(' · ') : button.firstChild?.textContent || '' }));

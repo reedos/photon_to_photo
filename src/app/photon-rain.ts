@@ -15,7 +15,7 @@ export function createPhotonRain() {
     <div class="rain-controls"><label>Aperture<select data-rain="aperture"></select></label><label>Shutter<select data-rain="shutter"></select></label><label>Reference light<select data-rain="light"></select></label><button class="btn" data-rain="compare">16× more light</button></div>
     <div class="rain-transport"><button class="btn" data-rain="play">Play exposure</button><button class="btn" data-rain="new">New exposure</button><button class="btn rain-mobile-close" data-rain="mobile-close">Close</button><label>Exposure progress<input data-rain="time" type="range" min="0" max="1000" step="1" value="0"></label><output data-rain="clock"></output></div>
     <div class="rain-tabs" aria-label="Experiment view"><button class="btn" data-rain="arrivals-tab" aria-pressed="true">Arrivals</button><button class="btn" data-rain="noise-tab" aria-pressed="false">Noise & counts</button></div>
-    <div class="rain-main"><section class="rain-arrivals-panel"><div class="rain-section-title"><h3>Photons arriving</h3><span>1 dot = 1 photon</span></div><canvas data-rain="rain" role="img" aria-label="Wavelength-colored photons arriving at eight identical pixels"></canvas><div class="rain-scale" data-rain="scale"></div></section>
+    <div class="rain-main"><section class="rain-arrivals-panel"><div class="rain-section-title"><h3>Photons arriving</h3><span>1 dot = 1 photon</span></div><canvas data-rain="rain" role="img" aria-label="Wavelength-colored photon arrivals; the newest 20 per pixel are shown while counts include all arrivals"></canvas><p class="rain-well-note">Newest 20 per pixel retained; counts include all arrivals.</p><div class="rain-scale" data-rain="scale"></div></section>
     <section class="rain-noise-panel"><div class="rain-section-title"><h3>256 equally lit pixels</h3><span>One exposure</span></div><canvas data-rain="noise" role="img" aria-label="Sampled pixel counts and their expected Poisson distribution"></canvas><p class="rain-grid-note">Tile brightness is normalized to the expected mean. This is photon-count variation, not a photograph.</p></section></div>
     <div class="rain-stats" data-rain="stats" aria-live="off"></div>
     <p class="rain-takeaway" data-rain="takeaway" role="status"></p>
@@ -43,6 +43,18 @@ export function createPhotonRain() {
     ctx.strokeStyle = '#355464'; ctx.lineWidth = 1;
     for (let i = 0; i < 8; i++) {
       const x = 12 + gap * (i + .5), count = snapshot.counts[i];
+      // Keep only the newest arrivals in the bounded well. `count` and the stats
+      // still use the full sample; five columns show density without a sensor pattern.
+      ctx.fillStyle = '#07141c'; ctx.fillRect(x - gap * .39, floor - 48, gap * .78, 44);
+      ctx.strokeStyle = '#355464'; ctx.strokeRect(x - gap * .39, floor - 48, gap * .78, 44);
+      const arrived = experiment.visible[i].slice(Math.max(0, count - 20), count);
+      for (let j = 0; j < arrived.length; j++) {
+        const photon = arrived[j], col = j % 5, row = Math.floor(j / 5);
+        const px = x + (col - 2) * gap * .115 + photon.offset * gap * .09;
+        const py = floor - 8 - row * 9;
+        ctx.save(); ctx.fillStyle = color(photon.nm); ctx.shadowColor = color(photon.nm); ctx.shadowBlur = 7;
+        ctx.beginPath(); ctx.arc(px, py, 2.6, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+      }
       ctx.fillStyle = '#0a1a22'; ctx.fillRect(x - gap * .44, floor, gap * .88, 27);
       const recent = experiment.visible[i].some(a => progress >= a.at && progress - a.at < .025);
       ctx.strokeStyle = recent ? '#b6ffde' : '#447782'; ctx.strokeRect(x - gap * .44, floor, gap * .88, 27);

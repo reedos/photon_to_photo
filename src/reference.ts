@@ -62,7 +62,7 @@ if (active === 'story') {
     <h2>Reading evidence labels</h2><p>Spec, Vendor, Reported, Calc. and Assumed distinguish source types. Calculated does not mean measured: a result inherits the limitations of its inputs.</p><a class="btn" href="./reference.html?page=evidence">Open evidence →</a>`;
 } else {
   content = heading('05 / 05', 'Evidence', 'Source links recorded with the camera and lens data. This index exposes the existing records; inclusion does not mean a source has been newly verified or that every parameter is known.')
-    + '<dl><dt>Spec</dt><dd>A published specification.</dd><dt>Vendor</dt><dd>A maker’s claim or published characterization.</dd><dt>Reported</dt><dd>A third party’s report or measurement.</dd><dt>Calc.</dt><dd>A result calculated from the model and its inputs.</dd><dt>Assumed</dt><dd>An explicit modeling choice where a measurement is unavailable or the scenario requires one.</dd></dl>'
+    + '<details class="evidence-label-key"><summary>How to read evidence labels</summary><dl><dt>Spec</dt><dd>A published specification.</dd><dt>Vendor</dt><dd>A maker’s claim or published characterization.</dd><dt>Reported</dt><dd>A third party’s report or measurement.</dd><dt>Calc.</dt><dd>A result calculated from the model and its inputs.</dd><dt>Assumed</dt><dd>An explicit modeling choice where a measurement is unavailable or the scenario requires one.</dd></dl></details>'
     + '<h2>Recorded source index</h2><label class="ref-search">Filter sources<input type="search" id="ref-search" placeholder="D850, patent, read noise…"></label><div class="ref-search-status"><p id="search-count" role="status"></p><button class="btn" id="ref-clear" type="button" hidden>Clear search</button></div><p class="evidence-help">Search a camera, parameter or citation. Open a source’s recorded uses to see which fields cite it and the evidence labels attached to those records.</p><div id="evidence-list"></div>';
 }
 document.getElementById('reference-main')!.innerHTML = content;
@@ -104,4 +104,3 @@ try {
   });
 } catch { /* default links still work */ }
 mountSiteNavigation();
-

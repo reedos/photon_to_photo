@@ -473,7 +473,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (!running || graphicsLost) return;
     // Explicit settle requests still draw off-screen. Share this one RAF with the ambient
     // loop: parallel forced frames can resize/reuse WebGPU targets twice in one frame.
-    const covered = document.hidden || dom.canvas.inert || !!document.querySelector('dialog:modal');
+    // The compact settings sheet deliberately leaves the model visible so an
+    // aperture/focus adjustment has an immediate visual result behind it.
+    const covered = document.hidden || dom.canvas.inert || !!document.querySelector('dialog:modal:not(#phone-settings)');
     if ((!visible || covered) && !settleResolvers.length) {
       suspendedAt ??= now;
       return;

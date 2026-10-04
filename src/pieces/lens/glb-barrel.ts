@@ -31,7 +31,7 @@ const cache = new Map<string, Promise<THREE.Group>>();
 
 function getLoader(): GLTFLoader {
   if (!loader) {
-    const draco = new DRACOLoader().setDecoderPath(new URL('./draco/', location.href).href).setDecoderConfig({ type: 'js' });
+    const draco = new DRACOLoader().setDecoderPath(new URL('./draco/', location.href).href);
     loader = new GLTFLoader().setDRACOLoader(draco);
   }
   return loader;
@@ -71,10 +71,10 @@ interface Mats {
 function makeMats(lookMod: typeof look): Mats {
   // Satin black paint over aluminum: LOOK.md's anodized barrel, a little less metallic than the table's 1.0 so
   // the upper-hemisphere highlight rakes across it as a soft sheen instead of a mirror streak.
-  const paint = new THREE.MeshPhysicalMaterial({ color: 0x1a1b1f, metalness: 0.55, roughness: 0.4, clearcoat: 0.25, clearcoatRoughness: 0.32 });
+  const paint = new THREE.MeshPhysicalMaterial({ color: 0x24303c, metalness: 0.6, roughness: 0.34, clearcoat: 0.3, clearcoatRoughness: 0.3 });
   // The machined section: bare aluminum where the wedge was cut, a dull --metal-cool taken down toward
   // --anodize-black so the section reads as the same black barrel sliced, not a separate blue-gray part (R1-12).
-  const paintCut = new THREE.MeshPhysicalMaterial({ color: 0x777d82, metalness: 0.7, roughness: 0.44 });
+  const paintCut = new THREE.MeshPhysicalMaterial({ color: 0x87929a, metalness: 0.75, roughness: 0.36 });
   const baffle = lookMod.matteInternalMaterial();
   const baffleCut = new THREE.MeshStandardMaterial({ color: 0x2b2c30, roughness: 0.72, metalness: 0.3 });
   const rubber = lookMod.rubberGripMaterial();

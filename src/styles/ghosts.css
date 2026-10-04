@@ -11,3 +11,20 @@
  .ghost-layout figcaption{order:6}.ghost-film-note{order:7}.ghost-stats{order:8}.ghost-assumptions{order:9}.ghost-dialog details{order:10}
 }
 @media(max-width:650px){.ghost-rays+figcaption{order:1;margin:0}}
+
+/* Keep the ray diagram and plot stacked at readable width while limiting
+   their height so the modal's controls and results remain nearby. */
+.ghost-dialog {
+  max-height: calc(100vh - 32px);
+  max-height: calc(100svh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #806345 #0a121c;
+  scrollbar-width: thin;
+}
+@media (min-width: 900px) {
+  .ghost-layout { align-items: start; }
+  .ghost-rays { height: min(34svh, 300px); }
+  .ghost-graph { height: min(21svh, 180px); }
+  .ghost-rays text, .ghost-graph text { font-size: 18px; }
+}
