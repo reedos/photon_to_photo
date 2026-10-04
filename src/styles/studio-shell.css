@@ -226,6 +226,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio.phone-settings-layout .stage .body { grid-template-rows: minmax(0,1fr) 112px; }
   .workspace.viewport-studio.phone-settings-layout.model-expanded .stage .body { grid-template-rows: minmax(0,1fr); }
   .workspace.viewport-studio.phone-settings-layout .studio-sidebar { grid-template-columns: 86px minmax(0,1fr); }
+  .workspace.viewport-studio.phone-settings-layout .studio-sidebar[data-pane="parts"] .finalimg .sc-head > span { display: none; }
   .workspace.viewport-studio.phone-settings-layout .parts-head:has(#card-go[hidden]) { display: none; }
   .workspace.viewport-studio.phone-settings-layout .studio-tabs [aria-controls="phone-settings"] { color: var(--ink); }
   .workspace.viewport-studio.phone-settings-layout .studio-tabs #tab-explain { color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
