@@ -53,7 +53,7 @@ export function createShotPlayer(store:Store) {
     const range=track(),m=shotMoment(time,range.end),s=stages()[m.stage];
     let buffer:string|null=null;
     if(example&&!ready){const canvas=el<HTMLCanvasElement>('canvas');canvas.getContext('2d')!.clearRect(0,0,canvas.width,canvas.height);}
-    else if(visual)buffer=visual.draw(time,range.end);
+    else if(visual)buffer=visual.draw(time,range.end,range.start);
     el('capture').hidden=m.stage!==2;
     dialog.dataset.mechanism=el<HTMLSelectElement>('mechanism').value;
     dialog.dataset.track=trackId();dialog.style.setProperty('--track-color',range.color);
@@ -112,6 +112,7 @@ export function createShotPlayer(store:Store) {
         clearTimeout(timer);
         visual=createShotVisual(el<HTMLCanvasElement>('canvas'),model!,{example:selected,image});
         visual.setMechanism(el<HTMLSelectElement>('mechanism').value as CaptureMechanism);
+        visual.setReducedMotion(reduced.matches);
         readyImage=image;ready=true;el('status').textContent=`Supplied JPEG · ${selected.credit} Optics and sensor stages are illustrative.`;
         enablePlayback();
       }).catch(fail);
@@ -162,7 +163,7 @@ export function createShotPlayer(store:Store) {
   dialog.addEventListener('keydown',e=>e.stopPropagation());
   dialog.addEventListener('close',()=>{if(dialog.open)return;if(photoDialog.open)photoDialog.close();pause();cancelLoad();const target=opener?.getClientRects().length&&!opener.closest('details:not([open])')?opener:document.querySelector<HTMLElement>('.view-menu summary');target?.focus({preventScroll:true});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&dialog.open){autoIntent=false;pause();}});
-  reduced.addEventListener('change',()=>{if(reduced.matches&&dialog.open)pause();});
+  reduced.addEventListener('change',()=>{visual?.setReducedMotion(reduced.matches);if(reduced.matches&&dialog.open)pause();else if(dialog.open)draw();});
   new ResizeObserver(()=>{if(dialog.open)draw();}).observe(el('canvas'));
   return (source:HTMLElement,photo?:Example)=>{opener=source;example=photo;if(photo)addExample(photo);el<HTMLSelectElement>('track').value='all';el<HTMLSelectElement>('source').value=photo?`photo:${photo.id}`:'';emit('pause-exposure',{});emit('pause-tour',{});if(!dialog.open)dialog.showModal();if(photo){prepare(true);void loadChoices();}else void chooseDefault(true);};
 }

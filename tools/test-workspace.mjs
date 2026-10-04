@@ -18,7 +18,7 @@ try {
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
-    for (const selector of ['#finalimg-canvas', '#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso', '#compact-fire']) {
+    for (const selector of ['#finalimg-canvas', '#compact-fire', ...(width<600?['#tab-controls','#tab-explain']:['#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso'])]) {
       const box = await page.locator(selector).boundingBox();
       assert.ok(box && box.y >= 0 && box.y + box.height <= height, `${selector} fits ${width}×${height}: ${JSON.stringify(box)}`);
     }
@@ -37,14 +37,14 @@ try {
     assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'z800');
     await page.locator('#kit-scene').selectOption('bench');
     assert.equal(await page.evaluate(() => window.p2p.scenario().scene), 'bench');
-    if(width<600) await page.locator('#equipment-toggle').click();
     const before = await page.evaluate(() => window.p2p.scenario().iso);
     await page.locator('#sc-iso').focus();
     await page.locator('#sc-iso').press('ArrowRight');
     assert.ok(await page.evaluate(value => window.p2p.scenario().iso > value, before));
+    if(width<600) await page.locator('#phone-settings-close').click();
     await page.locator('#tab-controls').focus();
     await page.locator('#tab-controls').press('ArrowRight');
-    assert.equal(await page.locator('#tab-explain').getAttribute('aria-selected'), 'true');
+    if(width>=600) assert.equal(await page.locator('#tab-explain').getAttribute('aria-selected'), 'true');
     assert.equal(await page.locator('#studio-explain').isVisible(), true);
     await page.locator('#parts button[data-part-id="iris"]').click();
     assert.equal(await page.locator('#card').isVisible(), true);
@@ -57,9 +57,12 @@ try {
     await page.locator('#steps [data-piece="camera"]').click();
     assert.equal(await page.locator('#studio-explain').isVisible(), true, 'overview does not hide the parts pane');
     await page.locator('#tab-controls').click();
+    if(width<600) await page.locator('#phone-settings-close').click();
     await page.locator('#compact-fire').click();
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.exposure().status), 'paused');
+    if(width<600) await page.locator('#tab-controls').click();
     assert.equal(await page.locator('.rx-scrub').isVisible(), true);
+    if(width<600) await page.locator('#phone-settings-close').click();
     // A just-changed shot intentionally holds inspection until its current pixels arrive.
     await page.waitForFunction(() => document.getElementById('finalimg-canvas').getAttribute('aria-disabled') === 'false', null, { timeout: 90000 });
     await page.locator('#finalimg-canvas').focus();

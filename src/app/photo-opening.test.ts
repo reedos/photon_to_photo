@@ -5,6 +5,7 @@ describe('photo opening entry routing', () => {
   it('welcomes a fresh bare visit, including the brand top anchor', () => {
     expect(shouldShowPhotoOpening('', '', false)).toBe(true);
     expect(shouldShowPhotoOpening('', '#top', false)).toBe(true);
+    expect(shouldShowPhotoOpening('?v=release', '', false)).toBe(true);
   });
   it('never intercepts a scenario, tour, photo, lesson, or unknown query', () => {
     for (const query of ['?piece=lens&part=glass', '?tour=1', '?photo=flycatcher', '?lesson=readout', '?lens=n500', '?gl=webgl2', '?future=1']) {

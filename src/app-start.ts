@@ -11,6 +11,7 @@ import { mountLearning } from './app/learning';
 import { mountComparison } from './app/comparison';
 import { mountPerspectiveStudy } from './app/perspective-study';
 import { mountShotLauncher } from './app/shot-launch';
+import { mountStartHere } from './app/start-here';
 import { installHooks } from './app/hooks';
 import { build as buildCamera } from './scene/camera-rig';
 import { build as buildLens } from './pieces/lens';
@@ -59,6 +60,7 @@ export async function startApp() {
   mountShotLauncher(store);
   mountPerspectiveStudy(store);
   installHooks(store, stage);
+  mountStartHere();
 }
 
 export function showStartupFailure(err: unknown): void {

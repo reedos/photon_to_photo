@@ -402,6 +402,8 @@ export function mountUI(store: Store, stage: Stage): void {
   }
   dom.cardX.addEventListener('click', clearSelection);
   window.addEventListener('keydown', (e) => {
+    // Escape belongs to an open dialog, not to the selected part behind its backdrop.
+    if (document.querySelector('dialog[open]')) return;
     if (e.key === 'Escape' && selectedPartId && phone?.matches) clearSelection();
   });
 

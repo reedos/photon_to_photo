@@ -2,10 +2,11 @@ import { siteNavigation } from './site-nav';
 
 /** Only an unaddressed first visit gets the invitation. Every existing deep link wins. */
 export function shouldShowPhotoOpening(search: string, hash: string, entered: boolean): boolean {
-  return !search && (!hash || hash === '#top') && !entered;
+  const addressed = [...new URLSearchParams(search).keys()].some(key => key !== 'v');
+  return !addressed && (!hash || hash === '#top') && !entered;
 }
 
-export function mountPhotoOpening(enter: (photoId?: string) => Promise<void>): () => void {
+export function mountPhotoOpening(enter: (photoId?: string, photos?: boolean) => Promise<void>): () => void {
   const opening = document.getElementById('photo-opening')!;
   const nav = document.getElementById('topnav')!;
   const menu = document.getElementById('menu-btn')!;
@@ -25,6 +26,7 @@ export function mountPhotoOpening(enter: (photoId?: string) => Promise<void>): (
   }, options);
   document.getElementById('opening-follow')!.addEventListener('click', () => void enter('flycatcher'), options);
   document.getElementById('opening-explore')!.addEventListener('click', () => void enter(), options);
+  document.getElementById('opening-photos')!.addEventListener('click', () => void enter(undefined, true), options);
   nav.addEventListener('click', event => {
     const anchor = (event.target as Element).closest<HTMLAnchorElement>('a');
     if (anchor?.hasAttribute('data-return-view')) { event.preventDefault(); void enter(); }

@@ -1,8 +1,13 @@
 /* Numbered parts stay apparent while the chosen part carries the strongest emphasis. */
 .workspace.viewport-studio .pin .num {
+  position: relative; z-index: 1; flex-shrink: 0;
   color: #e7edf3; background: #17212bea; border: 1px solid #a5b9ca99;
   box-shadow: 0 1px 5px #0009; font-weight: 500;
 }
+.pin-leader { position: absolute; left: 11px; top: 11px; height: 1px; background: #a5b9ca88; transform-origin: left center; pointer-events: none; }
+.pin-leader::after { content: ''; position: absolute; right: -2px; top: -1px; width: 3px; height: 3px; background: #c3d4df; border-radius: 50%; }
+.pin-leader[hidden] { display: none; }
+.pin.on .pin-leader { background: var(--accent); }
 .workspace.viewport-studio .pin:is(.on,.preview) .num {
   color: #091118; background: var(--accent); border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent), 0 2px 9px #0008;
@@ -28,7 +33,7 @@
 @media (max-width: 760px) {
   .workspace.viewport-studio #model-tools { flex-wrap: wrap; }
   .workspace.viewport-studio #model-tools #hud-switches { width: auto; flex: 0 0 auto; }
-  .workspace.viewport-studio:not(.rig-detail) #model-tools:has([data-view="outside"][aria-pressed="true"]) .model-gestures {
+  .workspace.viewport-studio:not(.rig-detail)[data-model-view="outside"] #model-tools .model-gestures {
     display: block; order: 2; flex: 0 0 100%; margin: 0; text-align: center;
     color: #c4d1dc; font: 10px/1.35 var(--sans); letter-spacing: 0;
   }

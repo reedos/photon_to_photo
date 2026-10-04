@@ -51,16 +51,6 @@ function buildOutline(loop: { r: number; z: number }[], mat: THREE.Material): TH
   return line;
 }
 
-/** The cut face of an element: the glass shown in section, a pale, slightly blue-green tint (a thick crown
- *  glass seen edge-on) at low opacity, so it reads as glass in a cutaway without hiding the rays or the far
- *  half of the stack. The polished optical surfaces use a smoother, subtler alpha material. */
-function sectionGlassMaterial(dense: boolean): THREE.MeshPhysicalMaterial {
-  return new THREE.MeshPhysicalMaterial({
-    color: dense ? 0xd6e2cf : 0xc4dce6, metalness: 0, roughness: 0.18, transmission: 0,
-    transparent: true, opacity: 0.2, clearcoat: 1, clearcoatRoughness: 0.08, side: THREE.DoubleSide, depthWrite: false,
-  });
-}
-
 function buildOneBody(profile: BodyProfile, glassMat: THREE.Material, edgeMat: THREE.Material, capMat: THREE.Material): {
   glassFront: THREE.Mesh; glassBack: THREE.Mesh; edgeRim: THREE.Mesh; capA: THREE.Mesh; capB: THREE.Mesh;
 } {
@@ -85,26 +75,6 @@ function disposeBody(b: Body): void {
   b.outline.geometry.dispose();
 }
 
-/** Stable cutaway glass on both backends. WebGPU's viewport-transmission sampler
- * retains a destroyed framebuffer after navigating Camera → Optics and resizing,
- * freezing the visible scene. Alpha coverage preserves the glass silhouette and
- * reflective rim without that screen-space dependency. Traced refraction remains
- * computed by the optical engine; this material only illustrates the cut surface. */
-function cutawayGlassMaterial(ior: number, dense: boolean): THREE.MeshPhysicalMaterial {
-  return new THREE.MeshPhysicalMaterial({
-    color: dense ? 0xe4ead8 : 0xdce9f0,
-    transmission: 0,
-    opacity: 0.14,
-    transparent: true,
-    depthWrite: false,
-    roughness: 0.06,
-    metalness: 0,
-    ior,
-    reflectivity: 0.9,
-    side: THREE.DoubleSide,
-  });
-}
-
 type PieceRenderer = { backend?: { isWebGPUBackend?: boolean } };
 
 export function buildElements(model: Model, lookMod: typeof look, _renderer: PieceRenderer): ElementsHandle {
@@ -113,7 +83,7 @@ export function buildElements(model: Model, lookMod: typeof look, _renderer: Pie
   const realized = model.realized;
   const system = model.system.surfaces;
   const bodies: Body[] = [];
-  const outlineMat = new THREE.LineBasicMaterial({ color: 0xd4e4ec, transparent: true, opacity: 0.62 });
+  const outlineMat = new THREE.LineBasicMaterial({ color: 0xd4e4ec, transparent: true, opacity: 0.7 });
 
   const specs: { frontIdx: number; backIdx: number; kind: 'element' | 'plate'; elementIndex: number | null }[] = [];
   for (const el of realized.elements) specs.push({ frontIdx: el.surfaces[0], backIdx: el.surfaces[1], kind: 'element', elementIndex: el.index });
@@ -129,14 +99,14 @@ export function buildElements(model: Model, lookMod: typeof look, _renderer: Pie
 
     const nd = model.realized.design.surfaces[spec.frontIdx].nd ?? 1.52;
     const dense = nd > 1.65;
-    const glassMat = cutawayGlassMaterial(nd, dense);
+    const glassMat = lookMod.cutawayGlassMaterial(nd, dense);
     const edgeMat = lookMod.edgeBlackMaterial();
     // The cut face is still the element's own glass (its true cross-section, not a paint) -- but it is an
     // artist's-cutaway convention, not a real polished air-glass surface, so it never got an AR coating; a
     // separate rougher section material keeps it from mirror-catching
     // the PMREM's bright band as one flat, uniformly-lit wedge -- the "uniform glow" look-cheap smell
     // (design/RUBRIC.md) this piece hit at exactly this camera angle before the fix.
-    const capMat = sectionGlassMaterial(dense);
+    const capMat = lookMod.sectionGlassMaterial(dense);
     const { glassFront, glassBack, edgeRim, capA, capB } = buildOneBody(profile, glassMat, edgeMat, capMat);
 
     const bodyGroup = new THREE.Group();

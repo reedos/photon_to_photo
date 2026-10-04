@@ -34,7 +34,10 @@ try {
     await cameraMatches('iris');
     await page.locator('#parts [data-part-id="sensor"]').click();
     await cameraMatches('sensor');
-    await page.locator('[data-view="outside"]').click(); await cameraMatches('sensor');
+    if (width < 600) await page.locator('#tab-controls').click();
+    await page.locator('[data-view="outside"]').click();
+    if (width < 600) await page.locator('#phone-settings-close').click();
+    await cameraMatches('sensor');
     // Multiple selections during an unfinished animated move: the last one must win.
     await page.evaluate(() => {
       for (const id of ['glass', 'focusRing', 'mount', 'iris']) document.querySelector(`#parts [data-part-id="${id}"]`).click();
@@ -69,7 +72,8 @@ try {
           const point = await page.evaluate(id => {
             const pin = document.querySelector(`#pins [data-pin-id="${id}"]`);
             const view = document.getElementById('view');
-            return { x: parseFloat(pin.style.left), y: parseFloat(pin.style.top), w: view.clientWidth, h: view.clientHeight, display: pin.style.display };
+            const anchor = window.p2p.pins().find(p=>p.id===id);
+            return { x: anchor.anchorX, y: anchor.anchorY, w: view.clientWidth, h: view.clientHeight, display: pin.style.display };
           }, id);
           assert.notEqual(point.display, 'none', `${piece}/${id}: selected part stays visible`);
           assert.ok(Math.abs(point.x - point.w / 2) < 3 && Math.abs(point.y - point.h / 2) < 3, `${piece}/${id}: view centers selected geometry ${JSON.stringify(point)}`);
@@ -89,7 +93,8 @@ try {
           const centered = await page.evaluate(() => {
             const pin = document.querySelector('#pins [data-pin-id="bokeh-disk"]');
             const view = document.getElementById('view');
-            return Math.hypot(parseFloat(pin.style.left) - view.clientWidth / 2, parseFloat(pin.style.top) - view.clientHeight / 2);
+            const anchor = window.p2p.pins().find(p=>p.id==='bokeh-disk');
+            return Math.hypot(anchor.anchorX - view.clientWidth / 2, anchor.anchorY - view.clientHeight / 2);
           });
           assert.ok(centered < 3, 'changing the traced point keeps the selected bokeh disk centered');
         }

@@ -5,6 +5,7 @@ import type { Example } from './examples';
 import { photoSubject } from './photo-shot';
 import { fmtShutter } from './units';
 import { captureSweep, assemblyRows, type CaptureMechanism } from './shot-capture';
+import { journeyHandoff, journeyFraming } from './shot-journey';
 
 const fract=(n:number)=>n-Math.floor(n);
 type Point=readonly [number,number];
@@ -18,8 +19,18 @@ function along(r:Route,t:number):Point {
   const f=(d-r.lengths[i-1])/(r.lengths[i]-r.lengths[i-1]||1),a=r.points[i-1],b=r.points[i];return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
 }
 export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{example:Example;image:HTMLImageElement}) {
-  const ctx=canvas.getContext('2d')!;
+  const output=canvas.getContext('2d')!;
+  let ctx=output;
+  // One reusable transition surface; no bitmap history or frame-dependent state.
+  const transitionCanvas=document.createElement('canvas');
+  const transitionContext=transitionCanvas.getContext('2d')!;
+  // Decode once at native resolution. Chromium may otherwise reuse a prior
+  // downscaled HTMLImage raster after a large/small seek, changing photo detail.
+  const photoRaster=document.createElement('canvas');photoRaster.width=real.image.naturalWidth;photoRaster.height=real.image.naturalHeight;
+  photoRaster.getContext('2d')!.drawImage(real.image,0,0);
   let mechanism:CaptureMechanism='mechanical';
+  let reducedMotion=false;
+  let handoffRendering=false;
   const paths=[0,.35].flatMap(fieldFrac=>pointBundle(model,{pointDistMm:(real.example.focusM??1e6)*1000,fieldFrac,nms:[460,550,650],rays:9}).paths);
   const surfaces=model.system.surfaces,min=surfaces[0].z,max=surfaces.at(-1)!.z,scale=750/(max-min);
   const X=(z:number)=>150+(z-min)*scale,Y=(v:number)=>295-v*scale;
@@ -29,7 +40,7 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
   sample.getContext('2d')!.drawImage(real.image,0,0,36,32);
   const jpegSamples=sample.getContext('2d')!.getImageData(0,0,36,32).data;
   function line(x:number,y:number,X:number,Y:number,color:string,width=1) {ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X,Y);ctx.stroke();}
-  function text(value:string,x:number,y:number,size=20,color='#dcedf2',essential=false) {if(canvas.clientWidth<600&&!essential)return;ctx.font=`${canvas.clientWidth<600?Math.max(30,size):size}px system-ui`;ctx.fillStyle=color;ctx.fillText(value,x,y);}
+  function text(value:string,x:number,y:number,size=20,color='#dcedf2',essential=false) {if(handoffRendering||canvas.clientWidth<600&&!essential)return;ctx.font=`${canvas.clientWidth<600?Math.max(30,size):size}px system-ui`;ctx.fillStyle=color;ctx.fillText(value,x,y);}
   function dot(x:number,y:number,r:number,color:string) {ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
   // Every signal follows a complete, stable path. Position is solely a function of the scrubber.
   function flow(r:Route,t:number,color:string,count=3,strength=1,square=false) {
@@ -41,16 +52,16 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
     }ctx.restore();
   }
   function panel(x:number,y:number,w:number,h:number,color:string) {ctx.fillStyle='#091923dd';ctx.fillRect(x,y,w,h);ctx.strokeStyle=color+'80';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);}
-  function photograph(x:number,y:number,w:number,h:number,alpha=1) {
+  function photograph(x:number,y:number,w:number,h:number,alpha=1,original=false) {
     const im=real.image,scale=Math.min(w/im.naturalWidth,h/im.naturalHeight);
     const iw=im.naturalWidth*scale,ih=im.naturalHeight*scale,left=x+(w-iw)/2,top=y+(h-ih)/2;
-    ctx.save();ctx.globalAlpha*=alpha;ctx.drawImage(im,left,top,iw,ih);ctx.restore();
+    ctx.save();ctx.globalAlpha*=alpha;ctx.drawImage(original?im:photoRaster,left,top,iw,ih);ctx.restore();
     return {x:left,y:top,w:iw,h:ih};
   }
   function photoFinal(p:number,color:string) {
     // The assembled JPEG expands into the final view without restarting its reveal.
     const expand=Math.min(1,p/.32),ease=expand*expand*(3-2*expand);
-    const box=photograph(635+(24-635)*ease,90+(20-90)*ease,335+(952-335)*ease,360+(470-360)*ease);
+    const box=photograph(635+(24-635)*ease,90+(20-90)*ease,335+(952-335)*ease,360+(470-360)*ease,1,true);
     if(ease<1){ctx.save();ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=18;ctx.strokeRect(box.x,box.y,box.w,box.h);ctx.restore();}
     text('YOUR PHOTOGRAPH · SUPPLIED JPEG',30,539,21,'#d9c9ff',true);
     // The full composition remains visible. Detail is temporarily overlaid, then gives
@@ -72,13 +83,8 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
     line(110,295,930,295,'#ffffff25');
     for(let i=0;i<traced.length;i++){const path=traced[i];flow(path.route,progress*2+i*.079,path.nm<500?'#70aaff':path.nm<600?'#5ce1c6':'#ff8a76',1,.85);}
   }
-  function draw(seconds:number,stopAt=28) {
-    const {stage,progress:p}=shotMoment(seconds,stopAt),color=SHOT_STAGES[stage].color;
-    const ratio=Math.min(2,devicePixelRatio||1),w=Math.max(1,Math.round(canvas.clientWidth*ratio)),h=Math.round(w*.56);
-    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
-    ctx.setTransform(w/1000,0,0,h/560,0,0);ctx.clearRect(0,0,1000,560);
-    const bg=ctx.createRadialGradient(500,240,10,500,280,650);bg.addColorStop(0,'#142b3b');bg.addColorStop(1,'#050b13');ctx.fillStyle=bg;ctx.fillRect(0,0,1000,560);
-    ctx.globalAlpha=.12;for(let x=0;x<1000;x+=40)line(x,0,x,560,'#70dfff');for(let y=0;y<560;y+=40)line(0,y,1000,y,'#70dfff');ctx.globalAlpha=1;
+  function paintStage(stage:number,p:number) {
+    const color=SHOT_STAGES[stage].color;
     const motionTime=Math.min(p,.94); // A short, quiet landing before each handoff.
     if(stage===0){
       const photoBox=photograph(25,55,440,390);
@@ -92,6 +98,9 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
       text('YOUR PHOTO · SCENE REFERENCE',30,495,23,color,true);text('Scene-to-lens paths schematic',510,495,21);
     } else if(stage===1){
       optics(motionTime);
+      // An editorial guide riding an actual computed ray, not a counted photon.
+      const followed=traced[Math.floor(traced.length/2)];
+      if(followed){const at=along(followed.route,Math.min(1,p*1.12));ctx.save();ctx.shadowColor='#fff0bb';ctx.shadowBlur=24;dot(...at,5,'#fff0bb');ctx.restore();}
       text('REPRESENTATIVE LENS · COMPUTED RAYS',220,95,23,color);text('Surface shapes schematic · ray paths computed',140,490,20);
     } else if(stage===2){
       const sweep=captureSweep(p,real.example.shutter);
@@ -114,6 +123,10 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
       }
       ctx.restore();
       ctx.strokeStyle='#93abc5';ctx.strokeRect(box.x,box.y,box.w,box.h);
+      if(sweep.phase==='preview'){
+        const subject=photoSubject(real.example),x=box.x+box.w*subject.x,y=box.y+box.h*subject.y;
+        ctx.save();ctx.strokeStyle='#afffdc';ctx.lineWidth=2;ctx.shadowBlur=12;ctx.shadowColor='#afffdc';ctx.strokeRect(x-10,y-10,20,20);ctx.restore();
+      }
       const label=sweep.phase==='prepare'?'PREPARE':sweep.phase==='hold'?(mechanism==='electronic'?'READOUT COMPLETE':'CHARGE HELD'):sweep.phase==='preview'?(mechanism==='electronic'?'READY':'RETURN TO PREVIEW'):'EXPOSING';
       text(label,375,43,24,color,true);
       if(sweep.phase==='expose'){
@@ -151,7 +164,7 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
       const top=433-fill*257;panel(725,173,215,263,'#5ce1c6');
       const well=ctx.createLinearGradient(0,173,0,436);well.addColorStop(0,'#8cffe1');well.addColorStop(1,'#237e75');ctx.fillStyle=well;ctx.fillRect(728,top,209,433-top);
       // A schematic charge cloud; the level is not a recovered measurement.
-      for(let i=0;i<45*p;i++){const x=755+fract(i*.618)*155,y=215+fract(i*.414)*120;ctx.fillStyle='#aaffde';ctx.globalAlpha=.25+.65*fract(i*.79);ctx.fillRect(x,y,3,3);}ctx.globalAlpha=1;
+      for(let i=0;i<Math.floor(45*p);i++){const x=755+fract(i*.618)*155,y=top+fract(i*.414)*Math.max(0,430-top);ctx.fillStyle='#aaffde';ctx.globalAlpha=.25+.65*fract(i*.79);ctx.fillRect(x,y,3,3);}ctx.globalAlpha=1;
       text('MICROLENS',235,91,19,undefined,true);text('GREEN FILTER',265,194,19,undefined,true);text('PHOTODIODE',275,244,19,'#5ce1c6',true);
       text('WEIGHTED CHARGE PACKETS',380,414,18,'#9dffe6');text('CHARGE WELL',725,152,21,color,true);
       text('Charge accumulates',650,476,24,color,true);
@@ -183,8 +196,49 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
       photoFinal(p,color);
       return 'Your photograph, the result';
     }
-    if(stage===1||stage===2||stage===3){photograph(20,20,120,76);text('Your photograph',22,116,15);}
+    if(!handoffRendering&&(stage===1||stage===2||stage===3)){photograph(20,20,120,76);text('Your photograph',22,116,15);}
     return null;
   }
-  return {draw,setMechanism(value:CaptureMechanism){mechanism=value;}};
+  function background(w:number,h:number){
+    ctx.setTransform(w/1000,0,0,h/560,0,0);ctx.globalAlpha=1;ctx.clearRect(0,0,1000,560);
+    const bg=ctx.createRadialGradient(500,240,10,500,280,650);bg.addColorStop(0,'#142b3b');bg.addColorStop(1,'#050b13');ctx.fillStyle=bg;ctx.fillRect(0,0,1000,560);
+    ctx.globalAlpha=.12;for(let x=0;x<1000;x+=40)line(x,0,x,560,'#70dfff');for(let y=0;y<560;y+=40)line(0,y,1000,y,'#70dfff');ctx.globalAlpha=1;
+  }
+  function draw(seconds:number,stopAt=28,startAt=0) {
+    const {stage,progress}=shotMoment(seconds,stopAt);
+    const ratio=Math.min(2,devicePixelRatio||1),w=Math.max(1,Math.round(canvas.clientWidth*ratio)),h=Math.round(w*.56);
+    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+    delete canvas.dataset.capturePhase;delete canvas.dataset.captureFront;delete canvas.dataset.captureRear;delete canvas.dataset.assembledRows;
+    const handoff=journeyHandoff(seconds,startAt,stopAt,reducedMotion);
+    canvas.dataset.handoff=handoff?`${handoff.from}-${handoff.to}`:'';
+    ctx=output;background(w,h);
+    if(!handoff)return paintStage(stage,progress);
+    handoffRendering=true;
+    // Follow the same visual landmark into the next representation. Both views
+    // are derived directly from time, so reverse seeks cannot leave stale frames.
+    let outgoing:readonly number[]=handoff.outgoing;
+    if(handoff.from===2){
+      const subject=photoSubject(real.example),scale=Math.min(620/real.image.naturalWidth,400/real.image.naturalHeight);
+      const iw=real.image.naturalWidth*scale,ih=real.image.naturalHeight*scale;
+      outgoing=[190+(620-iw)/2+subject.x*iw,70+(400-ih)/2+subject.y*ih,2.15];
+    }
+    function view(index:number,anchor:readonly number[],amount:number){
+      const stage=SHOT_STAGES[index],p=Math.max(0,Math.min(1,(seconds-stage.start)/(stage.end-stage.start)));
+      const camera=journeyFraming(anchor,amount);
+      ctx.save();ctx.translate(camera.x,camera.y);ctx.scale(camera.scale,camera.scale);paintStage(index,p);ctx.restore();
+    }
+    view(handoff.from,outgoing,handoff.mix);
+    if(transitionCanvas.width!==w||transitionCanvas.height!==h){transitionCanvas.width=w;transitionCanvas.height=h;}
+    ctx=transitionContext;background(w,h);view(handoff.to,handoff.incoming,1-handoff.mix);
+    ctx=output;ctx.save();ctx.globalAlpha=handoff.mix;ctx.drawImage(transitionCanvas,0,0,1000,560);ctx.restore();
+    const u=handoff.mix,v=1-u,envelope=Math.sin(Math.PI*handoff.progress);
+    const x=v*v*outgoing[0]+2*v*u*500+u*u*handoff.incoming[0],y=v*v*outgoing[1]+2*v*u*280+u*u*handoff.incoming[1];
+    ctx.save();ctx.globalAlpha=envelope;ctx.shadowColor=SHOT_STAGES[handoff.to].color;ctx.shadowBlur=30;
+    ctx.strokeStyle=SHOT_STAGES[handoff.to].color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,10+envelope*17,0,Math.PI*2);ctx.stroke();
+    if(handoff.to>=3){ctx.fillStyle='#dbffef';ctx.fillRect(x-5,y-5,10,10);}else dot(x,y,6,'#fff0bb');ctx.restore();
+    handoffRendering=false;
+    text('ILLUSTRATIVE TRANSFER · EXPANDED TIME',36,535,20,'#b7d0dc',true);
+    return handoff.label;
+  }
+  return {draw,setMechanism(value:CaptureMechanism){mechanism=value;},setReducedMotion(value:boolean){reducedMotion=value;}};
 }

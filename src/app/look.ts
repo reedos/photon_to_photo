@@ -233,16 +233,46 @@ export function buildEnvironmentAndLights(renderer: THREE.WebGPURenderer, scene:
  *  so it gets the same material. Not a physics color: this is the housing's look, the rays stay exact. */
 export function opticalGlassMaterial(front = true): THREE.MeshPhysicalMaterial {
   return new THREE.MeshPhysicalMaterial({
-    color: front ? 0x28464e : 0x29404d, metalness: 0, roughness: 0.035, transparent: true, opacity: front ? 0.14 : 0.08,
-    clearcoat: 1, clearcoatRoughness: 0.035, envMapIntensity: 2.4, specularIntensity: 1,
-    iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [250, 420],
+    color: front ? 0x314f58 : 0x29404d, metalness: 0, roughness: 0.045, transparent: true, opacity: front ? 0.20 : 0.075,
+    transmission: 0, clearcoat: 1, clearcoatRoughness: 0.045, envMapIntensity: front ? 2.8 : 1.8, specularIntensity: 1,
+    iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [250, 380],
     side: THREE.DoubleSide, depthWrite: false,
   });
 }
 
 /** The blackened rim of an element (optical edge paint), drawn as a thin band at the element's outer radius. */
 export function elementEdgeMaterial(): THREE.MeshStandardMaterial {
-  return new THREE.MeshStandardMaterial({ color: 0x040405, roughness: 0.8, metalness: 0.05, side: THREE.DoubleSide });
+  return new THREE.MeshStandardMaterial({ color: 0x0b1014, roughness: 0.62, metalness: 0.08, side: THREE.DoubleSide });
+}
+
+/** Polished optical surfaces and the rougher exposed section are different finishes. These tints and coating
+ * thicknesses illustrate glass, not a measured coating spectrum. Alpha-only coverage deliberately avoids the
+ * viewport-transmission sampler; the optical engine alone bends and colors the rays through the real profiles. */
+export function cutawayGlassMaterial(ior: number, dense: boolean): THREE.MeshPhysicalMaterial {
+  return new THREE.MeshPhysicalMaterial({
+    color: dense ? 0xcdd5b8 : 0xafcdd9, transmission: 0, transparent: true, opacity: 0.18,
+    depthWrite: false, roughness: 0.055, metalness: 0, ior, reflectivity: 0.9,
+    iridescence: 0.55, iridescenceIOR: 1.38, iridescenceThicknessRange: [180, 360],
+    envMapIntensity: 1.35, side: THREE.DoubleSide,
+  });
+}
+
+export function sectionGlassMaterial(dense: boolean): THREE.MeshPhysicalMaterial {
+  return new THREE.MeshPhysicalMaterial({
+    color: dense ? 0xd3debb : 0xb2d5dd, metalness: 0, roughness: 0.32, transmission: 0,
+    transparent: true, opacity: 0.28, clearcoat: 0.25, clearcoatRoughness: 0.2,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+}
+
+/** Representative coated sensor surface, not a Bayer pattern or a signal level. Uses the existing environment
+ * to reveal a subtle angle-dependent sheen without a texture, extra pass, light or animation. */
+export function sensorArrayMaterial(): THREE.MeshPhysicalMaterial {
+  return new THREE.MeshPhysicalMaterial({
+    name: 'PixelArray', color: 0x283444, roughness: 0.18, metalness: 0.6,
+    iridescence: 1, iridescenceIOR: 1.8, iridescenceThicknessRange: [260, 640],
+    envMapIntensity: 2.1, side: THREE.DoubleSide,
+  });
 }
 
 /** A band at radius r from z0 to z1 (mm, lens axis = z), over angles a0..a1 (a full turn, or the kept half of a cut). */
@@ -437,8 +467,7 @@ export function studioReplacement(mat: THREE.Material): THREE.Material | null {
     return glass;
   }
   if (n === 'PixelArray') {
-    SILICON ??= new THREE.MeshPhysicalMaterial({ name: 'PixelArray', color: 0x1f2233, roughness: 0.22, metalness: 0.55,
-      iridescence: 1, iridescenceIOR: 1.8, iridescenceThicknessRange: [260, 640], envMapIntensity: 1.6, side: THREE.DoubleSide });
+    SILICON ??= sensorArrayMaterial();
     return SILICON;
   }
   if (n === 'screenGlass') {

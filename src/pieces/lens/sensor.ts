@@ -15,7 +15,7 @@ export function buildSensor(lookMod: typeof look): SensorHandle {
   const group = new THREE.Group();
   group.name = 'lens-sensor';
 
-  const plateMat = lookMod.siliconMaterial();
+  const plateMat = lookMod.sensorArrayMaterial();
   const plate = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.3), plateMat);
   plate.frustumCulled = false;
 

@@ -13,6 +13,7 @@ import type { BuildPiece, CameraFrame, Inset, LabelLayer, PieceHandle, PieceProb
 import * as look from './look';
 import * as bus from './bus';
 import { upperKeepMicro } from './units';
+import { spreadPins } from './pin-layout';
 
 export type Backend = 'webgpu' | 'webgl2';
 export type QualityTier = 'phone' | 'mid' | 'high';
@@ -35,6 +36,8 @@ export interface PinScreen {
   label: string;
   x: number;
   y: number;
+  anchorX: number;
+  anchorY: number;
   on: boolean;
 }
 
@@ -198,6 +201,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
   // ---- pins (from the active piece's probes) -----------------------------------------------------------------
   const pinEls = new Map<string, HTMLButtonElement>();
+  const pinAnchors = new Map<string, { x: number; y: number }>();
   let selectedPin: string | null = null;
   let hoveredPin: string | null = null;
   let focusedPin: string | null = null;
@@ -208,6 +212,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
   function syncPinEls(handle: PieceHandle | null) {
     hoveredPin = focusedPin = null;
+    pinAnchors.clear();
     for (const [id, el] of pinEls) { el.remove(); pinEls.delete(id); }
     if (!handle) return;
     handle.probes.forEach((probe, i) => {
@@ -215,7 +220,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       el.type = 'button';
       el.className = 'pin';
       el.dataset.pinId = probe.id;
-      el.innerHTML = `<span class="num">${i + 1}</span><span class="lbl">${probe.label}</span>`;
+      el.innerHTML = `<i class="pin-leader" aria-hidden="true"></i><span class="num">${i + 1}</span><span class="lbl">${probe.label}</span>`;
       el.setAttribute('aria-label', `${i + 1}. ${probe.label}`);
       const refreshLabel = () => { projectLabelsAndPins(false); start(); };
       el.addEventListener('pointerenter', () => { hoveredPin = probe.id; refreshLabel(); });
@@ -570,41 +575,28 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     }
     const handle = activeId ? built.get(activeId) : null;
     if (!handle) return;
-    type P = { id: string; i: number; el: HTMLButtonElement; x: number; y: number; z: number; show: boolean };
+    type P = { id: string; i: number; el: HTMLButtonElement; x: number; y: number; anchorX: number; anchorY: number; z: number; show: boolean };
     const ps: P[] = [];
     handle.probes.forEach((probe, i) => {
       const el = pinEls.get(probe.id);
       if (!el) return;
       const p = handle.group.localToWorld(probe.anchor.clone()).project(camera);
       const x = ((p.x + 1) / 2) * w, y = ((1 - p.y) / 2) * h;
+      pinAnchors.set(probe.id, { x, y });
       const inView = p.z < 1 && p.z > -1 && x > 6 && x < w - 6 && y > 6 && y < h - 6;
       // a pin under the chrome is hidden, not drawn over it; the list still reaches it
       const underChrome = exclusion.some((r) => x > r.l - 12 && x < r.r + 12 && y > r.t - 12 && y < r.b + 12);
-      ps.push({ id: probe.id, i, el, x, y, z: p.z, show: inView && (!underChrome || probe.id === selectedPin) });
+      ps.push({ id: probe.id, i, el, x, y, anchorX: x, anchorY: y, z: p.z, show: inView && (!underChrome || probe.id === selectedPin) });
     });
-    // merge pins that land on top of each other into one ("1·2"); the lower number leads. A merged pill is wider than
-    // a pin, so the pass repeats with each pill's real width until nothing it grew into is left touching it (R2-04).
-    const merged = new Map<string, number[]>();
-    for (const p of ps) if (p.show) merged.set(p.id, [p.i]);
-    const halfW = (p: P) => { const m = merged.get(p.id)!; return m.length > 1 ? (m.map((k) => k + 1).join('·').length * 7 + 14) / 2 : 11; };
-    for (let again = true, guard = 0; again && guard < 12; guard++) {
-      again = false;
-      const live = ps.filter((p) => p.show).sort((a, b) => a.i - b.i);
-      for (let a = 0; a < live.length && !again; a++) for (let b = a + 1; b < live.length && !again; b++) {
-        const A = live[a], B = live[b];
-        if (A.id === selectedPin || B.id === selectedPin) continue;
-        if (Math.abs(A.x - B.x) < halfW(A) + halfW(B) + 2 && Math.abs(A.y - B.y) < 24) {
-          merged.get(A.id)!.push(...merged.get(B.id)!);
-          merged.get(A.id)!.sort((x, y) => x - y);
-          merged.delete(B.id);
-          B.show = false;
-          again = true;
-        }
-      }
+    const positions = spreadPins(ps.filter(p => p.show), w, h, exclusion, selectedPin, w < 600);
+    for (const p of ps) {
+      const position = positions.get(p.id);
+      p.show = !!position;
+      if (position) { p.x = position.x; p.y = position.y; }
     }
     // labels: the selected pin first, then nearest first; right, left, above or below, whichever clears everything
     const placed: Rect[] = [...exclusion];
-    const pinRect = (p: P): Rect => { const hw = (merged.has(p.id) ? halfW(p) : 11) + 1; return { l: p.x - hw, t: p.y - 12, r: p.x + hw, b: p.y + 12 }; };
+    const pinRect = (p: P): Rect => ({ l: p.x - 12, t: p.y - 12, r: p.x + 12, b: p.y + 12 });
     for (const p of ps) if (p.show) placed.push(pinRect(p));
     const order = ps.filter((p) => p.show).sort((a, b) => (a.id === selectedPin ? -1 : b.id === selectedPin ? 1 : a.z - b.z));
     const placement = new Map<string, string>();
@@ -660,22 +652,21 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       if (got) { placed.push(got[1]); placement.set(p.id, got[0]); } else placement.set(p.id, 'none');
       if (two) twoLine.set(p.id, two); else twoLine.delete(p.id);
     }
-    // Every pin stays whole inside the view with a 12 px margin (a merged "6·7" pill included), and the picked one
-    // stays inside the free rectangle the chrome leaves (R1-FID-I, R1-04).
-    const ins = insets;
+    // Layout already honors the view edges and chrome. Never clamp again after placing the labels.
     for (const p of ps) {
       const el = p.el;
       el.style.display = p.show ? '' : 'none';
       if (!p.show) continue;
-      const m0 = merged.get(p.id) ?? [p.i];
-      const half = m0.length > 1 ? (m0.map((k) => k + 1).join('·').length * 7 + 14) / 2 : 11;
-      const [l, r, t, b] = p.id === selectedPin && activeId === 'camera'
-        ? [ins.left + 12 + half, w - ins.right - 12 - half, ins.top + 23, h - ins.bottom - 23]
-        : [12 + half, w - 12 - half, 23, h - 23];
-      if (r > l) p.x = Math.min(r, Math.max(l, p.x));
-      if (b > t) p.y = Math.min(b, Math.max(t, p.y));
       el.style.left = `${p.x}px`;
       el.style.top = `${p.y}px`;
+      const dx = p.anchorX - p.x, dyAnchor = p.anchorY - p.y;
+      const leader = el.querySelector<HTMLElement>('.pin-leader')!;
+      const distance = Math.hypot(dx, dyAnchor);
+      leader.hidden = distance < 8;
+      if (!leader.hidden) {
+        leader.style.width = `${distance}px`;
+        leader.style.transform = `rotate(${Math.atan2(dyAnchor, dx)}rad)`;
+      }
       const probe = handle.probes[p.i];
       const lblEl = el.querySelector('.lbl');
       if (lblEl && probe && lblEl.textContent !== probe.label) { lblEl.textContent = probe.label; el.setAttribute('aria-label', `${p.i + 1}. ${probe.label}`); }
@@ -684,10 +675,8 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       el.classList.toggle('preview', p.id === (focusedPin ?? hoveredPin));
       if (el.getAttribute('aria-pressed') !== String(on)) el.setAttribute('aria-pressed', String(on));
       el.classList.toggle('dim', !!selectedPin && !on);
-      const m = merged.get(p.id) ?? [p.i];
-      el.classList.toggle('merged', m.length > 1);
       const num = el.querySelector('.num') as HTMLElement;
-      const txt = m.map((k) => k + 1).join('·');
+      const txt = String(p.i + 1);
       if (num.textContent !== txt) num.textContent = txt;
       const place = placement.get(p.id) ?? 'none';
       const dy = /^(right|left)(-?[\d.]+)$/.exec(place);
@@ -811,6 +800,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
         out.push({
           id, label: el.querySelector('.lbl')?.textContent ?? '',
           x: parseFloat(el.style.left) || 0, y: parseFloat(el.style.top) || 0,
+          anchorX: pinAnchors.get(id)?.x ?? 0, anchorY: pinAnchors.get(id)?.y ?? 0,
           on: id === selectedPin,
         });
       }

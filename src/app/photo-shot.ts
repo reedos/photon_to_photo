@@ -5,7 +5,7 @@ import { SHOT_STAGES } from './shot-model';
 import { fmtFno, fmtShutter } from './units';
 import { CURTAIN_TRANSIT_S, type CaptureMechanism } from './shot-capture';
 
-export const photoShotFootnote = 'Your supplied JPEG stays unchanged. Recorded settings guide a representative lens model; shutter mechanisms, sensor structure, light packets, charge and readout are explanatory illustrations. No original RAW data, shutter type, scene brightness, motion speed or camera body is inferred.';
+export const photoShotFootnote = 'Your supplied JPEG stays unchanged. Recorded settings guide a representative lens model; shutter mechanisms, sensor structure, light packets, charge and readout are explanatory illustrations. The moving highlight guides the handoff between representations; it is not one measured photon or electron. Camera moves, pixel locations and expanded timing are editorial, not physical magnification or transit times. No original RAW data, shutter type, scene brightness, motion speed or camera body is inferred.';
 
 /** An isolated optical illustration, never a reconstruction of the photographed scene. */
 export function photoShotScenario(ex: Example): Partial<Scenario> {

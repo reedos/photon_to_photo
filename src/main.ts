@@ -7,7 +7,7 @@ try { entered = sessionStorage.getItem('p2p.entered') === '1' || sessionStorage.
 
 let starting: Promise<void> | undefined;
 let removeOpening: (() => void) | undefined;
-function enterCamera(photoId?: string): Promise<void> {
+function enterCamera(photoId?: string, photos = false): Promise<void> {
   return starting ??= (async () => {
     removeOpening?.();
     document.body.classList.remove('entry-pending', 'photo-opening-active');
@@ -18,7 +18,10 @@ function enterCamera(photoId?: string): Promise<void> {
       try { await startApp(); } catch (error) { showStartupFailure(error); return; }
       try { sessionStorage.setItem('p2p.entered', '1'); } catch { /* Optional session convenience. */ }
       const example = examplesFile.examples.find(photo => photo.id === photoId);
-      if (example) {
+      if (photos) {
+        document.getElementById('workspace-photos')!.click();
+        document.getElementById('workspace-photos')!.focus({ preventScroll: true });
+      } else if (example) {
         const { emit } = await import('./app/bus');
         emit('play-photo', { example, source: document.querySelector<HTMLElement>('.shot-launch')! });
       } else if (!location.hash || location.hash === '#stage-section') {
@@ -35,7 +38,7 @@ function enterCamera(photoId?: string): Promise<void> {
 }
 
 if (shouldShowPhotoOpening(location.search, location.hash, entered)) {
-  removeOpening = mountPhotoOpening(photo => enterCamera(photo));
+  removeOpening = mountPhotoOpening((photo, photos) => enterCamera(photo, photos));
 } else {
   void enterCamera(new URLSearchParams(location.search).get('photo') ?? undefined);
 }

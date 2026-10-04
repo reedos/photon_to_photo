@@ -74,7 +74,7 @@ function makeMats(lookMod: typeof look): Mats {
   const paint = new THREE.MeshPhysicalMaterial({ color: 0x1a1b1f, metalness: 0.55, roughness: 0.4, clearcoat: 0.25, clearcoatRoughness: 0.32 });
   // The machined section: bare aluminum where the wedge was cut, a dull --metal-cool taken down toward
   // --anodize-black so the section reads as the same black barrel sliced, not a separate blue-gray part (R1-12).
-  const paintCut = new THREE.MeshPhysicalMaterial({ color: 0x5b5f64, metalness: 0.7, roughness: 0.5 });
+  const paintCut = new THREE.MeshPhysicalMaterial({ color: 0x777d82, metalness: 0.7, roughness: 0.44 });
   const baffle = lookMod.matteInternalMaterial();
   const baffleCut = new THREE.MeshStandardMaterial({ color: 0x2b2c30, roughness: 0.72, metalness: 0.3 });
   const rubber = lookMod.rubberGripMaterial();

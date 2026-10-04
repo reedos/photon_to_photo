@@ -1,5 +1,6 @@
 import { siteNavigation, mountSiteNavigation } from './site-nav';
 import type { Store } from './store';
+import { emit } from './bus';
 import '../styles/studio-shell.css';
 
 const el = (id: string) => document.getElementById(id)!;
@@ -168,6 +169,10 @@ export function buildWorkspace(): void {
   photo.querySelector('.finalimg-card')!.append(photoHint);
   sidebar.append(photo, tabRow, controls, panel);
   stage.querySelector('.body')!.append(sidebar);
+  const settingsDrawer = document.createElement('dialog');
+  settingsDrawer.id = 'phone-settings'; settingsDrawer.setAttribute('aria-labelledby', 'phone-settings-title');
+  settingsDrawer.innerHTML = '<header><div><h2 id="phone-settings-title">Advanced settings</h2><p>Equipment, exposure, focus and model view</p></div><button type="button" class="btn" id="phone-settings-close" autofocus>Close</button></header><div class="phone-settings-scroll"><section id="phone-equipment"><h3>Equipment</h3></section><section id="phone-model-view"><h3>Model view</h3></section><section id="phone-exposure"><h3 id="phone-exposure-title">Exposure & focus</h3></section></div>';
+  document.body.append(settingsDrawer);
   el('topnav').innerHTML = siteNavigation();
 }
 
@@ -218,7 +223,67 @@ export function mountWorkspace(store: Store): void {
   });
   const tabs = [el('tab-controls'), el('tab-explain')];
   const panels = [el('scenario'), el('studio-explain')];
+  const phone = matchMedia('(max-width: 599px)');
+  const syncModelView = () => { document.body.dataset.modelView = document.querySelector('#hud-switches [data-view][aria-pressed="true"]')?.getAttribute('data-view') || 'outside'; };
+  new MutationObserver(syncModelView).observe(el('hud-switches'), { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
+  syncModelView();
+  const drawer = el('phone-settings') as HTMLDialogElement;
+  let drawerLauncher: HTMLElement | null = null;
+  let restoreDrawerFocus = true;
+  let desktopPane = 0;
+  const relocations = [
+    ['equipment-controls', 'phone-equipment'], ['hud-switches', 'phone-model-view'], ['scenario', 'phone-exposure'],
+  ].map(([id, target]) => {
+    const node = el(id), marker = document.createComment(`Desktop home for ${id}`);
+    node.before(marker); return { node, marker, target: el(target) };
+  });
+  function openSettings(source: HTMLElement, equipment = false) {
+    if (!phone.matches || drawer.open) return;
+    drawerLauncher = source; drawer.showModal();
+    emit('pause-exposure', {});
+    el('equipment-toggle').setAttribute('aria-expanded', String(equipment));
+    equipmentToggleLabel(el('equipment-summary').textContent || '');
+    el('tab-controls').setAttribute('aria-expanded', 'true');
+    (equipment ? el('kit-body') : el('phone-settings-close')).focus({ preventScroll: true });
+    el('phone-settings').querySelector('.phone-settings-scroll')!.scrollTop = 0;
+  }
+  function closeSettings(restoreFocus = true) { if (drawer.open) { restoreDrawerFocus = restoreFocus; drawer.close(); } }
+  el('phone-settings-close').addEventListener('click', () => closeSettings());
+  drawer.addEventListener('close', () => {
+    el('equipment-toggle').setAttribute('aria-expanded', 'false');
+    equipmentToggleLabel(el('equipment-summary').textContent || '');
+    el('tab-controls').setAttribute('aria-expanded', 'false');
+    const target = drawerLauncher?.checkVisibility() ? drawerLauncher : document.body.dataset.workspaceView === 'photos' ? el('workspace-photos') : el('tab-controls');
+    if (restoreDrawerFocus) target.focus({ preventScroll: true });
+    drawerLauncher = null; restoreDrawerFocus = true;
+  });
+  drawer.addEventListener('click', event => {
+    if ((event.target as Element).closest('#open-readout, #open-pipeline')) closeSettings(false);
+  }, { capture: true });
+  drawer.addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const items = [...drawer.querySelectorAll<HTMLElement>('button, input, select, textarea, summary, a[href], [tabindex]')]
+      .filter(node => node.checkVisibility() && node.tabIndex >= 0 && !node.matches(':disabled'));
+    const first = items[0], last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  });
+  // Capture the compact equipment trigger before its desktop disclosure handler.
+  el('equipment-toggle').addEventListener('click', event => {
+    if (!phone.matches) return;
+    event.stopImmediatePropagation(); openSettings(el('equipment-toggle'), true);
+  }, { capture: true });
+  document.addEventListener('workspace-view', event => {
+    if ((event as CustomEvent<{ view: string }>).detail.view !== 'model') closeSettings();
+  });
   function activate(index: number) {
+    if (phone.matches) {
+      panels[0].hidden = false; panels[1].hidden = false;
+      document.querySelector<HTMLElement>('.studio-sidebar')!.dataset.pane = 'parts';
+      if (index === 0) openSettings(tabs[0]);
+      return;
+    }
+    desktopPane = index;
     tabs.forEach((tab, i) => {
       tab.setAttribute('aria-selected', String(i === index));
       tab.tabIndex = i === index ? 0 : -1;
@@ -232,10 +297,45 @@ export function mountWorkspace(store: Store): void {
       if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
         event.preventDefault();
         const next = event.key === 'Home' ? 0 : event.key === 'End' ? 1 : 1 - index;
-        activate(next); tabs[next].focus();
+        if (!phone.matches) activate(next);
+        tabs[next].focus();
       }
     });
   });
+  function applyPhoneLayout() {
+    closeSettings();
+    document.body.classList.toggle('phone-settings-layout', phone.matches);
+    document.querySelector('.studio-kit')!.classList.remove('equipment-open');
+    el('equipment-toggle').setAttribute('aria-expanded', 'false');
+    el('equipment-toggle').querySelector('b')!.textContent = 'Edit';
+    for (const { node, marker, target } of relocations) {
+      if (phone.matches) target.append(node);
+      else marker.parentNode!.insertBefore(node, marker.nextSibling);
+    }
+    const tablist = document.querySelector('.studio-tabs')!;
+    tablist.setAttribute('role', phone.matches ? 'group' : 'tablist');
+    tabs.forEach((tab, index) => {
+      tab.setAttribute('role', phone.matches ? 'button' : 'tab');
+      if (phone.matches) { tab.removeAttribute('aria-selected'); tab.tabIndex = 0; }
+      else tab.removeAttribute('aria-expanded');
+      tab.setAttribute('aria-controls', phone.matches && index === 0 ? 'phone-settings' : index === 0 ? 'scenario' : 'studio-explain');
+    });
+    tabs[0].textContent = phone.matches ? 'Settings' : 'Controls';
+    if (phone.matches) {
+      tabs[0].setAttribute('aria-haspopup', 'dialog'); tabs[0].setAttribute('aria-expanded', 'false');
+      panels[0].setAttribute('role', 'region'); panels[0].setAttribute('aria-labelledby', 'phone-exposure-title');
+      panels[1].setAttribute('role', 'region');
+      panels[0].hidden = false; panels[1].hidden = false;
+      document.querySelector<HTMLElement>('.studio-sidebar')!.dataset.pane = 'parts';
+    } else {
+      tabs[0].removeAttribute('aria-haspopup');
+      panels[0].setAttribute('role', 'tabpanel'); panels[0].setAttribute('aria-labelledby', 'tab-controls');
+      panels[1].setAttribute('role', 'tabpanel');
+      activate(desktopPane);
+    }
+    window.dispatchEvent(new Event('resize'));
+  }
+  phone.addEventListener('change', applyPhoneLayout); applyPhoneLayout();
   let lastPart: string | null = null;
   store.subscribe(state => {
     for (const { name, select, group } of selectors) {

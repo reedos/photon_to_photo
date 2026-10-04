@@ -102,7 +102,7 @@ try {
       await page.locator('#kit-scene').selectOption(scene);
       assert.ok((await page.locator('#equipment-summary').textContent()).includes(await page.locator('#kit-scene option:checked').textContent()));
       await page.screenshot({path:`${output}/${name}-equipment-editor.png`});
-      await page.locator('#kit-scene').selectOption(previousScene); await page.keyboard.press('Escape');
+      await page.locator('#kit-scene').selectOption(previousScene); await page.locator('#phone-settings-close').click();
       assert.equal(await page.locator('#equipment-toggle').getAttribute('aria-expanded'),'false');
       assert.equal(await page.evaluate(()=>document.activeElement.id),'equipment-toggle');
     }

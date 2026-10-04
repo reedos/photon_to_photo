@@ -89,6 +89,7 @@ try {
     box=await page.locator('#sc-fno').boundingBox();
     await page.mouse.click(box.x+box.width*.4,box.y+box.height*.5);
     assert.ok(await page.evaluate(()=>window.p2p.scenario().fno<22));
+    if(width<600)await page.locator('#phone-settings-close').click();
     await page.locator('#compact-fire').press('Enter');
     assert.equal(await page.evaluate(()=>window.p2p.pieces.camera.exposure().status),'paused');
     await page.evaluate(()=>window.p2p.set({iso:window.p2p.scenario().iso===100?200:100}));
@@ -97,11 +98,13 @@ try {
     console.log('Controls',width,await page.evaluate(()=>({body:document.body.className,detail:window.p2p.pieces.camera.detail(),exp:window.p2p.pieces.camera.exposure().status,frame:window.p2p.framing(),marks:document.querySelectorAll('.rig-teach').length})));
     assert.equal(await page.evaluate(()=>document.body.classList.contains('rig-teaching')),false);
     assert.equal(await page.locator('.rig-teach').count(),3);
+    if(width<600)await page.locator('#tab-controls').click();
     await page.locator('[data-view="cutaway"]').click();
     await page.evaluate(()=>window.p2p.settle());
     assert.equal(await page.locator('.rig-teach').count(),0);
     for(const control of ['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
     await page.locator('[data-view="outside"]').click();
+    if(width<600)await page.locator('#phone-settings-close').click();
     await page.evaluate(()=>window.p2p.settle());
     assert.equal(await page.locator('.rig-teach').count(),3);
     assert.ok((await page.locator('.pins .pin:visible').count())>=4);
