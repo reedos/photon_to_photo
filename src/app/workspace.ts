@@ -185,6 +185,9 @@ export function mountWorkspace(store: Store): void {
   [...viewTabs, el('expand-model')].forEach(button => { (button as HTMLButtonElement).disabled = false; });
   const viewPanels = [el('stage-section'), el('photo-study-panel')];
   function showView(index: number, focus = false) {
+    // An expanded phone inspector belongs to the model currently being read.
+    // Do not carry its overlay back from a photo/settings navigation journey.
+    if (index === 1 && document.body.classList.contains('inspector-expanded')) el('inspector-size').click();
     viewTabs.forEach((tab, i) => {
       tab.setAttribute('aria-selected', String(i === index)); tab.tabIndex = i === index ? 0 : -1;
       viewPanels[i].hidden = i !== index;
@@ -304,6 +307,7 @@ export function mountWorkspace(store: Store): void {
   });
   function applyPhoneLayout() {
     closeSettings();
+    if (!phone.matches && document.body.classList.contains('inspector-expanded')) el('inspector-size').click();
     document.body.classList.toggle('phone-settings-layout', phone.matches);
     document.querySelector('.studio-kit')!.classList.remove('equipment-open');
     el('equipment-toggle').setAttribute('aria-expanded', 'false');

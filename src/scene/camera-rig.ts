@@ -977,7 +977,13 @@ export const build: BuildPiece = (ctx) => {
   function updateExtras(model: Model) {
     const surf = model.system.surfaces;
     const imageZ = surf[surf.length - 1].z;
-    epRing.visible = detail === 'iris';
+    const barrel = boxOf(['barrel']);
+    const pupilZ = model.cardinal.ep.z - imageZ;
+    const pupilInHousing = !barrel.isEmpty() && pupilZ >= barrel.min.z && pupilZ <= barrel.max.z;
+    // A pupil is an optical image of the stop. It can lie far outside the physical
+    // lens (the 800 mm pupil lies behind the camera); do not draw that image as
+    // detached hardware or frame the view around it. Its diameter remains exact.
+    epRing.visible = detail === 'iris' && pupilInHousing;
     iris.material = detail === 'iris' ? irisLitMat : irisMat;
     bladeEdges.visible = detail === 'iris';
     if (epRing.visible) {
@@ -986,6 +992,9 @@ export const build: BuildPiece = (ctx) => {
       epRing.scale.set(r, r, 1);
       // the label sits just above the ring's top, clear of the line
       if (group.visible) ctx.labels.set('rig-ep', { world: new THREE.Vector3(0, r * 1.06, model.cardinal.ep.z - imageZ), text: `Entrance pupil ⌀ ${(2 * r).toFixed(1)} mm`, kind: 'hud' });
+    } else if (detail === 'iris' && !barrel.isEmpty() && group.visible) {
+      ctx.labels.set('rig-ep', { world: new THREE.Vector3(0, barrel.max.y * 1.06, (barrel.min.z + barrel.max.z) / 2),
+        text: `Entrance pupil ⌀ ${(2 * model.cardinal.ep.r).toFixed(1)} mm · apparent`, kind: 'hud' });
     } else ctx.labels.remove('rig-ep');
     bundleGroup.visible = raysOn && detail === 'focusRing';
     if (bundleGroup.visible) {
@@ -1035,11 +1044,14 @@ export const build: BuildPiece = (ctx) => {
         const imageZ = m ? m.system.surfaces[m.system.surfaces.length - 1].z : 0;
         const epZ = m ? m.cardinal.ep.z - imageZ : z;
         const epR = m ? m.cardinal.ep.r : 10;
+        const a = THREE.MathUtils.degToRad(10);
+        const dir = new THREE.Vector3(-Math.sin(a), Math.sin(a) * 0.35, -Math.cos(a)).normalize();
+        if (!barrel.isEmpty() && (epZ < barrel.min.z || epZ > barrel.max.z)) {
+          return fitBox(barrel, dir, 1.2);
+        }
         const { fh } = freeFraction();
         const tanV = Math.tan(THREE.MathUtils.degToRad(ctx.camera.fov) / 2) * fh;
         const dist = Math.max(epR / (0.4 * tanV), epZ - front + 25);
-        const a = THREE.MathUtils.degToRad(10);
-        const dir = new THREE.Vector3(-Math.sin(a), Math.sin(a) * 0.35, -Math.cos(a)).normalize();
         return { position: new THREE.Vector3(0, 0, epZ).addScaledVector(dir, dist), target: new THREE.Vector3(0, 0, epZ) };
       }
       // Side-on, keep the whole path from the front element to the sensor visible. A margin below one zooms past

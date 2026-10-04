@@ -352,6 +352,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   // A piece fetching its models veils the view with its progress and holds its pins back, so nothing piles up at the
   // origin before there is a model to pin (UI-21).
   const loadingPieces = new Map<string, { progress?: number; label?: string; error?: string }>();
+  let graphicsLost = false;
   const veilMsg = document.getElementById('veil-msg');
   const veilBar = document.getElementById('veil-bar');
   const stopLoading = bus.on('piece-loading', (e) => {
@@ -362,6 +363,15 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     syncVeil();
   });
   function syncVeil() {
+    // A late asset completion or another level must not dismiss a failed renderer.
+    if (graphicsLost) {
+      dom.pins.classList.add('held');
+      dom.veil.classList.add('err');
+      dom.veil.classList.remove('off');
+      if (veilMsg) veilMsg.textContent = 'The browser lost the 3D view. Restore it to continue with your current camera settings.';
+      if (veilBar) veilBar.style.width = '0%';
+      return;
+    }
     const l = activeId ? loadingPieces.get(activeId) : undefined;
     dom.pins.classList.toggle('held', !!l);
     dom.veil.classList.toggle('err', !!l?.error);
@@ -390,7 +400,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   let running = false;
   let lastFrameTime = performance.now();
   let suspendedAt: number | null = null;
-  let settleResolvers: (() => void)[] = [];
+  let settleResolvers: { resolve: () => void; reject: (error: Error) => void }[] = [];
   const onVisibilityChange = () => { if (document.hidden) suspendedAt ??= performance.now(); };
   document.addEventListener('visibilitychange', onVisibilityChange);
 
@@ -456,11 +466,11 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     if (!(activeId && loadingPieces.has(activeId))) dom.veil.classList.add('off');
     const resolvers = settleResolvers;
     settleResolvers = [];
-    for (const r of resolvers) r();
+    for (const r of resolvers) r.resolve();
   }
 
   function frame(now: number) {
-    if (!running) return;
+    if (!running || graphicsLost) return;
     // Explicit settle requests still draw off-screen. Share this one RAF with the ambient
     // loop: parallel forced frames can resize/reuse WebGPU targets twice in one frame.
     const covered = document.hidden || dom.canvas.inert || !!document.querySelector('dialog:modal');
@@ -479,7 +489,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
   }
 
   function start() {
-    if (running) return;
+    if (running || graphicsLost) return;
     running = true;
     lastFrameTime = performance.now();
     // Three advances node/material frame caches immediately before this callback.
@@ -692,6 +702,25 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     }
   }
 
+  const originalDeviceLost = renderer.onDeviceLost.bind(renderer);
+  renderer.onDeviceLost = info => {
+    originalDeviceLost(info);
+    graphicsLost = true;
+    running = false;
+    void renderer.setAnimationLoop(null);
+    diveTo = null;
+    const waiters = settleResolvers;
+    settleResolvers = [];
+    for (const waiter of waiters) waiter.reject(new Error('The graphics device was lost. Restore the 3D view.'));
+    bus.emit('pause-exposure', {});
+    dom.canvas.getAnimations().forEach(animation => animation.cancel());
+    dom.view.classList.add('graphics-lost');
+    syncVeil();
+    const reload = document.getElementById('veil-reload');
+    if (reload) reload.textContent = 'Restore 3D view';
+    dom.veil.setAttribute('role', 'alert');
+  };
+
   const stage: Stage = {
     registerPiece(id, build) { builders.set(id, build); },
 
@@ -699,6 +728,13 @@ export async function createStage(dom: StageDom): Promise<Stage> {
       // the title and subline follow the scenario even when the piece stays (a focus drag changes the subline)
       dom.hudTitle.textContent = title;
       dom.hudSub.textContent = upperKeepMicro(sub);
+      if (graphicsLost) {
+        // Preserve navigation for Restore without allocating on a lost device.
+        activeId = id;
+        selectedPin = null;
+        syncVeil();
+        return;
+      }
       if (activeId === id) return;
       // A short crossfade joins inspection scales without pretending their different coordinate systems are one.
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -734,7 +770,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     },
 
     update(model, scenario) {
-      if (!activeId) return;
+      if (!activeId || graphicsLost) return;
       const handle = built.get(activeId);
       // scaleLabel/scaleBar stay unused (see index.html's #scalebar) until a piece has real, calibrated
       // geometry to measure -- an axis-line stub has no true scale to report.
@@ -744,7 +780,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     },
 
     resetView() {
-      if (!activeId) return;
+      if (!activeId || graphicsLost) return;
       forceMeasure = true;
       measure(performance.now());
       const handle = built.get(activeId);
@@ -757,6 +793,7 @@ export async function createStage(dom: StageDom): Promise<Stage> {
 
     selectPin(id) {
       selectedPin = id;
+      if (graphicsLost) return;
       forceMeasure = true;
       measure(performance.now());
       const handle = activeId ? built.get(activeId) : undefined;
@@ -779,8 +816,9 @@ export async function createStage(dom: StageDom): Promise<Stage> {
     },
 
     settle() {
-      return new Promise<void>((resolve) => {
-        settleResolvers.push(resolve);
+      if (graphicsLost) return Promise.reject(new Error('The graphics device was lost. Restore the 3D view.'));
+      return new Promise<void>((resolve, reject) => {
+        settleResolvers.push({ resolve, reject });
         start();
       });
     },

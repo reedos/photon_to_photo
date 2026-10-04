@@ -64,6 +64,8 @@
 .veil-bar b { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s ease; }
 .veil.err { color: var(--vendor); pointer-events: auto; }
 .veil.err .veil-bar { display: none; }
+.view.graphics-lost > :not(.veil) { visibility: hidden; }
+.view.graphics-lost .veil { transition: none; }
 .veil-in > span { display: block; max-width: 32ch; padding: 0 16px; text-align: center; line-height: 1.5; }
 .veil-reload { display: none; }
 .veil.err .veil-reload { display: inline-flex; min-height: 40px; padding: 0 18px; font-size: 11px; }

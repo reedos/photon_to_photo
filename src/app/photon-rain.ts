@@ -107,7 +107,11 @@ export function createPhotonRain() {
     draw();
   };
   dialog.addEventListener('keydown', event => event.stopPropagation());
-  dialog.addEventListener('close', () => { pause(); if (opener?.isConnected && opener.getClientRects().length) opener.focus({ preventScroll: true }); });
+  dialog.addEventListener('close', () => {
+    // A queued close event belongs to the previous opening, not a fresh replay.
+    if (dialog.open) return;
+    pause(); if (opener?.isConnected && opener.getClientRects().length) opener.focus({ preventScroll: true });
+  });
   const onHidden = () => { if (document.hidden) pause(); }, onReduced = () => { if (reduced.matches) pause(); };
   document.addEventListener('visibilitychange', onHidden); reduced.addEventListener('change', onReduced);
   const resize = new ResizeObserver(draw); resize.observe(rainCanvas); resize.observe(noiseCanvas);

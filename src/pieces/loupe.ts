@@ -381,15 +381,30 @@ export const build: BuildPiece = (ctx) => {
   const rainLaunch = document.createElement('button'); rainLaunch.type = 'button'; rainLaunch.className = 'btn rain-launch';
   rainLaunch.textContent = 'Photon rain & noise'; rainLaunch.hidden = true; photonControls.before(rainLaunch);
   let rainView: ReturnType<typeof import('../app/photon-rain').createPhotonRain> | null = null;
+  let cancelRainOpening: (() => void) | null = null;
   rainLaunch.onclick = async () => {
     if (!currentModel || rainLaunch.disabled) return;
     pausePhotons(); rainLaunch.disabled = true;
+    let canceled = false;
+    const onEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') cancel(); };
+    const cancel = () => { canceled = true; document.removeEventListener('keydown', onEscape, true); };
+    cancelRainOpening = cancel;
+    document.addEventListener('keydown', onEscape, true);
     try {
-      const { createPhotonRain } = await import('../app/photon-rain');
-      if (disposed || !group.visible) return;
-      rainView ??= createPhotonRain(); rainView.open(currentModel, rainLaunch);
+      // Reopening an existing dialog is synchronous. A cold lazy import may
+      // finish after Escape or a trip to another level; do not resurrect it.
+      if (!rainView) {
+        const { createPhotonRain } = await import('../app/photon-rain');
+        if (canceled || disposed || !group.visible) return;
+        rainView = createPhotonRain();
+      }
+      if (!canceled && !disposed && group.visible) rainView.open(currentModel, rainLaunch);
     } catch (error) { console.error('Photon rain could not open', error); rainLaunch.textContent = 'Retry photon rain'; }
-    finally { rainLaunch.disabled = false; }
+    finally {
+      document.removeEventListener('keydown', onEscape, true);
+      if (cancelRainOpening === cancel) cancelRainOpening = null;
+      rainLaunch.disabled = false;
+    }
   };
   let photonPlaying = false, photonTime = 0;
   const pausePhotons = () => { photonPlaying = false; photonButton.setAttribute('aria-pressed', 'false'); photonButton.textContent = photonTime > 0 ? '▶ Resume photons' : '▶ Play photons'; };
@@ -1028,6 +1043,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     deactivate() {
+      cancelRainOpening?.();
       rainLaunch.hidden = true; rainView?.close();
       pausePhotons(); photonControls.hidden = true;
       invalidatePixel(); status.hidden = true;
@@ -1147,6 +1163,7 @@ export const build: BuildPiece = (ctx) => {
     },
 
     dispose() {
+      cancelRainOpening?.();
       disposed = true; invalidatePixel(); status.remove(); offFailure();
       offPhotonPause(); document.removeEventListener('visibilitychange', hiddenPhotons); photonControls.remove(); rainLaunch.remove(); rainView?.dispose();
       offBusTap();
