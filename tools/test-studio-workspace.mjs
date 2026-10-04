@@ -30,7 +30,7 @@ async function sample(name) {
     return { viewport:[innerWidth,innerHeight], scroll:[scrollX,scrollY],
       document:[document.documentElement.scrollWidth,document.documentElement.scrollHeight],
       view:document.body.dataset.workspaceView, frame:window.p2p.framing(),
-      boxes:Object.fromEntries(['#gl','#compact-fire','#zoom-in','#zoom-out','#part-next','#part-prev','#workspace-model','#workspace-photos','#rp-img','#rp-play','#rp-match','#rp-picks','#rp-prediction','.studio-sidebar'].map(s=>[s,rect(s)])) };
+      boxes:Object.fromEntries(['#gl','#compact-fire','#zoom-in','#zoom-out','#part-next','#part-prev','#workspace-model','#workspace-photos','#rp-img','#rp-play','#rp-match','#rp-picks','.studio-sidebar'].map(s=>[s,rect(s)])) };
   });
   report.samples.push({name,...data});
   await page.screenshot({ path:`${output}/${name}.png` });
@@ -56,6 +56,7 @@ async function distance() { return page.evaluate(() => {const f=window.p2p.frami
 try {
   await page.goto(entry.href); await page.waitForFunction(()=>window.p2p?.pieces.camera);
   await page.evaluate(()=>window.p2p.pieces.camera.ready()); await rest();
+  assert.equal(await page.locator('#finalimg,#fi-dock,#kit-scene,#sc-scene,#compare-photo,#compare-dialog,#rp-canvas,.rp-render,.rp-prediction').count(),0,'removed synthetic previews and scene controls stay absent');
   report.backend = await page.evaluate(()=>window.p2p.backend());
   if(process.env.P2P_BACKEND) assert.equal(report.backend,process.env.P2P_BACKEND);
   await sample('00-desktop-camera');
@@ -97,12 +98,13 @@ try {
       assert.equal(await page.locator('#equipment-toggle').getAttribute('aria-expanded'),'false');
       assert.equal(await page.locator('#kit-body').isVisible(),false,'equipment editor starts manually collapsed');
       await page.locator('#equipment-toggle').click();
-      const previousScene=await page.locator('#kit-scene').inputValue();
-      const scene=await page.locator('#kit-scene option').evaluateAll(nodes=>nodes.map(n=>n.value).find(value=>value!==document.querySelector('#kit-scene').value));
-      await page.locator('#kit-scene').selectOption(scene);
-      assert.ok((await page.locator('#equipment-summary').textContent()).includes(await page.locator('#kit-scene option:checked').textContent()));
+      const previousLens=await page.locator('#kit-lens').inputValue();
+      const lens=await page.locator('#kit-lens option').evaluateAll(nodes=>nodes.map(n=>n.value).find(value=>value!==document.querySelector('#kit-lens').value));
+      assert.ok(lens,'equipment editor offers another lens');
+      await page.locator('#kit-lens').selectOption(lens);
+      assert.ok((await page.locator('#equipment-summary').textContent()).includes((await page.locator('#kit-lens option:checked').textContent()).replace(/\s*·\s*/g,' ').trim()));
       await page.screenshot({path:`${output}/${name}-equipment-editor.png`});
-      await page.locator('#kit-scene').selectOption(previousScene); await page.locator('#phone-settings-close').click();
+      await page.locator('#kit-lens').selectOption(previousLens); await page.locator('#phone-settings-close').click();
       assert.equal(await page.locator('#equipment-toggle').getAttribute('aria-expanded'),'false');
       assert.equal(await page.evaluate(()=>document.activeElement.id),'equipment-toggle');
     }
@@ -130,10 +132,7 @@ try {
       assert.equal(await page.locator('#inspector-size').getAttribute('aria-expanded'),'false');
     }
     await page.locator('#workspace-photos').click(); await sample(`${name}-photos`);
-    await page.locator('#rp-prediction summary').click();
-    await page.waitForFunction(()=>document.querySelector('#rp-canvas').dataset.example);
-    await sample(`${name}-prediction`);
-    await page.locator('#rp-prediction summary').click();
+    assert.equal(await page.locator('#rp-canvas,.rp-render,.rp-prediction').count(),0,'photo tab contains no synthetic companion preview');
   }
   await page.setViewportSize({width:320,height:568});
   injectingCatalog=true; let requests=0;

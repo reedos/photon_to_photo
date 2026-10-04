@@ -1,12 +1,11 @@
 // The page shell around the 3D view: the settings (body, lens, aperture, focus, shutter, ISO, format), the level strip
 // (the camera and its three inspection views), the part list and its cards, the stat row with evidence chips, and
-// the final image (docked live in the view, and in full below it). Reads Model only through engine-api.ts's compute();
+// focused physics controls. Reads Model only through engine-api.ts's compute();
 // never computes physics itself. Queries the DOM ids index.html defines and wires them once.
 import type { Model } from '../engine/model-types';
 import type { FormatId, Scenario } from '../engine/types';
-import { bodyForLens, compute, defaultFocusM, lensSummary, LINEUP, LONG_LENS_MM, sceneIds, sceneTargets, type BodyId } from './engine-api';
+import { bodyForLens, compute, defaultFocusM, lensSummary, LINEUP, LONG_LENS_MM, type BodyId } from './engine-api';
 import { motionPartial, motionSpeedOf } from './motion';
-import { currentRender, onRenderFailure, publishRender, requestRender, type RenderView } from './render-client';
 import { emit, on } from './bus';
 import { type AppState, type PieceId, type Store } from './store';
 import { cameraPart, PART_LABELS } from './inspection';
@@ -46,7 +45,7 @@ const PIECES: { id: PieceId; n: number; title: string; short: string; color: str
   { id: 'cone', n: 3, title: 'Focus & bokeh', short: 'Focus', color: 'var(--focus)', deep: true,
     lede: "A deep dive into focus. One point's light converges to a point on the sensor when it is in focus, and paints a disk when it is not." },
   { id: 'loupe', n: 4, title: 'The loupe', short: 'Loupe', color: 'var(--loupe)', deep: true,
-    lede: 'A deep dive into one pixel. From a spot in the final photo down to the microlens, the color filter and the well that counts the electrons.' },
+    lede: 'A deep dive into one pixel. From a controlled light sample down to the microlens, the color filter and the well that counts the electrons.' },
 ];
 
 export function chip(ev: string, src?: string): string {
@@ -74,12 +73,10 @@ interface Dom {
   pieceCounter: HTMLElement; pageTitle: HTMLElement; pageLede: HTMLElement;
   scBody: HTMLElement; scLens: HTMLElement; scFno: HTMLInputElement; scFnoV: HTMLElement;
   scFocus: HTMLInputElement; scFocusV: HTMLElement; scShutter: HTMLInputElement; scShutterV: HTMLElement;
-  scIso: HTMLInputElement; scIsoV: HTMLElement; scFormat: HTMLElement; scScene: HTMLElement; scMotion: HTMLElement; kpis: HTMLElement;
+  scIso: HTMLInputElement; scIsoV: HTMLElement; scFormat: HTMLElement; scMotion: HTMLElement; kpis: HTMLElement;
   steps: HTMLElement; intro: HTMLElement; partsK: HTMLElement; parts: HTMLElement; partsAll: HTMLButtonElement;
   card: HTMLElement; cardK: HTMLElement; cardT: HTMLElement; cardSub: HTMLElement; cardB: HTMLElement; cardS: HTMLElement; cardX: HTMLButtonElement;
   resetView: HTMLButtonElement; shareBtn: HTMLButtonElement; toast: HTMLElement;
-  finalimgCanvas: HTMLCanvasElement; finalimgCap: HTMLElement; finalimgScale: HTMLElement;
-  dock: HTMLButtonElement; dockCanvas: HTMLCanvasElement; dockCap: HTMLElement;
   raysChip: HTMLButtonElement; hudBtns: HTMLElement; hudBtnsPhone: HTMLElement; hint: HTMLElement; hudTr: HTMLElement;
   topnav: HTMLElement; menuBtn: HTMLButtonElement; stageSection: HTMLElement;
 }
@@ -95,12 +92,10 @@ function queryDom(): Dom {
     pieceCounter: byId('piece-counter'), pageTitle: byId('page-title'), pageLede: byId('page-lede'),
     scBody: byId('sc-body'), scLens: byId('sc-lens'), scFno: byId('sc-fno'), scFnoV: byId('sc-fno-v'),
     scFocus: byId('sc-focus'), scFocusV: byId('sc-focus-v'), scShutter: byId('sc-shutter'), scShutterV: byId('sc-shutter-v'),
-    scIso: byId('sc-iso'), scIsoV: byId('sc-iso-v'), scFormat: byId('sc-format'), scScene: byId('sc-scene'), scMotion: byId('sc-motion'), kpis: byId('kpis'),
+    scIso: byId('sc-iso'), scIsoV: byId('sc-iso-v'), scFormat: byId('sc-format'), scMotion: byId('sc-motion'), kpis: byId('kpis'),
     steps: byId('steps'), intro: byId('intro'), partsK: byId('parts-k'), parts: byId('parts'), partsAll: byId('parts-all'),
     card: byId('card'), cardK: byId('card-k'), cardT: byId('card-t'), cardSub: byId('card-sub'), cardB: byId('card-b'), cardS: byId('card-s'), cardX: byId('card-x'),
     resetView: byId('reset-view'), shareBtn: byId('share-btn'), toast: byId('toast'),
-    finalimgCanvas: byId('finalimg-canvas'), finalimgCap: byId('finalimg-cap'), finalimgScale: byId('finalimg-scale'),
-    dock: byId('fi-dock'), dockCanvas: byId('fi-dock-canvas'), dockCap: byId('fi-dock-cap'),
     raysChip: byId('rays-chip'), hudBtns: byId('hud-btns'), hudBtnsPhone: byId('hud-btns-phone'), hint: byId('hint'), hudTr: byId('hud-tr'),
     topnav: byId('topnav'), menuBtn: byId('menu-btn'), stageSection: byId('stage-section'),
   };
@@ -113,15 +108,6 @@ const phoneQuery = () => (typeof window !== 'undefined' && window.matchMedia ? w
 export function lensChange(fromLens: string, toLens: string, focusM: number | null): { lens: string; focusM?: number | null } {
   const long = (id: string) => lensSummary(id).focalLength >= LONG_LENS_MM;
   return long(fromLens) === long(toLens) ? { lens: toLens } : { lens: toLens, focusM: defaultFocusM(toLens) };
-}
-
-/** Whether any of the bench scene's targets (the charts, the foreground card) falls inside this shot's frame, from the
- *  sensor's size and the lens's image distance: drawing geometry for the empty-frame caption, not a displayed number. */
-export function targetsInFrame(model: Model): boolean {
-  const wMm = (model.sensor.widthPx * model.sensor.pitchUm) / 1000, hMm = (model.sensor.heightPx * model.sensor.pitchUm) / 1000;
-  const img = model.cardinal.efl * (1 + Math.abs(model.focus.magnification || 0));
-  const tx = wMm / 2 / img, ty = hMm / 2 / img;
-  return sceneTargets(model.scenario.scene ?? 'bench', model.scenario.subjectM).some((t) => t.x0 < t.z * tx && t.x1 > -t.z * tx && t.y0 < t.z * ty && t.y1 > -t.z * ty);
 }
 
 /** A card title's parenthetical provenance ("50 mm f/1.8 (generic, after ...)") goes on a mono line of its own. */
@@ -176,23 +162,6 @@ export function mountUI(store: Store, stage: Stage): void {
     btn.innerHTML = `${f.label}<small>${f.sub}</small>`;
     btn.addEventListener('click', () => store.set({ format: f.id }));
     dom.scFormat.appendChild(btn);
-  }
-
-  // ---- scene switch: Tabletop (the bench charts) / Field (a long lens's own default, docs contract with the scenes
-  // stream). Offered unconditionally: normalizeScenario already falls back to the default scene for an id sceneIds()
-  // doesn't know, so picking Field before that stream's edit to scenes.ts lands is a safe no-op, not a crash.
-  const SCENES: { id: string; label: string; sub: string }[] = [
-    { id: 'bench', label: 'Tabletop', sub: 'Close, still' },
-    { id: 'flight', label: 'Bird glide', sub: 'Lateral flight' },
-    { id: 'field', label: 'Field', sub: 'Far, open' },
-  ];
-  for (const s of SCENES) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.scene = s.id;
-    btn.innerHTML = `${s.label}<small>${s.sub}</small>`;
-    btn.addEventListener('click', () => store.set({ scene: s.id }));
-    dom.scScene.appendChild(btn);
   }
 
   // ---- moving subject: Off, or an illustrative walking/running/bird-in-flight speed (motion.ts's shared-contract
@@ -260,7 +229,7 @@ export function mountUI(store: Store, stage: Stage): void {
   const inspectionBar = document.createElement('div');
   inspectionBar.className = 'inspection-context';
   inspectionBar.hidden = true;
-  inspectionBar.innerHTML = '<button type="button" class="inspection-back"></button><span aria-hidden="true">/</span><span class="inspection-here"></span><span class="inspection-note">Same shot, a closer look</span>';
+  inspectionBar.innerHTML = '<button type="button" class="inspection-back"></button><span aria-hidden="true">/</span><span class="inspection-here"></span><span class="inspection-note">Same camera, a closer look</span>';
   dom.steps.after(inspectionBar);
   const inspectionBack = inspectionBar.querySelector<HTMLButtonElement>('button')!;
   inspectionBack.addEventListener('click', () => store.setPiece('camera'));
@@ -280,12 +249,11 @@ export function mountUI(store: Store, stage: Stage): void {
   const spy = () => {
     const line = window.innerHeight * 0.33;
     let key = 'stage';
-    for (const [id, k] of [['scenario', 'scenario'], ['finalimg', 'finalimg']] as const) {
+    for (const [id, k] of [['scenario', 'scenario']] as const) {
       const el = document.getElementById(id);
       if (el && el.getBoundingClientRect().top <= line) key = k;
     }
     // the last section can never reach the line: at the foot of the page it is the one on screen (R2-05)
-    if (document.getElementById('finalimg') && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) key = 'finalimg';
     for (const a of navLinks) a.setAttribute('aria-current', String(a.dataset.nav === key));
   };
   window.addEventListener('scroll', spy, { passive: true });
@@ -317,12 +285,6 @@ export function mountUI(store: Store, stage: Stage): void {
   };
   placeButtons();
   phone?.addEventListener('change', placeButtons);
-  // the docked final image: in the left rail under the exposure panel on a wide screen, in the lower right on a phone
-  const rail = document.getElementById('hud-rail'), br = document.getElementById('hud-br');
-  const placeDock = () => { if (phone?.matches) br?.append(dom.dock); else rail?.append(dom.dock); };
-  placeDock();
-  phone?.addEventListener('change', placeDock);
-
   dom.resetView.addEventListener('click', () => {
     if (store.get().piece === 'camera' && selectedPartId) stage.selectPin(selectedPartId);
     else stage.resetView();
@@ -348,22 +310,6 @@ export function mountUI(store: Store, stage: Stage): void {
     dom.raysChip.setAttribute('aria-pressed', String(on));
     emit('layer', { id: 'rays', on });
   });
-
-  // A tap on the final image opens the loupe at that rendered pixel (the loupe piece hears it on the bus).
-  dom.finalimgCanvas.addEventListener('click', (ev) => {
-    // The previous photo remains visible while its replacement is computed. Its pixels no longer
-    // describe the current controls, so wait for a successful render before opening an inspection.
-    if (dom.finalimgCanvas.getAttribute('aria-disabled') === 'true') return;
-    const view = currentRender();
-    if (!view) return;
-    const r = dom.finalimgCanvas.getBoundingClientRect();
-    store.setPiece('loupe');
-    dom.stageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    const x = Math.min(view.width - 1, Math.max(0, Math.floor(((ev.clientX - r.left) / r.width) * view.width)));
-    const y = Math.min(view.height - 1, Math.max(0, Math.floor(((ev.clientY - r.top) / r.height) * view.height)));
-    emit('loupe-tap', { x, y, renderId: view.renderId });
-  });
-  dom.dock.addEventListener('click', () => document.getElementById('finalimg')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   // ---- the part list and its card ---------------------------------------------------------------------------
   const previous = byId<HTMLButtonElement>('part-prev'), next = byId<HTMLButtonElement>('part-next');
@@ -417,14 +363,6 @@ export function mountUI(store: Store, stage: Stage): void {
     for (const btn of dom.scBody.children) (btn as HTMLElement).setAttribute('aria-pressed', String((btn as HTMLElement).dataset.body === body));
     for (const btn of dom.scLens.children) (btn as HTMLElement).setAttribute('aria-pressed', String((btn as HTMLElement).dataset.lens === scenario.lens));
     for (const btn of dom.scFormat.children) (btn as HTMLElement).setAttribute('aria-pressed', String((btn as HTMLElement).dataset.format === scenario.format));
-    const knownScenes = sceneIds();
-    for (const btn of dom.scScene.children) {
-      const el = btn as HTMLButtonElement;
-      el.setAttribute('aria-pressed', String(el.dataset.scene === scenario.scene));
-      // Disabled, not hidden, until the scenes stream's own scenes.ts registers it: a real option that isn't wired
-      // up yet reads as "not yet" rather than as a silent no-op (see the note by SCENES above).
-      el.disabled = !!el.dataset.scene && !knownScenes.includes(el.dataset.scene);
-    }
     const speedMps = motionSpeedOf(scenario);
     for (const btn of dom.scMotion.children) (btn as HTMLElement).setAttribute('aria-pressed', String(Number((btn as HTMLElement).dataset.speed) === speedMps));
 
@@ -558,92 +496,6 @@ export function mountUI(store: Store, stage: Stage): void {
     }
   }
 
-  // ---- the final image: rendered in a worker (render-worker.ts, about 2 s at 600 x 400), debounced so a drag asks
-  // for one render when it pauses, and latest-wins so a stale render never paints over a newer setting. The docked
-  // thumbnail in the view is the same render, scaled down.
-  let renderTimer = 0;
-  let renderGeneration = 0;
-  const retryPhoto = byId<HTMLButtonElement>('finalimg-retry');
-  function setPhotoInspection(enabled: boolean, hint: string) {
-    dom.finalimgCanvas.setAttribute('aria-disabled', String(!enabled));
-    dom.finalimgCanvas.tabIndex = enabled ? 0 : -1;
-    dom.finalimgCanvas.setAttribute('aria-label', enabled
-      ? 'Calculated photo. Click a pixel, or press Enter to inspect the center.' : hint);
-    const help = document.querySelector('.photo-hint');
-    if (help) help.textContent = hint;
-  }
-  retryPhoto.onclick = () => renderFinalImage(compute(store.get().scenario));
-  onRenderFailure(() => {
-    setPhotoInspection(false, 'Retry the photo to inspect a pixel');
-    dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
-    dom.dock.classList.remove('rendering');
-    dom.finalimgCanvas.setAttribute('aria-busy', 'false');
-    dom.finalimgCap.textContent = 'The photo renderer stopped. Retry to restore this photo and its pixel inspection.';
-    retryPhoto.hidden = false;
-  });
-  function renderFinalImage(model: Model) {
-    setPhotoInspection(false, 'Updating the photo…');
-    retryPhoto.hidden = true;
-    dom.finalimgCanvas.setAttribute('aria-busy', 'true');
-    const generation = ++renderGeneration;
-    window.clearTimeout(renderTimer);
-    dom.finalimgCanvas.closest('.finalimg-card')?.classList.add('rendering');
-    dom.dock.classList.add('rendering');
-    dom.dockCap.textContent = `${fmtFno(model.scenario.fno)} · ${fmtShutter(model.scenario.shutter)}`;
-    renderTimer = window.setTimeout(async () => {
-      const w = dom.finalimgCanvas.width, h = dom.finalimgCanvas.height;
-      let view: RenderView | null;
-      try {
-        view = await requestRender(model.scenario, w, h, 1);
-      } catch (err) {
-        if (generation !== renderGeneration) return;
-        setPhotoInspection(false, 'Retry the photo to inspect a pixel');
-        dom.finalimgCap.textContent = 'The photo could not be rendered. Retry to keep these settings.';
-        dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
-        dom.finalimgCanvas.setAttribute('aria-busy', 'false');
-        retryPhoto.hidden = false;
-        dom.dock.classList.remove('rendering');
-        console.error('ui.ts: render failed', err);
-        return;
-      }
-      if (!view || generation !== renderGeneration) return; // includes changes still inside the debounce interval
-      dom.finalimgCanvas.setAttribute('aria-busy', 'false');
-      const ctx = dom.finalimgCanvas.getContext('2d');
-      if (!ctx) return;
-      const imageData = ctx.createImageData(view.width, view.height);
-      imageData.data.set(view.rgba);
-      ctx.putImageData(imageData, 0, 0);
-      setPhotoInspection(true, 'Tap the photo to inspect a pixel');
-      dom.finalimgCanvas.closest('.finalimg-card')?.classList.remove('rendering');
-      const dctx = dom.dockCanvas.getContext('2d');
-      if (dctx) { dctx.imageSmoothingQuality = 'high'; dctx.drawImage(dom.finalimgCanvas, 0, 0, dom.dockCanvas.width, dom.dockCanvas.height); }
-      dom.dock.classList.remove('rendering');
-      publishRender(view);
-      const block = Math.round(view.pixelScale);
-      const sc = view.scenario;
-      const nbsp = ' ';
-      // "EACH ONE 14 × 14 SENSOR PIXELS" wraps mid-phrase if the line breaks at an ordinary space (R3-04): keep the
-      // pixel count and its unit on one line, wherever the rest of the (pre-line) text wraps.
-      const eachOne = `each one${nbsp}${block}${nbsp}×${nbsp}${block}${nbsp}sensor${nbsp}pixels`;
-      dom.finalimgScale.textContent = `${view.width} × ${view.height} px · ${eachOne}
-`
-        + `${fmtFno(sc.fno)} · ${fmtShutter(sc.shutter)} · ISO ${Math.round(sc.iso)} · focus ${fmtDistance(model.focus.distanceMm)}`;
-      // A long lens's narrow view misses the charts at any focus: say so, in the card and on the dock, instead of
-      // showing a gray field that looks like a failed render (R1-06).
-      const empty = !targetsInFrame(model);
-      const chartsAt = fmtDistance(sceneTargets(model.scenario.scene ?? 'bench', model.scenario.subjectM).find((t) => t.id === 'colorchecker')?.z ?? 3000);
-      dom.finalimgCap.classList.toggle('finalimg-empty', empty);
-      dom.finalimgCap.textContent = empty
-        ? `At ${model.lens.focalLength} mm the view is too narrow to take in the test charts. The charts stand ${chartsAt} away, outside `
-          + `this narrow view, so this frame holds the gray wall far behind them and the small foreground swatch used to test background blur. `
-          + `Pick a 35 or 50 mm lens to see the charts in the shot.`
-        : `The engine's render of this shot, with the photon and read noise of the sensor pixels behind each image pixel. `
-          + `It is shown no larger than it was rendered, so any softness comes from the shot, not from enlarging it. Tap a spot to open the loupe on it.`;
-      const dockEmpty = document.getElementById('fi-dock-empty');
-      if (dockEmpty) { dockEmpty.hidden = !empty; dockEmpty.textContent = empty ? 'Charts outside this view' : ''; }
-    }, 120);
-  }
-
   let renderedState: AppState | null = null;
   function render(state: AppState) {
     const apertureNotice = apertureClampNotice(renderedState, state);
@@ -665,15 +517,13 @@ export function mountUI(store: Store, stage: Stage): void {
       stage.selectPin(selectedPartId);
     }
     renderedState = state;
-    // the camera's own chrome: the Rays chip and the docked final image belong to level 1
+    // The ray toggle belongs to the camera overview.
     dom.raysChip.hidden = piece !== 'camera';
-    dom.dock.hidden = piece !== 'camera';
     setHint();
     spy();
     renderScenario(scenario, model);
     renderSteps(model, piece);
     renderPanel(model, piece);
-    if (shotChanged) renderFinalImage(model);
   }
 
   // the camera's own controls (the focus ring, the command dials) set the scenario through the bus

@@ -4,7 +4,6 @@
 import type { Scenario } from '../engine/types';
 import type { Model } from '../engine/model-types';
 import { compute } from './engine-api';
-import { currentRender } from './render-client';
 import type { PieceId, Store } from './store';
 import type { PinScreen, Stage } from './stage';
 
@@ -20,7 +19,7 @@ export interface P2P {
   framing(): ReturnType<Stage['framing']>;
   /** Each piece's own hooks (probes for the visual accuracy gate, recording controls): p2p.pieces.lens.probe() */
   pieces: Record<string, Record<string, (...args: any[]) => any>>;
-  /** The latest final-image render (sizes, meta); the loupe and the gates read it. */
+  /** Legacy hook: synthetic photo rendering has been removed. */
   render(): import('./render-client').RenderView | null;
 }
 
@@ -44,7 +43,7 @@ export function installHooks(store: Store, stage: Stage): void {
     pieces: new Proxy({} as Record<string, Record<string, (...args: any[]) => any>>, {
       get: (_t, id: string) => stage.pieceHooks(id),
     }),
-    render() { return currentRender(); },
+    render() { return null; },
   };
   window.p2p = api;
 }

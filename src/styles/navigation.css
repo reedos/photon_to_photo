@@ -20,11 +20,6 @@
 .view-menu #studio-actions { position: absolute; z-index: 80; top: calc(100% + 8px); right: 0; width: 220px; padding: 10px; border: 1px solid var(--line-2); background: var(--surface); box-shadow: 0 18px 44px #0009; }
 .view-menu .hud-row { display: grid; }
 .view-menu .btn { width: 100%; }
-.workspace .studio-sidebar[data-pane="parts"] .finalimg { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 5px 12px; padding-block: 10px; }
-.studio-sidebar[data-pane="parts"] .finalimg .sc-head { grid-column: 1 / -1; }
-.studio-sidebar[data-pane="parts"] .finalimg .sc-head > span { display: none; }
-.studio-sidebar[data-pane="parts"] .photo-hint { display: none; }
-.studio-sidebar[data-pane="parts"] .photo-details[open] { grid-column: 1 / -1; }
 .workspace .panel { display: grid; grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; padding: 10px 16px; }
 .workspace .panel-scroll { display: contents; }
 .workspace #intro { display: none; }
@@ -56,8 +51,6 @@
   .workspace .part-nav { width: 100%; }
   .workspace .part-nav .btn { min-height: 36px; padding-inline: 12px; font-size: 10px; justify-content: center; }
   #part-position { margin-left: auto; font-size: 10px; }
-  .workspace .studio-sidebar[data-pane="parts"] .finalimg { display: block; padding: 10px; }
-  .workspace .studio-sidebar[data-pane="parts"] .finalimg .sc-head > span { display: block; }
   .workspace .panel { height: 470px; max-height: none; padding: 10px; }
   .workspace #parts { gap: 0 5px; }
   .workspace #parts button { min-height: 44px; padding: 4px 0; gap: 4px; }

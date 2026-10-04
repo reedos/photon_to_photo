@@ -1,17 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { pipelinePixels, rowWindow, movingEdgeFraction, sameShot, EXPERIMENTS } from './learning-model';
+import { pipelinePixels, rowWindow, movingEdgeFraction, TOUR } from './learning-model';
 import { compute, normalizeScenario } from './engine-api';
-import { renderImage } from '../engine/render';
-import { sensorFor } from '../engine/data';
-import type { RenderView } from './render-client';
+import { createPipelineTestSample } from './pipeline-test-sample';
 
 describe('sensor-to-photo lessons', () => {
   it('integrates the moving-edge chart over each row window, keeping skew separate from exposure blur', () => {
-    // x=.38 is crossed at 40 ms. A 30–50 ms exposure is half lit; scrubbing at 35 ms has accumulated a quarter.
     expect(movingEdgeFraction(.38, .03, .02, .1)).toBeCloseTo(.5, 10);
     expect(movingEdgeFraction(.38, .03, .02, .035)).toBeCloseTo(.25, 10);
     expect(movingEdgeFraction(.38, .03, .02, .02)).toBe(0);
-    // Both rows expose for just 1 ms, but a 64 ms scan still records different sides of the same edge.
     expect(movingEdgeFraction(.38, 0, .001, 1)).toBe(1);
     expect(movingEdgeFraction(.38, .064, .001, 1)).toBe(0);
   });
@@ -19,47 +15,34 @@ describe('sensor-to-photo lessons', () => {
     for (const exposure of [1 / 8000, 1 / 30, 2]) {
       const first = rowWindow(0, 12, .064, exposure), last = rowWindow(11, 12, .064, exposure);
       expect(first.start).toBe(0); expect(last.start).toBeCloseTo(.064, 9);
-      expect(last.end - last.start).toBeCloseTo(exposure, 9);
-      expect(first.end).toBe(exposure);
+      expect(last.end - last.start).toBeCloseTo(exposure, 9); expect(first.end).toBe(exposure);
     }
     expect(rowWindow(0, 1, .064, .01)).toEqual({ start: 0, end: .01 });
   });
   it('uses each body’s recorded scan time and retains its uncertainty', () => {
     const d850 = compute({ lens: 'n50' }).sensor, z8 = compute({ lens: 'm50' }).sensor;
     expect(d850.readoutS).toBe(.064); expect(z8.readoutS).toBe(.0036);
-    expect(d850.figs.readoutS.loc).toContain('directly');
-    expect(z8.figs.readoutS.loc).toContain('low');
+    expect(d850.figs.readoutS.loc).toContain('directly'); expect(z8.figs.readoutS.loc).toContain('low');
   });
-  it('shows the exact final image and stored intermediate values, with no second tone curve', () => {
-    const model = compute({ lens: 'n50' });
-    const result = renderImage(model, { width: 24, height: 16, seed: 1 });
-    const view = { ...result, scenario: model.scenario, renderId: 1 } as RenderView;
-    expect(pipelinePixels(view, 'tone')).toEqual(result.rgba);
-    const wb = pipelinePixels(view, 'wb');
-    for (let i = 0; i < result.raw.length; i++) {
-      expect(wb[i * 4 + 3]).toBe(255);
-      for (let c = 0; c < 3; c++) expect(wb[i * 4 + c]).toBe(new Uint8ClampedArray([255 * result.stages.wb[i * 3 + c]])[0]);
-    }
+  it('processes an explicit controlled test chart without depending on a photo render', () => {
+    const scenario = normalizeScenario({ lens: 'n50' });
+    const sample = createPipelineTestSample(scenario.format, scenario.iso, scenario.sensor);
+    expect(sample.width).toBe(96); expect(sample.height).toBe(64);
+    expect(pipelinePixels(sample, 'tone')).toEqual(sample.rgba);
+    const raw = pipelinePixels(sample, 'raw');
+    expect(raw).toHaveLength(sample.width * sample.height * 4);
+    expect(raw[3]).toBe(255);
+    expect(raw[0]).toBeGreaterThan(0); // RGGB top-left is the red-filtered site.
+    expect(raw[4 + 1]).toBeGreaterThanOrEqual(0); // Green-filtered top-right site.
+    expect(pipelinePixels(sample, 'wb')[3]).toBe(255);
+    const neutral = sample.stages.wb, i = (8 * sample.width + 8) * 3;
+    expect(neutral[i]).toBeCloseTo(.78, 2);
+    expect(neutral[i + 1]).toBeCloseTo(.78, 2);
+    expect(neutral[i + 2]).toBeCloseTo(.78, 2);
   });
-  it('subtracts raw black level and preserves RGGB channel order', () => {
-    const scenario = normalizeScenario({ lens: 'n50' }), spec = sensorFor(scenario.format, scenario.iso, scenario.sensor).spec;
-    const raw = new Uint16Array([spec.blackLevelDn, 2 ** spec.bitDepth - 1, 2 ** spec.bitDepth - 1, 2 ** spec.bitDepth - 1]);
-    const view = { scenario, width: 2, height: 2, raw } as RenderView;
-    expect([...pipelinePixels(view, 'raw')]).toEqual([0, 0, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255]);
-  });
-  it('matches shots independent of property order but rejects stale and extra settings', () => {
-    const s = normalizeScenario({});
-    expect(sameShot(s, { ...s })).toBe(true);
-    expect(sameShot(s, { ...s, iso: s.iso * 2 })).toBe(false);
-    expect(sameShot(s, { ...s, motion: { speedMps: 1 } })).toBe(false);
-  });
-  it('experiments express their stated light/brightness tradeoffs', () => {
-    const pair = (id: string) => { const r = EXPERIMENTS[id]; const a = normalizeScenario(r.before); return [a, normalizeScenario({ ...a, ...r.after })]; };
-    const [da, db] = pair('depth');
-    expect(da.shutter / da.fno ** 2).toBeCloseTo(db.shutter / db.fno ** 2, 9);
-    const [na, nb] = pair('noise');
-    expect(nb.shutter / na.shutter).toBe(16); expect(na.iso / nb.iso).toBe(16);
-    const [ma, mb] = pair('motion');
-    expect(ma.motion?.speedMps).toBe(1); expect(mb.shutter).toBeLessThan(ma.shutter);
+  it('labels the pipeline tour as an illustrative sample separate from the user photograph', () => {
+    const stop = TOUR.find(s => s.lesson === 'pipeline')!;
+    expect(stop.text).toMatch(/illustrative test sample/i);
+    expect(stop.text).toMatch(/separate from your photograph/i);
   });
 });

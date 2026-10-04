@@ -38,8 +38,7 @@ export function buildWorkspace(): void {
   toolbar.className = 'studio-kit';
   toolbar.innerHTML = `<button type="button" id="equipment-toggle" aria-expanded="false" aria-controls="equipment-controls"><span id="equipment-summary">Camera equipment</span><b>Edit</b></button>
     <div id="equipment-controls"><label>Camera<select id="kit-body" aria-label="Camera body"></select></label>
-    <label>Lens<select id="kit-lens" aria-label="Lens"></select></label>
-    <label>Photo scene<select id="kit-scene" aria-label="Calculated photo scene" title="Changes the calculated photo, not the inspection model"></select></label></div>
+    <label>Lens<select id="kit-lens" aria-label="Lens"></select></label></div>
     <div class="studio-share" id="studio-actions"></div>`;
   stage.prepend(toolbar);
   const why = document.createElement('p'); why.id = 'level-why'; why.className = 'level-why';
@@ -109,7 +108,7 @@ export function buildWorkspace(): void {
   placeDoor(); narrow.addEventListener('change', placeDoor);
   const sidebar = document.createElement('aside');
   sidebar.className = 'studio-sidebar';
-  sidebar.setAttribute('aria-label', 'Photo and settings');
+  sidebar.setAttribute('aria-label', 'Camera controls and parts');
   const panel = stage.querySelector<HTMLElement>('.panel')!;
   panel.id = 'studio-explain';
   panel.hidden = true;
@@ -147,29 +146,7 @@ export function buildWorkspace(): void {
     hint.textContent = descriptions[i];
     group.append(hint);
   });
-  const photo = el('finalimg');
-  const photoCanvas = el('finalimg-canvas');
-  photoCanvas.tabIndex = 0;
-  photoCanvas.setAttribute('role', 'button');
-  photoCanvas.setAttribute('aria-label', 'Calculated photo. Click a pixel, or press Enter to inspect the center.');
-  photoCanvas.addEventListener('keydown', event => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    const box = photoCanvas.getBoundingClientRect();
-    photoCanvas.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 }));
-  });
-  photo.querySelector('.sc-head')!.innerHTML = '<h2 id="fi-h">Photo model</h2><span>Calculated from your settings</span>';
-  const photoDetails = document.createElement('details');
-  photoDetails.className = 'photo-details';
-  photoDetails.innerHTML = '<summary>Photo details</summary>';
-  photoDetails.append(photo.querySelector('.finalimg-side')!);
-  photo.append(photoDetails);
-  photoDetails.before(el('finalimg-retry'));
-  const photoHint = document.createElement('p');
-  photoHint.className = 'photo-hint';
-  photoHint.textContent = 'Tap the photo to inspect a pixel';
-  photo.querySelector('.finalimg-card')!.append(photoHint);
-  sidebar.append(photo, tabRow, controls, panel);
+  sidebar.append(tabRow, controls, panel);
   stage.querySelector('.body')!.append(sidebar);
   const settingsDrawer = document.createElement('dialog');
   settingsDrawer.id = 'phone-settings'; settingsDrawer.setAttribute('aria-labelledby', 'phone-settings-title');
@@ -217,7 +194,7 @@ export function mountWorkspace(store: Store): void {
     }
   });
   showView(location.hash === '#rp-card' ? 1 : 0);
-  const selectors = ['body', 'lens', 'scene'].map((name) => {
+  const selectors = ['body', 'lens'].map((name) => {
     const select = el(`kit-${name}`) as HTMLSelectElement;
     const group = el(`sc-${name}`);
     select.addEventListener('change', () => {
@@ -349,10 +326,10 @@ export function mountWorkspace(store: Store): void {
   let lastPart: string | null = null;
   store.subscribe(state => {
     el('level-why').textContent = {
-      camera: 'Try the shutter, aperture or focus ring. Watch how each changes the calculated photo.',
+      camera: 'Try the shutter, aperture or focus ring. Watch the shutter, light paths and lens respond.',
       lens: 'Each glass surface bends light. Follow the colors to see where they meet.',
       cone: 'One distance is sharp. Change focus to see nearby and distant points spread into blur.',
-      loupe: 'Light becomes charge, then a number. Select a pixel to follow its simulated signal.',
+      loupe: 'Light becomes charge, then a number. Follow a controlled light sample into a sensor pixel.',
     }[state.piece];
     for (const { name, select, group } of selectors) {
       const buttons = Array.from(group.querySelectorAll('button'));
@@ -367,7 +344,7 @@ export function mountWorkspace(store: Store): void {
     }
     const equipment = selectors.map(({ select }) => select.selectedOptions[0]?.textContent?.replace(/\s*·\s*/g, ' ') || '').filter(Boolean);
     const summary = el('equipment-summary');
-    summary.textContent = `${equipment[0]} · ${equipment[1]} · ${equipment[2]}`;
+    summary.textContent = equipment.join(' · ');
     equipmentToggleLabel(summary.textContent);
     if (state.cameraPart && state.cameraPart !== lastPart) {
       activate(1);

@@ -1,18 +1,11 @@
 import { selectionFrame } from './selection-frame';
 import '../styles/photon-rain.css';
 // Set piece 9, the loupe: docs/BRIEF.md #9, design/LOOK.md "9. The loupe," docs/PROTOTYPE.md's loupe section.
-// Everything drawn here is computed: the photo is the render worker's own rgba (render-client.ts), the target
-// pixel's numbers come from pixelAt() (a real sampled PixelState), the ray bundle from pointBundle() (a real
-// trace through the lens), and the well fill from electrons/fullWell. This piece never invents a number the
-// engine did not produce; see needs_from_lead below for the one place that was not true and what was reported
-// instead of invented.
+// The scene is an explicitly controlled 18% neutral sample. Its pixel values come from the engine's sensor
+// sampling path, its ray bundle from pointBundle(), and the well fill from electrons/fullWell. It does not
+// render or inspect a photograph.
 //
-// Coordinate convention (local group space, arbitrary display units -- always exaggerated, always badged):
-//   local Y is the DIVE axis (the piece's "straight down through scale" per LOOK.md's composition note --
-//   photo plane up high, well structure far below); local X/Z is the sensor's own row/column plane, always
-//   recentered so the TAPPED pixel sits at local (x=0, z=0) at every layer, so a single continuous camera dive
-//   toward local (0, *, 0) is all "diving straight down onto that exact pixel" needs -- no swapping geometry
-//   in and out (LOOK.md's motion rule: "the 3D geometry itself never fades -- it scales/recedes").
+// Local Y runs through the pixel stack. Display dimensions are enlarged for legibility.
 import * as THREE from 'three/webgpu';
 import type { BuildPiece, CameraFrame, Inset, PartCard, PieceProbe } from './types';
 import type { Model } from '../engine/model-types';
@@ -20,14 +13,11 @@ import type { Fig, RayPath } from '../engine/types';
 import { pointBundle } from '../app/engine-api';
 import { traceableBins } from './lens/valid-bins';
 import { badgeJoin, isPhone } from './phone-frame';
-import { currentRender, onRender, onRenderFailure, pixelAt, type PixelInfo, type RenderView } from '../app/render-client';
-import { sameShot } from '../app/learning-model';
 import { cfaColorAt } from '../engine/pipeline';
-import { projectToRenderedPixel, renderSetup } from '../engine/render';
+import { sampleNeutralPixel, type ControlledPixelInfo } from './pixel-sample';
 
 // ---- display constants (local units; never true scale -- the badge always says so) ---------------------------
 
-const Y_PHOTO = 70; // the photo plane's layer
 const Y_GRID = 0; // the pixel-neighborhood layer (microlens/CFA/photodiode/well all stack around this)
 const GRID_N = 5; // "a few neighbors" per LOOK.md -- a 5x5 block, center cell fully detailed, edges in view
 const CELL = 5; // grid spacing, local units
@@ -61,15 +51,9 @@ const DIE_BOT_Y = Y_GRID - 4.3;
 // separation from the well frame's actual viewing angle, not just 3D separation that projects away.
 const PIN_SPREAD = TARGET_HALF * 2.4;
 // Off-screen sentinel (RUBRIC.md's "overlapping labels" smell, the grid-overview case): before a tap, every
-// stack pin sits on the same unresolved point at the far-zoomed-out PHOTO_FRAME, rendering as one illegible
-// fused label block (the art director's own screenshot). These pins have nothing to say yet with no tapped
-// pixel resolved, so tick() parks them here (well outside any camera's frustum) until diveStage is 'well'.
+// Stack pins stay outside the view until the controlled pixel sample is available.
 const PIN_HIDE = new THREE.Vector3(0, -1e6, 0);
 
-const PHOTO_FRAME: CameraFrame = {
-  position: new THREE.Vector3(0, Y_PHOTO + 150, 58),
-  target: new THREE.Vector3(0, Y_PHOTO, 0),
-};
 const WELL_FRAME: CameraFrame = {
   // Looking into the cut from the front and a little to the side, down at about 30 degrees: the microlens, the
   // filter, the photodiode and the glass well with its charge stack up in one view, with the die's cut faces
@@ -87,8 +71,6 @@ const WELL_FRAME: CameraFrame = {
   position: new THREE.Vector3(10, Y_GRID + 12, 26),
   target: new THREE.Vector3(0, WELL_BOT_Y + WELL_HEIGHT * 0.6, 1.5),
 };
-const PHOTO_DIST = PHOTO_FRAME.position.distanceTo(PHOTO_FRAME.target);
-const WELL_DIST = WELL_FRAME.position.distanceTo(WELL_FRAME.target);
 
 // The ray-bundle request: rays: ~200 pupil samples (the brief's own figure) x a representative spread of
 // wavelength bins (fewer than the lens cutaway's 16 -- this cone is about the CONVERGENCE, not chromatic
@@ -104,8 +86,7 @@ const SPARK_POOL = 18;
 const SPARK_FALL_MS = 900;
 const SPARK_SPAWN_Y = MICROLENS_APEX_Y + 3.4;
 
-// The badge's dot budget: chosen so the badge's own "N photons/dot" times the dots actually drawn reproduces
-// the pixel's real photon count to within one dot (the accuracy gate's own check #4).
+// The spark badge summarizes the represented photon count for the controlled sample.
 const DOT_BUDGET = 40;
 
 const CFA_NAME: Record<string, string> = { R: 'red', G: 'green', B: 'blue' };
@@ -120,12 +101,11 @@ function fig(v: number, unit: string, ev: Fig['ev'], calc?: string, src?: string
   return { v, unit, ev, calc, src };
 }
 
-/** The scale badge (design/LOOK.md): how much the picture is enlarged, and how many photons one drawn spark
- *  stands for. Uppercase by hand, so a unit or a symbol is never case-mapped. */
-function badgeTextFor(mag: number, b: { n: number; dotsDrawn: number }): string {
-  const size = `${fmtInt(mag)}× SIZE`;
-  if (b.dotsDrawn === 0) return size;
-  return badgeJoin(size, `1 DOT = ${fmtInt(b.n)} ${b.n === 1 ? 'PHOTON' : 'PHOTONS'}`);
+/** Labels the controlled target and the number of photons represented by a drawn spark. */
+function badgeTextFor(b: { n: number; dotsDrawn: number }): string {
+  const sample = 'CONTROLLED 18% GRAY';
+  if (b.dotsDrawn === 0) return sample;
+  return badgeJoin(sample, `1 DOT = ${fmtInt(b.n)} ${b.n === 1 ? 'PHOTON' : 'PHOTONS'}`);
 }
 
 interface BadgeInfo {
@@ -231,34 +211,6 @@ function makeSlab(look: import('./types').PieceContext['look'], mat: THREE.Mater
 export const build: BuildPiece = (ctx) => {
   const group = new THREE.Group();
   group.name = 'piece-loupe';
-
-  // ---- the photo plane (the final render, as a texture) ------------------------------------------------------
-  let photoCanvas = document.createElement('canvas');
-  photoCanvas.width = 2;
-  photoCanvas.height = 2;
-  let photoCtx = photoCanvas.getContext('2d')!;
-  let photoTexture = new THREE.CanvasTexture(photoCanvas);
-  photoTexture.colorSpace = THREE.SRGBColorSpace;
-  // Unlit, not one of LOOK.md's hardware material classes: this plane shows the finished PHOTOGRAPH exactly as
-  // the final-image panel already displays it (design/LOOK.md's spectral/material rules govern light and
-  // hardware, not a picture of a picture) -- toneMapped:false so its own already-encoded sRGB pixels are not
-  // re-mapped a second time.
-  const photoMat = new THREE.MeshBasicMaterial({ map: photoTexture, toneMapped: false });
-  let photoAspect = 600 / 400;
-  const photoGeo = new THREE.PlaneGeometry(1, 1);
-  const photoMesh = new THREE.Mesh(photoGeo, photoMat);
-  photoMesh.rotation.x = -Math.PI / 2; // lie flat, normal facing +Y
-  // Up at the photo's own layer. (It was left at y = 0 before, flat under the pixel array, where it drew as the
-  // mid-gray ground of review round 0, and, once its texture uploaded, as the photo itself under the tiles.)
-  photoMesh.position.y = Y_PHOTO;
-  group.add(photoMesh);
-
-  const markerGeo = new THREE.RingGeometry(0.9, 1.15, 32);
-  const markerMat = new THREE.MeshBasicMaterial({ color: 0xf0f0fa, toneMapped: false, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
-  const marker = new THREE.Mesh(markerGeo, markerMat);
-  marker.rotation.x = -Math.PI / 2;
-  marker.position.y = Y_PHOTO + 0.05;
-  group.add(marker);
 
   // ---- the pixel-neighborhood grid: center cell = full detail, others = dim flat swatches ---------------------
   const gridGroup = new THREE.Group();
@@ -424,78 +376,6 @@ export const build: BuildPiece = (ctx) => {
     sparks.push({ mesh, phaseMs: (i / SPARK_POOL) * SPARK_FALL_MS });
   }
 
-  // ---- breadcrumb inset camera: a fixed top-down ortho view of the photo plane ---------------------------------
-  const insetCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-  insetCam.up.set(0, 0, -1);
-  insetCam.position.set(0, Y_PHOTO + 40, 0.0001);
-  insetCam.lookAt(0, Y_PHOTO, 0);
-
-  // A purpose-built scene for the breadcrumb, not the whole main scene (critic, "breadcrumb-empty" -- this
-  // piece's own "known limits" doc entry had assumed the far-below grid/well geometry was sub-pixel and
-  // harmless at the inset's zoomed-out framing; it is not: an orthographic camera draws distant geometry at
-  // full size, no perspective falloff, and the grid's neighbor swatches sit well within this camera's own XZ
-  // footprint, so they render right through/over the photo plane at this scale instead of vanishing behind it).
-  // crumbPhoto/crumbMarker are separate Mesh instances sharing the main photo/marker's own geometry and
-  // material (safe -- only object PARENTING is exclusive in three.js, not geometry/material reuse), so this
-  // costs one extra draw call, not a duplicated texture or a second CanvasTexture upload.
-  const insetScene = new THREE.Scene();
-  const crumbPhoto = new THREE.Mesh(photoGeo, photoMat);
-  crumbPhoto.rotation.x = -Math.PI / 2;
-  insetScene.add(crumbPhoto);
-  // A dedicated, larger marker for the crumb: the main marker (LOOK.md's on-photo ring, ~1.15 units on a
-  // ~90-unit-wide plane) is built to read at the PHOTO_FRAME's own zoomed-out scale, not a 132px-wide inset --
-  // at that ratio it is under 2px across, effectively invisible (critic, "no dot marking the tapped pixel").
-  const crumbMarkerGeo = new THREE.RingGeometry(1.6, 2.5, 24);
-  const crumbMarkerMat = new THREE.MeshBasicMaterial({ color: 0xf0f0fa, toneMapped: false, side: THREE.DoubleSide });
-  const crumbMarker = new THREE.Mesh(crumbMarkerGeo, crumbMarkerMat);
-  crumbMarker.rotation.x = -Math.PI / 2;
-  crumbMarker.visible = false;
-  insetScene.add(crumbMarker);
-
-  /** The photo breadcrumb: bottom-left, one line above the scale badge (on a phone, beside the pixel's readout
-   *  card at the bottom right, with the way-back line alone at the top under the layer switch). */
-  function crumbRect(): { left: number; bottom: number; width: number; height: number } {
-    const el = ctx.renderer.domElement;
-    const viewW = el.clientWidth || 1000, viewH = el.clientHeight || 640;
-    const phone = (typeof window !== 'undefined' ? window.innerWidth : viewW) <= 760;
-    const w = phone ? 120 : 168;
-    const h = Math.round(photoAspect >= 1 ? w / photoAspect : w);
-    if (phone) return { left: 12, bottom: 58, width: w, height: h };
-    const gutter = Math.min(72, Math.max(16, (typeof window !== 'undefined' ? window.innerWidth : viewW) * 0.044));
-    return { left: Math.round(gutter), bottom: 46, width: w, height: h };
-  }
-
-  function syncInsetFrustum(): void {
-    const halfW = (photoAspect >= 1 ? photoAspect : 1) * 1.06;
-    const halfH = (photoAspect >= 1 ? 1 : 1 / photoAspect) * 1.06;
-    // A little more room above the photo than below, the same aspect as the inset's box, so the inset's own
-    // caption ("The photo") sits over empty ground instead of the photo's top edge.
-    const room = 1.22, lift = 0.1;
-    insetCam.left = -halfW * room * PHOTO_HALF_UNITS;
-    insetCam.right = halfW * room * PHOTO_HALF_UNITS;
-    insetCam.top = halfH * (room + lift) * PHOTO_HALF_UNITS;
-    insetCam.bottom = -halfH * (room - lift) * PHOTO_HALF_UNITS;
-    insetCam.updateProjectionMatrix();
-  }
-  const PHOTO_HALF_UNITS = 46; // half-width of the plane at aspect 1; see resizePhoto()
-
-  // Places the crumb's photo + marker to match the main photoMesh's own current transform and the real tapped
-  // pixel's position within the frame (a straightforward fraction-of-width/height placement -- the plane's
-  // local X axis is the image's column axis unrotated, and CFA_TOP_Y's own rotation.x=-PI/2 carries local Y,
-  // the texture's V/row axis, onto world Z one-to-one, so no extra sign flip is needed here).
-  function syncCrumb(): void {
-    crumbPhoto.scale.copy(photoMesh.scale);
-    crumbPhoto.position.copy(photoMesh.position);
-    if (targetX < 0) { crumbMarker.visible = false; return; }
-    const view = currentRender();
-    const w = view?.width ?? 1;
-    const h = view?.height ?? 1;
-    const u = (targetX + 0.5) / w - 0.5;
-    const v = (targetY + 0.5) / h - 0.5;
-    crumbMarker.position.set(u * photoMesh.scale.x, Y_PHOTO + 0.08, v * photoMesh.scale.y);
-    crumbMarker.visible = true;
-  }
-
   /** WELL_FRAME, pulled back on a narrow (phone) view so the stack and a ring of neighbors still fit across it,
    *  and aimed a little higher so the way-back line at the top of the view stays clear of the photon bundle. */
   function wellFrame(): CameraFrame {
@@ -507,20 +387,14 @@ export const build: BuildPiece = (ctx) => {
   }
 
   // ---- piece state --------------------------------------------------------------------------------------------
-  type DiveStage = 'photo' | 'well';
-  let diveStage: DiveStage = 'photo';
   let targetX = -1;
   let targetY = -1;
-  let targetRenderId = -1;
-  let currentPixel: PixelInfo | null = null;
+  let currentPixel: ControlledPixelInfo | null = null;
   let currentModel: Model | null = null;
   let currentBundlePaths: RayPath[] = [];
   let badge: BadgeInfo = { n: 1, dotsDrawn: 0, photonsMean: 0 };
-  const badgeText = (mag: number) => badgeTextFor(mag, badge);
+  const badgeText = () => badgeTextFor(badge);
   let fetchSeq = 0;
-  let diveTimer: number | null = null;
-  let paintedRenderId = -1;
-  let wantsWell = true;
   let disposed = false;
   let pendingPixel = false;
   let pixelError = '';
@@ -530,68 +404,19 @@ export const build: BuildPiece = (ctx) => {
   const statusText = document.createElement('p');
   const retry = document.createElement('button');
   retry.type = 'button'; retry.className = 'btn'; retry.textContent = 'Retry pixel';
-  retry.onclick = () => acceptRender(currentRender());
+  retry.onclick = () => refreshPixel();
   status.append(statusText, retry); ctx.overlay.appendChild(status);
 
-  function matchingView(view: RenderView | null): view is RenderView {
-    return !!view && !!currentModel && sameShot(view.scenario, currentModel.scenario);
-  }
-  function cancelDive(): void {
-    if (diveTimer !== null) window.clearTimeout(diveTimer);
-    diveTimer = null;
-  }
   function invalidatePixel(): void {
     fetchSeq++; pendingPixel = false; currentPixel = null; currentBundlePaths = [];
-    cancelDive(); pausePhotons();
+    pausePhotons();
     badge = { n: 1, dotsDrawn: 0, photonsMean: 0 };
     bundleGeo.setDrawRange(0, 0);
     syncBackButton();
   }
 
-  function resizePhoto(view: RenderView | null): void {
-    if (!view) return;
-    photoAspect = view.width / view.height;
-    const halfW = photoAspect >= 1 ? PHOTO_HALF_UNITS : PHOTO_HALF_UNITS * photoAspect;
-    const halfH = photoAspect >= 1 ? PHOTO_HALF_UNITS / photoAspect : PHOTO_HALF_UNITS;
-    photoMesh.scale.set(halfW * 2, halfH * 2, 1);
-    syncInsetFrustum();
-    syncCrumb();
-  }
-
-  function paintPhoto(view: RenderView): void {
-    if (photoCanvas.width !== view.width || photoCanvas.height !== view.height) {
-      // A texture's GPU storage is sized at its first upload; growing its canvas afterwards makes every later
-      // upload overflow that storage (WebGL: "glCopySubTextureCHROMIUM: Offset overflows texture dimensions"),
-      // which left the photo plane and the breadcrumb blank. A new canvas and texture at the new size instead.
-      photoCanvas = document.createElement('canvas');
-      photoCanvas.width = view.width;
-      photoCanvas.height = view.height;
-      photoCtx = photoCanvas.getContext('2d')!;
-      const old = photoTexture;
-      photoTexture = new THREE.CanvasTexture(photoCanvas);
-      photoTexture.colorSpace = THREE.SRGBColorSpace;
-      photoMat.map = photoTexture;
-      photoMat.needsUpdate = true;
-      old.dispose();
-    }
-    const imageData = photoCtx.createImageData(view.width, view.height);
-    imageData.data.set(view.rgba);
-    photoCtx.putImageData(imageData, 0, 0);
-    photoTexture.needsUpdate = true;
-    paintedRenderId = view.renderId;
-    resizePhoto(view);
-  }
-
-  // Places the marker at the tapped pixel's own position on the (now recentered-under-it) photo plane -- since
-  // every layer is recentered so the tapped pixel sits at local (0, *, 0), the marker always sits at the plane's
-  // own center; recomputing this only documents why, it is not a coordinate lookup.
-  marker.position.x = 0;
-  marker.position.z = 0;
-
   function updateGridColors(cfa: 'R' | 'G' | 'B'): void {
-    // Real Bayer geometry around a native pixel's own color at (targetX, targetY): the four neighbors sharing a
-    // 2x2 quad follow cfaColorAt directly (imported, not reimplemented) so the grid's colors are the real CFA
-    // pattern around the tapped site, not an assumed alternating scheme.
+    // Bayer colors around the sampled native pixel follow cfaColorAt directly, rather than an assumed pattern.
     const realX = currentPixel?.x ?? 0;
     const realY = currentPixel?.y ?? 0;
     let i = 0;
@@ -695,64 +520,21 @@ export const build: BuildPiece = (ctx) => {
   }
 
   function refreshPixel(): void {
-    if (disposed || !group.visible || !matchingView(currentRender()) || targetRenderId < 0 || targetX < 0 || targetY < 0) return;
+    if (disposed || !group.visible || !currentModel) return;
     const seq = ++fetchSeq;
     pendingPixel = true; pixelError = ''; currentPixel = null; syncBackButton();
-    pixelAt(targetRenderId, targetX, targetY).then((info) => {
-      if (disposed || !group.visible || seq !== fetchSeq || !matchingView(currentRender())) return;
-      pendingPixel = false;
-      currentPixel = info;
+    Promise.resolve().then(() => sampleNeutralPixel(currentModel!, seq)).then((info) => {
+      if (disposed || !group.visible || seq !== fetchSeq) return;
+      pendingPixel = false; currentPixel = info; targetX = info.x; targetY = info.y;
       applyPixel();
-      if (wantsWell && diveStage === 'photo') scheduleDiveToWell();
     }).catch(() => {
       if (disposed || seq !== fetchSeq) return;
-      pendingPixel = false; pixelError = 'This pixel could not load. Retry, or change a camera setting to render a new photo.';
+      pendingPixel = false; pixelError = 'The controlled pixel sample could not be calculated. Retry the sample.';
       syncBackButton();
     });
   }
 
-  function scheduleDiveToWell(): void {
-    cancelDive();
-    if (!group.visible || !currentPixel || !wantsWell) return;
-    diveTimer = window.setTimeout(() => {
-      if (!group.visible || !currentPixel || !wantsWell || disposed) { diveTimer = null; return; }
-      diveStage = 'well';
-      ctx.dive(wellFrame());
-      syncBackButton();
-      diveTimer = null;
-    }, window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 480);
-  }
-
-  function setTarget(x: number, y: number, renderId: number): void {
-    const view = currentRender();
-    if (!matchingView(view) || view.renderId !== renderId) return;
-    invalidatePixel(); wantsWell = true;
-    targetX = Math.max(0, Math.min(view.width - 1, Math.round(x)));
-    targetY = Math.max(0, Math.min(view.height - 1, Math.round(y)));
-    targetRenderId = view.renderId;
-    marker.visible = true;
-    refreshPixel();
-    syncCrumb();
-  }
-
-  function acceptRender(view: RenderView | null): void {
-    if (disposed || !group.visible || !matchingView(view)) { syncBackButton(); return; }
-    if (view.renderId !== paintedRenderId) paintPhoto(view);
-    if (targetX < 0) {
-      const last = ctx.bus.lastLoupeTap();
-      setTarget(last?.x ?? Math.floor(view.width / 2), last?.y ?? Math.floor(view.height / 2), view.renderId);
-    } else if (targetRenderId !== view.renderId || (!currentPixel && !pendingPixel)) {
-      invalidatePixel();
-      targetX = Math.max(0, Math.min(view.width - 1, targetX));
-      targetY = Math.max(0, Math.min(view.height - 1, targetY));
-      targetRenderId = view.renderId; syncCrumb(); refreshPixel();
-    }
-  }
-
-  function goBackToPhoto(): void {
-    cancelDive(); wantsWell = false;
-    diveStage = 'photo';
-    ctx.dive(PHOTO_FRAME);
+  function clearSelection(): void {
     ctx.bus.emit('select-part', { id: null });
     syncBackButton();
   }
@@ -764,21 +546,13 @@ export const build: BuildPiece = (ctx) => {
   // On a phone with a part picked, the strip above the sheet holds only the pixel: the readout and the photo
   // inset step aside until the pick is cleared (R1-13).
   let pickedOnPhone = false;
-  const crumb = document.createElement('p');
-  crumb.className = 'lv-crumb';
-  crumb.hidden = true;
-  crumb.innerHTML = '<button type="button" class="lv-back">&larr; Photo</button><span class="lv-sep">/</span><span class="lv-here"></span>';
-  const backBtn = crumb.querySelector<HTMLButtonElement>('.lv-back')!;
-  const crumbHere = crumb.querySelector<HTMLElement>('.lv-here')!;
-  backBtn.addEventListener('click', goBackToPhoto);
-  ctx.overlay.appendChild(crumb);
-
   const read = document.createElement('div');
   read.className = 'lv-read';
   read.hidden = true;
   // One evidence chip for the whole reading (R2-08): every row is worked out by the engine for this pixel, the
   // same "Calc." the part cards give these numbers.
-  read.innerHTML = `<div class="lv-read-h"><p class="lv-ctl-k">This pixel</p><span class="chip derived" title="Calculated by the engine for this pixel">Calc.</span></div>
+  read.innerHTML = `<div class="lv-read-h"><p class="lv-ctl-k">Reference pixel</p><span class="chip derived" title="Calculated by the engine for this pixel">Calc.</span></div>
+    <p class="lv-read-condition" data-k="conditions"></p>
     <div class="lv-read-row"><span title="Expected photon arrivals; actual arrivals vary">Expected photons</span><b data-k="photons"></b></div>
     <div class="lv-read-row"><span>Electrons</span><b data-k="electrons"></b></div>
     <div class="lv-read-well" aria-hidden="true"><i></i></div>
@@ -792,13 +566,13 @@ export const build: BuildPiece = (ctx) => {
   function syncBackButton(): void {
     const active = group.visible && !disposed;
     rainLaunch.hidden = !group.visible;
-    const ready = !!currentPixel && matchingView(currentRender());
+    const ready = !!currentPixel;
     const waiting = active && !ready && !pixelError;
-    const label = matchingView(currentRender()) ? 'Loading this pixel…' : 'Preparing the photo for these camera settings…';
+    const label = 'Sampling a controlled neutral pixel…';
     const nextLoading = waiting ? label : '';
     if (nextLoading !== loadingState) {
       loadingState = nextLoading;
-      ctx.bus.emit('piece-loading', { id: 'loupe', loading: waiting, label, progress: matchingView(currentRender()) ? 0.85 : 0.15 });
+      ctx.bus.emit('piece-loading', { id: 'loupe', loading: waiting, label, progress: 0.5 });
     }
     // The shared central veil explains pending work and holds numbered pins. An
     // error replaces it with a centered, actionable message rather than an empty
@@ -806,16 +580,15 @@ export const build: BuildPiece = (ctx) => {
     status.hidden = !active || !pixelError;
     statusText.textContent = pixelError;
     retry.hidden = !pixelError;
-    retry.disabled = !matchingView(currentRender());
+    retry.disabled = pendingPixel;
     photonControls.hidden = !group.visible || !ready;
     gridGroup.visible = ready;
-    photoMesh.visible = matchingView(currentRender());
-    marker.visible = photoMesh.visible && targetX >= 0;
-    const inWell = diveStage !== 'photo';
-    crumb.hidden = !inWell || !ready;
-    read.hidden = !inWell || !currentPixel || pickedOnPhone;
+
+    read.hidden = !currentPixel || pickedOnPhone;
     if (currentPixel) {
-      crumbHere.textContent = `Row ${fmtInt(currentPixel.y)}, column ${fmtInt(currentPixel.x)} · ${CFA_NAME[currentPixel.cfa]} filter`;
+      const scenario = currentModel!.scenario;
+      const shutterLabel = scenario.shutter < 1 ? `1/${Math.round(1 / scenario.shutter)} s` : `${fmtNum(scenario.shutter, 2)} s`;
+      readOut('conditions').textContent = `18% gray · ${fmtNum(currentPixel.sample.lux, 0)} lux · ${fmtInt(currentPixel.sample.cctK)} K daylight · f/${fmtNum(scenario.fno, 1)} · ${shutterLabel} · ISO ${fmtInt(scenario.iso)} · ${currentPixel.sample.distanceMm === null ? 'infinity focus' : `${fmtNum(currentPixel.sample.distanceMm / 1000, 2)} m focus`}`;
       const frac = Math.max(0, Math.min(1, currentPixel.electrons / currentPixel.fullWell));
       readOut('photons').textContent = fmtInt(currentPixel.photonsMean);
       readOut('electrons').textContent = fmtInt(currentPixel.electrons);
@@ -827,16 +600,10 @@ export const build: BuildPiece = (ctx) => {
   }
 
   function onKeydown(ev: KeyboardEvent): void {
-    if (ev.key === 'Escape' && diveStage !== 'photo') goBackToPhoto();
+    if (ev.key === 'Escape') clearSelection();
   }
 
-  const offBusTap = ctx.bus.on('loupe-tap', (e) => setTarget(e.x, e.y, e.renderId));
-  const offRender = onRender(acceptRender);
-  const offFailure = onRenderFailure(() => {
-    if (disposed) return;
-    invalidatePixel(); pixelError = 'The photo worker stopped. Change a camera setting to render a new photo.';
-    syncBackButton();
-  });
+
 
   // ---- probes -------------------------------------------------------------------------------------------------
   function selectedProbeSync(): void { /* probes read closure state live; nothing to push */ }
@@ -844,19 +611,19 @@ export const build: BuildPiece = (ctx) => {
   const probes: PieceProbe[] = [
     {
       id: 'pixel',
-      label: 'The tapped pixel',
+      label: 'The controlled pixel sample',
       anchor: new THREE.Vector3(TARGET_HALF, CFA_TOP_Y, -TARGET_HALF),
       card(): PartCard {
         const p = currentPixel;
         return {
           kicker: 'Level 4 · the pixel',
           title: p ? `Row ${fmtInt(p.y)}, column ${fmtInt(p.x)}` : 'Waiting for the render…',
-          body: 'The exact sensor pixel behind the tapped point in the photo, and the raw digital number the ' +
-            'pipeline read out for it before demosaic, white balance or the color matrix touched it.',
+          body: 'A central sensor pixel sampling a controlled 18% neutral target under the model illuminant. ' +
+            'The raw digital number is read before demosaic, white balance or the color matrix.',
           specs: p ? [
             { k: 'Row / column', v: `${fmtInt(p.y)} / ${fmtInt(p.x)}` },
             { k: 'Filter color', v: CFA_NAME[p.cfa][0].toUpperCase() + CFA_NAME[p.cfa].slice(1) },
-            { k: 'Raw DN', v: fmtInt(p.dn), fig: fig(p.dn, 'DN', 'derived', 'render.ts pixel(x,y): readout(sensor, electrons, iso, sampled read noise)') },
+            { k: 'Raw DN', v: fmtInt(p.dn), fig: fig(p.dn, 'DN', 'derived', 'sensor.ts samplePixel(): sensor readout with sampled read noise') },
             { k: 'Saturated', v: p.saturated ? 'yes' : 'no' },
           ] : [],
         };
@@ -953,8 +720,7 @@ export const build: BuildPiece = (ctx) => {
     },
   ];
   // Each probe's real anchor, saved once so tick() can park a probe at PIN_HIDE before a tap resolves (the
-  // grid-overview state has nothing yet for any of these pins to say) and restore it once diveStage is 'well',
-  // without losing the real position permanently (see PIN_HIDE's own comment).
+  // Move anchors into view as soon as the sample resolves, without losing their real positions.
   const realAnchors = new Map(probes.map((p) => [p.id, p.anchor.clone()]));
 
   // ---- PieceHandle ----------------------------------------------------------------------------------------
@@ -963,82 +729,60 @@ export const build: BuildPiece = (ctx) => {
     group,
 
     update(model, _scenario) {
-      if (currentModel && !sameShot(currentModel.scenario, model.scenario)) {
+      if (currentModel && JSON.stringify(currentModel.scenario) !== JSON.stringify(model.scenario)) {
         invalidatePixel(); pixelError = '';
       }
       currentModel = model;
-      acceptRender(currentRender());
+      if (!currentPixel && !pendingPixel) refreshPixel();
       syncBackButton();
-      if (currentPixel && matchingView(currentRender())) ctx.badge.show(badgeText(1));
+      if (currentPixel) ctx.badge.show(badgeText());
       else ctx.badge.hide();
     },
 
-    frame() {
-      return diveStage === 'well' ? wellFrame() : PHOTO_FRAME;
-    },
+    frame() { return wellFrame(); },
 
     probes,
 
     tick(dtMs) {
       if (document.hidden || ctx.renderer.domElement.inert || document.querySelector('dialog[open]')) pausePhotons();
       if (photonPlaying) { photonTime = (photonTime + Math.min(dtMs, 100)) % SPARK_FALL_MS; photonRange.value = String(Math.round(1000 * photonTime / SPARK_FALL_MS)); }
-      // Park every stack pin off-screen until a tap has actually resolved something for it to point at (art
-      // director, "pin-overlap": at the pre-tap grid-overview frame every one of these anchors' 3D separation
-      // collapses to the same on-screen point at that extreme zoom-out, rendering as one fused, illegible label
-      // block regardless of how far apart the anchors are in local units).
-      const showPins = diveStage === 'well' && !!currentPixel;
+      // Park stack pins off-screen until the controlled pixel sample is ready.
+      const showPins = !!currentPixel;
       for (const p of probes) {
         const real = realAnchors.get(p.id);
         if (real) p.anchor.copy(showPins ? real : PIN_HIDE);
       }
       // The charge fill draws without a depth test (see updateWellFill), so while the camera is still above the
-      // photo plane, where the photo itself hides everything below it, it is switched off rather than showing
-      // through the picture as a stray blue square.
-      chargeMesh.visible = ctx.camera.position.y < Y_PHOTO - 0.5;
+      // The charge fill has no depth test, so show it only with a resolved sample.
+      chargeMesh.visible = !!currentPixel;
       // Photon sparks: a small pool falling on a fixed cycle from just above the microlens down to its apex.
       for (const s of sparks) {
         const t = ((photonTime + s.phaseMs) % SPARK_FALL_MS) / SPARK_FALL_MS;
         s.mesh.position.y = THREE.MathUtils.lerp(SPARK_SPAWN_Y, MICROLENS_APEX_Y, t);
-        s.mesh.visible = diveStage === 'well';
+        s.mesh.visible = !!currentPixel;
       }
-      // The scale badge's magnification, read live from the camera's own current distance to the target (see
-      // the module header): this stays honest under any easing curve, timing constant or reduced-motion snap
-      // the stage applies, because it never re-derives the dive's own timing -- it just measures where the
-      // camera actually is right now.
-      const camDist = Math.max(0.01, ctx.camera.position.distanceTo(new THREE.Vector3(0, (Y_PHOTO + Y_GRID) / 2, 0)));
-      const u = Math.max(0, Math.min(1, Math.log(PHOTO_DIST / camDist) / Math.log(PHOTO_DIST / WELL_DIST)));
-      const mag = Math.round(1 + u * 2400); // an honest, monotonic "how exaggerated is this view right now"
-      if (currentPixel && matchingView(currentRender())) ctx.badge.show(badgeText(mag));
+      // Reassert the controlled-sample badge while the pixel is available.
+      if (currentPixel) ctx.badge.show(badgeText());
       else ctx.badge.hide();
     },
 
     insets(): Inset[] {
-      if (targetX < 0 || pickedOnPhone || !matchingView(currentRender())) return [];
-      return [{
-        id: 'loupe-breadcrumb',
-        camera: insetCam,
-        scene: insetScene,
-        rect: crumbRect(),
-        label: 'The photo',
-      }];
+      return [];
     },
 
     select(id) {
       pickedOnPhone = !!id && isPhone();
-      if (id) {
-        wantsWell = true;
-        if (currentPixel && diveStage === 'photo') scheduleDiveToWell();
-      }
       syncBackButton();
     },
     selectionFrame(id) {
       const anchor = realAnchors.get(id);
-      return diveStage === 'well' && anchor
+      return anchor
         ? selectionFrame(wellFrame(), group.localToWorld(anchor.clone()))
         : this.frame();
     },
 
     activate() {
+      if (!currentPixel && !pendingPixel) refreshPixel();
       syncBackButton();
       window.addEventListener('keydown', onKeydown);
     },
@@ -1050,29 +794,21 @@ export const build: BuildPiece = (ctx) => {
       invalidatePixel(); status.hidden = true;
       window.removeEventListener('keydown', onKeydown);
       pickedOnPhone = false;
-      if (diveTimer !== null) { window.clearTimeout(diveTimer); diveTimer = null; }
     },
-    onViewInteraction() { cancelDive(); wantsWell = false; },
+    onViewInteraction() {},
 
     hooks: {
       photons: () => ({ playing: photonPlaying, phase: photonTime / SPARK_FALL_MS }),
       // Test/accuracy-gate surface: window.p2p.pieces.loupe.<name>(...). See tools/accuracy/loupe.mjs.
-      tap(x: number, y: number) {
-        const view = currentRender();
-        if (!view) throw new Error('loupe.ts hooks.tap: no render yet');
-        const cx = Math.max(0, Math.min(view.width - 1, Math.round(x)));
-        const cy = Math.max(0, Math.min(view.height - 1, Math.round(y)));
-        ctx.bus.emit('loupe-tap', { x: cx, y: cy, renderId: view.renderId });
-        return { x: cx, y: cy, renderId: view.renderId };
-      },
+      sample() { if (!currentModel) throw new Error('loupe.ts hooks.sample: model not ready'); refreshPixel(); return currentPixel; },
 
       // The Back control, for the choreography (tools/choreo/loupe.mjs) to drive without a real DOM click.
       back() {
-        goBackToPhoto();
+        clearSelection();
       },
 
       state() {
-        return { diveStage, targetX, targetY, targetRenderId, hasPixel: currentPixel !== null, pendingPixel, pixelError, paintedRenderId };
+        return { targetX, targetY, hasPixel: currentPixel !== null, pendingPixel, pixelError };
       },
 
       debugCamera() {
@@ -1087,36 +823,7 @@ export const build: BuildPiece = (ctx) => {
           chargeScale: chargeMesh.scale.toArray(),
           groupPos: group.position.toArray(),
           gridGroupPos: gridGroup.position.toArray(),
-          crumbMarkerVisible: crumbMarker.visible,
-          crumbMarkerPos: crumbMarker.position.toArray(),
-          crumbPhotoScale: crumbPhoto.scale.toArray(),
-          insetCamFrustum: [insetCam.left, insetCam.right, insetCam.top, insetCam.bottom],
         };
-      },
-
-      // For the choreography (tools/choreo/loupe.mjs): finds a real "highlight-edge" pixel in the CURRENT
-      // render -- a near-saturated pixel with a visibly darker neighbor -- by scanning the render's own rgba,
-      // not a hardcoded coordinate (the bokeh highlights' screen position moves with the lens/focus/format).
-      findHighlightEdge() {
-        const view = currentRender();
-        if (!view) throw new Error('loupe.ts hooks.findHighlightEdge: no render yet');
-        const lum = (i: number) => 0.2126 * view.rgba[i * 4] + 0.7152 * view.rgba[i * 4 + 1] + 0.0722 * view.rgba[i * 4 + 2];
-        // The brightest pixel with a real local gradient (a bokeh highlight's own defocused edge, not a flat
-        // saturated field) -- ranked by luma first, tie-broken by edge contrast, rather than a fixed luma
-        // threshold: a defocused highlight this far off the focus plane may not reach full 8-bit saturation
-        // even while it is still the frame's own brightest, most highlight-like feature.
-        let best: { x: number; y: number; lum: number; edge: number } | null = null;
-        for (let y = 1; y < view.height - 1; y++) {
-          for (let x = 1; x < view.width - 1; x++) {
-            const i = y * view.width + x;
-            const here = lum(i);
-            const edge = Math.max(here - lum(i - 1), here - lum(i + view.width));
-            if (edge <= 2) continue; // ignore flat regions entirely -- this hook wants an EDGE, not just bright
-            if (!best || here > best.lum || (here === best.lum && edge > best.edge)) best = { x, y, lum: here, edge };
-          }
-        }
-        if (!best) return null;
-        return { x: best.x, y: best.y };
       },
 
       badge() {
@@ -1134,20 +841,15 @@ export const build: BuildPiece = (ctx) => {
         };
       },
 
-      // Determinism (accuracy gate #3): two independent pixelAt() calls for the exact same (renderId, x, y).
-      async pixelAtTwice() {
-        if (targetRenderId < 0) throw new Error('loupe.ts hooks.pixelAtTwice: no target yet');
+      // Determinism check: repeat the same seeded controlled-pixel sample twice.
+      async sampleTwice() {
+        if (!currentModel) throw new Error('loupe.ts hooks.sampleTwice: model not ready');
         const [a, b] = await Promise.all([
-          pixelAt(targetRenderId, targetX, targetY),
-          pixelAt(targetRenderId, targetX, targetY),
+          Promise.resolve().then(() => sampleNeutralPixel(currentModel!, 1)),
+          Promise.resolve().then(() => sampleNeutralPixel(currentModel!, 1)),
         ]);
         return { a, b };
       },
-
-      // The noise check (accuracy gate #2): measures the raw DN standard deviation over a flat mid-gray
-      // ColorChecker patch in the current render's G channel, and predicts the same figure from the engine's
-      // own already-exposed numbers -- see the doc comment on grayPatchNoise below for the derivation.
-      grayPatchNoise() { return grayPatchNoise(); },
 
       probe() {
         return {
@@ -1158,20 +860,15 @@ export const build: BuildPiece = (ctx) => {
             wellHeightUnits: WELL_HEIGHT,
             emissiveBrightness: (chargeMesh.material as THREE.MeshBasicMaterial).color.getHSL({ h: 0, s: 0, l: 0 }).l,
           },
-          noise: grayPatchNoise(),
         };
       },
     },
 
     dispose() {
       cancelRainOpening?.();
-      disposed = true; invalidatePixel(); status.remove(); offFailure();
+      disposed = true; invalidatePixel(); status.remove();
       offPhotonPause(); document.removeEventListener('visibilitychange', hiddenPhotons); photonControls.remove(); rainLaunch.remove(); rainView?.dispose();
-      offBusTap();
-      offRender();
       window.removeEventListener('keydown', onKeydown);
-      if (diveTimer !== null) window.clearTimeout(diveTimer);
-      crumb.remove();
       wellEdgeGeo.dispose();
       wellEdgeMat.dispose();
       read.remove();
@@ -1181,13 +878,6 @@ export const build: BuildPiece = (ctx) => {
       dieMat.dispose();
       dieCutMat.dispose();
       ctx.labels.clear('loupe-');
-      photoGeo.dispose();
-      photoMat.dispose();
-      photoTexture.dispose();
-      markerGeo.dispose();
-      markerMat.dispose();
-      crumbMarkerGeo.dispose();
-      crumbMarkerMat.dispose();
       bundleGeo.dispose();
       bundleMat.dispose();
       sparkGeo.dispose();
@@ -1210,116 +900,4 @@ export const build: BuildPiece = (ctx) => {
     },
   };
 
-  // ---- the gray-patch noise check: measured (from the render's own raw buffer) vs predicted (from the ------
-  // ---- model's own already-exposed sensor figures) -----------------------------------------------------------
-  //
-  // Locates the ColorChecker's "neutral 5 (.70 D)" patch (reflectance ~0.20, the chart's closest neutral to
-  // the engine's own 18%-gray convention) by calling the engine's OWN projection function
-  // (render.ts's projectToRenderedPixel) on that patch's known world position -- reading where a real object
-  // already is, not computing new physics (see the module header's "pieces never compute physics" rule; this
-  // is gate-support code, not a drawn visual). The patch's world position is derived the same way
-  // colorCheckerBillboard (scenes.ts) itself places patches: billboard center [-550, 0, 3000] mm, 650x500 mm,
-  // right = normal x up = [1,0,0] (scene.ts's own convention), row 3 (0-indexed, the bottom/grayscale row),
-  // column 3 ("neutral 5").
-  function grayPatchNoise(): { measuredSigmaDn: number; predictedSigmaDn: number; cfa: 'G'; n: number } | null {
-    if (!currentModel) return null;
-    const view = currentRender();
-    if (!view) return null;
-    const model = currentModel;
-
-    const patchU = (3 + 0.5) / 6 - 0.5;
-    const patchV = 0.5 - (3 + 0.5) / 4;
-    const worldX = -550 + patchU * 650;
-    const worldY = patchV * 500;
-    const worldZ = 3000;
-
-    const setup = renderSetup(model, view.width, view.height);
-    const { bx, by } = projectToRenderedPixel(setup.efl, setup.blockPitchMm, view.width, view.height, worldX, worldY, worldZ);
-
-    // R=8 (a 17x17 box, comfortably inside this patch's own ~22px content width at the default scenario,
-    // found by direct inspection while building this gate) rather than a smaller box: the standard deviation
-    // ESTIMATE from N samples itself carries relative uncertainty ~sqrt(2/dof) (a small box's own dof was the
-    // dominant source of gate flakiness found while tuning this, not a formula error -- a 61-sample box (dof
-    // 58) has ~13% relative uncertainty in its own sigma estimate; this box's ~280+ samples cut that well
-    // under half).
-    const R = 8;
-    const samples: { dx: number; dy: number; v: number }[] = [];
-    const cx = Math.round(bx);
-    const cy = Math.round(by);
-    for (let dy = -R; dy <= R; dy++) {
-      for (let dx = -R; dx <= R; dx++) {
-        const x = cx + dx;
-        const y = cy + dy;
-        if (x < 0 || x >= view.width || y < 0 || y >= view.height) continue;
-        if (cfaColorAt('RGGB', x, y) !== 'G') continue;
-        samples.push({ dx, dy, v: view.raw[y * view.width + x] });
-      }
-    }
-    if (samples.length < 8) return null;
-
-    // Even a "flat" ColorChecker patch this far off-axis carries a small, real illumination/vignetting
-    // gradient across an 11x11-rendered-pixel box (found by direct inspection while building this gate:
-    // roughly 0.7-0.9% peak-to-peak, enough on its own to double the naive sample standard deviation above
-    // the true shot+read noise). That gradient is real signal structure, not noise, so it has to come out
-    // before comparing to a noise prediction -- fit and remove a local linear plane (least squares over the
-    // sample's own dx, dy offsets) and measure the RESIDUAL spread, the standard two-point/detrending method
-    // for isolating noise from a slow spatial trend in sensor-noise characterization.
-    const n = samples.length;
-    let Sx = 0, Sy = 0, Sxx = 0, Syy = 0, Sxy = 0, Sv = 0, Sxv = 0, Syv = 0;
-    for (const s of samples) {
-      Sx += s.dx; Sy += s.dy; Sxx += s.dx * s.dx; Syy += s.dy * s.dy; Sxy += s.dx * s.dy;
-      Sv += s.v; Sxv += s.dx * s.v; Syv += s.dy * s.v;
-    }
-    // Solve the 3x3 normal-equations system [[n,Sx,Sy],[Sx,Sxx,Sxy],[Sy,Sxy,Syy]] * [a,b,c]^T = [Sv,Sxv,Syv]^T
-    // by Cramer's rule (a hand-rolled 3x3 solve local to this gate -- not engine code, not reused elsewhere).
-    const det3 = (m: number[][]) =>
-      m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
-      m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-      m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-    const M = [[n, Sx, Sy], [Sx, Sxx, Sxy], [Sy, Sxy, Syy]];
-    const rhs = [Sv, Sxv, Syv];
-    const detM = det3(M);
-    let a = n > 0 ? Sv / n : 0, b = 0, c = 0; // fallback: flat mean, if the system is degenerate
-    if (Math.abs(detM) > 1e-9) {
-      const withCol = (col: number) => M.map((row, i) => row.map((v, j) => (j === col ? rhs[i] : v)));
-      a = det3(withCol(0)) / detM;
-      b = det3(withCol(1)) / detM;
-      c = det3(withCol(2)) / detM;
-    }
-    let sqResidual = 0;
-    for (const s of samples) {
-      const fitted = a + b * s.dx + c * s.dy;
-      sqResidual += (s.v - fitted) ** 2;
-    }
-    const dof = Math.max(1, n - 3);
-    const measuredSigmaDn = Math.sqrt(sqResidual / dof);
-    const mean = a; // the fitted plane's value at the patch center -- this gate's own mean-signal estimate
-
-    // Predicted sigma, entirely from Model's own exposed numbers (no reimplementation of the engine's private
-    // SensorSpec): invert the measured MEAN back to electrons via the same gain/black-level readout uses,
-    // then apply the same shot+dark+read variance terms sensor.ts's varianceE computes (PRNU's own small
-    // quadratic term is the one piece Model does not expose per-pixel and is omitted here -- negligible next
-    // to shot+read noise at this signal level; see docs/pieces/loupe.md, "known limits").
-    const gain = model.scenario.iso / model.sensor.unityGainIso;
-    const blackLevelDn = model.sensor.figs.blackLevelDn?.v ?? 0;
-    const meanElectrons = Math.max(0, (mean - blackLevelDn) / gain);
-    const darkMeanE = (model.sensor.figs.darkCurrentEPerS?.v ?? 0) * model.scenario.shutter;
-    const readNoiseE = model.sensor.readNoiseE;
-    // PRNU (sensor.ts's own varianceE term, signalE*(1+p^2) + signalE^2*p^2): Model does not expose the
-    // engine's own prnuStdDev per pixel, so this uses the SAME representative figure the engine's data feeds
-    // from (data/sensors.json, generic.prnu.typicalPercent: 1.5% RMS, onsemi NOII4SM6600A datasheet -- one
-    // concretely cited commercial CMOS sensor's PRNU, used project-wide as the representative value, not
-    // reinvented here). At the signal level this patch sits at, PRNU is not negligible next to shot noise
-    // (found while building this gate: omitting it left prediction ~30% low), so it is included, not skipped.
-    const prnu = 0.015;
-    const varianceE = meanElectrons * (1 + prnu * prnu) + meanElectrons * meanElectrons * prnu * prnu + darkMeanE + readNoiseE * readNoiseE;
-    const sigmaPerPixelDn = Math.sqrt(varianceE) * gain;
-    // raw[] holds each rendered pixel's BLOCK average (render.ts's own doc comment), averaged over the
-    // same-CFA-color real pixels in that block -- divide by sqrt(N) to predict the block-averaged sigma.
-    const halfBlock = view.pixelScale / 2;
-    const nSameColorG = 2 * halfBlock * halfBlock;
-    const predictedSigmaDn = sigmaPerPixelDn / Math.sqrt(Math.max(1, nSameColorG));
-
-    return { measuredSigmaDn, predictedSigmaDn, cfa: 'G', n: samples.length };
-  }
 };

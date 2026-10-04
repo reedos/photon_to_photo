@@ -42,18 +42,12 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio .zoom-controls .btn:hover { background: #233849; border-color: #9bc8e8; }
 .workspace.viewport-studio #part-position { font-size: 10px; margin-left: 10px; }
 .workspace.viewport-studio .studio-sidebar { height: 100%; min-height: 0; overflow: hidden; background: #101820; }
-.workspace.viewport-studio .finalimg { padding: 10px 14px; }
-.workspace.viewport-studio .finalimg-canvas-wrap { aspect-ratio: auto; }
-.workspace.viewport-studio #finalimg-canvas { --photo-height: clamp(78px, 17dvh, 160px); position: static; width: min(100%, calc(var(--photo-height) * 1.5)); height: auto; margin-inline: auto; background: #080e14; }
-.workspace.viewport-studio .studio-sidebar[data-pane="parts"] .finalimg { display: block; padding: 10px 14px; }
 .workspace.viewport-studio .step .t, .workspace.viewport-studio .step.deep .t { font: 600 13px/1.2 var(--sans); }
 .studio-share { flex: none; margin-left: auto; }
 .studio-share .hud-row { display: flex; }
 .studio-share #share-btn { min-height: 36px; font-size: 11px; }
 .level-why { flex: none; margin: 0; padding: 5px 16px; color: var(--muted); background: #0d151e; border-bottom: 1px solid var(--line); font: 12px/1.4 var(--sans); }
 @media (max-width: 599px) and (max-height: 650px) { .level-why { display: none; } }
-.workspace.viewport-studio .finalimg .photo-hint { display: none; }
-.workspace.viewport-studio .finalimg .photo-details > summary { padding-block: 4px; }
 .workspace.viewport-studio .scenario { padding: 12px 14px; overflow: auto; overscroll-behavior: contain; }
 .workspace.viewport-studio .panel { height: auto; min-height: 0; max-height: none; }
 .workspace.viewport-studio #card:not([hidden]) { overscroll-behavior: contain; }
@@ -78,14 +72,6 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio #journey { max-height: 24dvh; overflow: auto; }
 @media (min-width: 761px) and (max-height: 760px) {
   .workspace.viewport-studio .hud.tl { display: none; }
-  .workspace.viewport-studio .studio-sidebar .finalimg { display: grid; grid-template-columns: 120px minmax(0,1fr); gap: 0 10px; }
-  .workspace.viewport-studio .finalimg .finalimg-card { grid-column: 1; grid-row: 2 / span 2; }
-  .workspace.viewport-studio .finalimg .photo-actions { grid-column: 2; grid-row: 2; flex-wrap: wrap; margin: 0; }
-  .workspace.viewport-studio .finalimg .photo-details { grid-column: 2; grid-row: 3; }
-  .workspace.viewport-studio .finalimg .sc-head { grid-column: 1 / -1; }
-  .workspace.viewport-studio .finalimg .sc-head > span { display: none; }
-  .workspace.viewport-studio .photo-details[open] { grid-column: 1 / -1; }
-  .workspace.viewport-studio #finalimg-canvas { --photo-height: 80px; }
   .workspace.viewport-studio #studio-exposure .rig-exposure { padding-block: 6px; }
   .workspace.viewport-studio .rx-status { display: none; }
 }
@@ -99,8 +85,8 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio[data-workspace-view="photos"] .workspace-views { padding-right: 8px; }
   .workspace.viewport-studio .stage .body { display: grid; grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) clamp(180px,27dvh,230px); }
   .workspace.viewport-studio .stage:has(.inspection-context:not([hidden])) .body { display: grid; }
-  .workspace.viewport-studio .studio-sidebar { grid-template-rows: 36px minmax(0,1fr); grid-template-columns: 108px minmax(0,1fr); }
-  .workspace.viewport-studio .inspector-tab-row { grid-column: 2; }
+  .workspace.viewport-studio .studio-sidebar { grid-template-rows: 36px minmax(0,1fr); grid-template-columns: minmax(0,1fr); }
+  .workspace.viewport-studio .inspector-tab-row { grid-column: 1; }
   .workspace.viewport-studio .panel { padding: 6px 8px; grid-template-rows: auto auto minmax(0,1fr); overflow: auto; overscroll-behavior: contain; }
   .workspace.viewport-studio .panel-scroll { display: block; }
   .workspace.viewport-studio #parts { grid-template-columns: repeat(2,minmax(0,1fr)); margin-bottom: 5px; gap: 0 4px; }
@@ -110,12 +96,6 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio .scenario { padding: 7px 9px; }
   .workspace.viewport-studio .sc-controls { gap: 3px 8px; }
   .workspace.viewport-studio .sc-controls input[type="range"] { height: 28px; }
-  .workspace.viewport-studio .finalimg, .workspace.viewport-studio .studio-sidebar[data-pane="parts"] .finalimg { padding: 7px; min-height: 0; overflow: auto; overscroll-behavior: contain; }
-  .workspace.viewport-studio #finalimg-canvas { --photo-height: 67px; }
-  .workspace.viewport-studio .finalimg .sc-head > span { display: none; }
-  .workspace.viewport-studio .finalimg h2 { font-size: 14px; }
-  .workspace.viewport-studio .photo-actions { gap: 3px; }
-  .workspace.viewport-studio .photo-actions .btn { font-size: 8px; padding-inline: 3px; min-height: 28px; }
   .workspace.viewport-studio .part-nav { width: auto; min-width: 0; }
   .workspace.viewport-studio .part-nav .btn { min-height: 34px; padding-inline: 9px; font-size: 9px; }
   .workspace.viewport-studio #part-position, .zoom-controls span { display: none; }
@@ -175,7 +155,6 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .phone-settings-scroll { padding: 0 12px 12px; }
   .phone-settings-scroll > section { padding-block: 10px; }
   #phone-settings .sc-controls { gap: 8px; }
-  .workspace.viewport-studio .studio-sidebar[data-pane="parts"] .finalimg { padding: 7px; }
   .workspace.viewport-studio .studio-kit { position: relative; padding: 3px 8px; gap: 8px; z-index: 7; }
   #equipment-toggle { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 3px 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
   #equipment-summary { min-width: 0; font: 11px/1.35 var(--sans); overflow-wrap: anywhere; }
@@ -185,7 +164,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio #equipment-controls label { display: grid; grid-template-columns: 56px minmax(0,1fr); align-items: center; font-size: 11px; }
   .workspace.viewport-studio #equipment-controls select { height: 36px; font-size: 12px; }
 }
-@media (max-width: 359px) { .workspace.viewport-studio .studio-sidebar { grid-template-columns: 86px minmax(0,1fr); } }
+@media (max-width: 359px) { .workspace.viewport-studio .studio-sidebar { grid-template-columns: minmax(0,1fr); } }
 @media (max-width: 599px) and (max-height: 680px) {
   .workspace.viewport-studio .stage .body { position: relative; }
   #inspector-size { display: block; flex: none; align-self: stretch; padding: 0 7px; border: 1px solid var(--line); background: #192734; color: var(--ink); font: 9px var(--sans); cursor: pointer; }
@@ -225,8 +204,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 @media (max-width: 599px) {
   .workspace.viewport-studio.phone-settings-layout .stage .body { grid-template-rows: minmax(0,1fr) 112px; }
   .workspace.viewport-studio.phone-settings-layout.model-expanded .stage .body { grid-template-rows: minmax(0,1fr); }
-  .workspace.viewport-studio.phone-settings-layout .studio-sidebar { grid-template-columns: 86px minmax(0,1fr); }
-  .workspace.viewport-studio.phone-settings-layout .studio-sidebar[data-pane="parts"] .finalimg .sc-head > span { display: none; }
+  .workspace.viewport-studio.phone-settings-layout .studio-sidebar { grid-template-columns: minmax(0,1fr); }
   .workspace.viewport-studio.phone-settings-layout .parts-head:has(#card-go[hidden]) { display: none; }
   .workspace.viewport-studio.phone-settings-layout .studio-tabs [aria-controls="phone-settings"] { color: var(--ink); }
   .workspace.viewport-studio.phone-settings-layout .studio-tabs #tab-explain { color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
@@ -234,7 +212,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio.phone-settings-layout .stage .body { position: relative; }
   .workspace.viewport-studio.phone-settings-layout.inspector-expanded:not(.model-expanded) .studio-sidebar { position: absolute; z-index: 6; bottom: 0; left: 0; right: 0; height: min(55dvh,320px); box-shadow: 0 -8px 24px #0008; }
   /* Keep model navigation above the expanded inspector, never underneath its
-     photo/actions column. The fixed workspace ends at the viewport bottom. */
+     parts panel. The fixed workspace ends at the viewport bottom. */
   .workspace.viewport-studio.phone-settings-layout.inspector-expanded:not(.model-expanded) .hud-btns-phone { position: fixed; inset: auto 0 min(55dvh,320px); z-index: 8; background: #0c141d; border-top: 1px solid var(--line); }
   .workspace.viewport-studio.phone-settings-layout #model-tools :is(#compact-fire,.shot-launch) { flex: 1; margin-left: 0; min-height: 32px; }
   .workspace.viewport-studio.phone-settings-layout #model-tools .action-name { display: inline; }

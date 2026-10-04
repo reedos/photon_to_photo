@@ -4,11 +4,9 @@
 import { createStore } from './app/store';
 import { createStage, type StageDom } from './app/stage';
 import { buildWorkspace, mountWorkspace } from './app/workspace';
-import { prewarmInitialRender } from './app/render-client';
 import { mountUI } from './app/ui';
 import { mountExamples } from './app/examples';
 import { mountLearning } from './app/learning';
-import { mountComparison } from './app/comparison';
 import { mountPerspectiveStudy } from './app/perspective-study';
 import { mountShotLauncher } from './app/shot-launch';
 import { mountStartHere } from './app/start-here';
@@ -43,8 +41,6 @@ export async function startApp() {
   };
 
   const store = createStore();
-  const photoCanvas = byId<HTMLCanvasElement>('finalimg-canvas');
-  prewarmInitialRender(store.get().scenario, photoCanvas.width, photoCanvas.height);
   const stage = await createStage(dom);
 
   stage.registerPiece('camera', buildCamera);
@@ -56,7 +52,6 @@ export async function startApp() {
   mountWorkspace(store);
   mountExamples(store);
   mountLearning(store, startTour, startLesson);
-  mountComparison(store);
   mountShotLauncher(store);
   mountPerspectiveStudy(store);
   installHooks(store, stage);

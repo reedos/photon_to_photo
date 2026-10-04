@@ -1,8 +1,8 @@
 import type { Store, AppState } from './store';
 import { compute } from './engine-api';
-import { currentRender, onRender, onRenderFailure, type RenderView } from './render-client';
-import { TOUR, PIPELINE, PIPELINE_GUIDE, pipelinePixels, rowWindow, sameShot, type PipelineStage } from './learning-model';
+import { TOUR, PIPELINE, PIPELINE_GUIDE, pipelinePixels, rowWindow, type PipelineStage } from './learning-model';
 import { pipelineSample } from './pipeline-sample';
+import { createPipelineTestSample } from './pipeline-test-sample';
 import { sensorFor } from '../engine/data';
 import { analogGain, readout, maxDn } from '../engine/sensor';
 import '../styles/learning.css';
@@ -47,7 +47,7 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
       <div class="pipeline-picture"><canvas id="pipeline-canvas" width="600" height="400" role="button" tabindex="0" aria-label="Choose a sample in the pipeline image. Click a spot or use arrow keys; Enter centers the sample."></canvas><i id="pipeline-region" aria-hidden="true"></i><canvas id="pipeline-crop" width="128" height="128" role="img" aria-label="Enlarged selected sample of the processing stage"></canvas><span class="pipeline-crop-label" aria-hidden="true">16 × 16 samples</span><i id="pipeline-wipe" hidden></i></div>
       <div class="pipeline-sample-tools"><span>Tap the image to move the enlarged sample. Arrow keys move it; Enter centers it.</span><button type="button" class="btn" id="pipeline-center">Center sample</button></div>
       <label class="lesson-control" for="pipeline-progress">Processing journey<input id="pipeline-progress" type="range" min="0" max="1000" value="0"></label>
-      <p class="pipeline-look"><b>Look for</b><span id="pipeline-look-for"></span></p><p id="pipeline-description" role="status"></p><p class="lesson-note">Synthetic shot · actual model buffers. Intermediate stages are shown as stored, without display encoding; they can look dark. Each sample represents a block of sensor pixels.</p>
+      <p class="pipeline-look"><b>Look for</b><span id="pipeline-look-for"></span></p><p id="pipeline-description" role="status"></p><p class="lesson-note">Illustrative test sample · not RAW data from your JPEG. This color sample uses illustrative white-balance gains and a color matrix, not calibrated camera data. Intermediate stages are shown without display encoding.</p>
     </div><p id="lesson-shot" class="lesson-note" role="status"></p>`;
   el('view').append(lesson);
   const shortcuts = document.createElement('div'); shortcuts.className = 'lesson-shortcuts';
@@ -61,7 +61,8 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   let lessonModel = compute(store.get().scenario);
   let animation = 0, animating = false, animationTime = 0, lastFrame = 0;
   const pipelineCache = new Map<string, HTMLCanvasElement>();
-  let cachedRenderId = -1;
+  let cachedSampleKey = '';
+  let cachedPipelineData: ReturnType<typeof createPipelineTestSample> | null = null;
   let sampleX=.5,sampleY=.5;
   const duration = () => mode === 'readout' ? 8000 : 15000;
   function pauseLesson() {
@@ -74,14 +75,20 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el('journey-live').textContent = insight.live;
     el('journey-use').textContent = insight.use;
   }
-  const rendered = () => { const v = currentRender(); return v && sameShot(v.scenario, lessonModel.scenario) ? v : null; };
+  const pipelineData = () => {
+    const key = `${lessonModel.scenario.format}:${lessonModel.scenario.iso}:${lessonModel.scenario.sensor ?? ''}`;
+    if (cachedSampleKey !== key || !cachedPipelineData) {
+      cachedSampleKey = key; pipelineCache.clear(); cachedPipelineData = createPipelineTestSample(lessonModel.scenario.format, lessonModel.scenario.iso, lessonModel.scenario.sensor);
+    }
+    return cachedPipelineData;
+  };
   function pause() { playing = false; clearTimeout(timer); el('journey-play').textContent = 'Play'; }
   on('pause-tour', () => { pause(); pauseLesson(); });
   function schedule() {
     clearTimeout(timer);
     if (playing) timer = window.setTimeout(() => { if (index < TOUR.length - 1) go(index + 1); else pause(); }, 14000);
   }
-  function paintPipeline(view: RenderView | null, reveal = 1) {
+  function paintPipeline(reveal = 1) {
     const stage = el<HTMLSelectElement>('pipeline-stage').value as PipelineStage;
     const desc = PIPELINE.find(([id]) => id === stage)!;
     if (el('pipeline-description').textContent !== desc[2]) el('pipeline-description').textContent = desc[2];
@@ -89,13 +96,11 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     for (const button of el('pipeline-route').querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.stage === stage));
     const canvas = el<HTMLCanvasElement>('pipeline-canvas'), crop = el<HTMLCanvasElement>('pipeline-crop');
     const ctx = canvas.getContext('2d')!, cctx = crop.getContext('2d')!;
-    el('pipeline-region').hidden = !view;
-    if (!view) { ctx.clearRect(0, 0, canvas.width, canvas.height); cctx.clearRect(0, 0, 128, 128); return; }
+    const view = pipelineData();
     // Assigning even the same dimensions clears and reallocates the backing store.
     // The pipeline wipe repaints every frame; only resize when the photo changes size.
     if (canvas.width !== view.width) canvas.width = view.width;
     if (canvas.height !== view.height) canvas.height = view.height;
-    if (cachedRenderId !== view.renderId) { pipelineCache.clear(); cachedRenderId = view.renderId; }
     const buffer = (id: PipelineStage) => {
       let image = pipelineCache.get(id);
       if (!image) {
@@ -118,7 +123,7 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     marker.style.left=`${100*sample.x/view.width}%`;marker.style.top=`${100*sample.y/view.height}%`;
     marker.style.width=`${100*sample.width/view.width}%`;marker.style.height=`${100*sample.height/view.height}%`;
     el('pipeline-crop').setAttribute('aria-label',`${desc[1]}: enlarged ${sample.width} by ${sample.height} sample at column ${sample.x+1}, row ${sample.y+1}`);
-    canvas.setAttribute('aria-label', `Your shot: ${desc[1]}. Click a spot or use arrow keys to move the enlarged sample. Enter centers it.`);
+    canvas.setAttribute('aria-label', `Illustrative test sample: ${desc[1]}. Click a spot or use arrow keys to move the enlarged sample. Enter centers it.`);
   }
   function paintReadout() {
     const model = lessonModel, sc = model.scenario;
@@ -165,7 +170,7 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
       el<HTMLSelectElement>('pipeline-stage').value = PIPELINE[step][0];
       el<HTMLInputElement>('pipeline-progress').value = String(1000 * animationTime / duration());
       el('pipeline-progress').setAttribute('aria-valuetext', `${PIPELINE[step][1]}, ${Math.round(100 * animationTime / duration())} percent through the journey`);
-      paintPipeline(rendered(), Math.min(1, (animationTime - step * 3000) / 1000));
+      paintPipeline(Math.min(1, (animationTime - step * 3000) / 1000));
     }
   }
   function animate(now: number) {
@@ -178,10 +183,9 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   }
   function refresh() {
     if (lesson.hidden) return;
-    const view = rendered();
-    el<HTMLButtonElement>('lesson-play').disabled = mode === 'pipeline' && !view;
-    el('lesson-shot').textContent = view ? `Same shot · ${view.scenario.lens} · f/${view.scenario.fno} · ISO ${view.scenario.iso}` : 'Updating your shot…';
-    if (mode === 'pipeline') paintPipeline(view); else paintReadout();
+    el<HTMLButtonElement>('lesson-play').disabled = false;
+    el('lesson-shot').textContent = mode === 'pipeline' ? 'Illustrative controlled color-chart sample · not RAW data from your JPEG' : `Current camera model · ${lessonModel.scenario.lens} · f/${lessonModel.scenario.fno} · ISO ${lessonModel.scenario.iso}`;
+    if (mode === 'pipeline') paintPipeline(); else paintReadout();
   }
   function hideLesson(restore = false) {
     pauseLesson();
@@ -212,7 +216,7 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el('readout-lesson').hidden = mode !== 'readout'; el('pipeline-lesson').hidden = mode !== 'pipeline';
     el('lesson-readout').setAttribute('aria-pressed', String(mode === 'readout'));
     el('lesson-pipeline').setAttribute('aria-pressed', String(mode === 'pipeline'));
-    el('lesson-title').textContent = mode === 'readout' ? 'Read the sensor' : 'From raw to photo';
+    el('lesson-title').textContent = mode === 'readout' ? 'Read the sensor' : 'From sensor sample to color';
     if (mode === 'pipeline') {
       animationTime = PIPELINE.findIndex(([id]) => id === el<HTMLSelectElement>('pipeline-stage').value) * 3000 + 1000;
       paintAnimation();
@@ -268,10 +272,10 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     pause();pauseLesson();paintAnimation();
   };
   el('pipeline-canvas').onkeydown=event=>{
-    const view=rendered();if(!view||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter',' '].includes(event.key))return;
+    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter',' '].includes(event.key))return;
     event.preventDefault();event.stopPropagation();
     if(event.key==='Enter'||event.key===' '){sampleX=.5;sampleY=.5;}
-    else {sampleX=Math.max(0,Math.min(1,sampleX+(event.key==='ArrowLeft'?-4:event.key==='ArrowRight'?4:0)/view.width));sampleY=Math.max(0,Math.min(1,sampleY+(event.key==='ArrowUp'?-4:event.key==='ArrowDown'?4:0)/view.height));}
+    else {sampleX=Math.max(0,Math.min(1,sampleX+(event.key==='ArrowLeft'?-4:event.key==='ArrowRight'?4:0)/96));sampleY=Math.max(0,Math.min(1,sampleY+(event.key==='ArrowUp'?-4:event.key==='ArrowDown'?4:0)/64));}
     pause();pauseLesson();paintAnimation();
   };
   el('pipeline-center').onclick=()=>{sampleX=.5;sampleY=.5;pause();pauseLesson();paintAnimation();};
@@ -304,8 +308,6 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     }
     previous = state; lessonModel = compute(state.scenario); showInsights(); refresh();
   });
-  onRender(refresh);
-  onRenderFailure(refresh);
   if (startTour) begin();
   else if (startLesson === 'readout' || startLesson === 'pipeline') openLesson(startLesson);
 }

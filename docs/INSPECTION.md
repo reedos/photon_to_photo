@@ -1,5 +1,7 @@
 # Camera inspections and playback
 
+**October 4 update:** The synthetic scene selector, photo previews and A/B comparisons below have been retired. Pixel inspection now uses an independent controlled sample; Image Pipeline uses an on-demand color test sample. The real-photo gallery and JPEG-based Play the shot journeys remain. No synthetic scene renderer runs in the visualizer. Earlier implementation notes below are historical.
+
 Local buildout, 10/1/2026. The camera is the parent view; Optics, Focus, and Pixel inspect the same shot in the existing renderer pieces. Their breadcrumb returns to the relevant camera part. Camera in the navigation strip opens the overview.
 
 The URL keeps `piece=camera|lens|cone|loupe` for existing links and automation. Optional `part=lens|focusRing|iris|glass|mount|sensor|shutter|viewfinder` preserves camera context. Legacy inspection links without a part return to glass, focus ring, or sensor respectively. Invalid parts are ignored. Changing views does not change the scenario or request another final-image render.

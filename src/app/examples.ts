@@ -1,14 +1,9 @@
-// The real-photo comparison panel (workflow brief, "A real-photo comparison panel"): reads public/examples/
-// examples.json, hidden whenever it's empty. Never the engine's input -- BRIEF.md's synthetic-scenes-only rule is
-// about what the engine renders, and this only ever compares the engine's own output at a real shot's settings
-// alongside that real shot as an optional calculation. These records also launch the photo journey;
-// its JPEG is a scene reference and final reveal, never input to the physics renderer.
+// The real-photo gallery reads public/examples/examples.json. The photographs and their recorded settings
+// support study, matching and the illustrated Play the shot journey; no synthetic scene is generated here.
 import { lensSummary } from './engine-api';
 import type { Scenario } from '../engine/types';
-import { fmtDistance, fmtFno, fmtRange, fmtShutter } from './units';
-import type { ExampleRenderRequest, ExampleRenderResult } from './example-worker';
+import { fmtDistance, fmtFno, fmtShutter } from './units';
 import type { Store } from './store';
-import { chip } from './ui';
 import { emit } from './bus';
 import { mountPhotoDetails } from './photo-details';
 import '../styles/photo-study.css';
@@ -47,9 +42,8 @@ function byId<T extends HTMLElement>(id: string): T {
 }
 
 export function exampleScenario(ex: Example): Partial<Scenario> {
-  // The engine's own subject stands where the real shot was focused, so the two frames are compared at the same
-  // subject distance (scenes.ts's sceneFor); a photo without a recorded distance keeps the scene's own layout.
-  return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, focusM: ex.focusM, subjectM: ex.focusM ?? undefined };
+  // Recorded values feed the settings workspace; focus remains metadata when it is unavailable.
+  return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, focusM: ex.focusM };
 }
 
 export function mountExamples(store: Store): void {
@@ -57,17 +51,13 @@ export function mountExamples(store: Store): void {
   const picks = byId('rp-picks');
   const img = byId<HTMLImageElement>('rp-img');
   const credit = byId('rp-credit');
-  const canvas = byId<HTMLCanvasElement>('rp-canvas');
   const note = byId('rp-note');
-  const specs = byId('rp-specs');
   const matchBtn = byId<HTMLButtonElement>('rp-match');
   const playBtn = document.createElement('button');
   playBtn.type = 'button'; playBtn.className = 'btn'; playBtn.id = 'rp-play';
   playBtn.textContent = 'Play this photo'; playBtn.disabled = true;
   matchBtn.after(playBtn);
   const settings = byId('rp-settings');
-  const status = byId('rp-render-status');
-  const retry = byId<HTMLButtonElement>('rp-retry');
   const heading = byId('rp-h');
   const header = card.querySelector<HTMLElement>('.sc-head')!;
   header.querySelector('.eyebrow')!.textContent = 'Your photographs · the physics behind the moment';
@@ -79,22 +69,14 @@ export function mountExamples(store: Store): void {
   const photoCount = document.createElement('span'); photoCount.className = 'rp-count';
   navigation.append(previousPhoto, photoCount, nextPhoto); header.replaceChildren(headingText, navigation);
   const photo = card.querySelector<HTMLElement>('.rp-photo')!;
-  const predictionFigure = card.querySelector<HTMLElement>('.rp-render')!;
   const side = card.querySelector<HTMLElement>('.rp-side')!;
+  const settingsExplanation = side.querySelector<HTMLElement>(':scope > .note');
   const compare = card.querySelector<HTMLElement>('.rp-compare')!;
   const facts = document.createElement('dl'); facts.className = 'rp-facts'; facts.id = 'rp-facts';
   const why = document.createElement('p'); why.className = 'rp-insight-title'; why.textContent = 'Look closely';
   const actions = document.createElement('div'); actions.className = 'rp-actions';
   actions.append(playBtn, matchBtn); matchBtn.textContent = 'Use these settings';
-  const prediction = document.createElement('details'); prediction.className = 'rp-prediction'; prediction.id = 'rp-prediction';
-  const summary = document.createElement('summary'); summary.textContent = 'Explore the calculated physics';
-  const predictionBody = document.createElement('div'); predictionBody.className = 'rp-prediction-body';
-  const disclosure = document.createElement('p'); disclosure.className = 'rp-prediction-note';
-  disclosure.textContent = 'Same settings, different scene. This is a synthetic subject under the simulator’s lighting, not a reconstruction or measurement of your photograph. Recorded focus is approximate; model limits may adapt the settings.';
-  predictionFigure.querySelector('figcaption')!.textContent = 'Synthetic scene · calculated from these settings';
-  canvas.setAttribute('aria-label', 'Synthetic scene rendered using the photograph’s settings; not a reconstruction of the photograph');
-  predictionBody.append(disclosure, predictionFigure, specs); prediction.append(summary, predictionBody);
-  side.replaceChildren(settings, facts, why, note, actions, prediction);
+  side.replaceChildren(settings, facts, why, note, ...(settingsExplanation ? [settingsExplanation] : []), actions);
   compare.replaceChildren(photo, side); card.replaceChildren(header, compare, picks);
   picks.setAttribute('aria-label', 'Choose a photograph');
   const imageStatus = document.createElement('p'); imageStatus.className = 'rp-image-status'; imageStatus.setAttribute('role', 'status');
@@ -103,17 +85,22 @@ export function mountExamples(store: Store): void {
   imageFrame.append(img, imageStatus, imageRetry); photo.prepend(imageFrame);
   const photoDetails = mountPhotoDetails(img, imageFrame, note);
   img.decoding = 'async';
-  img.onload = () => { imageStatus.hidden = true; imageRetry.hidden = true; imageFrame.setAttribute('aria-busy', 'false'); };
+  img.onload = async () => {
+    const source = img.currentSrc;
+    try { await img.decode(); }
+    catch {
+      if (img.currentSrc !== source) return;
+      imageStatus.hidden = false; imageStatus.textContent = 'The photograph could not load.';
+      imageRetry.hidden = false; imageFrame.setAttribute('aria-busy', 'false'); return;
+    }
+    if (img.currentSrc !== source) return;
+    imageStatus.hidden = true; imageRetry.hidden = true; imageFrame.setAttribute('aria-busy', 'false');
+  };
   img.onerror = () => { imageStatus.hidden = false; imageStatus.textContent = 'The photograph could not load.'; imageRetry.hidden = false; imageFrame.setAttribute('aria-busy', 'false'); };
   imageRetry.onclick = () => { if (current) { img.removeAttribute('src'); showPhoto(current); } };
 
   let examples: Example[] = [];
   let current: Example | null = null;
-  let visible = document.body.dataset.workspaceView === 'photos';
-  let worker: Worker | null = null;
-  let pendingId: string | null = null;
-  let paintedId: string | null = null;
-  const cached = new Map<string, ExampleRenderResult>();
   const movePhoto = (step: number) => { if (current && examples.length) select(examples[(examples.indexOf(current) + step + examples.length) % examples.length]); };
   previousPhoto.onclick = () => movePhoto(-1); nextPhoto.onclick = () => movePhoto(1);
   picks.addEventListener('keydown', event => {
@@ -129,85 +116,10 @@ export function mountExamples(store: Store): void {
     imageFrame.setAttribute('aria-busy', 'true'); img.src = source;
   }
 
-  function cancel() {
-    worker?.terminate(); worker = null; pendingId = null;
-    canvas.setAttribute('aria-busy', 'false');
-  }
-
-  function paint(view: ExampleRenderResult, id: string) {
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      const data = ctx.createImageData(view.width, view.height);
-      data.data.set(view.rgba); ctx.putImageData(data, 0, 0);
-    }
-    specs.replaceChildren();
-    const rows: [string, string][] = [
-      ['Depth of field', fmtRange(view.nearMm, view.farMm)],
-      ['Background blur disk (at infinity)', `${view.backgroundBlurMm.toFixed(2)} mm`],
-      ['Photons per pixel (18% gray)', Math.round(view.photons).toLocaleString('en-US')],
-      ['Signal to noise', view.snr.toFixed(0)],
-    ];
-    for (const [k, v] of rows) {
-      const div = document.createElement('div');
-      const dt = document.createElement('dt'); dt.textContent = k;
-      const dd = document.createElement('dd'); dd.textContent = v;
-      const evidence = document.createElement('dd'); evidence.className = 'spec-evidence'; evidence.innerHTML = chip('derived');
-      div.append(dt, dd, evidence); specs.appendChild(div);
-    }
-    paintedId = id; canvas.dataset.example = id;
-    canvas.setAttribute('aria-busy', 'false'); status.textContent = 'Calculated for the synthetic scene'; retry.hidden = true;
-  }
-
-  function ensureRender() {
-    const ex = current;
-    if (!visible || document.hidden || !ex) return;
-    showPhoto(ex);
-    if (!prediction.open || pendingId === ex.id || paintedId === ex.id) return;
-    const hit = cached.get(ex.id);
-    if (hit) { paint(hit, ex.id); return; }
-    cancel();
-    pendingId = ex.id; canvas.setAttribute('aria-busy', 'true');
-    status.textContent = 'Calculating the synthetic scene…'; retry.hidden = true;
-    const fail = () => {
-      cancel(); status.textContent = 'This example could not be rendered. Try again.'; retry.hidden = false;
-    };
-    try {
-      const job = new Worker(new URL('./example-worker.ts', import.meta.url), { type: 'module' });
-      worker = job;
-      job.onmessage = (event: MessageEvent<ExampleRenderResult | { error: string }>) => {
-        if (worker !== job || current?.id !== ex.id) return;
-        if ('error' in event.data) { fail(); return; }
-        cached.set(ex.id, event.data);
-        if (cached.size > 3) cached.delete(cached.keys().next().value!);
-        cancel(); paint(event.data, ex.id);
-      };
-      job.onerror = event => { event.preventDefault(); if (worker === job) fail(); };
-      job.postMessage({ scenario: exampleScenario(ex), width: canvas.width, height: canvas.height } satisfies ExampleRenderRequest);
-    } catch { fail(); }
-  }
-  retry.onclick = ensureRender;
-  prediction.addEventListener('toggle', () => { if (prediction.open) ensureRender(); else cancel(); });
-  const observer = new IntersectionObserver(entries => {
-    visible = entries.some(entry => entry.isIntersecting && entry.intersectionRatio > 0);
-    if (visible) ensureRender();
-    else if (pendingId) { cancel(); status.textContent = 'Open this study to resume the calculation.'; }
-  // A positive threshold delivers a second entry after an exact zero-area boundary contact.
-  // With threshold 0, isIntersecting may already be true at that boundary and never notify on entry.
-  }, { threshold: .001 });
-  observer.observe(card);
-  document.addEventListener('workspace-view', event => {
-    visible = (event as CustomEvent<{ view: string }>).detail.view === 'photos';
-    if (visible) ensureRender(); else cancel();
-  });
-  window.addEventListener('pagehide', cancel);
-  window.addEventListener('pageshow', ensureRender);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) cancel(); else ensureRender();
-  });
-
   function renderCurrent() {
     const ex = current;
     if (!ex) return;
+    showPhoto(ex);
     img.alt = ex.title;
     heading.textContent = ex.title;
     photoCount.textContent = `${examples.indexOf(ex) + 1} / ${examples.length}`;
@@ -226,7 +138,7 @@ export function mountExamples(store: Store): void {
       const dt = document.createElement('dt'); dt.textContent = label;
       const dd = document.createElement('dd'); dd.textContent = value;
       const caption = document.createElement('span'); caption.textContent = explanation;
-      fact.append(dt, dd, caption); facts.append(fact);
+      dd.append(caption); fact.append(dt, dd); facts.append(fact);
     }
     playBtn.disabled = false;
     playBtn.setAttribute('aria-label', `Play this photo: ${ex.title}`);
@@ -236,16 +148,11 @@ export function mountExamples(store: Store): void {
     };
 
     for (const b of picks.children) (b as HTMLElement).setAttribute('aria-pressed', String((b as HTMLElement).dataset.id === ex.id));
-    ensureRender();
   }
 
   function select(ex: Example) {
-    if (current?.id === ex.id) { ensureRender(); return; }
-    cancel(); paintedId = null;
-    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-    delete canvas.dataset.example; specs.replaceChildren(); retry.hidden = true;
+    if (current?.id === ex.id) return;
     img.removeAttribute('src');
-    status.textContent = 'Open to calculate this photograph’s settings in the simulator.';
     current = ex;
     renderCurrent();
   }
