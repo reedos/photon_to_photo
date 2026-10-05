@@ -320,7 +320,8 @@ export function mountUI(store: Store, stage: Stage): void {
       if (store.get().cameraPart === id) stage.selectPin(id);
       else store.setCameraPart(cameraPart(id));
     }
-    else { stage.selectPin(id); if (!id) stage.resetView(); }
+    else stage.selectPin(id);
+    if (!id) stage.resetView();
     renderPanel(compute(store.get().scenario), store.get().piece);
     document.getElementById('tab-explain')?.click();
   }
@@ -444,6 +445,17 @@ export function mountUI(store: Store, stage: Stage): void {
 
     const focusedPart = dom.parts.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.partId : null;
     dom.parts.innerHTML = '';
+    const overviewItem = document.createElement('li');
+    overviewItem.classList.toggle('sel', selectedPartId === null);
+    const overviewButton = document.createElement('button');
+    overviewButton.type = 'button';
+    overviewButton.dataset.partId = 'overview';
+    overviewButton.setAttribute('aria-pressed', String(selectedPartId === null));
+    overviewButton.title = `Show the full ${VIEW_LABELS[activePiece].toLowerCase()} view`;
+    overviewButton.innerHTML = '<span class="pn">0</span><span class="pt">Overview</span>';
+    overviewButton.addEventListener('click', () => selectPart(null));
+    overviewItem.append(overviewButton);
+    dom.parts.append(overviewItem);
     probes.forEach((probe, i) => {
       const li = document.createElement('li');
       if (probe.id === selectedPartId) li.className = 'sel';
