@@ -1,0 +1,138 @@
+[
+  {
+    "id": "sheep-flock",
+    "source": "IMG_4049.jpg",
+    "baseStops": 0.34,
+    "softMasks": [
+      [
+        0.32,
+        0.77,
+        0.28,
+        0.23,
+        0.18
+      ]
+    ],
+    "contrast": 1.0,
+    "warmth": 0,
+    "note": "Lift foreground and faces; retain the sky."
+  },
+  {
+    "id": "sheep-close",
+    "source": "IMG_4076.jpg",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.58,
+        0.46,
+        0.22,
+        0.2,
+        0.38
+      ]
+    ],
+    "contrast": 1.0,
+    "warmth": 0,
+    "note": "Gently lift the dark face; retain black wool."
+  },
+  {
+    "id": "sheep-portrait",
+    "source": "IMG_4078.JPG",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.59,
+        0.36,
+        0.22,
+        0.18,
+        0.32
+      ]
+    ],
+    "contrast": 1.0,
+    "warmth": 0,
+    "note": "Gently lift facial shadows."
+  },
+  {
+    "id": "mallard",
+    "source": "DSC_8797.JPG",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.48,
+        0.48,
+        0.22,
+        0.17,
+        0.3
+      ]
+    ],
+    "contrast": 1.0,
+    "warmth": 0,
+    "note": "Lift duckling shadows; slightly reduce green saturation."
+  },
+  {
+    "id": "fox-snow",
+    "source": "DSC_2840.JPG",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.51,
+        0.46,
+        0.14,
+        0.26,
+        0.22
+      ]
+    ],
+    "contrast": 1.045,
+    "warmth": 0,
+    "note": "Subtle contrast and subject lift; protect snow."
+  },
+  {
+    "id": "squirrel",
+    "source": "DSC_7668.JPG",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.46,
+        0.46,
+        0.24,
+        0.3,
+        0.08
+      ]
+    ],
+    "contrast": 1.035,
+    "warmth": 0.008,
+    "note": "Slight contrast and warmth."
+  },
+  {
+    "id": "bears",
+    "source": "IMG_4694.JPG",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.5,
+        0.56,
+        0.09,
+        0.15,
+        0.35
+      ]
+    ],
+    "contrast": 1.015,
+    "warmth": 0,
+    "note": "Lift the nearer bear face and coat."
+  },
+  {
+    "id": "fox-portrait",
+    "source": "IMG_3747.jpg",
+    "baseStops": 0,
+    "softMasks": [
+      [
+        0.34,
+        0.33,
+        0.2,
+        0.17,
+        0.14
+      ]
+    ],
+    "contrast": 1.0,
+    "warmth": 0,
+    "note": "Very small facial lift."
+  }
+]

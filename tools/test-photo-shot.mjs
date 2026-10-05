@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { chromium } from 'playwright';
 import { startPreview } from './preview.mjs';
 const examples=JSON.parse(readFileSync('public/examples/examples.json','utf8')).examples;
+const photoRoute=id=>`**/examples/${examples.find(ex=>ex.id===id).image}`;
 const axe=readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'),'utf8');
 const server=process.env.P2P_URL?null:await startPreview(),url=process.env.P2P_URL||server.url;
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
@@ -71,20 +72,20 @@ try {
  await page.locator('#shot-source').selectOption('photo:sheep-flock');await page.waitForSelector('#shot-dialog[data-ready="true"]');
  assert.match(await page.locator('#shot-measures').innerText(),/ISO 64/);
  // A delayed old image may neither replace the new photo nor revive a closed dialog.
- await page.route('**/examples/flycatcher-2026.jpg',async route=>{await new Promise(r=>setTimeout(r,1200));await route.continue();});
+ await page.route(photoRoute('flycatcher'),async route=>{await new Promise(r=>setTimeout(r,1200));await route.continue();});
  await page.locator('#shot-source').selectOption('photo:flycatcher');
  await page.locator('#shot-source').selectOption('photo:squirrel');
  await page.waitForSelector('#shot-dialog[data-source="photo:squirrel"][data-ready="true"]');
  await page.waitForTimeout(1500);assert.equal(await page.locator('#shot-source').inputValue(),'photo:squirrel');
  await page.locator('#shot-source').selectOption('photo:flycatcher');await page.keyboard.press('Escape');await page.waitForTimeout(1500);
  assert.equal(await page.locator('#shot-dialog').evaluate(d=>d.open),false);
- await page.unroute('**/examples/flycatcher-2026.jpg');
+ await page.unroute(photoRoute('flycatcher'));
  // Explicit load failure and recovery.
- await page.route('**/examples/sheep-portrait-2026.jpg',route=>route.abort());
+ await page.route(photoRoute('sheep-portrait'),route=>route.abort());
  await page.locator('.rp-pick[data-id="sheep-portrait"]').click();await page.locator('#rp-play').click();
  await page.locator('#shot-retry').waitFor({state:'visible'});
  assert.equal(await page.locator('#shot-use').isDisabled(),true);
- await page.unroute('**/examples/sheep-portrait-2026.jpg');await page.locator('#shot-retry').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');
+ await page.unroute(photoRoute('sheep-portrait'));await page.locator('#shot-retry').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.locator('#shot-track').selectOption('all');await page.locator('#shot-speed').selectOption('2');await seek(0);
  await page.evaluate(()=>{window.photoPlayback={frames:0,stages:new Set()};const sample=()=>{const d=document.getElementById('shot-dialog');window.photoPlayback.frames++;window.photoPlayback.stages.add(d.dataset.stage);if(d.dataset.playing==='true')requestAnimationFrame(sample);};document.getElementById('shot-play').click();requestAnimationFrame(sample);});
