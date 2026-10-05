@@ -16,14 +16,15 @@ try {
     await page.goto(`${url}?piece=camera&lens=n50&focus=1.5&iso=400`);
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
-    const ids = await page.locator('#parts button').evaluateAll(buttons => buttons.map(b => b.dataset.partId));
+    // Overview is a separate navigation action, not a camera component.
+    const ids = await page.locator('#parts button').evaluateAll(buttons => buttons.map(b => b.dataset.partId).filter(id => id !== 'overview'));
     const detail = () => page.evaluate(() => window.p2p.pieces.camera.detail());
     assert.equal(await detail(), null);
     await page.locator('#part-prev').click(); assert.equal(await detail(), ids.at(-1));
     await page.locator('#part-next').click(); assert.equal(await detail(), null);
     for (const id of ids) {
       await page.locator('#part-next').click(); assert.equal(await detail(), id);
-      assert.equal(await page.locator('#parts button:visible').count(), ids.length, 'every part remains visible after selecting a part');
+      assert.equal(await page.locator('#parts button:visible').count(), ids.length + 1, 'every part and Overview remain visible after selecting a part');
       assert.equal(await page.locator('#studio-explain').evaluate(el => el.scrollTop), 0, 'the part list is not scrolled away');
       const transport = await page.locator('.part-nav').boundingBox();
       assert.ok(transport.y >= 0 && transport.y + transport.height <= height, 'previous/next stay in view');
@@ -38,6 +39,7 @@ try {
     await page.locator('#tab-controls').click();
     await page.locator('#sc-iso').focus(); await page.locator('#sc-iso').press('ArrowRight'); assert.equal(await detail(), ids[0], 'slider arrows do not navigate');
     const shot = await page.evaluate(() => window.p2p.scenario());
+    if (width < 760) await page.locator('#phone-settings-close').click();
     await page.locator('#tab-explain').click();
     for (const [part, piece] of [['iris', 'lens'], ['focusRing', 'cone'], ['sensor', 'loupe']]) {
       await page.locator(`#parts [data-part-id="${part}"]`).click();
@@ -55,9 +57,9 @@ try {
     await page.locator('#reset-view').click();
     await page.evaluate(() => window.p2p.settle());
     assert.deepEqual(await page.evaluate(() => window.p2p.pieces.camera.camDebug().pos), beforeReset, 'reset retains the current part framing');
-    assert.equal(await page.locator('#parts button:visible').count(), ids.length);
+    assert.equal(await page.locator('#parts button:visible').count(), ids.length + 1);
     await page.locator('#card').evaluate(el => el.scrollTop = el.scrollHeight);
-    assert.equal(await page.locator('#parts button:visible').count(), ids.length);
+    assert.equal(await page.locator('#parts button:visible').count(), ids.length + 1);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
     await page.evaluate(() => window.p2p.settle());
     await page.screenshot({ path: `shots/navigation/verified/parts-${width}.png` });
@@ -69,9 +71,10 @@ try {
     await page.locator('#topnav [data-return-view]').click(); await page.waitForFunction(() => window.p2p?.pieces.camera);
     assert.deepEqual(await page.evaluate(() => window.p2p.scenario()), shot, 'reference page returns to the same shot');
     assert.equal(new URL(page.url()).searchParams.get('part'), 'sensor');
-    for (const name of ['story', 'evidence', 'method', 'parts']) {
+    for (const name of ['story', 'evidence', 'method', 'glossary', 'parts']) {
       await page.goto(new URL(`reference.html?page=${name}`, url).href);
-      await page.waitForSelector('h1'); assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'noindex');
+      await page.waitForSelector('h1'); assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'index, follow');
+      assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), `https://reedos.dev/photon_to_photo/reference.html?page=${name}`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
       if (name === 'evidence') assert.ok(await page.locator('.evidence-row').count() > 10, 'source index is populated from actual records');
       if (name === 'parts') assert.equal(await page.locator('[data-part]').count(), 8);

@@ -10,11 +10,13 @@ Personal educational project based on cited public sources. Not an official publ
 companies whose products are discussed. The camera bodies and lenses are generic, unbranded models built to published
 dimensions; where a design is tied to a product, its card says so. Estimates and assumptions are labeled as such.
 
-## Review build and publishing
+## Live site and publishing
 
-The deployed review build is at [reedos.dev/photon_to_photo](https://reedos.dev/photon_to_photo/).
-It retains `noindex` and is awaiting a separate launch decision. A documentation update
-does not change that status.
+**[Open Photon to Photo](https://reedos.dev/photon_to_photo/)**
+
+Reed authorized public launch on 10/05/2026. The camera and reference pages allow search
+indexing and are linked from [Reedos.dev](https://reedos.dev/#project-p2p). Developer model
+and scene previews remain excluded from search results.
 
 Publishing is manual: `gh workflow run pages.yml --ref main` runs the configured
 Node 22 install, typecheck, tests and build, then deploys `dist/` through GitHub Pages
