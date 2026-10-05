@@ -13,6 +13,13 @@ export interface Example {
   title: string;
   image: string;   // a path under public/examples/
   thumb?: string;   // the picker's small copy, under public/examples/
+  fullImage?: string;
+  detailImage?: string;
+  cameraName?: string;
+  lensName?: string;
+  focalLengthMm?: number;
+  modelMatch?: boolean;
+  subject?: { x: number; y: number };
   lens: string;     // an engine lens id
   fno: number;
   shutter: number;
@@ -43,7 +50,7 @@ function byId<T extends HTMLElement>(id: string): T {
 
 export function exampleScenario(ex: Example): Partial<Scenario> {
   // Recorded values feed the settings workspace; focus remains metadata when it is unavailable.
-  return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, focusM: ex.focusM };
+  return { lens: ex.lens, fno: ex.fno, shutter: ex.shutter, iso: ex.iso, ...(ex.focusM === null ? {} : { focusM: ex.focusM }) };
 }
 
 export function mountExamples(store: Store): void {
@@ -125,9 +132,9 @@ export function mountExamples(store: Store): void {
     photoCount.textContent = `${examples.indexOf(ex) + 1} / ${examples.length}`;
     credit.textContent = ex.credit;
     note.textContent = ex.note;
-    photoDetails.setPhoto(ex.id, ex.note, ex.title);
+    photoDetails.setPhoto(ex.id, ex.note, ex.title, ex.fullImage ? `examples/${ex.fullImage}` : undefined);
     const lensName = (() => { try { return lensSummary(ex.lens).name; } catch { return ex.lens; } })();
-    settings.textContent = `${lensName} · ISO ${ex.iso}`;
+    settings.textContent = `${ex.cameraName ? ex.cameraName + ' · ' : ''}${ex.lensName ?? lensName} · ISO ${ex.iso}`;
     facts.replaceChildren();
     for (const [label, value, explanation] of [
       ['Exposure', fmtShutter(ex.shutter), 'The time each row collects light'],
@@ -143,6 +150,9 @@ export function mountExamples(store: Store): void {
     playBtn.disabled = false;
     playBtn.setAttribute('aria-label', `Play this photo: ${ex.title}`);
     playBtn.onclick = () => emit('play-photo', { example: ex, source: playBtn });
+    matchBtn.disabled = ex.modelMatch === false;
+    matchBtn.textContent = ex.modelMatch === false ? 'Lens not modeled' : 'Use these settings';
+    matchBtn.title = ex.modelMatch === false ? 'The recorded camera and lens are not available in this simulator.' : '';
     matchBtn.onclick = () => {
       store.set(exampleScenario(ex));
     };
@@ -155,6 +165,7 @@ export function mountExamples(store: Store): void {
     img.removeAttribute('src');
     current = ex;
     renderCurrent();
+    picks.querySelector<HTMLElement>('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
   const catalogStatus = document.querySelector<HTMLElement>('#photo-study-panel .study-loading');
@@ -200,7 +211,7 @@ export function mountExamples(store: Store): void {
       label.textContent = ex.title;
       const sub = document.createElement('span');
       sub.className = 'rp-pick-k';
-      const focal = (() => { try { return `${lensSummary(ex.lens).focalLength} mm`; } catch { return ex.lens; } })();
+      const focal = ex.focalLengthMm ? `${ex.focalLengthMm} mm` : (() => { try { return `${lensSummary(ex.lens).focalLength} mm`; } catch { return ex.lens; } })();
       sub.textContent = `${focal} · ${fmtFno(ex.fno)}`;
       btn.append(label, sub);
       btn.addEventListener('click', () => select(ex));

@@ -19,12 +19,12 @@ try {
     await page.locator('#workspace-photos').click();
     await page.locator('#rp-picks button').first().waitFor({ state: 'attached' });
     assert.equal(await page.locator('#rp-canvas, .rp-render, #rp-prediction').count(), 0, 'gallery has no synthetic preview');
-    assert.equal(await page.locator('#rp-img').getAttribute('src'), 'examples/flycatcher.jpg', 'gallery displays the supplied JPEG');
+    assert.equal(await page.locator('#rp-img').getAttribute('src'), 'examples/flycatcher-2026.jpg', 'gallery displays the supplied JPEG');
     const picks = page.locator('#rp-picks button');
     const initialSrc = await page.locator('#rp-img').getAttribute('src');
     const initialTitle = await page.locator('#rp-h').textContent();
     await picks.nth(1).click();
-    await page.waitForFunction(() => document.querySelector('#rp-img').getAttribute('src') !== 'examples/flycatcher.jpg');
+    await page.waitForFunction(() => document.querySelector('#rp-img').getAttribute('src') !== 'examples/flycatcher-2026.jpg');
     assert.notEqual(await page.locator('#rp-h').textContent(), initialTitle, 'selecting a gallery item updates its title');
     const selectedSrc = await page.locator('#rp-img').getAttribute('src');
     await page.locator('#rp-match').click();

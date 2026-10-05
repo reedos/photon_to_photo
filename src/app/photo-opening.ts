@@ -1,3 +1,4 @@
+import catalog from '../../public/examples/examples.json';
 import { siteNavigation } from './site-nav';
 
 /** Only an unaddressed first visit gets the invitation. Every existing deep link wins. */
@@ -17,7 +18,7 @@ export function mountPhotoOpening(enter: (photoId?: string, photos?: boolean) =>
   document.getElementById('top')!.hidden = true;
   opening.hidden = false;
   const photo = document.getElementById('opening-photo') as HTMLImageElement;
-  photo.src = 'examples/flycatcher.jpg';
+  photo.src = `examples/${catalog.examples[0].image}`;
   nav.innerHTML = siteNavigation('opening');
   nav.querySelector<HTMLAnchorElement>('[data-return-view]')!.href = '#stage-section';
   menu.addEventListener('click', () => {

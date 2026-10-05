@@ -51,7 +51,7 @@ try {
   await seek(28);const final=await pixels();await page.emulateMedia({reducedMotion:'reduce'});await seek(28);
   assert.deepEqual(compare(final,await pixels()),{changed:0,max:0},'normal and reduced motion have the same finished JPEG');
   const sourceDifference=await page.locator('#shot-canvas').evaluate(async canvas=>{
-    const image=new Image();image.src=new URL('examples/flycatcher.jpg',document.baseURI).href;await image.decode();
+    const image=new Image();image.src=new URL('examples/flycatcher-2026.jpg',document.baseURI).href;await image.decode();
     const reference=document.createElement('canvas');reference.width=canvas.width;reference.height=canvas.height;
     const context=reference.getContext('2d');context.setTransform(canvas.width/1000,0,0,canvas.height/560,0,0);
     const scale=Math.min(952/image.naturalWidth,470/image.naturalHeight),w=image.naturalWidth*scale,h=image.naturalHeight*scale,x=24+(952-w)/2,y=20+(470-h)/2;

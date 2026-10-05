@@ -43,14 +43,14 @@
 .rp-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .rp-facts div { min-width: 0; }
 .rp-facts dt { color: var(--muted); font: 9px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; }
-.rp-facts dd { margin: 5px 0 4px; color: var(--ink); font: 500 clamp(13px, 1.5vw, 19px)/1.25 var(--mono); white-space: nowrap; }
-.rp-facts span { display: block; color: var(--muted); font: 10px/1.4 var(--sans); }
+.rp-facts dd { margin: 5px 0 4px; color: var(--ink); font: 500 clamp(13px, 1.25vw, 17px)/1.25 var(--mono); overflow-wrap: anywhere; }
+.rp-facts span { display: block; color: var(--muted); font: 10px/1.4 var(--sans); white-space: normal; }
 .rp-insight-title { margin: 2px 0 -7px; color: var(--accent); font: 10px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .1em; }
 #rp-card .rp-note { font-size: 13px; line-height: 1.55; margin: 0; }
 .rp-actions { display: grid; grid-template-columns: 1fr; gap: 7px; }
 .rp-actions .btn { min-height: 40px; width: 100%; }
 #rp-play { background: #b8d6cc; color: #0c1816; border-color: #b8d6cc; }
-#rp-card .rp-picks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 0; max-width: none; overflow: visible; }
+#rp-card .rp-picks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(110px, 1fr); grid-template-columns: none; gap: 8px; padding: 0 0 4px; margin: 0; max-width: none; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
 #rp-card .rp-pick { display: grid; grid-template-columns: 58px minmax(0, 1fr); grid-template-rows: 1fr 1fr; align-items: center; gap: 0 7px; padding: 4px; border-color: var(--line); }
 #rp-card .rp-pick img { grid-row: 1 / 3; width: 58px; height: 48px; aspect-ratio: auto; margin: 0; object-fit: cover; }
 #rp-card .rp-pick-t { padding: 0; font-size: 10px; line-height: 1.15; align-self: end; }
@@ -89,7 +89,7 @@
   .rp-read-explanation { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 3px 5px; font-size: 9px; line-height: 1.2; color: var(--accent); }
   .rp-actions { grid-template-columns: 1fr 1fr; }
   .rp-actions .btn { min-height: 38px; padding: 5px; font-size: 10px; }
-  #rp-card .rp-picks { gap: 5px; }
+  #rp-card .rp-picks { gap: 5px; grid-auto-columns: minmax(48px, 1fr); }
   #rp-card .rp-pick { display: block; padding: 2px; }
   #rp-card .rp-pick img { height: 40px; }
 }

@@ -80,7 +80,7 @@ export function createShotPlayer(store:Store) {
   function play(){if(!ready)return;if(time>=track().end)time=track().start;playing=true;el('status').textContent=`Real photograph · illustrated camera journey · ${photoCredit()}`;cancelAnimationFrame(raf);last=performance.now();raf=requestAnimationFrame(tick);draw();}
   function pause(){playing=false;cancelAnimationFrame(raf);if(ready)el('status').textContent=`Paused · ${stages()[shotMoment(time,track().end).stage].title}${example?' · '+photoCredit():''}`;draw();}
   function enablePlayback(){
-    el<HTMLButtonElement>('play').disabled=false;el<HTMLButtonElement>('use').disabled=false;
+    el<HTMLButtonElement>('play').disabled=false;el<HTMLButtonElement>('use').disabled=example?.modelMatch===false;
     el<HTMLButtonElement>('view-photo').disabled=!readyImage;
     if(autoIntent&&!reduced.matches&&!document.hidden)play();else draw();
   }
@@ -94,8 +94,8 @@ export function createShotPlayer(store:Store) {
     el('view-photo').hidden=!example;el<HTMLButtonElement>('view-photo').disabled=true;
     dialog.querySelector('.shot-eyebrow')!.textContent='Real photograph · illustrated camera journey';
     dialog.querySelector('.shot-footnote')!.textContent=`${photoShotFootnote} Workspace may adapt recorded values to model limits. ${example.credit}`;
-    el('use').textContent='Use these settings →';
-    el('use').title=example?'Workspace may adapt recorded values to model limits.':'';
+    el('use').textContent=example.modelMatch===false?'Lens not modeled':'Use these settings →';
+    el('use').title=example.modelMatch===false?'The recorded camera and lens are not available in this simulator.':'Workspace may adapt recorded values to model limits.';
     const firstChapter=dialog.querySelector<HTMLButtonElement>('[data-shot-chapter="0"]')!;
     firstChapter.querySelector('span')!.textContent=' Scene';firstChapter.setAttribute('aria-label',`Chapter 1: Scene`);
     el('settings').textContent=`${fmtFno(example.fno)} · ${fmtShutter(example.shutter)} · ISO ${example.iso} · focus ${example.focusM===null?'unknown':`≈ ${example.focusM} m`}`;
@@ -107,10 +107,12 @@ export function createShotPlayer(store:Store) {
       const selected=example,image=new Image();
       timer=window.setTimeout(fail,30000);
       image.src=new URL(`examples/${selected.image}`,document.baseURI).href;
-      image.decode().then(()=>{
+      const detailImage=selected.detailImage?new Image():undefined;
+      if(detailImage)detailImage.src=new URL(`examples/${selected.detailImage}`,document.baseURI).href;
+      Promise.all([image.decode(),detailImage?.decode().catch(()=>undefined)]).then(()=>{
         if(id!==generation||!dialog.open)return;
         clearTimeout(timer);
-        visual=createShotVisual(el<HTMLCanvasElement>('canvas'),model!,{example:selected,image});
+        visual=createShotVisual(el<HTMLCanvasElement>('canvas'),model!,{example:selected,image,detailImage:detailImage?.naturalWidth?detailImage:undefined});
         visual.setMechanism(el<HTMLSelectElement>('mechanism').value as CaptureMechanism);
         visual.setReducedMotion(reduced.matches);
         readyImage=image;ready=true;el('status').textContent=`Supplied JPEG · ${selected.credit} Optics and sensor stages are illustrative.`;

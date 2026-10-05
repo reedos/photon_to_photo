@@ -14,7 +14,7 @@ try {
  page.setDefaultTimeout(120000);
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('ERR_FAILED'))errors.push(m.text());});
- await page.goto(new URL('?piece=camera',url).href);await page.waitForFunction(()=>window.p2p&&document.querySelectorAll('.rp-pick').length===6);
+ await page.goto(new URL('?piece=camera',url).href);await page.waitForFunction(count=>window.p2p&&document.querySelectorAll('.rp-pick').length===count,examples.length);await page.locator('#workspace-photos').click();
  const before=await page.evaluate(()=>window.p2p.scenario());
  const seek=t=>page.locator('#shot-time').evaluate((el,t)=>{el.value=String(t);el.dispatchEvent(new Event('input',{bubbles:true}));},t);
  for(const width of [1366,390,320]){
@@ -25,6 +25,7 @@ try {
    await page.waitForSelector(`#shot-dialog[data-source="photo:${ex.id}"][data-ready="true"]`);
    assert.equal(await page.locator('#shot-source').inputValue(),`photo:${ex.id}`);
    assert.equal(await page.locator('#shot-capture').isVisible(),false);
+   assert.equal(await page.locator('#shot-use').isDisabled(),ex.modelMatch===false);
    assert.match(await page.locator('#shot-settings').innerText(),new RegExp(`ISO ${ex.iso}`));
    assert.equal(await page.locator('#shot-dialog').getAttribute('data-playing'),'false');
    for(const t of [2,6,10,14,18,25,28]){
@@ -60,30 +61,30 @@ try {
    assert.equal(await page.evaluate(()=>document.activeElement.id),'rp-play');
    assert.deepEqual(await page.evaluate(()=>window.p2p.scenario()),before,'watching preserves workspace');
   }
-  console.log(`PASS real photographs ${width}: all six launches, stages, unchanged pixels, metadata, close/focus, no overflow`);
+  console.log(`PASS real photographs ${width}: all ten launches, stages, unchanged pixels, metadata, close/focus, no overflow`);
  }
  await page.setViewportSize({width:1366,height:900});await page.locator('#rp-play').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');
  await page.addScriptTag({content:axe});
  const violations=await page.evaluate(async()=> (await axe.run(document.getElementById('shot-dialog'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations);
  assert.deepEqual(violations.map(v=>v.id),[]);
  await page.locator('#shot-track').selectOption('charge');assert.equal(await page.locator('#shot-time').inputValue(),'12');
- await page.locator('#shot-source').selectOption('photo:sheep-village');await page.waitForSelector('#shot-dialog[data-ready="true"]');
+ await page.locator('#shot-source').selectOption('photo:sheep-flock');await page.waitForSelector('#shot-dialog[data-ready="true"]');
  assert.match(await page.locator('#shot-measures').innerText(),/ISO 64/);
  // A delayed old image may neither replace the new photo nor revive a closed dialog.
- await page.route('**/examples/flycatcher.jpg',async route=>{await new Promise(r=>setTimeout(r,1200));await route.continue();});
+ await page.route('**/examples/flycatcher-2026.jpg',async route=>{await new Promise(r=>setTimeout(r,1200));await route.continue();});
  await page.locator('#shot-source').selectOption('photo:flycatcher');
  await page.locator('#shot-source').selectOption('photo:squirrel');
  await page.waitForSelector('#shot-dialog[data-source="photo:squirrel"][data-ready="true"]');
  await page.waitForTimeout(1500);assert.equal(await page.locator('#shot-source').inputValue(),'photo:squirrel');
  await page.locator('#shot-source').selectOption('photo:flycatcher');await page.keyboard.press('Escape');await page.waitForTimeout(1500);
  assert.equal(await page.locator('#shot-dialog').evaluate(d=>d.open),false);
- await page.unroute('**/examples/flycatcher.jpg');
+ await page.unroute('**/examples/flycatcher-2026.jpg');
  // Explicit load failure and recovery.
- await page.route('**/examples/sheep-larches.jpg',route=>route.abort());
- await page.locator('.rp-pick[data-id="sheep-larches"]').click();await page.locator('#rp-play').click();
+ await page.route('**/examples/sheep-portrait-2026.jpg',route=>route.abort());
+ await page.locator('.rp-pick[data-id="sheep-portrait"]').click();await page.locator('#rp-play').click();
  await page.locator('#shot-retry').waitFor({state:'visible'});
  assert.equal(await page.locator('#shot-use').isDisabled(),true);
- await page.unroute('**/examples/sheep-larches.jpg');await page.locator('#shot-retry').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');
+ await page.unroute('**/examples/sheep-portrait-2026.jpg');await page.locator('#shot-retry').click();await page.waitForSelector('#shot-dialog[data-ready="true"]');
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.locator('#shot-track').selectOption('all');await page.locator('#shot-speed').selectOption('2');await seek(0);
  await page.evaluate(()=>{window.photoPlayback={frames:0,stages:new Set()};const sample=()=>{const d=document.getElementById('shot-dialog');window.photoPlayback.frames++;window.photoPlayback.stages.add(d.dataset.stage);if(d.dataset.playing==='true')requestAnimationFrame(sample);};document.getElementById('shot-play').click();requestAnimationFrame(sample);});

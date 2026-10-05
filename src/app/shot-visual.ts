@@ -18,7 +18,7 @@ function along(r:Route,t:number):Point {
   const d=Math.max(0,Math.min(1,t))*r.total;let i=1;while(i<r.lengths.length-1&&r.lengths[i]<d)i++;
   const f=(d-r.lengths[i-1])/(r.lengths[i]-r.lengths[i-1]||1),a=r.points[i-1],b=r.points[i];return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
 }
-export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{example:Example;image:HTMLImageElement}) {
+export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{example:Example;image:HTMLImageElement;detailImage?:HTMLImageElement}) {
   const output=canvas.getContext('2d')!;
   let ctx=output;
   // One reusable transition surface; no bitmap history or frame-dependent state.
@@ -31,7 +31,7 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
   let mechanism:CaptureMechanism='mechanical';
   let reducedMotion=false;
   let handoffRendering=false;
-  const paths=[0,.35].flatMap(fieldFrac=>pointBundle(model,{pointDistMm:(real.example.focusM??1e6)*1000,fieldFrac,nms:[460,550,650],rays:9}).paths);
+  const paths=[0,.35].flatMap(fieldFrac=>pointBundle(model,{pointDistMm:(real.example.focusM??10)*1000,fieldFrac,nms:[460,550,650],rays:9}).paths);
   const surfaces=model.system.surfaces,min=surfaces[0].z,max=surfaces.at(-1)!.z,scale=750/(max-min);
   const X=(z:number)=>150+(z-min)*scale,Y=(v:number)=>295-v*scale;
   const traced=paths.map(path=>({nm:path.nm,points:path.pts.filter(q=>q[2]>=min-15&&q[2]<=max+1).map(q=>[X(q[2]),Y(q[1])] as Point)})).filter(p=>p.points.length>1).map(p=>({...p,route:route(p.points)}));
@@ -85,7 +85,10 @@ export function createShotVisual(canvas:HTMLCanvasElement,model:Model,real:{exam
       ctx.save();ctx.globalAlpha=detail;const dx=775,dy=285,dw=195;
       const px=box.x+(sx/im.naturalWidth)*box.w,py=box.y+(sy/im.naturalHeight)*box.h,pw=side/im.naturalWidth*box.w,ph=side/im.naturalHeight*box.h;
       ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.strokeRect(px,py,pw,ph);line(px+pw,py+ph,dx,dy,color);
-      panel(dx-5,dy-32,dw+10,dw+37,color);ctx.drawImage(im,sx,sy,side,side,dx,dy,dw,dw);text('Photo detail',dx,dy-10,20,color,true);ctx.restore();
+      panel(dx-5,dy-32,dw+10,dw+37,color);
+      if(real.detailImage)ctx.drawImage(real.detailImage,dx,dy,dw,dw);
+      else ctx.drawImage(im,sx,sy,side,side,dx,dy,dw,dw);
+      text('Photo detail',dx,dy-10,20,color,true);ctx.restore();
     }
   }
   function optics(progress:number) {

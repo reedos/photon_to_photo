@@ -34,7 +34,8 @@ describe('connected story chapter art and evidence figures', () => {
     expect(byId.lens.figureValue).toBe(`${n500.elements} elements · ${n500.groups} groups`);
     expect(byId.pixel.evidence).toMatch(/not this photo/i);
     expect(byId.readout.figureValue).toBe(`${d850.sensor.readout.electronicFullFrameMs.v} ms`);
-    expect(byId.readout.note).toMatch(/not supplied with this JPEG/i);
+    expect(byId.readout.note).toMatch(/metadata identifies a Nikon D850/i);
+    expect(byId.readout.note).toMatch(/do not attribute this electronic scan timing/i);
     expect(byId.final.figureValue).toBe('3 channels');
     expect(connectedStory()).toContain('class="figure story-figure"');
   });

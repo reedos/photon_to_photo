@@ -3,80 +3,492 @@
     {
       "id": "flycatcher",
       "title": "Vermilion flycatcher",
-      "image": "flycatcher.jpg",
-      "thumb": "flycatcher-thumb.jpg",
+      "image": "flycatcher-2026.jpg",
+      "fullImage": "flycatcher-full.jpg",
+      "thumb": "flycatcher-thumb-2026.jpg",
+      "detailImage": "flycatcher-shot-detail.jpg",
+      "width": 8256,
+      "height": 5504,
+      "previewWidth": 3200,
+      "previewHeight": 2133,
       "lens": "n500",
       "fno": 5.6,
       "shutter": 0.00025,
       "iso": 1400,
-      "focusM": 8.9,
-      "credit": "Photo: Reed Osaki. Focus distance as the camera recorded it (coarse steps).",
-      "note": "Wide open at about 9 m, the zone of sharpness is only 10 cm deep. A branch 3 m behind the bird spreads each point into a 1.3 mm blur on the sensor, over 40 times the sharpness limit, so the tangle behind it melts."
+      "focusM": 8.91,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.474,
+        "y": 0.467
+      },
+      "credit": "Photo: Reed Osaki. Camera-recorded focus distance is approximate.",
+      "note": "The bird and nest hold fine detail while branches at other distances soften. A long lens and a wide aperture help isolate this small subject.",
+      "details": [
+        {
+          "label": "Bird & nest",
+          "rect": [
+            0.35,
+            0.43,
+            0.2,
+            0.3
+          ],
+          "note": "Inspect the feathers and woven nest. Focus selects a distance; it does not make every branch equally sharp."
+        },
+        {
+          "label": "Soft branches",
+          "rect": [
+            0.63,
+            0.4,
+            0.18,
+            0.29
+          ],
+          "note": "Overlapping blur disks soften branches beyond the focus distance. Enlarging this region shows recorded defocus, not missing download detail."
+        }
+      ]
     },
     {
       "id": "mallard",
       "title": "Mallard and ducklings",
-      "image": "mallard.jpg",
-      "thumb": "mallard-thumb.jpg",
+      "image": "mallard-2026.jpg",
+      "fullImage": "mallard-full.jpg",
+      "thumb": "mallard-thumb-2026.jpg",
+      "detailImage": "mallard-shot-detail.jpg",
+      "width": 8256,
+      "height": 5504,
+      "previewWidth": 3200,
+      "previewHeight": 2133,
       "lens": "n500",
       "fno": 5.6,
       "shutter": 0.002,
       "iso": 900,
       "focusM": 10,
-      "credit": "Photo: Reed Osaki. Focus distance as the camera recorded it (coarse steps).",
-      "note": "At 10 m the zone of sharpness is about 13 cm deep: enough for the ducks, not for the water behind them. Half a meter in front of focus, a point already spreads eight times wider than the sharpness limit."
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.5,
+        "y": 0.585
+      },
+      "credit": "Photo: Reed Osaki. Camera-recorded focus distance is approximate.",
+      "note": "Compare the ducklings, the log and the water. Objects at similar distances can share the sharp region even when they are different subjects.",
+      "details": [
+        {
+          "label": "Duckling detail",
+          "rect": [
+            0.37,
+            0.44,
+            0.2,
+            0.23
+          ],
+          "note": "Down and bark reveal small-scale texture. A shallow focus zone does not make every animal equally sharp."
+        },
+        {
+          "label": "Water highlights",
+          "rect": [
+            0.59,
+            0.04,
+            0.27,
+            0.3
+          ],
+          "note": "Reflections spread into soft shapes. Defocus and water motion can both affect them; a single image cannot separate those effects precisely."
+        }
+      ]
     },
     {
-      "id": "chipmunk",
-      "title": "Chipmunk on a rock",
-      "image": "chipmunk.jpg",
-      "thumb": "chipmunk-thumb.jpg",
+      "id": "fox-snow",
+      "title": "Fox beside the snow",
+      "image": "fox-snow-2026.jpg",
+      "fullImage": "fox-snow-full.jpg",
+      "thumb": "fox-snow-thumb-2026.jpg",
+      "detailImage": "fox-snow-shot-detail.jpg",
+      "width": 8256,
+      "height": 5504,
+      "previewWidth": 3200,
+      "previewHeight": 2133,
       "lens": "n500",
       "fno": 5.6,
-      "shutter": 0.003125,
-      "iso": 900,
-      "focusM": 11.2,
-      "credit": "Photo: Reed Osaki. Focus distance as the camera recorded it (coarse steps).",
-      "note": "A distant background turns into an even wash. At these settings a point at infinity spreads into a 4 mm disk, about a ninth of the frame width, so no detail back there survives."
+      "shutter": 0.001,
+      "iso": 450,
+      "focusM": 16.79,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.51,
+        "y": 0.48
+      },
+      "credit": "Photo: Reed Osaki. Camera-recorded focus distance is approximate.",
+      "note": "The fox stands between snow and soft distant scenery. The recorded 1/1000-second exposure limits motion during capture; focus and scene depth shape the remaining softness.",
+      "details": [
+        {
+          "label": "Fox detail",
+          "rect": [
+            0.4,
+            0.24,
+            0.26,
+            0.49
+          ],
+          "note": "Compare facial detail with the softer fur farther from the focus plane. The photograph alone cannot establish which softness came from motion or defocus."
+        },
+        {
+          "label": "Snow edge",
+          "rect": [
+            0.17,
+            0.64,
+            0.48,
+            0.29
+          ],
+          "note": "The snow and rock create bright boundaries. Bright areas can lose detail if their signal clips, but this crop is not a RAW clipping measurement."
+        }
+      ]
     },
     {
       "id": "squirrel",
-      "title": "Gray squirrel",
-      "image": "squirrel.jpg",
-      "thumb": "squirrel-thumb.jpg",
+      "title": "Ground squirrel on a rock",
+      "image": "squirrel-2026.jpg",
+      "fullImage": "squirrel-full.jpg",
+      "thumb": "squirrel-thumb-2026.jpg",
+      "detailImage": "squirrel-shot-detail.jpg",
+      "width": 8256,
+      "height": 5504,
+      "previewWidth": 3200,
+      "previewHeight": 2133,
       "lens": "n500",
-      "fno": 6.3,
-      "shutter": 0.0004,
-      "iso": 2200,
-      "focusM": 5.6,
-      "credit": "Photo: Reed Osaki. Focus distance as the camera recorded it (coarse steps).",
-      "note": "The closest of the long-lens shots, under 6 m away. Closer focus thins the zone of sharpness to about 4 cm, and a far background spreads to an 8 mm disk."
+      "fno": 5.6,
+      "shutter": 0.001,
+      "iso": 2000,
+      "focusM": 7.08,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.5,
+        "y": 0.44
+      },
+      "credit": "Photo: Reed Osaki. Camera-recorded focus distance is approximate.",
+      "note": "The squirrel and textured rock stand against a smooth background. ISO 2000 amplifies the captured signal; it does not create additional photons.",
+      "details": [
+        {
+          "label": "Eye & fur",
+          "rect": [
+            0.4,
+            0.15,
+            0.26,
+            0.39
+          ],
+          "note": "Inspect the eye and the fine hairs. Fine detail depends on focus, lens blur, captured light and the processing already applied to this JPEG."
+        },
+        {
+          "label": "Smooth background",
+          "rect": [
+            0.05,
+            0.1,
+            0.27,
+            0.32
+          ],
+          "note": "Broad color gradients replace distant detail. This is the captured background, not an artificial blur effect added by the app."
+        }
+      ]
     },
     {
-      "id": "sheep-village",
-      "title": "Sheep above the village",
-      "image": "sheep-village.jpg",
-      "thumb": "sheep-village-thumb.jpg",
+      "id": "fox-portrait",
+      "title": "Fox portrait",
+      "image": "fox-portrait-2026.jpg",
+      "fullImage": "fox-portrait-full.jpg",
+      "thumb": "fox-portrait-thumb-2026.jpg",
+      "detailImage": "fox-portrait-shot-detail.jpg",
+      "width": 3096,
+      "height": 4127,
+      "previewWidth": 2401,
+      "previewHeight": 3200,
+      "lens": "n500",
+      "fno": 5.6,
+      "shutter": 0.002,
+      "iso": 200,
+      "focusM": null,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.46,
+        "y": 0.37
+      },
+      "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
+      "note": "The face stands out against a soft backdrop. The edited file retains aperture, shutter and ISO, but no recorded focus distance.",
+      "details": [
+        {
+          "label": "Face & whiskers",
+          "rect": [
+            0.2,
+            0.18,
+            0.47,
+            0.31
+          ],
+          "note": "Look closely at the eyes, muzzle and whiskers. The crop uses the supplied portrait, including any editing already applied."
+        },
+        {
+          "label": "Fur texture",
+          "rect": [
+            0.59,
+            0.45,
+            0.27,
+            0.34
+          ],
+          "note": "Hair texture changes across the depth of the body. We cannot recover the original focus distance or sharpening choices from this JPEG."
+        }
+      ]
+    },
+    {
+      "id": "sheep-flock",
+      "title": "Sheep in the mountain valley",
+      "image": "sheep-flock-2026.jpg",
+      "fullImage": "sheep-flock-full.jpg",
+      "thumb": "sheep-flock-thumb-2026.jpg",
+      "detailImage": "sheep-flock-shot-detail.jpg",
+      "width": 5504,
+      "height": 7339,
+      "previewWidth": 2400,
+      "previewHeight": 3200,
       "lens": "n50",
       "fno": 1.8,
-      "shutter": 0.002,
+      "shutter": 0.00125,
       "iso": 64,
-      "focusM": 6.3,
-      "credit": "Photo: Reed Osaki. Focus distance as the camera recorded it (coarse steps).",
-      "note": "A 50 mm lens at f/1.8, focused near 6 m. The village far below is soft but still readable: a point that far away spreads to about 0.23 mm, where the 500 mm shots spread theirs to 4 to 8 mm."
+      "focusM": null,
+      "focalLengthMm": 50,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 50 mm f/1.8G",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.32,
+        "y": 0.77
+      },
+      "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
+      "note": "A 50 mm view includes both the flock and the mountain setting. At f/1.8, depth of field remains limited even though the wider view makes the landscape recognizable.",
+      "details": [
+        {
+          "label": "Foreground sheep",
+          "rect": [
+            0.11,
+            0.59,
+            0.43,
+            0.38
+          ],
+          "note": "Compare the horns, wool and grass. Recognizable detail is not a calibrated measure of depth of field."
+        },
+        {
+          "label": "Mountain backdrop",
+          "rect": [
+            0.42,
+            0.03,
+            0.52,
+            0.31
+          ],
+          "note": "The mountains establish the setting while their fine edges appear softer. Their actual distance and the original focus distance were not supplied."
+        }
+      ]
     },
     {
-      "id": "sheep-larches",
-      "title": "Sheep under the larches",
-      "image": "sheep-larches.jpg",
-      "thumb": "sheep-larches-thumb.jpg",
+      "id": "sheep-close",
+      "title": "Curly-coated sheep",
+      "image": "sheep-close-2026.jpg",
+      "fullImage": "sheep-close-full.jpg",
+      "thumb": "sheep-close-thumb-2026.jpg",
+      "detailImage": "sheep-close-shot-detail.jpg",
+      "width": 5504,
+      "height": 7339,
+      "previewWidth": 2400,
+      "previewHeight": 3200,
+      "lens": "n500",
+      "fno": 5.6,
+      "shutter": 0.001,
+      "iso": 1800,
+      "focusM": null,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.59,
+        "y": 0.43
+      },
+      "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
+      "note": "The close composition emphasizes curls and a dark face. The supplied file records a 500 mm lens; the portrait framing also reflects the supplied crop.",
+      "details": [
+        {
+          "label": "Face & curls",
+          "rect": [
+            0.32,
+            0.22,
+            0.56,
+            0.42
+          ],
+          "note": "The pale curls surround darker facial detail. Exposure and processing determine how much texture remains in bright and dark areas."
+        },
+        {
+          "label": "Wool detail",
+          "rect": [
+            0.06,
+            0.52,
+            0.41,
+            0.34
+          ],
+          "note": "Individual curls contain high-frequency detail. This enlargement comes from the full-resolution source rather than the small gallery preview."
+        }
+      ]
+    },
+    {
+      "id": "sheep-portrait",
+      "title": "Horned sheep portrait",
+      "image": "sheep-portrait-2026.jpg",
+      "fullImage": "sheep-portrait-full.jpg",
+      "thumb": "sheep-portrait-thumb-2026.jpg",
+      "detailImage": "sheep-portrait-shot-detail.jpg",
+      "width": 5504,
+      "height": 7339,
+      "previewWidth": 2400,
+      "previewHeight": 3200,
+      "lens": "n500",
+      "fno": 5.6,
+      "shutter": 0.001,
+      "iso": 900,
+      "focusM": null,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.62,
+        "y": 0.42
+      },
+      "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
+      "note": "The horns and face stand out against a green hillside. The long lens and scene geometry separate the subject from its surroundings; focus distance is unavailable.",
+      "details": [
+        {
+          "label": "Horns & face",
+          "rect": [
+            0.33,
+            0.23,
+            0.62,
+            0.39
+          ],
+          "note": "Compare the horn edges with the wool and eyes. Sharpness can change across different depths of the animal."
+        },
+        {
+          "label": "Soft hillside",
+          "rect": [
+            0.05,
+            0.02,
+            0.43,
+            0.23
+          ],
+          "note": "The hillside becomes broad green shapes. A sharp subject and soft background can coexist because they occupy different distances."
+        }
+      ]
+    },
+    {
+      "id": "chipmunk",
+      "title": "Chipmunk above the rocks",
+      "image": "chipmunk-2026.jpg",
+      "fullImage": "chipmunk-full.jpg",
+      "thumb": "chipmunk-thumb-2026.jpg",
+      "detailImage": "chipmunk-shot-detail.jpg",
+      "width": 3110,
+      "height": 4146,
+      "previewWidth": 2400,
+      "previewHeight": 3200,
+      "lens": "n500",
+      "fno": 5.6,
+      "shutter": 0.003125,
+      "iso": 720,
+      "focusM": null,
+      "focalLengthMm": 500,
+      "cameraName": "Nikon D850",
+      "lensName": "AF-S Nikkor 500 mm f/5.6E PF",
+      "modelMatch": true,
+      "subject": {
+        "x": 0.59,
+        "y": 0.45
+      },
+      "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
+      "note": "The small animal is framed by textured rock and a quiet background. A 1/320-second exposure gathers more light than a faster shutter at the same aperture, but leaves more opportunity for motion blur.",
+      "details": [
+        {
+          "label": "Face & stripes",
+          "rect": [
+            0.41,
+            0.24,
+            0.38,
+            0.36
+          ],
+          "note": "The eye, whiskers and stripes give useful fine-detail targets. This is a crop of the new portrait source."
+        },
+        {
+          "label": "Rock texture",
+          "rect": [
+            0.13,
+            0.66,
+            0.64,
+            0.27
+          ],
+          "note": "The rocks show detail at nearby distances. The JPEG records the combined effects of optics, motion and processing."
+        }
+      ]
+    },
+    {
+      "id": "bears",
+      "title": "Bears on the riverbank",
+      "image": "bears-2026.jpg",
+      "fullImage": "bears-full.jpg",
+      "thumb": "bears-thumb-2026.jpg",
+      "detailImage": "bears-shot-detail.jpg",
+      "width": 6000,
+      "height": 4000,
+      "previewWidth": 3200,
+      "previewHeight": 2133,
       "lens": "n50",
-      "fno": 2.0,
-      "shutter": 0.004,
-      "iso": 64,
-      "focusM": 6.3,
-      "credit": "Photo: Reed Osaki. Focus distance as the camera recorded it (coarse steps).",
-      "note": "Focused near 6 m, the zone of sharpness runs from about 5.6 to 7.3 m. The two sheep much nearer the lens fall outside it and go soft, while the flock on the slope stays crisp."
+      "fno": 5,
+      "shutter": 0.003125,
+      "iso": 100,
+      "focusM": null,
+      "focalLengthMm": 160,
+      "cameraName": "Canon EOS Rebel T7",
+      "lensName": "Canon EF 75–300 mm at 160 mm",
+      "modelMatch": false,
+      "subject": {
+        "x": 0.5,
+        "y": 0.61
+      },
+      "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
+      "note": "The nearer bear and the second bear occupy different depths. This photograph was recorded with a Canon EOS Rebel T7 and a 75–300 mm lens at 160 mm; that lens is not in the simulator.",
+      "details": [
+        {
+          "label": "Near bear",
+          "rect": [
+            0.36,
+            0.39,
+            0.28,
+            0.41
+          ],
+          "note": "Inspect the face and coat of the nearer bear. This crop uses the supplied Canon photograph, not the simulator’s Nikon camera model."
+        },
+        {
+          "label": "Second bear",
+          "rect": [
+            0.72,
+            0.52,
+            0.23,
+            0.29
+          ],
+          "note": "Compare the smaller bear with the foreground subject. Subject distance and image size both affect how much visible detail it contains."
+        }
+      ]
     }
   ]
 }
