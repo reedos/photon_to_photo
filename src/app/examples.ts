@@ -33,7 +33,7 @@ interface ExamplesFile { examples: Example[] }
 
 export async function loadExamples(): Promise<Example[]> {
   try {
-    const res = await fetch('examples/examples.json');
+    const res = await fetch('examples/examples.json', { cache: 'no-cache' });
     if (!res.ok) return [];
     const data = (await res.json()) as ExamplesFile;
     return Array.isArray(data.examples) ? data.examples : [];
