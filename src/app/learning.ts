@@ -25,9 +25,19 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   placeLaunch(); phone.addEventListener('change', placeLaunch);
   const journey = document.createElement('section');
   journey.id = 'journey'; journey.hidden = true; journey.setAttribute('aria-label', 'Follow the light');
-  journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p><p id="journey-caption" role="status"></p><details id="journey-more"><summary>More</summary><p id="journey-more-text"></p><details id="journey-physics"><summary>Physics & practical use</summary><p id="journey-equation"></p><p id="journey-live"></p><p id="journey-use"></p></details></details></div>
+  journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p><p id="journey-caption" role="status"></p><details id="journey-more"><summary>More</summary><p id="journey-more-text"></p><button type="button" class="btn" id="journey-physics" aria-haspopup="dialog" aria-controls="journey-reading">Physics & practical use ↗</button></details></div>
     <nav aria-label="Tour controls"><button class="btn" id="journey-prev" aria-label="Previous tour stop">‹</button><button class="btn" id="journey-play">Play</button><button class="btn" id="journey-next" aria-label="Next tour stop">Next ›</button><button class="btn" id="journey-restart">Restart</button><button class="btn" id="journey-close" aria-label="Close tour">×</button></nav>`;
   el('viewer').prepend(journey);
+  const reading = document.createElement('dialog');
+  reading.id = 'journey-reading'; reading.setAttribute('aria-labelledby', 'journey-reading-title');
+  reading.innerHTML = `<header><div><span class="journey-label">Physics & practical use</span><h2 id="journey-reading-title"></h2></div><button type="button" class="btn" id="journey-reading-close" autofocus>Back to tour</button></header>
+    <div class="journey-reading-body"><p id="journey-reading-context"></p>
+      <section><h3>The physics</h3><p id="journey-equation"></p></section>
+      <section><h3>With your current settings</h3><p id="journey-live"></p></section>
+      <section><h3>In practice</h3><p id="journey-use"></p></section></div>`;
+  document.body.append(reading);
+  el('journey-physics').onclick = () => { pause(); pauseLesson(); showInsights(); reading.showModal(); };
+  el('journey-reading-close').onclick = () => reading.close();
   phone.addEventListener('change', () => { el<HTMLDetailsElement>('journey-more').open = !phone.matches; });
   const lesson = document.createElement('section');
   lesson.id = 'sensor-lesson'; lesson.hidden = true; lesson.setAttribute('aria-label', 'Sensor to photo');
@@ -71,6 +81,8 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   }
   function showInsights() {
     const insight = learningInsights(lessonModel)[index];
+    el('journey-reading-title').textContent = TOUR[index].title;
+    el('journey-reading-context').textContent = TOUR[index].text;
     el('journey-equation').textContent = insight.equation;
     el('journey-live').textContent = insight.live;
     el('journey-use').textContent = insight.use;
@@ -230,13 +242,14 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el<HTMLSelectElement>('journey-stop').value = String(index);
     el('journey-text').textContent = stop.text; el('journey-caption').textContent = stop.text; el('journey-more-text').textContent = stop.text;
     el<HTMLDetailsElement>('journey-more').open = !phone.matches;
-    el<HTMLDetailsElement>('journey-physics').open = false;
+    if (reading.open) reading.close();
     showInsights();
     el<HTMLButtonElement>('journey-prev').disabled = index === 0;
     el('journey-next').textContent = index === TOUR.length - 1 ? 'Finish ✓' : 'Next ›';
     schedule();
   }
   function closeTour() {
+    if (reading.open) reading.close();
     pause(); hideLesson(); journey.hidden = true; launch.setAttribute('aria-expanded', 'false');
     if (tourReturn) { entering = true; store.setPiece(tourReturn.piece); store.setCameraPart(tourReturn.cameraPart); entering = false; }
     tourReturn = null; launch.focus({ preventScroll: true });

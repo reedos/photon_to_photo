@@ -5,9 +5,7 @@
 .light-playback input { width: 100%; min-width: 30px; height: 28px; accent-color: var(--accent); }
 .light-playback > span { max-width: 130px; font: 9px/1.5 var(--mono); color: var(--muted); }
 .workspace .viewer:has(#sensor-lesson:not([hidden])) > .light-playback { display: none; }
-#journey-physics { font-size: 11px; margin-top: 4px; }
-#journey-physics summary { color: var(--accent); cursor: pointer; }
-#journey-physics #journey-equation { color: #b8def6; font-family: var(--mono); }
+#journey-physics { flex: none; align-self: flex-start; min-height: 36px; margin-top: 4px; padding: 5px 10px; font-size: 11px; color: var(--accent); }
 .lesson-playback { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
 .lesson-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .lesson-toolbar .lesson-tabs { margin: 8px 0; }
@@ -31,7 +29,7 @@
 #journey-caption { display: none; }
 #journey-more { display: contents; }
 #journey-more > summary, #journey-more-text { display: none; }
-#journey-physics { flex: none; max-height: 42px; overflow: auto; }
+
 .workspace.viewport-studio .stage:has(#journey:not([hidden])) .inspection-context { display: none !important; }
 @media (min-width: 761px) {
   .workspace.viewport-studio .stage:has(#journey:not([hidden])) .body { height: calc(100svh - 186px); }
@@ -109,7 +107,7 @@
   .workspace .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .learn-launch { padding-inline: 9px; font-size: 10px; align-self: stretch; min-height: 40px; border-width: 0 0 0 1px; }
   .workspace.viewport-studio #journey { max-height: none; overflow: visible; }
-  #journey { position: relative; z-index: 8; height: 78px; min-height: 78px; padding: 4px 8px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; overflow: visible; }
+  #journey { position: relative; z-index: 70; height: 78px; min-height: 78px; padding: 4px 8px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; overflow: visible; }
   .journey-copy { height: 34px; flex: none; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 20px 14px; gap: 0 7px; overflow: visible; }
   .journey-label { display: none; }
   #journey select { grid-column: 1 / -1; grid-row: 1; height: 20px; min-height: 20px; padding: 0 18px 0 0; font-size: 11px; }
@@ -122,7 +120,7 @@
   #journey-more[open] { position: absolute; top: calc(100% + 2px); left: 8px; right: 8px; z-index: 20; box-sizing: border-box; max-height: 35dvh; overflow: auto; padding: 8px 10px; border: 1px solid var(--line-2); background: #1b2025; box-shadow: 0 8px 20px #0009; }
   #journey-more[open] > summary { position: sticky; top: -8px; z-index: 1; background: #1b2025; }
   #journey-more[open] > p { position: static; max-height: none; overflow: visible; padding: 0; border: 0; background: transparent; box-shadow: none; font-size: 11px; }
-  #journey-physics { display: block; position: static; max-height: none; padding: 0; overflow: visible; background: transparent; margin-top: 8px; }
+  #journey-physics { margin-top: 12px; min-height: 44px; }
   #journey-more[open] #journey-more-text { display: block; }
   #journey nav { box-sizing: border-box; width: 100%; max-width: none; height: 30px; min-height: 30px; margin: 0; padding-right: 54px; justify-content: flex-start; flex-wrap: nowrap; gap: 4px; }
   #journey nav .btn { min-height: 30px; height: 30px; padding: 0 8px; font-size: 10px; }
@@ -147,3 +145,25 @@
 }
 #pipeline-canvas:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
 #pipeline-region[hidden] { display:none; }
+
+/* Reading gets a full-height sheet instead of nested, line-sized scrollers. */
+#journey-reading { width: min(720px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 0; border: 1px solid var(--line-2); border-radius: 12px; background: #101923; color: var(--ink); overflow: hidden; }
+#journey-reading[open] { display: flex; flex-direction: column; }
+#journey-reading::backdrop { background: #03080fba; }
+#journey-reading header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+#journey-reading h2 { margin: 0; font: 600 26px/1.2 var(--display); }
+#journey-reading-close { flex: none; min-height: 44px; padding: 0 12px; }
+.journey-reading-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 24px 24px; }
+#journey-reading p { margin: 14px 0 0; font: 14px/1.65 var(--sans); overflow-wrap: anywhere; }
+#journey-reading-context { color: var(--muted); }
+#journey-reading section { margin-top: 20px; }
+#journey-reading h3 { margin: 0; color: var(--accent); font: 600 14px/1.4 var(--sans); }
+#journey-reading section p { margin-top: 6px; }
+#journey-reading #journey-equation { color: #b8def6; font-family: var(--mono); font-size: 13px; }
+#journey-reading button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 760px) {
+  #journey-reading header { padding: 14px 16px; gap: 12px; }
+  #journey-reading h2 { font-size: 22px; }
+  .journey-reading-body { padding: 0 16px 20px; }
+  #journey-reading-close { max-width: 90px; white-space: normal; font-size: 11px; }
+}

@@ -60,31 +60,29 @@ try {
       if (phoneGeometry.viewNavOverlap > 0 || phoneGeometry.viewSidebarOverlap > 0) report.findings.push(`${viewport.key}: #view overlaps navigation or the Parts inspector`);
       for(const record of records) if(record.visibleHeight < minFrame || record.navOverlap>0 || record.sidebarOverlap>0) report.findings.push(`${viewport.key} stop ${record.index}: model frame is clipped or covered (${record.visibleHeight}px visible)`);
     }
-    if (viewport.key === 'phone') {
+    {
       await page.locator('#journey-stop').selectOption('1');
-      const before = await page.locator('#view').boundingBox();
-      await page.locator('#journey-more > summary').click();
-      const card = await page.locator('#journey-more').boundingBox();
-      const after = await page.locator('#view').boundingBox();
-      const physicsSummary = await page.locator('#journey-physics > summary').boundingBox();
-      const copy = await page.locator('#journey-more-text').boundingBox();
-      await page.locator('#journey-physics > summary').click();
-      const expandedCard = await page.locator('#journey-more').boundingBox();
-      const overflow = await page.locator('#journey-more').evaluate(el => ({scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}));
+      if (isPhone) await page.locator('#journey-more > summary').click();
+      await page.locator('#journey-physics').click();
+      await page.locator('#journey-reading').waitFor({state:'visible'});
+      const reading = await page.locator('#journey-reading').evaluate(dialog => {
+        const r=dialog.getBoundingClientRect(), body=dialog.querySelector('.journey-reading-body');
+        return {top:r.top,bottom:r.bottom,right:r.right,bodyHeight:body.clientHeight,horizontalOverflow:body.scrollWidth>body.clientWidth};
+      });
       await page.locator('#journey-use').scrollIntoViewIfNeeded();
-      const physicsBody = await page.locator('#journey-use').boundingBox();
-      const scrollPosition = await page.locator('#journey-more').evaluate(el => el.scrollTop);
-      report.tour.phone.disclosure = { card, expandedCard, copy, physicsSummary, physicsBody, overflow, scrollPosition, viewBefore:before, viewAfter:after,
-        physicsReachable:!!(expandedCard&&physicsSummary&&physicsBody&&physicsBody.y>=expandedCard.y&&physicsBody.y+physicsBody.height<=expandedCard.y+expandedCard.height&&(overflow.scrollHeight<=overflow.clientHeight||scrollPosition>0)) };
-      if (!report.tour.phone.disclosure.physicsReachable || Math.abs(before.height-after.height) > .1) report.findings.push('Phone More/Physics content cannot be reached by scrolling its bounded card, or changes the 3D frame height');
-      await page.screenshot({ path:`${out}/phone-tour-more-physics.png` });
+      const reachable=await page.locator('#journey-use').evaluate(e=>{const r=e.getBoundingClientRect(),b=e.closest('.journey-reading-body').getBoundingClientRect();return r.top>=b.top-1&&r.bottom<=b.bottom+1});
+      report.tour[viewport.key].reading={...reading,reachable};
+      if(reading.bodyHeight<300||reading.top<0||reading.bottom>viewport.height||reading.right>viewport.width||reading.horizontalOverflow||!reachable) report.findings.push(`${viewport.key}: physics reading sheet is clipped or too small`);
+      await page.screenshot({path:`${out}/${viewport.key}-tour-more-physics.png`});
+      await page.keyboard.press('Escape');
+      if(await page.locator('#journey-reading').isVisible()||await page.evaluate(()=>document.activeElement.id)!=='journey-physics') report.findings.push(`${viewport.key}: reading sheet did not close and return keyboard focus`);
     }
     if (isPhone) {
       await page.locator('#journey-close').click();
       await page.waitForFunction(() => document.querySelector('#journey').hidden);
       await page.close();
       report.checks.push(`${viewport.key}: all tour stops share a stable frame (${phoneGeometry.visibleCanvasHeight}px visible), with no navigation or Parts overlap.`);
-      if (viewport.key === 'phone') report.checks.push('Phone More and nested Physics content can be scrolled into view without resizing the 3D frame.');
+      if (viewport.key === 'phone') report.checks.push('Physics opens in a spacious reading sheet with accessible closing and focus return.');
       continue;
     }
     report.checks.push(`Desktop: all eight tour stops sampled; #view height spread ${spread}px.`);
