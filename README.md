@@ -50,3 +50,8 @@ source's license noted there. The site's look follows the author's companion pro
 ## License
 
 Code: MIT (see LICENSE). Third-party data keeps its own license, recorded with it in `research/`.
+
+## Automatic validation
+
+The `checks` workflow runs typecheck, unit tests and the production build on pushes
+and pull requests. Production publication remains a separate manual workflow.
