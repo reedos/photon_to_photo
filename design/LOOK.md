@@ -3,7 +3,8 @@
 Status 09/28/2026, art-director. Written before any building, per the brief. Concrete enough to follow without
 asking; where a number is a placeholder pending the engine's own data, it says so.
 
-Reference board: [design/reference-board.html](reference-board.html). Rubric for gates: [design/RUBRIC.md](RUBRIC.md).
+The original reference board is not included in this public repository. The maintained
+visual principles are recorded below; use the [review rubric](RUBRIC.md) for gates.
 
 ## Principle
 
@@ -21,7 +22,7 @@ The page-level brand accent and evidence categories keep their existing meanings
 and physical materials retain their computed or documented colors. Labels and selection outlines accompany color.
 
 Reed: "I like the look and want to maintain a coherent signature style" (pointing at
-https://reedos.github.io/intelligence_factory/?view=0.power). So this site does not get its own accent or its own
+https://reedos.dev/intelligence_factory/?view=0.power). So this site does not get its own accent or its own
 components. It uses The Intelligence Factory's, and differs only in its subject and its physics colors.
 Screenshots of the live page for builders and the critic: `design/if-style/` (desktop, phone, visualizer).
 

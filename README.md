@@ -10,7 +10,21 @@ Personal educational project based on cited public sources. Not an official publ
 companies whose products are discussed. The camera bodies and lenses are generic, unbranded models built to published
 dimensions; where a design is tied to a product, its card says so. Estimates and assumptions are labeled as such.
 
+## Live site and publishing
+
+**[Open Photon to Photo](https://reedos.dev/photon_to_photo/)**
+
+Reed authorized public launch on 10/05/2026. The camera and reference pages allow search
+indexing and are linked from [Reedos.dev](https://reedos.dev/#project-p2p). Developer model
+and scene previews remain excluded from search results.
+
+Publishing is manual: `gh workflow run pages.yml --ref main` runs the configured
+Node 22 install, typecheck, tests and build, then deploys `dist/` through GitHub Pages
+to the Reedos.dev address. A normal push does not trigger this workflow.
+
 ## Run it
+
+Use Node 22 (as in the publishing workflow) and npm.
 
 - `npm ci`, then `npm run dev` (http://127.0.0.1:47500)
 - `npm test` runs the engine's unit and golden tests; `node tools/test-perf.mjs` runs the render time budget alone
@@ -26,6 +40,18 @@ The lens prescriptions come from published patents, each cited in its `data/lens
 Glass, color, sensor and hardware data are cited per value in `data/**` and described in `research/*.md`, with each
 source's license noted there. The site's look follows the author's companion project, The Intelligence Factory.
 
+## Documentation map
+
+- [Design principles](design/LOOK.md) and [review rubric](design/RUBRIC.md).
+- [Research notes](research/) for lens, glass, sensor, color and hardware sources.
+- [Lens data](data/lenses/) for the cited prescriptions consumed by the engine.
+- [Blender source](blender/) for the authored assets.
+
 ## License
 
 Code: MIT (see LICENSE). Third-party data keeps its own license, recorded with it in `research/`.
+
+## Automatic validation
+
+The `checks` workflow runs typecheck, unit tests and the production build on pushes
+and pull requests. Production publication remains a separate manual workflow.
