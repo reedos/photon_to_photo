@@ -45,6 +45,19 @@ async function sample(name) {
       assert.ok(await page.locator(selector).evaluate(el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit===el||el.contains(hit);}),`${name}: ${selector} is not clipped or covered`);
     }
   }
+  if(data.view === 'photos') {
+    const look = await page.evaluate(() => {
+      const AMBER='rgb(230, 186, 130)', MINT='rgb(184, 214, 204)', props=['color','backgroundColor','borderTopColor','borderRightColor','borderBottomColor','borderLeftColor','outlineColor','fill','stroke','boxShadow'];
+      const card=document.querySelector('#rp-card'), play=document.querySelector('#rp-play'), mint=[];
+      for(const el of document.querySelectorAll('#photo-study-panel, #photo-study-panel *')) { const cs=getComputedStyle(el); for(const p of props) if(cs[p].includes(MINT)||cs[p].includes('rgb(184,214,204)')) mint.push((el.id||el.className||el.tagName)+':'+p); }
+      const probe=document.createElement('i'); probe.style.color=getComputedStyle(card).getPropertyValue('--accent').trim(); document.body.append(probe); const accent=getComputedStyle(probe).color; probe.remove();
+      return { AMBER, accent, playBg:getComputedStyle(play).backgroundColor, playBorder:getComputedStyle(play).borderTopColor, mint };
+    });
+    assert.equal(look.accent, look.AMBER, `${name}: Real photos accent is house amber`);
+    assert.equal(look.playBg, look.AMBER, `${name}: Play this photo is amber`);
+    assert.equal(look.playBorder, look.AMBER, `${name}: Play this photo border is amber`);
+    assert.deepEqual(look.mint, [], `${name}: no mint #b8d6cc left in Real photos computed styles`);
+  }
   if(data.view === 'model') assert.ok(data.boxes['#gl'].w >= Math.min(260,data.viewport[0]-30) && data.boxes['#gl'].h>=100, `${name}: usable canvas area`);
   if(data.view === 'model') {
     const clipped=await page.locator('.light-playback button, .light-playback input, #model-experiments .btn, .rain-launch').evaluateAll(nodes=>nodes.filter(el=>el.checkVisibility()).filter(el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit!==el&&!el.contains(hit);}).map(el=>el.textContent?.trim()||el.getAttribute('aria-label')));
@@ -86,6 +99,21 @@ try {
   assert.ok(Math.hypot(...returned.position.map((v,i)=>v-original.position[i]))<.001,'tab return preserves manual camera position');
   await page.keyboard.press('End'); await page.locator('#rp-picks button').nth(2).click();
   const selected=await page.locator('#rp-picks [aria-pressed="true"]').getAttribute('data-id');
+  {
+    const detail=page.locator('.rp-detail-controls .btn:not(:disabled)').first();
+    await detail.click(); await page.waitForTimeout(400);
+    const fills=await page.evaluate(()=>{
+      const probe=document.createElement('i'); probe.style.background=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim(); document.body.append(probe); const shared=getComputedStyle(probe).backgroundColor; probe.remove();
+      const rgb=c=>c.match(/[\d.]+/g).slice(0,3).map(Number);
+      return { shared, items:['#rp-picks [aria-pressed="true"]','.rp-detail-controls .btn[aria-pressed="true"]'].map(sel=>{const el=document.querySelector(sel); return { sel, bg:el?getComputedStyle(el).backgroundColor:null, rgb:el?rgb(getComputedStyle(el).backgroundColor):null }; }) };
+    });
+    for(const f of fills.items) {
+      assert.ok(f.bg, `pressed chip exists: ${f.sel}`);
+      const [r,g,b]=f.rgb;
+      assert.ok(!(g>r+4 && g>b+4), `Real photos pressed chip is not green-dominant: ${f.sel} is ${f.bg}`);
+      assert.equal(f.bg, fills.shared, `Real photos pressed chip uses the shared selected fill: ${f.sel}`);
+    }
+  }
   await page.locator('#workspace-model').click(); await page.locator('#workspace-photos').click();
   assert.equal(await page.locator('#rp-picks [aria-pressed="true"]').getAttribute('data-id'),selected);
   await page.locator('#rp-match').click(); await rest();

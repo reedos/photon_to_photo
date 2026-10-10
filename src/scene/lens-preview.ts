@@ -121,6 +121,13 @@ async function main() {
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
     camera.aspect = w / h;
+    const halfVertical = THREE.MathUtils.degToRad(camera.fov / 2);
+    const limitingAngle = Math.min(halfVertical, Math.atan(Math.tan(halfVertical) * camera.aspect));
+    // Keep the user's current view direction and orbit target; only the distance is refit to the new aspect.
+    const viewDir = camera.position.clone().sub(controls.target);
+    if (viewDir.lengthSq() < 1e-12) viewDir.copy(dir);
+    viewDir.normalize();
+    camera.position.copy(controls.target).addScaledVector(viewDir, sphere.radius / Math.sin(limitingAngle) * 1.15);
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
   }
@@ -136,7 +143,7 @@ async function main() {
   loop();
 
   // Exposed for the screenshot/accuracy tooling, same convention as window.p2p.pieces in the main app.
-  (window as unknown as { p2pLensPreview: unknown }).p2pLensPreview = { model, handle, renderer, camera, pmrem, scene };
+  (window as unknown as { p2pLensPreview: unknown }).p2pLensPreview = { model, handle, renderer, camera, pmrem, scene, controls };
 }
 
 main().catch((err) => {

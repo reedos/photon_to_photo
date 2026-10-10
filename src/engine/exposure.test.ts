@@ -47,7 +47,9 @@ describe('photon energy and flux (golden)', () => {
   });
 
   it('photonEnergy is inversely proportional to wavelength', () => {
-    expect(photonEnergy(1100)).toBeCloseTo(photonEnergy(550) / 2, 9);
+    expect(photonEnergy(1100) / photonEnergy(550)).toBeCloseTo(.5, 12);
+    // The energy is ~1e-19 J. An absolute 1e-9 tolerance accepted even zero.
+    expect(photonEnergy(550) / 3.611719740270779e-19).toBeCloseTo(1, 12);
   });
 
   it('photonFlux(watts, nm) scales linearly with watts', () => {

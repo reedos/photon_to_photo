@@ -20,7 +20,7 @@ body.entry-pending #top { display:none; }
 .opening-photo figcaption strong { font-weight:500; color:var(--ink); }
 .opening-path { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:22px; margin-top:36px; border-top:1px solid var(--line); color:var(--muted); font:11px var(--mono); }
 .opening-path span { color:var(--accent); }
-.opening-path a { color:var(--ink); font:12px var(--sans); text-underline-offset:5px; text-decoration-color:var(--accent); }
+.opening-path a { display:inline-flex; align-items:center; min-height:44px; color:var(--ink); font:12px var(--sans); text-underline-offset:5px; text-decoration-color:var(--accent); }
 .photo-opening :is(a,button):focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 @media(max-width:760px){
  .photo-opening { padding:calc(var(--bar) + 24px) 20px 24px; }

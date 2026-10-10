@@ -519,7 +519,8 @@ export function mountUI(store: Store, stage: Stage): void {
     const model = shotChanged || !lastModel ? compute(scenario) : lastModel;
     lastModel = model;
     const p = PIECES.find((x) => x.id === piece)!;
-    dom.stageSection.style.setProperty('--accent', p.color);
+    // Level colors identify navigation; controls and evidence chrome inherit house amber.
+    dom.stageSection.style.removeProperty('--accent');
     dom.stageSection.dataset.level = piece;
     stage.showPiece(piece, p.title, subFor(model, piece));
     if (shotChanged || viewChanged) stage.update(model, scenario);

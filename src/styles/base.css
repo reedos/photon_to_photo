@@ -34,7 +34,7 @@ h2 { margin: 0; font: 600 clamp(30px, 4vw, 52px)/.94 var(--display); text-transf
    Factory's), so page content starts passing behind the fixed bar almost as soon as scrolling begins; see
    src/app/ui.ts's scroll listener, ported from intelligence_factory/src/app/site.js's onScroll */
 body.scrolled .topbar { border-bottom-color: var(--line-2); }
-.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); flex: none; }
+.brand { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; text-decoration: none; color: var(--ink); flex: none; }
 .brand .mark { display: grid; grid-template-rows: repeat(3, 3px); gap: 3px; width: 22px; }
 .brand .mark i { display: block; height: 3px; }
 .brand .mark i:nth-child(1) { background: var(--mv); width: 100%; }
@@ -236,3 +236,23 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
   .hud.bl { left: 12px; bottom: 12px; } .hud.br { right: 12px; bottom: 12px; max-width: calc(100% - 130px); }
   .sc-controls { padding-block: 16px; gap: 20px; }
 }
+
+/* Shared chrome for the optical studies. Plot/channel colors stay in their diagrams. */
+body :is(.diffraction-dialog,.ghost-dialog,#perspective-dialog,#photon-rain,#shot-dialog) {
+  background: var(--surface); color: var(--ink); border-color: var(--line-2); border-radius: 0;
+}
+body :is(.diffraction-dialog,.ghost-dialog,#perspective-dialog,#photon-rain,#shot-dialog) :is(h2,h3) {
+  font-family: var(--display); text-transform: uppercase;
+}
+body :is(.diffraction-kicker,.ghost-kicker,#perspective-dialog header span),
+body :is(.diffraction-launch .btn,.ghost-dialog output,.ghost-dialog a,.perspective-controls output) { color: var(--accent); }
+body :is(.diffraction-dialog,.ghost-dialog,#perspective-dialog,#photon-rain,#shot-dialog) input { accent-color: var(--accent); }
+body :is(.diffraction-dialog,.ghost-dialog,#perspective-dialog,#photon-rain,#shot-dialog) :focus-visible { outline-color: var(--accent); }
+body :is(.diffraction-dialog,.ghost-dialog,#perspective-dialog,#photon-rain,#shot-dialog) :is(select,button) { border-radius: 0; }
+body :is(.diffraction-dialog,.ghost-dialog,#perspective-dialog,#photon-rain,#shot-dialog) summary { min-height: 32px; }
+body :is(.workspace #expand-model,.workspace select,#equipment-toggle b) { border-radius: 0; }
+
+body .diffraction-dialog output { color: var(--accent); }
+body .diffraction-modes [aria-pressed=true] { border-color: var(--accent); color: var(--accent); background: var(--raise); }
+
+body :is(.rain-kicker,.rain-section-title span) { color: var(--accent); }

@@ -23,7 +23,8 @@ try{
  assert.equal(await page.locator('#shot-dialog').getAttribute('data-playing'),'false','reduced motion pauses on opening');
  await seek(8);
  assert.equal(await page.locator('#shot-source').inputValue(),'photo:flycatcher');
- assert.equal(await page.locator('#shot-source option').count(),6);
+ const photoIds=JSON.parse(readFileSync('public/examples/examples.json','utf8')).examples.map(example=>`photo:${example.id}`);
+ assert.deepEqual(await page.locator('#shot-source option').evaluateAll(options=>options.map(option=>option.value)),photoIds,'every supplied photograph is selectable in catalog order');
  assert.equal(await page.locator('#shot-preset').count(),0);
  assert.equal(Number(await page.locator('#shot-time').inputValue()),8);
  const image=()=>page.locator('#shot-canvas').evaluate(c=>c.toDataURL());

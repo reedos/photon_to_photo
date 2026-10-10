@@ -19,7 +19,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio .stage:not([data-level="camera"]) #model-tools { display: none; }
 .workspace.viewport-studio #model-tools :is(.layer-chip,.mode button) { min-height: 32px; padding: 0 10px; font-size: 10px; }
 .workspace.viewport-studio #model-tools .shot-launch { position: static; margin-left: auto; min-height: 32px; padding: 4px 10px!important; font-size: 10px; box-shadow: none; }
-.workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 32px; padding: 0 10px; font-size: 10px; color: #ffcf8d; border-color: #ffb14e88; }
+.workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 32px; padding: 0 10px; font-size: 10px; color: var(--accent); border-color: var(--accent); }
 .workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) { display: flex; flex-direction: column; justify-content: center; gap: 2px; line-height: 1.1; }
 .workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) small { display: block; font: 8px/1.1 var(--sans); color: var(--muted); text-transform: none; letter-spacing: 0; }
 .workspace.viewport-studio #model-tools .shot-launch { background: color-mix(in srgb, var(--accent) 15%, #101923); }
@@ -42,7 +42,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio .zoom-controls .btn:hover { background: #233849; border-color: #9bc8e8; }
 .workspace.viewport-studio #part-position { font-size: 10px; margin-left: 10px; }
 .workspace.viewport-studio .studio-sidebar { height: 100%; min-height: 0; overflow: hidden; background: #101820; }
-.workspace.viewport-studio .step .t, .workspace.viewport-studio .step.deep .t { font: 600 13px/1.2 var(--sans); }
+.workspace.viewport-studio .step .t, .workspace.viewport-studio .step.deep .t { font: 600 17px/1.2 var(--display); }
 .studio-share { flex: none; margin-left: auto; }
 .studio-share .hud-row { display: flex; }
 .studio-share #share-btn { min-height: 36px; font-size: 11px; }
@@ -133,7 +133,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 }
 @media (max-width: 599px) and (max-height: 680px) {
   .workspace.viewport-studio .stage .body { grid-template-rows: minmax(0,1fr) 148px; }
-  .workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 30px; padding: 0 7px; font-size: 9px; color: #ffcf8d; border-color: #ffb14e88; }
+  .workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 30px; padding: 0 7px; font-size: 9px; color: var(--accent); border-color: var(--accent); }
   .workspace.viewport-studio #model-tools { gap: 4px; }
   .workspace.viewport-studio .lv-read:not(.lv-status) { right: 6px; bottom: 6px; width: 142px; padding: 5px 7px; gap: 3px; }
   .workspace.viewport-studio .lv-read-row, .workspace.viewport-studio .lv-read-row b { font-size: 9px; }
@@ -221,4 +221,10 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 @media (max-width: 599px) and (max-height: 600px) {
   .workspace.viewport-studio.phone-settings-layout:not(.model-expanded) .stage .body { grid-template-rows: minmax(0,1fr) 96px; }
   .workspace.viewport-studio.phone-settings-layout #equipment-toggle { min-height: 36px; }
+}
+
+/* Keep thin slider tracks while giving a finger the full 44 px input box. */
+@media (max-width: 760px) {
+  .workspace.viewport-studio .light-playback input,
+  .workspace.viewport-studio .lv-ctl-row input[type="range"] { height: 44px; }
 }

@@ -67,7 +67,7 @@ export function buildProbes(anchors: ProbeAnchors, getExtras: () => ProbeExtras)
             { k: 'Index nd', v: nd.toFixed(5), fig: { v: nd, unit: '', ev: 'spec', src: src.url, loc: src.location } },
             { k: 'Abbe vd', v: vd.toFixed(2), fig: { v: vd, unit: '', ev: 'spec', src: src.url, loc: src.location } },
             { k: 'Patent', v: src.ref },
-            { k: 'Elements / groups', v: `${model.lens.elements} / ${model.lens.groups}` },
+            { k: 'Elements / groups', v: `${model.lens.elements} / ${model.lens.groups}`, fig: { v: model.lens.elements, unit: 'elements', ev: 'spec', src: src.url, loc: src.location } },
           ],
         };
       },
@@ -111,7 +111,7 @@ export function buildProbes(anchors: ProbeAnchors, getExtras: () => ProbeExtras)
           specs: [
             { k: 'Method', v: (FOCUS_NAMES[design.focus.method] ?? ['', design.focus.method])[1] },
             { k: 'Closest focus', v: fmtDistance(model.lens.closestFocusMm), fig: spec },
-            { k: 'Focus setting', v: fmtDistance(model.focus.distanceMm) },
+            { k: 'Focus setting', v: fmtDistance(model.focus.distanceMm), fig: { v: model.focus.distanceMm ?? Infinity, unit: 'mm', ev: 'assumed', src: 'Selected focus distance; clamped to the modeled focusing range' } },
             { k: 'Magnification', v: `${fmtNum(Math.abs(model.focus.magnification), 3)}×`, fig: derivedFig(model.focus.magnification, '×', 'paraxial.ts imageOf()') },
           ],
         };
@@ -130,8 +130,8 @@ export function buildProbes(anchors: ProbeAnchors, getExtras: () => ProbeExtras)
           specs: [
             { k: 'Format', v: `${fmtNum(model.sensor.format.w, 1)} × ${fmtNum(model.sensor.format.h, 1)} mm` },
             { k: 'Pixel pitch', v: `${model.sensor.pitchUm.toFixed(2)} µm`, fig: model.figs.pitchUm },
-            { k: 'Array', v: `${fmtDims(model.sensor.widthPx, model.sensor.heightPx)} px` },
-            { k: 'Image circle', v: `${model.realized.design.imageCircleMm.toFixed(1)} mm`, fig: derivedFig(model.realized.design.imageCircleMm, 'mm', 'lens-types.ts LensDesign.imageCircleMm') },
+            { k: 'Array', v: `${fmtDims(model.sensor.widthPx, model.sensor.heightPx)} px`, fig: { v: model.sensor.widthPx, unit: 'px', ev: 'derived', calc: 'data.ts sensorInfo(): active array from sensor record; format crop capped to even pixel counts at physical pitch' } },
+            { k: 'Image circle', v: `${model.realized.design.imageCircleMm.toFixed(1)} mm`, fig: { v: model.realized.design.imageCircleMm, unit: 'mm', ev: 'assumed', src: `data/lenses/${model.scenario.lens}.json imageCircleMm; nominal modeled coverage, not a measured illuminated circle` } },
           ],
         };
       },
@@ -154,7 +154,7 @@ export function buildProbes(anchors: ProbeAnchors, getExtras: () => ProbeExtras)
           specs: [
             { k: 'Wavelength bins', v: n < all ? `${n} of ${all}` : String(n), fig: { v: n, unit: 'bins', ev: 'spec', src: 'data/color/wavelength-bins-16.json' } },
             { k: 'Field fractions', v: extras.fields.map((f) => f.toFixed(2)).join(', '), fig: { v: extras.fields.length, unit: 'fields', ev: 'assumed', calc: 'this piece\'s own choice of which field angles to draw' } },
-            { k: 'Rays per field', v: '9' },
+            { k: 'Rays per field', v: '9', fig: { v: 9, unit: 'rays', ev: 'assumed', src: 'lens.ts: nine ray samples per wavelength and field' } },
           ],
         };
       },
@@ -168,7 +168,7 @@ export function buildProbes(anchors: ProbeAnchors, getExtras: () => ProbeExtras)
         return {
           kicker: 'Level 2 · the detail inset',
           title: 'Where the edge rays land',
-          body: `The colors split by far less than a pixel of the main view, so the inset looks straight at the ` +
+          body: `To make the color separation easier to inspect, the inset looks straight at the ` +
             `sensor where the off-axis rays arrive, magnified, with a dot for each traced ray in its own color.`,
           specs: [
             { k: 'Magnification', v: `${Math.round(extras.insetMagnification)}×`, fig: derivedFig(extras.insetMagnification, '×', 'inset.ts: inset px/mm over main-view px/mm at the image plane depth') },

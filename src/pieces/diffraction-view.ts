@@ -15,7 +15,7 @@ export function diffractionView(ctx: PieceContext, id: string) {
     <aside><p class="diffraction-takeaway">A smaller aperture makes the diffraction pattern wider. Keep your eye on the first dark ring as you stop down.</p>
     <label>Aperture <output class="diffraction-fno"></output><input class="diffraction-aperture" type="range" min="1.8" max="22" step="0.01" aria-label="Diffraction aperture"></label>
     <label>Wavelength <output class="diffraction-nm">550 nm</output><input class="diffraction-wavelength" type="range" min="450" max="650" step="10" value="550" aria-label="Diffraction wavelength"></label>
-    <p class="diffraction-control-note">Aperture updates your workspace photo. Wavelength is local to this view.</p>
+    <p class="diffraction-control-note">Aperture updates the camera model. Wavelength is local to this view.</p>
     <div class="diffraction-modes" role="group" aria-label="Diffraction display"><button class="btn" type="button" data-mode="pattern" aria-pressed="true">Airy pattern</button><button class="btn" type="button" data-mode="pixels" aria-pressed="false">Collected by pixels</button></div>
     <label class="diffraction-ring"><input type="checkbox" checked> Mark first dark ring</label>
     <dl class="diffraction-stats"></dl>
@@ -115,5 +115,4 @@ export function diffractionView(ctx: PieceContext, id: string) {
     dispose() { pause(); clearTimeout(updateTimer); clearTimeout(apertureTimer); launch.remove(); dialog.remove(); document.removeEventListener('visibilitychange', visibility); reduced.removeEventListener('change', motion); },
   };
 }
-
 

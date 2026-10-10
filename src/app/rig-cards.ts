@@ -1,18 +1,19 @@
 // The camera level's part cards (src/scene/camera-rig.ts's pins and the parts list), kept apart from the 3D code so
 // the evidence rule can be tested without a renderer: every number on a card carries its chip (R1-07). Engine
 // figures bring their own (model.figs); the rest are labeled here:
-//   spec     - a published number: the marked focal length, the filter thread, the mount's flange, throat and
-//              bayonet, the blade count and element count of the prescription;
+//   spec     - a published number: the marked focal length, the filter thread, the blade count and element count of the prescription;
 //   derived  - the engine's own geometry: the iris opening, the entrance pupil and its area, the glass shift, the
 //              focus ring's turn;
 //   reported - a third party's measurement: the D850's 76 ms release lag (Imaging Resource), its source in the title.
 import type { Model } from '../engine/model-types';
 import type { Ev, Fig } from '../engine/types';
 import type { PartCard } from '../pieces/types';
-import { fmtDistance, fmtDims, fmtFno } from './units';
+import { fmtDistance, fmtDims, fmtFno, fmtShutter } from './units';
 import lensFacts from '../../public/models/lenses.json';
 import bodyFacts from '../../public/models/bodies.json';
 import dslrHw from '../../data/hardware/dslr.json';
+import exteriors from '../../data/hardware/lens-exteriors.json';
+import mounts from '../../data/hardware/mounts.json';
 
 export interface LensFact { label: string; glb: string; flangeMm: number; lengthMm: number; diameterMm: number; filterMm: number;
   filterKind: string; elementCount: number; groupCount: number; representativeOf: string | null;
@@ -27,8 +28,14 @@ export const mountOf = (body: BodyKey): Mount => (bodyFacts as unknown as Record
 export interface RigCardState { body: BodyKey; ringAngle: number; elementShift: number[] }
 
 const LAG = (dslrHw as unknown as { timing: { shutterLag: { v: number; src: string } } }).timing.shutterLag;
-const fig = (v: number, unit: string, ev: Ev, src?: string): Fig => ({ v, unit, ev, ...(src ? { src } : {}) });
+const fig = (v: number, unit: string, ev: Ev, src?: string): Fig => ({ v, unit, ev, ...(src ? ev === 'derived' ? { calc: src } : { src } : {}) });
 const mm = (v: number, d = 1) => `${v.toFixed(d)} mm`;
+const mountFig = (body: BodyKey, field: 'flangeMm' | 'throatMm' | 'lugs' | 'contacts'): Fig => {
+  const record = mounts.mounts[body === 'dslr' ? 'nikonF' : 'nikonZ'];
+  // These are secondary reports, even where the historical ledger called them specs.
+  return { v: record[field], unit: field.endsWith('Mm') ? 'mm' : field, ...record.figs[field],
+    ev: 'reported' };
+};
 
 export const PART_IDS = ['lens', 'focusRing', 'iris', 'glass', 'mount', 'sensor', 'shutter', 'viewfinder'] as const;
 export type PartId = typeof PART_IDS[number];
@@ -59,10 +66,10 @@ export function partCard(id: PartId, m: Model, st: RigCardState): PartCard {
           + (f.clipped.length ? ` The engine's clear aperture for the front glass is wider than this barrel allows, so it is shown trimmed; that margin is under review.` : '')
           + (focusesAsStandIn(m) ? STAND_IN_NOTE : '') : m.lens.name,
         specs: [
-          { k: 'Focal length (marked)', v: `${m.lens.focalLength} mm`, fig: fig(m.lens.focalLength, 'mm', 'spec', 'the focal length marked on the lens') },
-          { k: 'Maximum aperture', v: fmtFno(m.lens.markedFno), fig: F.maxFno },
-          { k: 'Elements / groups', v: `${m.lens.elements} / ${m.lens.groups}`, fig: fig(m.lens.elements, 'elements', 'spec', 'the patent prescription') },
-          ...(f ? [{ k: 'Filter', v: `${f.filterMm} mm ${f.filterKind}`, fig: fig(f.filterMm, 'mm', 'spec', "the maker's published filter size") }] : []),
+          { k: 'Focal length (marked)', v: `${m.lens.focalLength} mm`, fig: fig(m.lens.focalLength, 'mm', 'spec', `data/lenses/${m.scenario.lens}.json focalLength; representative product class, not computed EFL`) },
+          { k: 'Maximum aperture (prescription)', v: `f/${m.lens.maxFno.toFixed(2)}`, fig: F.maxFno },
+          { k: 'Elements / groups', v: `${m.lens.elements} / ${m.lens.groups}`, fig: { ...fig(m.lens.elements, 'elements', 'spec', m.lens.source.url), loc: m.lens.source.location } },
+          ...(f ? [{ k: 'Filter', v: `${f.filterMm} mm ${f.filterKind}`, fig: { ...((exteriors.lenses as unknown as Record<string, {filterMm: Omit<Fig, 'v' | 'unit'>}>)[m.scenario.lens].filterMm), v: f.filterMm, unit: 'mm' } }] : []),
         ] };
     }
     case 'focusRing':
@@ -78,12 +85,12 @@ export function partCard(id: PartId, m: Model, st: RigCardState): PartCard {
       const epD = 2 * m.cardinal.ep.r;
       const d = m.realized.design.iris;
       return { kicker: 'The camera · the aperture', title: fmtFno(m.scenario.fno),
-        body: 'The blades set the opening at the stop. Seen through the front glass that opening looks larger, and its apparent width, the entrance pupil, sets how much light the lens takes in. Its area goes as 1/N squared, so each full stop halves the light.',
+        body: 'The blades set the opening at the stop. Seen through the front glass that opening can differ in size, and its apparent width, the entrance pupil, sets how much light the lens takes in. At fixed focus its area goes as 1/N squared, so stopping down one full stop halves the light.',
         specs: [
           { k: 'Iris opening', v: mm(2 * m.iris.radius, 2), fig: fig(2 * m.iris.radius, 'mm', 'derived', 'the stop radius for this f-number') },
           { k: 'Entrance pupil', v: mm(epD, 1), fig: fig(epD, 'mm', 'derived', 'the stop imaged through the front glass') },
-          { k: 'Pupil area', v: `${(Math.PI * m.cardinal.ep.r ** 2).toFixed(0)} mm²`, fig: fig(Math.PI * m.cardinal.ep.r ** 2, 'mm²', 'derived') },
-          { k: 'Blades', v: `${d.blades}${d.rounded ? ', rounded' : ''}`, fig: fig(d.blades, 'blades', 'spec', "the maker's published blade count") },
+          { k: 'Pupil area', v: `${(Math.PI * m.cardinal.ep.r ** 2).toFixed(0)} mm²`, fig: fig(Math.PI * m.cardinal.ep.r ** 2, 'mm²', 'derived', 'pi * entrance-pupil radius squared (circular pupil approximation)') },
+          { k: 'Blades', v: `${d.blades}${d.rounded ? ', rounded' : ''}`, fig: fig(d.blades, 'blades', d.ev, d.source) },
         ] };
     }
     case 'glass':
@@ -92,31 +99,31 @@ export function partCard(id: PartId, m: Model, st: RigCardState): PartCard {
         specs: [{ k: 'Effective focal length', v: mm(m.cardinal.efl, 2), fig: F.efl }, { k: 'Working f-number', v: `f/${m.focus.workingFno.toFixed(2)}`, fig: F.workingFno }] };
     case 'mount': {
       const b = mountOf(st.body);
-      const src = `the published ${b.type.replace(/ geometry$/, '')} mount`;
       return { kicker: 'The camera · the mount', title: b.type,
         body: 'The lens seats on the body at the flange distance, the fixed gap every lens for this mount is designed around.',
         specs: [
-          { k: 'Flange distance', v: `${b.flangeMm} mm`, fig: fig(b.flangeMm, 'mm', 'spec', src) },
-          { k: 'Throat', v: `${b.throatMm} mm`, fig: fig(b.throatMm, 'mm', 'spec', src) },
-          { k: 'Lugs / contacts', v: `${b.lugCount} / ${b.contactCount}`, fig: fig(b.lugCount, 'lugs', 'spec', src) },
+          { k: 'Flange distance', v: `${b.flangeMm} mm`, fig: mountFig(st.body, 'flangeMm') },
+          { k: 'Throat', v: `${b.throatMm} mm`, fig: mountFig(st.body, 'throatMm') },
+          { k: 'Lugs', v: `${b.lugCount}`, fig: mountFig(st.body, 'lugs') },
+          { k: 'Contacts (modeled body)', v: `${b.contactCount}`, fig: mountFig(st.body, 'contacts') },
         ] };
     }
     case 'sensor':
       return { kicker: 'The camera · the sensor', title: `${fmtDims(m.sensor.widthPx, m.sensor.heightPx)} pixels`,
-        body: 'Every pixel counts the photons that land on it while the shutter is open. At these settings a mid-gray patch delivers the count below to each pixel.',
+        body: 'Each pixel converts a fraction of the incident photons into electrons while the shutter is open. At these settings a mid-gray patch delivers the expected incident photon count below to each pixel.',
         specs: [
           { k: 'Pixel pitch', v: `${m.sensor.pitchUm.toFixed(2)} µm`, fig: F.pitchUm },
           { k: 'Photons per pixel (18% gray)', v: Math.round(m.exposure.photonsMidGray).toLocaleString('en-US'), fig: F.photonsMidGray },
           { k: 'Signal to noise', v: m.exposure.snrMidGray.toFixed(1), fig: F.snrMidGray },
         ] };
     case 'shutter':
-      return { kicker: 'The camera · exposure time', title: m.scenario.shutter < 1 ? `1/${Math.round(1 / m.scenario.shutter)} s` : `${m.scenario.shutter} s`,
+      return { kicker: 'The camera · exposure time', title: fmtShutter(m.scenario.shutter),
         body: st.body === 'dslr' ? 'Two curtains cross the sensor, and the gap between them is the exposure. Doubling the time doubles the photons every pixel collects.'
           : 'No mechanical shutter here. The sensor starts and stops counting row by row, and the sensor itself rides on the stabilization plate.',
         specs: [{ k: 'Exposure value (EV100)', v: m.exposure.ev100.toFixed(1), fig: F.ev100 }, { k: 'Light on the sensor', v: `${m.exposure.sensorLux.toFixed(0)} lux`, fig: F.sensorLux }] };
     case 'viewfinder': {
       const flange = mountOf(st.body).flangeMm;
-      const flangeFig = fig(flange, 'mm', 'spec', `the published ${mountOf(st.body).type.replace(/ geometry$/, '')} mount`);
+      const flangeFig = mountFig(st.body, 'flangeMm');
       return st.body === 'dslr'
         ? { kicker: 'The camera · the viewfinder', title: 'Mirror, screen and prism',
             body: 'Until the shutter fires, the mirror sends the light up to the focusing screen, which sits at the same optical distance from the mirror as the sensor, so what is sharp there is sharp on the sensor. The pentaprism turns that image upright for the eye. The traced rays bounce up at the mirror to show that path. Fire the shutter and the mirror swings up out of the way.',

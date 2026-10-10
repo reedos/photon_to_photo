@@ -451,11 +451,11 @@ export const build: BuildPiece = (ctx) => {
           return {
             kicker: 'Level 3 · the bokeh disk',
             title: 'Measured vs. predicted',
-            body: 'How wide the disk is where the traced rays land, next to the textbook formula for defocus blur. Aberrations make the traced disk larger than the formula near wide apertures and close focus.',
+            body: 'How wide the disk is where the traced rays land, next to the textbook formula for defocus blur. Aberrations can change the traced disk relative to the paraxial prediction, especially near wide apertures and close focus.',
             specs: b ? [
               { k: 'Measured diameter', v: fmtMm(b.diameterMm), fig: fig(b.diameterMm, 'mm', 'pointBundle(): max chord of landing points') },
               { k: 'Predicted diameter', v: fmtMm(b.predictedBlurMm), fig: fig(b.predictedBlurMm, 'mm', 'camera.ts exitPupilBlurDiameterMm()') },
-              { k: 'Blade count', v: `${lastModel?.lens.blades ?? '–'}`, fig: lastModel ? { v: lastModel.lens.blades, unit: 'blades', ev: 'spec', src: lastModel.lens.source.url, loc: lastModel.lens.source.location } : undefined },
+              { k: 'Blade count', v: `${lastModel?.lens.blades ?? '–'}`, fig: lastModel ? { v: lastModel.lens.blades, unit: 'blades', ev: lastModel.realized.design.iris.ev, src: lastModel.realized.design.iris.source } : undefined },
             ] : [],
           };
         },
@@ -481,7 +481,7 @@ export const build: BuildPiece = (ctx) => {
           return {
             kicker: 'Level 3 · depth of field',
             title: 'The CoC assumption',
-            body: 'The largest blur that still counts as sharp: the format diagonal divided by 1500, the default most depth-of-field calculators use. It is a convention about print size and viewing distance, so it is marked assumed.',
+            body: 'The largest blur that still counts as sharp: the format diagonal divided by 1500, the viewing criterion selected for this model. It is a convention about print size and viewing distance, so it is marked assumed.',
             specs: [{ k: 'CoC (this format)', v: fmtMm(model.focus.cocMm), fig: model.figs.cocMm }],
           };
         },

@@ -102,16 +102,16 @@ async function main() {
     }
 
     if (showDslr) {
-      load('./models/dslr.glb').then((root) => setupGlb(root, showMirrorless ? -110 : 0));
+      setupGlb(await load('./models/dslr.glb'), showMirrorless ? -110 : 0);
     }
     if (showMirrorless) {
-      load('./models/mirrorless.glb').then((root) => setupGlb(root, showDslr ? 110 : 0));
+      setupGlb(await load('./models/mirrorless.glb'), showDslr ? 110 : 0);
     }
 
     hud.textContent = `Photon to Photo — body preview (glb) · ${backend}` +
       (which ? ` · ${which}` : ' · dslr + mirrorless') + (cutaway ? ' · cutaway' : '');
 
-    (window as unknown as { p2pPreview: unknown }).p2pPreview = { scene, camera, renderer };
+    (window as unknown as { p2pPreview: unknown }).p2pPreview = { scene, camera, renderer, controls };
   } else {
     // ---- bodies (Three.js-primitive builders) ---------------------------------------------
     const dslr = buildDslrBody(look, { cutaway });
@@ -133,14 +133,24 @@ async function main() {
 
     // Expose for the screenshot tool / manual inspection in devtools.
     (window as unknown as { p2pPreview: unknown }).p2pPreview = {
-      scene, camera, renderer, dslr, mirrorless,
+      scene, camera, renderer, controls, dslr, mirrorless,
       setCutaway(on: boolean) { dslr.setCutaway(on); mirrorless.setCutaway(on); },
     };
   }
 
+  const bounds = new THREE.Box3().setFromObject(scene).getBoundingSphere(new THREE.Sphere());
+  const viewDirection = camera.position.clone().sub(controls.target).normalize();
+  controls.target.copy(bounds.center);
   function resize() {
     const w = window.innerWidth, h = window.innerHeight;
     camera.aspect = w / h;
+    const halfVertical = THREE.MathUtils.degToRad(camera.fov / 2);
+    const limitingAngle = Math.min(halfVertical, Math.atan(Math.tan(halfVertical) * camera.aspect));
+    // Keep the user's current view direction and orbit target; only the distance is refit to the new aspect.
+    const viewDir = camera.position.clone().sub(controls.target);
+    if (viewDir.lengthSq() < 1e-12) viewDir.copy(viewDirection);
+    viewDir.normalize();
+    camera.position.copy(controls.target).addScaledVector(viewDir, bounds.radius / Math.sin(limitingAngle) * 1.12);
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h, false);

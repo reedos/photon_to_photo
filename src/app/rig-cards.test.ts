@@ -3,6 +3,10 @@ import { compute, LINEUP, bodyForLens } from './engine-api';
 import { bareNumbers, partCard, partLabel, PART_IDS } from './rig-cards';
 
 describe('camera part cards (R1-07)', () => {
+  it.each([[.6,'0.6 s'],[.8,'0.8 s'],[1/125,'1/125 s']])('keeps the actual %s-second shutter duration on the card', (shutter,title) => {
+    const card=partCard('shutter',compute({lens:'n50',shutter:Number(shutter)}),{body:'dslr',ringAngle:0,elementShift:[]});
+    expect(card.title).toBe(title);
+  });
   for (const lens of [...LINEUP.dslr, ...LINEUP.mirrorless]) {
     it(`every number on ${lens}'s cards carries an evidence chip`, () => {
       const m = compute({ lens });

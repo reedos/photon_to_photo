@@ -35,7 +35,8 @@ try {
     });
     const errors = []; page.on('pageerror', e => errors.push(String(e))); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
     await page.goto(`${process.env.P2P_URL || server.url}?piece=camera&lens=m50`);
-    await page.waitForFunction(() => window.p2p?.render());
+    await page.waitForFunction(() => window.p2p?.pieces.camera);
+    await page.evaluate(() => window.p2p.pieces.camera.ready());
     await page.locator('#steps [data-piece="loupe"]').click();
     await page.waitForFunction(() => window.p2p.pieces.loupe.state().hasPixel);
     await page.evaluate(() => window.p2p.settle());
@@ -93,7 +94,8 @@ try {
     await launch.evaluate(el => new Promise((resolve,reject)=>{const end=performance.now()+2000;const check=()=>document.activeElement===el?resolve():performance.now()>end?reject(new Error('Photon launcher did not regain focus')):requestAnimationFrame(check);check()}));
     // The previous freeze involved mirrorless → Pixel → body/lens change → Pixel.
     await page.evaluate(() => { window.p2p.piece('camera'); window.p2p.set({ lens: 'n500' }); });
-    await page.waitForFunction(() => window.p2p.render()?.scenario.lens === 'n500');
+    await page.waitForFunction(() => window.p2p.model().scenario.lens === 'n500');
+    await page.evaluate(async () => { await window.p2p.pieces.camera.ready(); await window.p2p.settle(); });
     await page.locator('#steps [data-piece="loupe"]').click();
     await page.waitForFunction(() => window.p2p.pieces.loupe.state().hasPixel); await page.evaluate(() => window.p2p.settle());
     await launch.click(); await dialog.waitFor({ state: 'visible' });

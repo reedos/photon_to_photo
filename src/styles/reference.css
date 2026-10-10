@@ -95,3 +95,7 @@
 .reference :is(input,button,summary):focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
 
 .story-illustration video{display:block;width:100%;height:auto;max-height:230px;background:#07131f}.reference .story-loop-note{font-size:10px;line-height:1.4;color:#b6cbd7;margin:7px 2px 0}
+
+/* Source links and expandable citations remain touchable below the first viewport. */
+.reference main a:not(.btn) { display: inline-block; min-height: 24px; max-width: 100%; overflow-wrap: anywhere; }
+.reference main summary { min-height: 32px; }

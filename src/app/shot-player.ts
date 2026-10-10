@@ -58,7 +58,7 @@ export function createShotPlayer(store:Store) {
     dialog.dataset.mechanism=el<HTMLSelectElement>('mechanism').value;
     dialog.dataset.track=trackId();dialog.style.setProperty('--track-color',range.color);
     dialog.dataset.stage=String(m.stage);dialog.dataset.ready=String(ready);dialog.dataset.playing=String(playing);
-    dialog.style.setProperty('--shot-color',s.color);
+    dialog.style.setProperty('--shot-color', '#e6ba82');
     if(el('heading').textContent!==(buffer||s.title)) el('heading').textContent=buffer||s.title;
     if(prevStage!==m.stage){el('caption').textContent=s.text;el('note').textContent=s.note;el('step').textContent=`${m.stage+1} / 6`;
       const stats=photoShotStats(example,model,m.stage);

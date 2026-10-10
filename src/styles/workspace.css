@@ -10,7 +10,7 @@
 #studio-actions { margin-left: auto; }
 .workspace .steps { min-height: 0; }
 .workspace .step { min-height: 40px; padding: 8px 16px; }
-.workspace .step .t { font: 600 12px var(--sans); text-transform: none; }
+.workspace .step .t { font: 600 17px/1.2 var(--display); text-transform: uppercase; }
 .workspace .step .meta { display: none; }
 .workspace .body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: calc(100svh - 148px); min-height: 490px; }
 .workspace .viewer { height: auto; min-height: 0; }
