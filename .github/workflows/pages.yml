@@ -16,7 +16,7 @@ jobs:
       # the public site leaves out the developer previews (lens-preview.html, scene-preview.html)
       - run: npm run build
         env: { P2P_PUBLIC_BUILD: '1' }
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with: { path: dist }
   deploy:
     needs: build
