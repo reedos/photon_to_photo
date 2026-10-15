@@ -27,12 +27,15 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
   const head = new LineSegments2(headGeometry,headMaterial);
   head.name='animated-traced-light-head';head.frustumCulled=false;head.renderOrder=13;head.layers.set(layer);head.visible=false;owner.add(head);
   const bar = document.createElement('div'); bar.className = 'light-playback'; bar.hidden = true;
-  bar.innerHTML = `<button class="btn" type="button" aria-pressed="false">▶ Play light</button><label><span class="playback-caption">${label}<small>Illustrative time · drag to inspect</small></span><input type="range" min="0" max="1000" value="0" aria-label="Light travel progress"></label><span>Computed paths<br>Slowed to reveal the journey</span>`;
+  bar.innerHTML = `<button class="btn" type="button" aria-pressed="false">▶ Play light</button><label><span class="playback-caption">${label}<small>Illustrative time · drag to inspect</small></span><input type="range" min="0" max="1000" value="0" aria-label="Light travel progress"></label><span class="playback-note"><span>Computed paths</span> <span>Slowed to reveal the journey</span></span>`;
   document.getElementById('model-experiments')!.before(bar);
   const button = bar.querySelector('button')!, range = bar.querySelector('input')!;
   let paths: { trail: Trail; color: THREE.Color; nm: number }[] = [], elapsed = 0, playing = false;
   let lastPaintMs = 0, lastSegments = 0, lastHeadSegments = 0;
   const duration = 6000;
+  // spoken from the first moment, not only after the first paint (score loop r6: the Focus level's slider read the bare step number)
+  let lastSpoken = '0 percent along the displayed paths; timing is illustrative';
+  range.setAttribute('aria-valuetext', lastSpoken);
   function paint() {
     const began = performance.now();
     const p: number[] = [], c: number[] = [], hp: number[] = [], hc: number[] = [];
@@ -62,7 +65,9 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
     }
     lastSegments=p.length/6;lastHeadSegments=hp.length/6;lastPaintMs=performance.now()-began;
     range.value = String(Math.round(1000 * elapsed / duration));
-    range.setAttribute('aria-valuetext', `${Math.round(100 * elapsed / duration)} percent along the displayed paths; timing is illustrative`);
+    range.style.setProperty('--pct', `${Math.min(100, 100 * elapsed / duration)}%`);
+    const spoken = `${Math.round(100 * elapsed / duration)} percent along the displayed paths; timing is illustrative`;
+    if (spoken !== lastSpoken) { lastSpoken = spoken; range.setAttribute('aria-valuetext', spoken); } // only when the words change: paint runs every frame while playing
   }
   function pause() { playing = false; button.setAttribute('aria-pressed', 'false'); button.textContent = elapsed >= duration ? '↻ Replay light' : elapsed > 0 ? '▶ Resume light' : '▶ Play light'; }
   button.onclick = () => {
@@ -85,9 +90,11 @@ export function lightPlayback(ctx: PieceContext, owner: THREE.Group, label: stri
       headGeometry.setPositions(new Float32Array(capacity*6));headGeometry.setColors(new Float32Array(capacity*6));
       elapsed = 0; pause(); paint();
     },
-    tick(dt: number) {
-      if (!playing || document.hidden || ctx.renderer.domElement.inert || document.querySelector('dialog[open]')) { if (playing) pause(); return; }
+    /** True when it painted a new frame of the light (the stage draws on demand). */
+    tick(dt: number): boolean {
+      if (!playing || document.hidden || ctx.renderer.domElement.inert || document.querySelector('dialog[open]')) { if (playing) pause(); return false; }
       elapsed = Math.min(duration, elapsed + Math.max(0,Math.min(dt, 100))); paint(); if (elapsed === duration) pause();
+      return true;
     },
     activate() { bar.hidden = false; },
     deactivate() { pause(); bar.hidden = true; },

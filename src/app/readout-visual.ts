@@ -1,14 +1,32 @@
 import { rowWindow, movingEdgeFraction } from './learning-model';
 const surfaces = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 
-/** Schematic moving-edge test chart. Timing follows the selected body's model; spatial scale is illustrative. */
+/** The smallest canvas label, in CSS px (design/LOOK.md text floor: 10.5-11 px). */
+const MIN_LABEL_PX = 11;
+
+/** Schematic moving-edge test chart. Timing follows the selected body's model; spatial scale is illustrative.
+ *  Score loop r3: the drawing is laid out on a 760 x 210 plan (380 x 405 on a narrow view) but rendered at the
+ *  canvas's own CSS size times the device pixel ratio, and every label is sized so it shows at 11 CSS px or more
+ *  (they showed at about 8 px at 1440). The legends live in HTML under the canvas (#readout-legend). */
 export function drawReadout(canvas: HTMLCanvasElement, time: number, scan: number, exposure: number, charge: number, dn: number, bits: number) {
+  const compact = canvas.clientWidth < 500;
+  const targetWidth = compact ? 380 : 760, targetHeight = compact ? 405 : 210;
+  const shown = canvas.clientWidth || targetWidth;
+  // plan units per CSS px, and the backing store's resolution
+  const cssPerPlan = shown / targetWidth;
+  const k = Math.max(1, (shown * Math.min(3, globalThis.devicePixelRatio || 1)) / targetWidth);
   let surface = surfaces.get(canvas);
-  if (!surface) { surface = document.createElement('canvas'); surface.width = 760; surface.height = 210; surfaces.set(canvas, surface); }
+  if (!surface) { surface = document.createElement('canvas'); surfaces.set(canvas, surface); }
+  const sw = Math.round(760 * k), sh = Math.round(210 * k);
+  if (surface.width !== sw || surface.height !== sh) { surface.width = sw; surface.height = sh; }
   const c = surface.getContext('2d')!;
-  const w = surface.width, h = surface.height;
+  c.setTransform(k, 0, 0, k, 0, 0);
+  const w = 760, h = 210;
   c.clearRect(0, 0, w, h); c.fillStyle = '#0d141c'; c.fillRect(0, 0, w, h);
-  const text = (s: string, x: number, y: number, color = '#b9c6d2', size = 12) => { c.fillStyle = color; c.font = `${size}px ui-monospace, monospace`; c.fillText(s, x, y); };
+  const minPlan = MIN_LABEL_PX / Math.max(cssPerPlan, 0.01);
+  const text = (s: string, x: number, y: number, color = '#b9c6d2', size = 12, align: CanvasTextAlign = 'left') => {
+    c.fillStyle = color; c.font = `${Math.max(size, minPlan)}px ui-monospace, monospace`; c.textAlign = align; c.fillText(s, x, y); c.textAlign = 'left';
+  };
   text('ELECTRONIC SCAN', 18, 23, '#eed7a4'); text('SELECTED PIXEL', 375, 23, '#eed7a4'); text(`${bits}-BIT CONVERSION`, 550, 23, '#eed7a4');
   const rows = 24, cols = 32, x0 = 20, y0 = 38, cw = 9, ch = 5;
   // Fixed speed is an illustrative chart parameter, not a motion estimate for the rendered photo.
@@ -25,14 +43,14 @@ export function drawReadout(canvas: HTMLCanvasElement, time: number, scan: numbe
       c.fillStyle = `rgb(${color.map(v => Math.round(16 + v * level * .75)).join(',')})`;
       c.fillRect(x0 + col * cw, y0 + row * ch, cw - 1, ch - 1);
     }
-    if (active) { c.fillStyle = '#f4db9c'; c.fillRect(x0 - 7, y0 + row * ch, 3, ch - 1); }
-    if (complete) { c.fillStyle = '#8cc5f1'; c.fillRect(x0 + cols * cw + 4, y0 + row * ch, 3, ch - 1); }
+    if (active) { c.fillStyle = '#f4db9c'; c.fillRect(x0 - 8, y0 + row * ch, 5, ch - 1); }
+    if (complete) { c.fillStyle = '#8cc5f1'; c.fillRect(x0 + cols * cw + 3, y0 + row * ch, 5, ch - 1); }
   }
   // Reference edge at first-row exposure midpoint. Clipped to the diagram, not wrapped.
   const referenceX = x0 + edge(exposure / 2) * cols * cw;
   if (referenceX <= x0 + cols * cw) { c.setLineDash([3, 4]); c.strokeStyle = '#e4edf5'; c.beginPath(); c.moveTo(referenceX, y0); c.lineTo(referenceX, y0 + rows * ch); c.stroke(); c.setLineDash([]); }
-  text('Gold: collecting · blue: read', 20, 176, '#b9c6d2', 11);
-  text('Moving edge: 4 sensor widths/s', 20, 193, '#b9c6d2', 11);
+  // name the moving edge on the drawing itself (score loop r3: the legend named an edge the reader could not find)
+  text('edge moves →', x0, y0 + rows * ch + 22, '#e4edf5', 12);
   const gradient = c.createLinearGradient(0, 50, 0, 159); gradient.addColorStop(0, '#9de3ff'); gradient.addColorStop(1, '#26739c');
   c.strokeStyle = '#7c9aab'; c.lineWidth = 2; c.strokeRect(380, 42, 116, 118);
   c.fillStyle = gradient; c.fillRect(383, 157 - 112 * charge, 110, 112 * charge);
@@ -44,20 +62,21 @@ export function drawReadout(canvas: HTMLCanvasElement, time: number, scan: numbe
   const binary = Math.round(dn).toString(2).padStart(bits, '0');
   for (let i = 0; i < bits; i++) {
     const x = 550 + (i % 7) * 24, y = 51 + Math.floor(i / 7) * 33;
-    c.fillStyle = binary[i] === '1' ? '#4c9fa5' : '#202d3a'; c.fillRect(x, y, 19, 25); text(binary[i], x + 5, y + 17, '#f2f8fc');
+    c.fillStyle = binary[i] === '1' ? '#4c9fa5' : '#202d3a'; c.fillRect(x, y, 19, 25); text(binary[i], x + 9.5, y + 18, '#f2f8fc', 12, 'center');
   }
   text(`${dn.toLocaleString()} DN`, 550, 141, '#f0d899', 20);
-  text('Gain → offset → rounding', 550, 176, '#b9c6d2', 11);
-  text('Schematic · not the photo', 550, 193, '#b9c6d2', 11);
-  const compact = canvas.clientWidth < 500;
-  const targetWidth = compact ? 380 : 760, targetHeight = compact ? 405 : 210;
-  if (canvas.width !== targetWidth || canvas.height !== targetHeight) { canvas.width = targetWidth; canvas.height = targetHeight; }
+  const bw = Math.round(targetWidth * k), bh = Math.round(targetHeight * k);
+  if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
   const output = canvas.getContext('2d')!;
+  output.setTransform(1, 0, 0, 1, 0, 0);
   output.fillStyle = '#0d141c'; output.fillRect(0, 0, canvas.width, canvas.height);
+  // copy plan regions from the surface (both at k device px per plan unit)
+  const blit = (sx: number, sy: number, sw2: number, sh2: number, dx: number, dy: number) =>
+    output.drawImage(surface!, sx * k, sy * k, sw2 * k, sh2 * k, dx * k, dy * k, sw2 * k, sh2 * k);
   if (compact) {
-    output.drawImage(surface, 0, 0, 340, 210, 20, 0, 340, 210);
-    output.drawImage(surface, 360, 0, 165, 210, 0, 195, 165, 210);
-    output.drawImage(surface, 535, 0, 225, 210, 150, 195, 225, 210);
-  } else output.drawImage(surface, 0, 0);
+    blit(0, 0, 340, 210, 20, 0);
+    blit(360, 0, 165, 210, 0, 195);
+    blit(535, 0, 225, 210, 150, 195);
+  } else blit(0, 0, 760, 210, 0, 0);
   canvas.setAttribute('aria-label', `Schematic electronic scan at ${(time * 1000).toFixed(2)} milliseconds, ${Math.round(charge * 100)} percent full well, digital output ${dn}. A moving edge is sampled at different times by successive rows.`);
 }

@@ -10,7 +10,9 @@
 
 import type { Asphere, DoeSpec, GlassEntry, LensDesign, Surface, VariableGap } from './lens-types';
 import type { Doe, TraceSurface, TraceSystem } from './types';
-import { type GlassCatalog, FRAUNHOFER_D_NM, indexAt, resolveGlass } from './glass';
+import {
+  type GlassCatalog, FRAUNHOFER_C_NM, FRAUNHOFER_D_NM, FRAUNHOFER_F_NM, FRAUNHOFER_G_NM, indexAt, resolveGlass,
+} from './glass';
 import { cardinal, imageOf } from './paraxial';
 
 // How far a "glass" (nearest-match) resolution may sit from every catalog entry before loadLens refuses to use
@@ -19,6 +21,49 @@ import { cardinal, imageOf } from './paraxial';
 // genuine "fail loudly" rather than a silent bad match. Assumed, not derived from a source.
 const FAIL_LOUD_MAX_DND = 0.05;
 const FAIL_LOUD_MAX_DVD = 5;
+
+/**
+ * Autofocus shift versus focus distance (score loop r4, 10/12/2026). A camera's autofocus puts the BEST focus on
+ * the sensor at every distance, not the paraxial image: with spherical aberration the best focus sits a little
+ * ahead of the paraxial image, and by an amount that changes with the object distance (a fast lens wide open at
+ * close range moves it by 0.1 mm or more). realize.ts solves the on-axis minimum polychromatic RMS plane at each
+ * node distance, wide open (where autofocus runs), and stores each node's shift: how far (mm) the paraxial image
+ * must sit short of its infinity position so the best focus lands on the sensor. v = closestMm / distance from the
+ * sensor, 0 (infinity, shift 0 by definition) to 1 (the closest focus); the shift between nodes is a natural cubic
+ * spline in v. Evidence: derived from the real-ray trace.
+ */
+export interface AfShiftTable {
+  closestMm: number;
+  v: number[];
+  shiftMm: number[];
+}
+
+/** The autofocus shift (mm) at a focus distance from the sensor: 0 without a table or at infinity. */
+export function afShiftAt(table: AfShiftTable | undefined, distanceMm: number): number {
+  if (!table || table.v.length < 2 || !Number.isFinite(distanceMm) || distanceMm <= 0) return 0;
+  const x = table.v, y = table.shiftMm, n = x.length;
+  const v = Math.min(1, Math.max(0, table.closestMm / distanceMm));
+  // natural cubic spline second derivatives (tridiagonal solve, Thomas algorithm)
+  const m = new Array<number>(n).fill(0);
+  if (n > 2) {
+    const sub = new Array<number>(n).fill(0), diag = new Array<number>(n).fill(1), sup = new Array<number>(n).fill(0), rhs = new Array<number>(n).fill(0);
+    for (let i = 1; i < n - 1; i++) {
+      const h0 = x[i] - x[i - 1], h1 = x[i + 1] - x[i];
+      sub[i] = h0; diag[i] = 2 * (h0 + h1); sup[i] = h1;
+      rhs[i] = 6 * ((y[i + 1] - y[i]) / h1 - (y[i] - y[i - 1]) / h0);
+    }
+    for (let i = 2; i < n - 1; i++) {
+      const w = sub[i] / diag[i - 1];
+      diag[i] -= w * sup[i - 1]; rhs[i] -= w * rhs[i - 1];
+    }
+    m[n - 2] = rhs[n - 2] / diag[n - 2];
+    for (let i = n - 3; i >= 1; i--) m[i] = (rhs[i] - sup[i] * m[i + 1]) / diag[i];
+  }
+  let k = 0;
+  while (k < n - 2 && v > x[k + 1]) k++;
+  const h = x[k + 1] - x[k], a = (x[k + 1] - v) / h, b = (v - x[k]) / h;
+  return a * y[k] + b * y[k + 1] + ((a ** 3 - a) * m[k] + (b ** 3 - b) * m[k + 1]) * (h * h) / 6;
+}
 
 export interface GlassResolution {
   surfaceIndex: number; // index into design.surfaces
@@ -29,6 +74,7 @@ export interface GlassResolution {
   baseKey: string; // the nearest catalog glass (the model glass takes its dispersion shape from it)
   nd: number; vd: number; // the design's own stated values
   dnd: number; dvd: number; // stated minus the nearest catalog entry's values
+  thetaGF?: number; // the source's stated partial dispersion, when the model glass reproduces it (see pdQ)
 }
 
 // A patent's nd/vd pair matches a catalog glass "exactly" when both agree to the precision patents print (nd to 5
@@ -86,6 +132,9 @@ export interface ResolvedLens {
   /** Set by realize.ts: the sensor sits this far (mm, +z = away from the lens) from the paraxial infinity image,
    *  where the best polychromatic on-axis focus is at full aperture (what autofocus does). Undefined = 0. */
   afOffset?: number;
+  /** Set by realize.ts: how far the best focus sits from the paraxial image at each focus distance, relative to
+   *  its infinity value (see AfShiftTable). Undefined = 0 at every distance, the infinity offset reused. */
+  afShift?: AfShiftTable;
   sensorZ: number; // fixed image-plane z at infinity focus
   index: (medium: string, nm: number) => number;
 }
@@ -170,11 +219,41 @@ export interface ModelGlass {
   base: GlassEntry;
   baseNd: number; // the base glass's nd evaluated from its coefficients (not the catalog's printed nd)
   scale: number; // ((nd - 1)/vd) / (nF - nC)_base, the base dispersion evaluated from its coefficients
+  /** Set only when the source states the glass's partial dispersion theta_g,F (Surface.thetaGF): the stated value,
+   *  and the coefficient `gq` of the correction term below that makes the model reproduce it. */
+  thetaGF?: number;
+  gq?: number;
 }
 
-/** Index of a model glass at a wavelength (see the comment above EXACT_DND). */
+// The partial-dispersion correction. The shifted-and-scaled base curve keeps the base glass's theta_g,F (the ratio
+// is invariant under n -> a + b n). When the source states theta_g,F, the model changes the curvature of n against
+// 1/lambda^2 (the C/lambda^4 term of Cauchy's formula n = A + B/lambda^2 + C/lambda^4) and re-solves the constant
+// and 1/lambda^2 terms so nd and nF - nC stay exactly as stated. That adds gq * q(lambda) with
+//   q = (s - s_d)(s - s_d'),  s = 1/lambda^2 (lambda in um),  s_d' = s_F + s_C - s_d,
+// a parabola in s that is zero at the d line and equal at F and C. gq is solved so theta_g,F equals the stated
+// value. This is the role lens-design programs give a model glass's third parameter (Zemax's MODEL glass takes nd,
+// vd and dPgF). A curvature change was chosen over a term pinned to zero at d, F and C because a real glass with
+// anomalous blue dispersion (a UV absorption nearer the visible) bends its whole curve; modelGlass.test.ts checks
+// both choices against real anomalous catalog glasses. Evidence: derived (r3 physics, 10/11/2026).
+const sOf = (nm: number): number => 1 / (nm / 1000) ** 2;
+const S_D = sOf(FRAUNHOFER_D_NM);
+const S_D2 = sOf(FRAUNHOFER_F_NM) + sOf(FRAUNHOFER_C_NM) - S_D;
+export function pdQ(nm: number): number {
+  const s = sOf(nm);
+  return (s - S_D) * (s - S_D2);
+}
+
+/** Index of a model glass at a wavelength (see the comment above EXACT_DND and above pdQ). */
 export function modelIndexAt(m: ModelGlass, nm: number): number {
-  return m.nd + (indexAt(m.base, nm) - m.baseNd) * m.scale;
+  return m.nd + (indexAt(m.base, nm) - m.baseNd) * m.scale + (m.gq ? m.gq * pdQ(nm) : 0);
+}
+
+/** theta_g,F of a model glass, evaluated from modelIndexAt. */
+export function modelThetaGF(m: ModelGlass): number {
+  const ng = modelIndexAt(m, FRAUNHOFER_G_NM);
+  const nF = modelIndexAt(m, FRAUNHOFER_F_NM);
+  const nC = modelIndexAt(m, FRAUNHOFER_C_NM);
+  return (ng - nF) / (nF - nC);
 }
 
 /** nd and vd of a catalog entry evaluated from its coefficients. Catalogs print rounded values (SUMITA prints some
@@ -224,17 +303,29 @@ function resolveMedium(
       });
       return entry.key;
     }
+    if (s.thetaGF !== undefined && !s.thetaGFSource) {
+      throw new Error(`lens.ts: loadLens: surface ${surfaceIndex} states thetaGF without thetaGFSource`);
+    }
+    const pd = s.thetaGF !== undefined ? `/PgF${s.thetaGF.toFixed(4)}` : '';
     const key = isResin
-      ? `MODEL:resin:${s.nd.toFixed(5)}/${s.vd.toFixed(2)}~${entry.key}`
-      : `MODEL:${s.nd.toFixed(5)}/${s.vd.toFixed(2)}~${entry.key}`;
+      ? `MODEL:resin:${s.nd.toFixed(5)}/${s.vd.toFixed(2)}${pd}~${entry.key}`
+      : `MODEL:${s.nd.toFixed(5)}/${s.vd.toFixed(2)}${pd}~${entry.key}`;
     if (!models.has(key)) {
       // a non-dispersive base (test fixtures) has nF = nC: the model is then a constant index nd
       const scale = ev.dFC !== 0 && Number.isFinite(ev.dFC) ? ((s.nd - 1) / s.vd) / ev.dFC : 0;
-      models.set(key, { key, nd: s.nd, vd: s.vd, base: entry, baseNd: ev.nd, scale });
+      const m: ModelGlass = { key, nd: s.nd, vd: s.vd, base: entry, baseNd: ev.nd, scale };
+      if (s.thetaGF !== undefined && scale !== 0) {
+        // theta = (ng - nF)/(nF - nC); the q term leaves nF - nC alone, so solve linearly for gq.
+        const dFC = (s.nd - 1) / s.vd;
+        m.gq = ((s.thetaGF - modelThetaGF(m)) * dFC) / (pdQ(FRAUNHOFER_G_NM) - pdQ(FRAUNHOFER_F_NM));
+        m.thetaGF = s.thetaGF;
+      }
+      models.set(key, m);
     }
     resolutions.push({
       surfaceIndex, requested: 'glass', resolvedKey: key, matched: true, kind: 'model', baseKey: entry.key,
       nd: s.nd, vd: s.vd, dnd, dvd,
+      ...(s.thetaGF !== undefined ? { thetaGF: s.thetaGF } : {}),
     });
     return key;
   }
@@ -414,6 +505,16 @@ function solveNewton(f: (x: number) => number, x0: number, opts: { h: number; to
 }
 
 /**
+ * Where the lens's own paraxial infinity image (d line) sits relative to lens.sensorZ, the patent's summed back
+ * focus (mm, +z = away from the lens). A patent's back focus is a rounded or loosely stated figure, so the two
+ * differ (0 to 0.36 mm across the lineup); focus solves and afOffset must both refer to the paraxial image itself.
+ */
+export function paraxialInfinityOffset(lens: ResolvedLens): number {
+  const sys = toSystem(lens, buildSurfaces({ ...lens, afOffset: 0 }, (_i, t) => t));
+  return cardinal(sys, FRAUNHOFER_D_NM).F2 - lens.sensorZ;
+}
+
+/**
  * A TraceSystem for this lens, with the image plane at the fixed infinity-focus sensor position.
  * focusFromSensorMm === null gives the infinity-focus system unmodified. Otherwise it is the object distance
  * from the (fixed) sensor plane, in mm, clamped to the design's minimum focus.
@@ -423,16 +524,23 @@ function solveNewton(f: (x: number) => number, x0: number, opts: { h: number; to
  * parameter t in [0,1] (0 = infinity, 1 = the design's stated close-focus condition). Both are solved paraxially
  * at the d line so the object images onto the fixed sensor (Newton's method; see paraxial.imageOf).
  */
-export function systemAt(lens: ResolvedLens, focusFromSensorMm: number | null, opts?: { clamp?: boolean }): TraceSystem {
+export function systemAt(lens: ResolvedLens, focusFromSensorMm: number | null, opts?: { clamp?: boolean; afShiftMm?: number }): TraceSystem {
   const infinitySurfaces = buildSurfaces(lens, (_i, t) => t);
   if (focusFromSensorMm === null) return toSystem(lens, infinitySurfaces);
 
   const minFocusMm = lens.design.focus.minFocusM * 1000;
   const clamped = Math.max(focusFromSensorMm, minFocusMm);
-  // Distances are measured from the physical sensor (paraxial image + afOffset). The focus solve still puts the
-  // PARAXIAL image at lens.sensorZ, so the best focus (paraxial + afOffset) lands on the sensor, as autofocus does.
+  // Distances are measured from the physical sensor (paraxial image + afOffset). The focus solve puts the
+  // PARAXIAL image where autofocus would, so the BEST focus lands on the sensor (score loop r4, 10/12/2026):
+  //   - paraxialRef: the lens's own paraxial infinity image, not the patent's summed back focus (they differ by up
+  //     to 0.36 mm for p85 and 26 um for z35, which over-focused every finite distance by that much), so the
+  //     infinity offset between best focus and paraxial image carries over to finite distances unchanged;
+  //   - afShift: the further change of that offset with distance (realize.ts solves it per distance, wide open;
+  //     0 for a lens without a table), the part a fixed offset cannot follow.
   const objectZ = lens.sensorZ + (lens.afOffset ?? 0) - clamped;
   const nm = FRAUNHOFER_D_NM;
+  const rho = paraxialInfinityOffset(lens);
+  const shift = opts?.afShiftMm ?? afShiftAt(lens.afShift, clamped);
 
   // A design that names another focus method but lists no variable gaps (the patent gave none) focuses by unit
   // extension here, a schematic stand-in; loadLens records a warning.
@@ -443,7 +551,7 @@ export function systemAt(lens: ResolvedLens, focusFromSensorMm: number | null, o
       const surfaces = shifted(e).map((s) => (s.kind === 'image' ? { ...s, z: lens.sensorZ + (lens.afOffset ?? 0) } : s));
       return toSystem(lens, surfaces);
     };
-    const f = (e: number) => imageOf(systemFor(e), nm, objectZ).z - lens.sensorZ;
+    const f = (e: number) => imageOf(systemFor(e), nm, objectZ).z - (lens.sensorZ + rho - shift);
     const e = solveNewton(f, 0, { h: 0.01, tol: 1e-6, maxIter: 40, label: `unit-focus extension for ${lens.design.id}` });
     return systemFor(e);
   }
@@ -488,7 +596,7 @@ export function systemAt(lens: ResolvedLens, focusFromSensorMm: number | null, o
   const f = (t: number) => {
     const sys = systemFor(t);
     const sensor = sensorOf(sys);
-    return imageOf(sys, nm, sensor + (lens.afOffset ?? 0) - clamped).z - sensor;
+    return imageOf(sys, nm, sensor + (lens.afOffset ?? 0) - clamped).z - (sensor + rho - shift);
   };
   const t = solveNewton(f, 0.5, { h: 1e-4, tol: 1e-6, maxIter: 60, label: `${lens.design.focus.method} focus parameter for ${lens.design.id}` });
   // t is documented (see this function's doc comment) as living in [0,1]: 0 = infinity, 1 = the design's stated

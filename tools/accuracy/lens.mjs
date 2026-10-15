@@ -124,14 +124,46 @@ async function main() {
       }
       if (best && best.diff <= 2) break;
     }
-    if (!best) {
-      check('exact sRGB color of a drawn ray', false, `no on-screen ok-status ray (>600nm) found among ${candidates.length} candidates`);
+    // The fan's bins are composited with a per-channel MAX blend (src/pieces/lens.ts, score loop r1), so a pixel that
+    // one bin crosses alone is that bin's exact color, and a pixel that several coincident bins cross is exactly the
+    // per-channel max of their engine colors (the white light of the shared stretch). Where the bins of one ray
+    // share their first segment (same field, same entry and first-surface points), that segment's midpoint is such a
+    // pixel; its expected value is computed here from the same wavelengthSrgb255() hook, so a double sRGB encoding or
+    // a tinted ray still fails it.
+    let bestCoincident = null;
+    {
+      const drawnRays = probe.rays.filter((r) => r.world.length >= 2 && !(r.status !== 'ok' && r.world.length <= 2));
+      const groups = new Map();
+      for (const r of drawnRays) {
+        const [a, b] = r.world;
+        const key = `${r.field}|${a.map((v) => v.toFixed(5)).join(',')}|${b.map((v) => v.toFixed(5)).join(',')}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(r);
+      }
+      for (const members of groups.values()) {
+        if (members.length < 2) continue;
+        for (const m of members) if (!expectedByNm.has(m.nm)) expectedByNm.set(m.nm, await page.evaluate((nm) => window.p2p.pieces.lens.wavelengthSrgb255(nm), m.nm));
+        const expected = [0, 1, 2].map((k) => Math.max(...members.map((m) => expectedByNm.get(m.nm)[k])));
+        const [p0, p1] = members[0].screenFromWorld;
+        const mid = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
+        if (mid[0] < 0 || mid[0] >= canvasBox.width || mid[1] < 0 || mid[1] >= canvasBox.height) continue;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const px = pngPixel(img, canvasBox.x + mid[0] + dx, canvasBox.y + mid[1] + dy);
+          if (!px) continue;
+          const diff = Math.max(Math.abs(px[0] - expected[0]), Math.abs(px[1] - expected[1]), Math.abs(px[2] - expected[2]));
+          if (!bestCoincident || diff < bestCoincident.diff) bestCoincident = { n: members.length, expected, px, diff };
+        }
+      }
+    }
+    if (best && best.diff <= 2) {
+      check(`exact sRGB color at ${best.r.nm.toFixed(0)}nm`, true,
+        `expected [${best.expected}], best pixel found [${best.px.slice(0, 3)}], max channel diff ${best.diff} (tolerance 2/255, searched ${candidates.length} rays)`);
+    } else if (bestCoincident) {
+      check(`exact sRGB color where ${bestCoincident.n} coincident bins combine (per-channel max of their engine colors)`, bestCoincident.diff <= 2,
+        `expected [${bestCoincident.expected}], best pixel found [${bestCoincident.px.slice(0, 3)}], max channel diff ${bestCoincident.diff} (tolerance 2/255); `
+        + `no single bin runs alone on screen at this framing (closest single-bin diff ${best ? best.diff : 'n/a'})`);
     } else {
-      check(
-        `exact sRGB color at ${best.r.nm.toFixed(0)}nm`,
-        best.diff <= 2,
-        `expected [${best.expected}], best pixel found [${best.px.slice(0, 3)}], max channel diff ${best.diff} (tolerance 2/255, searched ${candidates.length} rays)`,
-      );
+      check('exact sRGB color of a drawn ray', false, `no on-screen ok-status ray found among ${candidates.length} candidates and no coincident bins on screen`);
     }
 
     // ---- (3) stopping down to f/8 removes marginal rays exactly as the engine's own status says --------------
@@ -166,6 +198,39 @@ async function main() {
       irisErr <= 0.005,
       `drawn ${irisProbe.iris.drawnRadius.toFixed(4)} mm vs model ${irisProbe.iris.modelRadius.toFixed(4)} mm (${(irisErr * 100).toFixed(2)}%, tolerance 0.5%)`,
     );
+
+    // ---- (5) score loop r2: the fans start on the focused plane, so they converge on the sensor ---------------
+    // At f/8 the on-axis fan's landing chord at the bin nearest the d line stays under 2 x CoC at any focus (before
+    // r2 the fans came from infinity: n500 at 8.91 m landed over 3.8 mm). And the inset legend names whichever part
+    // of the spread dominates: one color's own blur, or the shift between colors.
+    for (const [lens, focusM] of [['p50', 3], ['p50', 0.6], ['n50', 3], ['n500', 8.91], ['n500', 30], ['s35', 1]]) {
+      await page.evaluate(([l, f]) => window.p2p.set({ lens: l, fno: 8, focusM: f, format: 'ff' }), [lens, focusM]);
+      await page.evaluate(() => window.p2p.settle());
+      const pr = await page.evaluate(() => window.p2p.pieces.lens.probe());
+      const coc = await page.evaluate(() => window.p2p.model().figs.cocMm.v);
+      const nms = [...new Set(pr.rays.map((r) => r.nm))];
+      const nmD = nms.reduce((a, b) => (Math.abs(b - 587.56) < Math.abs(a - 587.56) ? b : a));
+      const pts = pr.rays.filter((r) => r.field === 0 && r.nm === nmD && r.status === 'ok').map((r) => r.engine[r.engine.length - 1]);
+      let chord = 0;
+      for (const a of pts) for (const b of pts) chord = Math.max(chord, Math.hypot(a[0] - b[0], a[1] - b[1]));
+      const focusMm = await page.evaluate(() => window.p2p.model().focus.distanceMm);
+      check(`${lens} focused at ${focusM} m: fans start on the focused plane`, pr.fanSourceMm !== null && Math.abs(pr.fanSourceMm - focusMm) < 1e-6,
+        `rays start ${pr.fanSourceMm === null ? 'at infinity' : (pr.fanSourceMm / 1000).toFixed(3) + ' m'} from the sensor; focus ${(focusMm / 1000).toFixed(3)} m`);
+      // The drawn fan samples the WIDE-OPEN pupil and clips it at the current iris (marginal-rays.ts), so at f/8 a short
+      // lens draws only its chief ray; the chord is checked where at least three on-axis rays survive. src/engine/
+      // camera.test.ts checks 15-ray f/8 fans for 11 lens/focus cases.
+      if (pts.length >= 3) {
+        check(`${lens} f/8 focused at ${focusM} m: on-axis fan converges on the sensor`, chord < 2 * coc,
+          `${nmD.toFixed(1)} nm landing chord ${(chord * 1000).toFixed(1)} µm over ${pts.length} rays (limit 2 x CoC = ${(2 * coc * 1000).toFixed(1)} µm)`);
+      }
+      const ins = pr.inset;
+      // score loop r4 wording: a plain key. It states the red-to-violet distance, and the widest one-color spread when there is one
+      const um = (mm) => `${(mm * 1000).toFixed(mm < 0.01 ? 1 : 0)} µm`;
+      const keyOk = ins.legend.startsWith('Colors land in different places') && ins.legend.includes(`red to violet ${um(ins.colorShiftMm)} apart`)
+        && (ins.spotMm < 0.0001 ? /each color lands in one point/.test(ins.legend) : ins.legend.includes(`up to ${um(ins.spotMm)}`));
+      check(`${lens} at ${focusM} m: inset legend states the color shift and one color's own spread`, keyOk && !/spread is chromatic aberration|color error|other blur/.test(ins.legend),
+        `color shift ${(ins.colorShiftMm * 1000).toFixed(1)} µm, widest one-color spread ${(ins.spotMm * 1000).toFixed(1)} µm; legend "${ins.legend}"`);
+    }
 
     check('zero console errors during the gate', consoleErrors.length === 0, `${consoleErrors.length} error(s)${consoleErrors.length ? ': ' + consoleErrors.slice(0, 3).join(' | ') : ''}`);
 

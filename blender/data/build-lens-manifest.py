@@ -20,6 +20,10 @@ out = {
 for i in IDS:
     b = json.load(open(os.path.join(ROOT, 'blender/data', f'{i}-build.json'), encoding='utf-8'))
     b['body'] = BODY[b['mount']]
+    # the phone variant (lens_v2.py --lite), when it has been exported: the Models page loads it on a narrow screen
+    lite = f'public/models/lenses/{i}.lite.glb'
+    if os.path.exists(os.path.join(ROOT, lite)):
+        b['glbLite'] = lite
     out['lenses'][i] = b
 json.dump(out, open(os.path.join(ROOT, 'public/models/lenses.json'), 'w', encoding='utf-8'), indent=2, ensure_ascii=False)
 print('wrote public/models/lenses.json:', ', '.join(f"{i} {out['lenses'][i]['label']}" for i in IDS))

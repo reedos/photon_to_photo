@@ -13,13 +13,14 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { nodeDracoLoader } from './draco-node';
 
 const ROOT = resolve(__dirname, '../../..');
 
 function loadGlb(relPath: string): Promise<THREE.Group> {
   const buf = readFileSync(resolve(ROOT, relPath));
   const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-  const loader = new GLTFLoader();
+  const loader = new GLTFLoader().setDRACOLoader(nodeDracoLoader());
   return new Promise((resolve_, reject) => {
     loader.parse(arrayBuffer, '', (gltf) => resolve_(gltf.scene), (err) => reject(err));
   });

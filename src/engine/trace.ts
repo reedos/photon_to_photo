@@ -38,6 +38,9 @@ export interface TraceOptions {
  * non-circular blade) opening; per types.ts, an absent `sys.iris` means "a circular stop of the stop's sd", which
  * is exactly the sd check already applied to every surface, so no extra test is needed in that case.
  */
+/** mm: how far behind its previous hit a ray may meet a surface before that counts as edge contact (R-L5). */
+const EDGE_CONTACT_TOL = 1e-6;
+
 export function traceRay(sys: TraceSystem, ray: Ray, opts?: TraceOptions): RayPath {
   const ignoreVignetting = opts?.ignoreVignetting ?? false;
   const pts: Vec3[] = [ray.o];
@@ -65,6 +68,21 @@ export function traceRay(sys: TraceSystem, ray: Ray, opts?: TraceOptions): RayPa
     if (!ignoreVignetting && surf.kind === 'stop' && sys.iris && !sys.iris(x, y)) {
       pts.push(p);
       return { nm: ray.nm, pts, status: 'iris', blockedAt: i };
+    }
+
+    // R-L5 (10/10/2026 correctness review): edge contact. Sequential tracing lets a ray reach a surface behind its
+    // previous hit (surface.ts: virtual propagation for zero or negative gaps). Where the axial gap is positive and
+    // both surfaces bound real media, a hit behind the previous one means the two surfaces have already crossed at
+    // that height: there is no glass (or air space) there, only the element's edge or a spacer, so the ray is
+    // blocked. Without this, s35's L12/L13 air space (surfaces 22/23, crossing at h = 16.0 mm inside clear
+    // apertures of 17.7 to 18.0 mm) passed rays that ran 0.13 mm backward. Dummy surfaces (no medium change) and
+    // stops keep virtual propagation; realize.ts's clear-aperture survey (ignoreVignetting) is unaffected.
+    if (!ignoreVignetting && i > 0 && t < -EDGE_CONTACT_TOL) {
+      const prev = sys.surfaces[i - 1];
+      if (surf.kind === 'refract' && prev.kind === 'refract' && surf.z - prev.z > EDGE_CONTACT_TOL && prev.mediumAfter !== surf.mediumAfter) {
+        pts.push(p);
+        return { nm: ray.nm, pts, status: 'vignetted', blockedAt: i };
+      }
     }
 
     pts.push(p);

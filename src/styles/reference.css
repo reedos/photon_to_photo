@@ -15,9 +15,12 @@
 .reference dl { margin: 0; }
 .reference dt { font-weight: 700; color: var(--accent); }
 .reference dd { margin: 8px 0 24px; color: var(--muted); }
-.reference .evidence-row { display: grid; grid-template-columns: 180px 1fr; gap: 16px; border-bottom: 1px solid var(--line); padding: 16px 0; overflow-wrap: anywhere; }
+.reference .evidence-row { display: grid; grid-template-columns: 240px 1fr; gap: 16px; border-bottom: 1px solid var(--line); padding: 16px 0; overflow-wrap: anywhere; }
 .reference .evidence-row small { display: block; color: var(--muted); }
-.reference footer { padding: 24px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+/* the footer text starts on the content column (score loop r4: it sat at the page edge, 100 px left of the text above it) */
+.reference footer { padding: 24px max(28px, calc((100% - 1120px) / 2 + 28px)); border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.reference:has(.connected-story) footer { padding-inline: max(28px, calc((100% - 1240px) / 2 + 28px)); }
+@media(max-width: 760px) { .reference footer, .reference:has(.connected-story) footer { padding-inline: 20px; } }
 .reference [hidden] { display: none !important; }
 @media(max-width: 760px) { .reference main { padding: calc(var(--bar) + 24px) 20px 40px; } .reference .ref-grid { grid-template-columns: 1fr; } .reference .evidence-row { grid-template-columns: 1fr; gap: 6px; } }
 
@@ -33,24 +36,40 @@
 .story-chapters { display:grid;grid-template-columns:repeat(8,minmax(0,1fr));border:1px solid var(--line-2);background:var(--surface); }
 .story-chapters button { display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:52px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--muted);font:12px var(--sans);cursor:pointer;padding:7px; }
 .story-chapters button:last-child { border-right:0; }
-.story-chapters button span { font:10px var(--mono);color:var(--accent); }
+.story-chapters button span { font:11px var(--mono);color:var(--accent); }
 .story-chapters button[aria-current] { color:var(--ink);background:#263039;box-shadow:inset 0 -2px var(--accent); }
-.story-spread { display:grid;grid-template-columns:minmax(0,1.13fr) minmax(0,1fr);gap:32px;padding:28px 0 24px;align-items:center; }
+/* top-aligned (score loop r3: a tall chapter, the Pixel one, left an empty block above the photo) */
+.story-spread { display:grid;grid-template-columns:minmax(0,1.13fr) minmax(0,1fr);gap:32px;padding:28px 0 24px;align-items:start; }
 .story-photograph { margin:0;min-width:0; }
 .story-photograph img { display:block;width:100%;height:auto;aspect-ratio:1600/1066;object-fit:contain;border:1px solid var(--line-2); }
 .story-photograph figcaption { display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px 12px;font-size:11px;color:var(--muted);padding:10px 0; }
 .story-photograph figcaption strong { color:var(--ink);font-weight:500; }
-.story-record { display:flex;flex-wrap:wrap;gap:10px;font:10px var(--mono);color:var(--muted);padding-top:6px; }
+.story-record { display:flex;flex-wrap:wrap;gap:10px;font:11px var(--mono);color:var(--muted);padding-top:6px; }
 .story-record span { color:var(--accent); }.story-record b { font-weight:400; }
 .story-illustration { border:1px solid #263d47;background:linear-gradient(135deg,#111f29,#0c141b);color:#94b4bf;padding:8px; }
 .story-illustration svg { display:block;width:100%;height:auto;max-height:260px; }
-.story-illustration .story-svg-label { fill:#e6f2f7;font:600 13px var(--sans);letter-spacing:.04em;paint-order:stroke;stroke:#07111a;stroke-width:3px;stroke-linejoin:round; }
-.story-illustration .story-svg-small { fill:#c2d3dc;font:600 10px var(--mono);letter-spacing:.12em; }
+/* Score loop r4: diagram text is 14 viewBox units, so it renders at 10.5 px or more wherever the figure is 500 px wide or
+   more (the figure is also capped at 220 to 260 px tall, so its scale never passes .93 or drops under .78 there). In a
+   narrower box the labels hide, numbered badges stand in for them and the same words list under the figure at page size. */
+.story-illustration { container: story-art / inline-size; }
+.story-illustration .story-svg-label { fill:#e6f2f7;font:600 14px var(--sans);letter-spacing:.04em;paint-order:stroke;stroke:#07111a;stroke-width:3px;stroke-linejoin:round; }
+.story-illustration .story-svg-small { fill:#c2d3dc;font:600 14px var(--mono);letter-spacing:.06em;paint-order:stroke;stroke:#07111a;stroke-width:3px;stroke-linejoin:round; }
+.story-illustration .story-badge, .story-illustration .story-svg-key { display:none; }
+.story-illustration .story-badge circle { fill:#ffd58e;stroke:#07111a;stroke-width:2px; }
+.story-illustration .story-badge text { fill:#07111a;font:700 23px var(--sans);letter-spacing:0; }
+.story-illustration .story-svg-key { list-style:none;margin:8px 2px 2px;padding:0;counter-reset:key;gap:6px; }
+.story-illustration .story-svg-key li { counter-increment:key;display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;font:12px/1.4 var(--sans);color:#d6e5ec; }
+.story-illustration .story-svg-key li::before { content:counter(key);display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ffd58e;color:#07111a;font:700 12px/1 var(--sans); }
+@container story-art (max-width: 499px) {
+  .story-illustration .story-svg-label, .story-illustration .story-svg-small { display:none; }
+  .story-illustration .story-badge { display:inline; }
+  .story-illustration .story-svg-key { display:grid; }
+}
 .story-ray { stroke:#ffc16e; }.story-glass { fill:#56c8f61a;stroke:#61c9f0; }.story-filter { fill:#64d5ba25;stroke:#62c7a8; }.story-charge { fill:#63d4b1;stroke:#63d4b1; }.story-source { fill:var(--accent);stroke:var(--accent); }.story-blur { fill:#b9a1f44d;stroke:#b9a1f4; }
 .reference .story-figure { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;margin:12px 0 10px;padding:10px 12px;border:1px solid #36505d;border-left:3px solid var(--accent);background:#101d27; }
 .reference .story-figure strong { grid-column:1;grid-row:1;color:#f1f6f8;font:600 20px/1.2 var(--mono);font-variant-numeric:tabular-nums; }
 .reference .story-figure small { grid-column:1;grid-row:2;color:var(--muted);font:11px/1.4 var(--sans); }
-.reference .story-figure .figure-evidence { grid-column:2;grid-row:1/3;justify-self:end;padding:5px 7px;border:1px solid #536b78;background:#0a131b;color:#bfe8d7;font:9px/1.3 var(--mono);text-align:center; }
+.reference .story-figure .figure-evidence { grid-column:2;grid-row:1/3;justify-self:end;padding:5px 7px;border:1px solid #536b78;background:#0a131b;color:#bfe8d7;font:11px/1.3 var(--mono);text-align:center; }
 .reference .story-chapter h2 { font-size:30px;margin:0 0 12px; }
 .reference #story-copy { font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 12px; }
 .story-provenance { color:var(--muted);font-size:11px;line-height:1.6;margin-bottom:16px; }
@@ -58,6 +77,8 @@
 .story-transport { display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:18px; }
 .story-transport p { font:11px var(--mono);color:var(--muted);margin:0; }
 .story-transport .btn:disabled { opacity:.35;cursor:default; }
+.reference .story-path { grid-column:1/-1;margin:0 0 20px;font-size:13px;line-height:1.6;color:var(--muted);max-width:68ch; }
+.story-path b { color:var(--ink);font-weight:500; }
 .story-endnote { font-size:12px;color:var(--muted);line-height:1.6;margin-top:22px; }
 .connected-story :is(button,a,summary):focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
 @media(max-width:760px){
@@ -66,20 +87,25 @@
  .reference .story-heading h1 { font-size:44px;margin:10px 0 12px; }
  .reference .story-heading .lede { font-size:13px;line-height:1.6; }
  .reference .story-heading .ref-actions { margin:18px 0 22px; }
- .story-heading .btn { min-height:44px;flex:1;padding:8px 10px;font-size:10px; }
+ .story-heading .btn { min-height:44px;flex:1;padding:8px 10px;font-size:11px; }
  .story-chapters { grid-template-columns:repeat(4,minmax(0,1fr)); }
- .story-chapters button { min-height:44px;font-size:10px;gap:5px;border-bottom:1px solid var(--line); }
- .story-chapters button span { font-size:9px; }
+ .story-chapters button { min-height:44px;font-size:11px;gap:5px;border-bottom:1px solid var(--line); }
+ .story-chapters button span { font-size:11px; }
  .story-spread { display:block;padding:18px 0; }
  .story-photograph { margin-bottom:24px; }
- .story-photograph figcaption { font-size:10px; }
+ .story-photograph figcaption { font-size:11px; }
  .story-illustration svg { max-height:220px; }
  .reference .story-figure { margin:8px 0; }
  .reference .story-figure strong { font-size:17px; }
  .reference .story-chapter h2 { font-size:28px; }
  .story-transport { gap:8px; }
- .story-transport .btn { min-height:42px;padding:8px;font-size:10px; }
- .story-transport p { font-size:10px;text-align:center; }
+ .story-transport .btn { min-height:42px;padding:8px;font-size:11px; }
+ .story-transport p { font-size:11px;text-align:center; }
+}
+/* score loop r3: on a narrow phone the evidence chip squeezed the figure to one word per line; it stacks under it */
+@media(max-width:480px){
+ .reference .story-figure { grid-template-columns:minmax(0,1fr); }
+ .reference .story-figure .figure-evidence { grid-column:1;grid-row:3;justify-self:start;margin-top:6px;text-align:left; }
 }
 .reference .ref-search-status { display:flex;gap:16px;align-items:center;margin:-12px 0 22px; }
 .ref-search-status p { margin:0;color:var(--muted);font-size:13px; }
@@ -94,8 +120,65 @@
 .evidence-uses p { margin:6px 0 0;color:var(--muted); }
 .reference :is(input,button,summary):focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
 
-.story-illustration video{display:block;width:100%;height:auto;max-height:230px;background:#07131f}.reference .story-loop-note{font-size:10px;line-height:1.4;color:#b6cbd7;margin:7px 2px 0}
+.story-illustration video{display:block;width:100%;height:auto;max-height:230px;background:#07131f}.reference .story-loop-note{font-size:11px;line-height:1.4;color:#b6cbd7;margin:7px 2px 0}
 
 /* Source links and expandable citations remain touchable below the first viewport. */
 .reference main a:not(.btn) { display: inline-block; min-height: 24px; max-width: 100%; overflow-wrap: anywhere; }
 .reference main summary { min-height: 32px; }
+/* score loop r2: how a source was retrieved, collapsed under the reader-facing summary */
+.retrieval-notes { margin-top:6px; }
+.retrieval-notes summary { cursor:pointer;color:var(--muted);font-size:11px; }
+.retrieval-notes p { font-size:11px; }
+/* score loop r2: the Pixel chapter's video, cropped to its two plots (frame rows 45-400 of 480) with the labels as
+   page text; the baked-in labels were about 5 px at this width */
+.story-video { margin: 0; }
+.story-video-heads { display: grid; grid-template-columns: 57.4% 1fr; gap: 0; margin: 4px 0 4px; font: 600 14px/1.25 var(--sans); color: #b8efdf; text-transform: uppercase; letter-spacing: .02em; }
+.story-video-frame { position: relative; overflow: hidden; aspect-ratio: 1080 / 355; background: #07131f; }
+.story-illustration .story-video-frame video { position: absolute; left: 0; top: -12.68%; width: 100%; height: auto; max-height: none; }
+.story-video-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+.story-video-keys p, .story-video figcaption { margin: 0; font-size: 14px; line-height: 1.4; color: #cad9e4; }
+.story-video-keys b { display: block; color: #b8efdf; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.story-video figcaption { margin-top: 8px; color: #b6cbd7; }
+@media (max-width: 760px) {
+  .story-video-heads { font-size: 11px; }
+  .story-video-keys { grid-template-columns: 1fr; gap: 6px; }
+  .story-video-keys p, .story-video figcaption { font-size: 12px; }
+  .story-video-keys b { font-size: 11px; }
+}
+
+/* The Evidence page's summary figure (score loop r4): the recorded uses by evidence label, as one bar and its key. */
+.reference .evidence-summary { margin: 22px 0 8px; padding: 14px 16px 12px; border: 1px solid var(--line); }
+.reference .evidence-summary figcaption { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+.reference .evidence-summary figcaption b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.reference .ev-bar { display: flex; gap: 2px; height: 14px; }
+.reference .ev-seg { display: block; flex-basis: 0; min-width: 4px; }
+.reference .ev-key { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--muted); }
+.reference .ev-key li { display: inline-flex; align-items: center; gap: 6px; }
+.reference .ev-key b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.reference .ev-dot { display: inline-block; width: 10px; height: 10px; }
+.reference .ev-spec { background: var(--spec); }
+.reference .ev-vendor { background: var(--vendor); }
+.reference .ev-reported { background: var(--reported); }
+.reference .ev-derived { background: var(--derived); }
+.reference .ev-assumed { background: var(--assumed); }
+.reference .ev-none { background: var(--line-2, #3a4048); }
+/* score loop r4: the Method page plain summary and its collapsed specialist details */
+.evidence-group > h3 { margin:26px 0 6px;font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent); }
+.evidence-group[hidden] { display:none; }
+.method-plain li { margin:4px 0; }
+.method-specialists { margin:14px 0 22px;border:1px solid var(--line);background:var(--surface);padding:4px 14px 10px; }
+.method-specialists summary { cursor:pointer;color:var(--accent);padding:6px 0; }
+
+/* Score loop r5: the Method page's two schematics, set inside their cards */
+.ref-fig { margin: 12px 0 10px; color: var(--muted); }
+.ref-fig svg { display: block; width: 100%; max-width: 480px; height: auto; background: color-mix(in srgb, var(--surface) 70%, #000); border: 1px solid var(--line); }
+.ref-fig figcaption { font: 400 12px/1.4 var(--sans); margin-top: 6px; max-width: 44ch; }
+
+/* score loop r6: the Method page's live figure (src/app/ref-focus-figure.ts), larger than the static schematics */
+.ref-fig-live svg { max-width: 560px; }
+.ref-fig-live .ref-fig-ctl { display: flex; align-items: center; gap: 12px; margin-top: 10px; max-width: 560px; font: 600 12px/1.3 var(--sans); color: var(--ink); }
+.ref-fig-live .ref-fig-ctl span { white-space: nowrap; }
+.ref-fig-live .ref-fig-ctl input { flex: 1; min-width: 0; min-height: 44px; accent-color: var(--accent); }
+.ref-fig-live .ref-fig-ctl small { font: 400 11px/1.3 var(--sans); color: var(--muted); white-space: nowrap; }
+.ref-fig-live .ref-fig-note { font: 400 13px/1.45 var(--sans); color: var(--ink); margin: 4px 0 0; max-width: 56ch; min-height: 3.9em; }
+@media (max-width: 520px) { .ref-fig-live .ref-fig-ctl { flex-wrap: wrap; } .ref-fig-live .ref-fig-ctl input { flex-basis: 100%; order: 3; } }

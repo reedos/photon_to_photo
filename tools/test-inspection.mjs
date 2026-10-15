@@ -24,8 +24,10 @@ try {
     await page.locator('#steps [data-piece="lens"]').click();
     await page.waitForFunction(() => new URL(location.href).searchParams.get('piece') === 'lens');
     assert.match(await page.locator('.inspection-back').innerText(), /Aperture/);
-    assert.equal(new URL(page.url()).searchParams.get('part'), 'iris');
+    assert.equal(new URL(page.url()).searchParams.get('from'), 'iris');
+    assert.equal(new URL(page.url()).searchParams.get('part'), null, 'a level with nothing selected does not write part=');
     await page.locator('.inspection-back').click();
+    await page.waitForFunction(() => window.p2p.framing().piece === 'camera'); // a level tap paints first, then changes the level (score loop r5)
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.detail()), 'iris');
     assert.equal(await page.evaluate(() => window.p2p.scenario().focusM), 1.5);
     await page.reload();
@@ -33,13 +35,16 @@ try {
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.detail()), 'iris');
     await page.locator('#steps [data-piece="cone"]').click();
+    await page.waitForFunction(() => new URL(location.href).searchParams.get('piece') === 'cone');
     await page.reload();
     await page.waitForFunction(() => !!window.p2p);
     assert.match(await page.locator('.inspection-back').innerText(), /Focus ring/);
     await page.locator('.inspection-back').click();
+    await page.waitForFunction(() => window.p2p.framing().piece === 'camera');
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.detail()), 'focusRing');
     await page.locator('#steps [data-piece="camera"]').click();
+    await page.waitForFunction(() => window.p2p.framing().piece === 'camera');
     assert.equal(await page.evaluate(() => window.p2p.pieces.camera.detail()), null);
     await page.evaluate(() => window.p2p.set({ lens: 'n500', focusM: 30 }));
     await page.evaluate(() => window.p2p.pieces.camera.ready());

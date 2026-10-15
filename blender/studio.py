@@ -20,6 +20,14 @@ def studio(floor_z, target=(0, 0, 0), scale=1.0, res=(1600, 1000)):
         sc.eevee.taa_render_samples = 128      # clean refraction through the glass
     except AttributeError:
         pass
+    # score loop r4 (10/11/2026): the s35's front element showed a patch of white speckle, the key light's reflection
+    # in the glass sampled too coarsely (it stayed with 256 samples, with clamped samples and with ray tracing on).
+    # More shadow rays and steps and a lower light threshold clean it, so the evidence renders carry no noise.
+    for attr, val in (('shadow_ray_count', 4), ('shadow_step_count', 16), ('light_threshold', 0.001)):
+        try:
+            setattr(sc.eevee, attr, val)
+        except AttributeError:
+            pass
     sc.view_settings.view_transform = 'AgX'
     sc.view_settings.look = 'AgX - Medium High Contrast'
     world = bpy.data.worlds.new('studio'); sc.world = world; world.use_nodes = True
@@ -40,7 +48,9 @@ def studio(floor_z, target=(0, 0, 0), scale=1.0, res=(1600, 1000)):
         d = bpy.data.lights.new(name, 'AREA'); d.size = size * scale; d.energy = watts * 3.6e5 * scale * scale; d.color = color
         o = bpy.data.objects.new(name, d); C.link(o); o.location = t + Vector(off) * scale
         o.rotation_euler = (t - o.location).to_track_quat('-Z', 'Y').to_euler()
-    area('key', (-420, 520, 420), 420, 30, (1.0, 0.97, 0.93))
+    # 600 mm (was 420, same power): a larger softbox is a dimmer reflection in glass, so no sample catches a firefly of
+    # it (score loop r5, 10/11/2026: the s35's front element still showed a white speckle patch in review renders)
+    area('key', (-420, 520, 420), 600, 30, (1.0, 0.97, 0.93))
     area('fill', (520, 260, 120), 520, 6, (0.85, 0.9, 1.0))
     area('rim', (120, -560, 380), 260, 28, (0.95, 0.97, 1.0))
     area('top', (0, 60, 700), 700, 8)
@@ -55,6 +65,12 @@ def studio(floor_z, target=(0, 0, 0), scale=1.0, res=(1600, 1000)):
 
 def shoot(outdir, prefix, views, lens_mm=85):
     sc = bpy.context.scene
+    # never fewer than 96 samples, whatever a script asked for: below that the key light's reflection in a front element
+    # still sparkles (score loop r5, 10/11/2026)
+    try:
+        sc.eevee.taa_render_samples = max(sc.eevee.taa_render_samples, 96)
+    except AttributeError:
+        pass
     cam = sc.camera
     if cam is None:
         cam_d = bpy.data.cameras.new('cam'); cam_d.lens = lens_mm; cam_d.clip_start = 1; cam_d.clip_end = 50000
@@ -62,9 +78,7 @@ def shoot(outdir, prefix, views, lens_mm=85):
     for name, loc, tgt in views:
         cam.location = loc
         cam.rotation_euler = (Vector(tgt) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
-        sc.render.filepath = os.path.join(outdir, f'{prefix}-{name}.png')
-        bpy.ops.render.render(write_still=True)
-        print('RENDERED', sc.render.filepath)
+        C.render_still(os.path.join(outdir, f'{prefix}-{name}.png'))
 
 
 def cyl(name, r, depth, loc, axis='Y', mat=None, verts=64, bevel=0.4):

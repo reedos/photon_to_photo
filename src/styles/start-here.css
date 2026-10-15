@@ -1,4 +1,4 @@
-.start-entry { font: inherit; background: none; cursor: pointer; border: 0; color: var(--accent); }
+.start-entry { font: inherit; background: none; cursor: pointer; border: 0; }
 #start-here { width: min(900px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 28px; color: #e8f1f6; background: #0d171f; border: 1px solid #546b7b; border-radius: 10px; box-shadow: 0 24px 100px #000b; }
 #start-here::backdrop { background: #03080ddd; backdrop-filter: blur(5px); }
 #start-here header { display: flex; align-items: flex-start; gap: 16px; justify-content: space-between; }
@@ -34,5 +34,7 @@
   .start-paths button > span:not(.start-art) { font-size:12px; }
   .start-paths b { font-size:12px; }
   .start-intro { margin:10px 0 14px; font-size:13px; }
-  .start-foot { margin:14px 0 0; font-size:10px; }
+  .start-foot { margin:14px 0 0; font-size:11px; }
 }
+/* Score loop r3: the dialog repeats the opening's eyebrow and headline, styled the same way. */
+#start-here h2 em { color: var(--accent); font-style: normal; }

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  chromaticAdaptation,
+  D65_WHITE_XYZ,
   fitCameraToXYZ,
   linearSrgbToXyz,
   LINEAR_SRGB_TO_XYZ,
@@ -214,5 +216,32 @@ describe('mat3Invert', () => {
 
   it('throws on a singular matrix (edge case)', () => {
     expect(() => mat3Invert([1, 2, 3, 2, 4, 6, 1, 1, 1])).toThrow();
+  });
+});
+
+// Score loop r4 (10/12/2026): the Bradford adaptation the color-matrix fit applies before it targets sRGB.
+describe('chromaticAdaptation (Bradford)', () => {
+  const D50: Vec3 = [0.96422, 1, 0.82521]; // CIE D50 white, Lindbloom's table
+  it('carries the source white to the destination white exactly', () => {
+    const m = chromaticAdaptation(D50, D65_WHITE_XYZ);
+    const w = mat3Vec3(m, D50);
+    for (let k = 0; k < 3; k++) expect(w[k]).toBeCloseTo(D65_WHITE_XYZ[k], 10);
+  });
+  it('is the identity when the two whites agree', () => {
+    const m = chromaticAdaptation(D65_WHITE_XYZ, D65_WHITE_XYZ);
+    const I = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    for (let k = 0; k < 9; k++) expect(m[k]).toBeCloseTo(I[k], 10);
+  });
+  it("matches Lindbloom's published Bradford D50 -> D65 matrix to 3 decimals", () => {
+    // brucelindbloom.com, "Chromatic Adaptation", Bradford, D50 to D65
+    const published = [0.9555766, -0.0230393, 0.0631636, -0.0282895, 1.0099416, 0.0210077, 0.0122982, -0.020483, 1.3299098];
+    const m = chromaticAdaptation(D50, [0.95047, 1, 1.08883]);
+    for (let k = 0; k < 9; k++) expect(m[k]).toBeCloseTo(published[k], 3);
+  });
+  it('the D65 white is the XYZ of linear sRGB (1, 1, 1)', () => {
+    const w = linearSrgbToXyz([1, 1, 1]);
+    for (let k = 0; k < 3; k++) expect(D65_WHITE_XYZ[k]).toBeCloseTo(w[k], 12);
+    expect(D65_WHITE_XYZ[0]).toBeCloseTo(0.95047, 4);
+    expect(D65_WHITE_XYZ[2]).toBeCloseTo(1.08883, 3);
   });
 });

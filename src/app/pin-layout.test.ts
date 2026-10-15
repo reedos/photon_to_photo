@@ -22,4 +22,8 @@ describe('independent part marker layout', () => {
     expect(result.every(p=>p.x>=162)).toBe(true);
     expect(spreadPins(cluster,320,220,[{l:0,t:0,r:320,b:220}],null,true).size).toBe(0);
   });
+  it('searches six rings out, so a pin whose near ring is covered still gets a place on a longer leader (score loop r5)', () => {
+    const result = spreadPins([{ id: 'a', x: 100, y: 110 }], 400, 220, [{ l: 0, t: 0, r: 260, b: 220 }], null, true);
+    expect(result.get('a')?.x).toBeGreaterThanOrEqual(282);
+  });
 });

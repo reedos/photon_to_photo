@@ -19,12 +19,12 @@
 #shot-dialog :focus-visible { outline:2px solid #80dbff;outline-offset:3px; }
 @media(max-width:600px){
   #shot-dialog { width:calc(100vw - 12px);max-height:calc(100svh - 12px);padding:12px; }
-  .shot-eyebrow { font-size:10px; } #shot-dialog h2 { font-size:21px; }
+  .shot-eyebrow { font-size:11px; } #shot-dialog h2 { font-size:21px; }
   .shot-options { flex-wrap:wrap;gap:5px; } .shot-options label { width:100%; } .shot-options select { flex:1;min-width:0; }
   #shot-canvas { max-height:34svh; } .shot-story { display:block;margin:9px 0;min-height:100px; } .shot-story>div { display:flex;gap:8px;align-items:center;margin-bottom:4px; } .shot-story h3 { font-size:16px; } .shot-story p { font-size:12px;line-height:1.4; }
   #shot-measures { grid-template-columns:repeat(2,1fr);gap:5px; } #shot-measures span { padding:5px 8px; } #shot-measures b { display:inline;font-size:13px;margin-right:4px; }
   .shot-chapters { gap:5px;margin:8px 0; }.shot-chapters span { display:none; }.shot-transport { flex-wrap:wrap;gap:6px; }
-  #shot-dialog .btn { padding:6px 8px; } .shot-scrub { flex-basis:calc(100% - 235px); } #shot-dialog footer { flex-wrap:wrap; } #shot-status { max-width:100%; } .shot-footnote { font-size:10px; }
+  #shot-dialog .btn { padding:6px 8px; } .shot-scrub { flex-basis:calc(100% - 235px); } #shot-dialog footer { flex-wrap:wrap; } #shot-status { max-width:100%; } .shot-footnote { font-size:11px; }
 }
 @media(prefers-reduced-motion:reduce){ #shot-dialog::backdrop { backdrop-filter:none; } }
 #shot-dialog .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0; }
@@ -32,10 +32,10 @@
 #shot-dialog { max-width:none;box-sizing:border-box; } #shot-dialog .btn:disabled { opacity:.45;cursor:wait; }
 #shot-dialog .shot-chapters .btn { transition:none; }
 @media(max-width:600px){ #shot-dialog .shot-eyebrow { display:none; } #shot-dialog h2 { margin:0; } #shot-canvas { aspect-ratio:2.15; } .shot-story { min-height:85px; } #shot-dialog footer { margin-top:6px; } }
-.shot-follow select { border-color:var(--track-color,#ffb14e)!important; } @media(max-width:600px){ .shot-options { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px 8px; } .shot-options label { display:block;min-width:0;font-size:10px; } .shot-options select { display:block;width:100%;font-size:11px;padding:5px!important; } #shot-settings { grid-column:1/-1; } }
+.shot-follow select { border-color:var(--track-color,#ffb14e)!important; } @media(max-width:600px){ .shot-options { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px 8px; } .shot-options label { display:block;min-width:0;font-size:11px; } .shot-options select { display:block;width:100%;font-size:11px;padding:5px!important; } #shot-settings { grid-column:1/-1; } }
 
 /* Give the mechanism the main column; explanation and measurements stay alongside it. */
-.shot-main { display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:18px;align-items:center; }
+.shot-main { display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:center; } /* 270 px, not 220 (score loop r5): the explanation column now keeps its longest chapter's height, and a wider column keeps that no taller than the picture */
 .shot-options { flex-wrap:wrap;gap:8px 16px; }
 .shot-options label { min-width:0; }
 #shot-source { max-width:240px; }
@@ -59,9 +59,17 @@
  .shot-explanation .shot-story { margin:8px 0; }
  .shot-explanation .shot-story>div { margin-bottom:4px; }
  .shot-explanation .shot-story h3 { font-size:16px; }
- #shot-dialog .shot-chapters .btn { padding:4px 2px;min-height:40px;min-width:0;font-size:10px;flex-direction:column;justify-content:center;gap:3px;letter-spacing:0; }
- .shot-chapters span { display:block;font-size:9px;letter-spacing:0; }
+ #shot-dialog .shot-chapters .btn { padding:4px 2px;min-height:40px;min-width:0;font-size:11px;flex-direction:column;justify-content:center;gap:3px;letter-spacing:0; }
+ .shot-chapters span { display:block;font-size:11px;letter-spacing:0; }
 }
+/* Score loop r4: on a phone six stacked tabs left 'EXPOSURE' touching its button's edges (57 px of text in a 55 px
+   tab). Three tabs a row give each label room, number beside name, with side padding. */
+@media(max-width:430px){
+ .shot-chapters { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px; }
+ #shot-dialog .shot-chapters .btn { flex-direction:row;gap:5px;min-height:36px;padding:4px 8px; }
+ .shot-chapters span { display:inline; }
+}
+.shot-chapters .shot-chip-short { display:none; }
 .shot-footer-actions { display:flex;gap:8px;flex-wrap:wrap; }
 #shot-view-photo[hidden] { display:none; }
 #shot-photo-dialog { box-sizing:border-box;width:min(1200px,90vw);max-height:92svh;padding:14px;background:#0b1520;color:#e5eff4;border:1px solid #496178;border-radius:12px;overflow:auto; }
@@ -79,22 +87,40 @@
  .shot-options label:first-child { display:flex;align-items:center;gap:6px; }
  .shot-options label:first-child select { flex:1;min-width:0; }
  #shot-dialog .shot-options select { min-height:32px; }
- .shot-explanation .shot-story { margin:6px 0; }
+ .shot-explanation .shot-story { margin:4px 0; }
  .shot-notes { margin-top:4px; }
 }
 /* Keep the full transport and photo actions visible on narrow phones. */
 @media(max-width:400px){
  #shot-step { white-space:nowrap; }
  .shot-explanation .shot-story h3 { font-size:15px; }
- .shot-explanation #shot-measures span { font-size:10px;line-height:1.35;padding:5px 6px; }
+ .shot-explanation #shot-measures span { font-size:11px;line-height:1.35;padding:3px 6px; } /* integration r5: 5 -> 3 px, with the story's 6 -> 4 px margin below, brings 320x740 back inside the dialog's height allowance */
  .shot-explanation #shot-measures b { font-size:12px; }
  .shot-transport { flex-wrap:nowrap;gap:4px; }
- #shot-dialog .shot-transport .btn { font-size:10px;padding:5px;letter-spacing:0; }
+ #shot-dialog .shot-transport .btn { font-size:11px;padding:5px;letter-spacing:0; }
  .shot-scrub { flex:1;min-width:30px; }
- #shot-clock { font-size:9px; }
+ #shot-clock { font-size:11px; }
+ #shot-clock .shot-clock-chapter { display:none; } /* r6: the chapter chips already say which chapter; the seconds left stay */
  #shot-dialog #shot-speed { width:44px;min-width:0;padding:4px;font-size:11px; }
  .shot-footer-actions { display:grid;grid-template-columns:1fr 1.7fr;gap:6px; }
- #shot-dialog .shot-footer-actions .btn { font-size:10px;white-space:normal;letter-spacing:0;padding:5px; }
- #shot-status { font-size:10px;line-height:1.35; }
+ #shot-dialog .shot-footer-actions .btn { font-size:11px;white-space:normal;letter-spacing:0;padding:5px; }
+ #shot-status { font-size:11px;line-height:1.35; }
  #shot-dialog[data-stage="2"] .shot-follow { grid-column:auto; }
+}
+/* score loop r1: step titles at the display leading design/LOOK.md sets (0.86-0.95), not the inherited ~1.6 */
+.shot-story h3, .shot-explanation .shot-story h3 { line-height:.95; }
+/* score loop r4 (WCAG 1.4.4, 1.4.10): below 440 px the six chapter chips (41-55 px each) were narrower than "Exposure", "Charge"
+   and "Readout", and their labels ran together ("OPTICSEXPOSURECHARGEREADOUT"). Here each chip is its number alone, 44 px
+   tall; its name stays in its accessible name ("Chapter 3: Exposure") and the chapter's title is the heading under the
+   picture, as it is while the story plays. */
+@media(max-width:439px){
+ #shot-dialog .shot-chapters .btn { min-height:44px;padding:4px 2px;justify-content:center; }
+ #shot-dialog .shot-chapters .btn span { display:none; }
+ /* score loop r5: the chips showed only numerals here, so the arc (Scene, Optics, Expo, Pixel, Read, Photo) was invisible
+    in the control that walks it. Each chip is its number over a short name at 10.5 px (design/LOOK.md); 'Exposure'
+    and 'Readout' are 'Expo' and 'Read' so every name fits a 46 px chip at 320 px. The full name stays in the aria-label. */
+ #shot-dialog .shot-chapters .btn { flex-direction:column;gap:1px;line-height:1.15; }
+ #shot-dialog .shot-chapters .btn .shot-chip-short { display:block;font-style:normal;font-size:10.5px;letter-spacing:0;white-space:nowrap; }
+ /* integration: with the names hidden the two-row grid of the 430 px block is two 44 px rows of bare numbers for nothing; one row of six keeps the dialog 49 px shorter at 320x740 */
+ .shot-chapters { grid-template-columns:repeat(6,minmax(0,1fr));gap:4px; }
 }

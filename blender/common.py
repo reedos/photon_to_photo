@@ -461,10 +461,12 @@ def mat_rubber(name="GripRubber", textured=True):
     """Leatherette/rubber: near-black, soft sheen, the pebble grain as a normal map."""
     mat, bsdf = _new_mat(name)
     bsdf.inputs["Base Color"].default_value = (0.018, 0.018, 0.019, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.72
+    bsdf.inputs["Roughness"].default_value = 0.76 if textured else 0.72
     bsdf.inputs["Metallic"].default_value = 0.0
     if textured:
-        _normal_chain(mat, pebble_normal(), 0.8)
+        # 0.6 (it was 0.8) and a little rougher: the pebble's ridges sparkled along the tile edges in the viewer (score
+        # loop r5, 10/11/2026), a normal map's highlights aliasing as it minifies
+        _normal_chain(mat, pebble_normal(), 0.6)
     return mat
 
 
@@ -508,13 +510,227 @@ def mat_flat(name, color, rough=0.5, metal=0.0):
 MAP_FILES = {'pebbleNormal': 'leatherette-normal.png', 'paintNormal': 'paint-normal.png'}
 
 
+def _material_signature(mat):
+    """Everything about a material that reaches the export: its node settings, images and extras."""
+    def val(v):
+        try:
+            return tuple(round(x, 6) for x in v)
+        except TypeError:
+            return round(v, 6) if isinstance(v, float) else v
+    sig = [getattr(mat, 'surface_render_method', None), getattr(mat, 'blend_method', None),
+           tuple(sorted((k, str(mat[k])) for k in mat.keys()))]
+    if mat.use_nodes:
+        for n in sorted(mat.node_tree.nodes, key=lambda n: n.name):
+            ins = tuple((i.identifier, val(i.default_value)) for i in n.inputs if hasattr(i, 'default_value'))
+            img = n.image.name if getattr(n, 'image', None) else None
+            sig.append((n.bl_idname, ins, img))
+        sig.append(tuple(sorted((l.from_node.name, l.from_socket.identifier, l.to_node.name, l.to_socket.identifier)
+                                for l in mat.node_tree.links)))
+    return repr(sig)
+
+
+def tidy_for_export():
+    """Score loop r1 (10/11/2026), export hygiene: materials that differ only by Blender's '.001' suffix and are
+    otherwise identical become one (each mat_* call made its own copy, so the GLBs carried SatinBlackPaint.001,
+    BrushedChrome.001 ...), and every mesh's data takes its object's name (glTF mesh names were Cube.012, Plane ...).
+    Returns (materials merged, meshes renamed)."""
+    import re
+    merged = 0
+    groups = {}
+    for m in list(bpy.data.materials):
+        groups.setdefault(re.sub(r'\.\d{3}$', '', m.name), []).append(m)
+    for stem, mats in groups.items():
+        mats.sort(key=lambda m: (m.name != stem, m.name))
+        keep = mats[0]
+        for dup in mats[1:]:
+            if _material_signature(dup) == _material_signature(keep):
+                dup.user_remap(keep)
+                bpy.data.materials.remove(dup)
+                merged += 1
+        if keep.name != stem and stem not in bpy.data.materials:
+            keep.name = stem
+            if keep.name in TEXTURED or any(m.name in TEXTURED for m in mats):
+                TEXTURED.add(stem)
+    renamed = 0
+    for o in bpy.context.scene.objects:
+        if o.type == 'MESH' and o.data.users == 1 and o.data.name != o.name:
+            o.data.name = o.name
+            renamed += 1
+    print('SLOTS', compact_material_slots(), 'faces moved off an empty material slot')
+    print('CULLING', set_backface_culling())
+    return merged, renamed
+
+
+def plain_twin(mat):
+    """The same material without its normal map (named <name>Plain), or None when `mat` has none. One twin per material."""
+    if mat is None or mat.name not in TEXTURED or not mat.use_nodes:
+        return None
+    name = mat.name + 'Plain'
+    t = bpy.data.materials.get(name)
+    if t is None:
+        t = mat.copy()
+        t.name = name
+        nt = t.node_tree
+        for n in [n for n in nt.nodes if n.type in ('NORMAL_MAP', 'TEX_IMAGE')]:
+            nt.nodes.remove(n)
+        for k in ('normalMap', 'normalScale', 'uvTileMm'):
+            if k in t.keys():
+                del t[k]
+    return t
+
+
+def compact_material_slots():
+    """Give every face an actual material (score loop r4, 10/11/2026): a boolean's cutter has no material, so the faces
+    it cuts into a part take an empty slot, which the glTF export wrote as a primitive with no material, and the
+    loader showed as the default white metal (the DSLR's prismHousing, 24 of its 78 triangles). Faces on an empty slot
+    go to the object's first real material, and the empty slots are dropped. Returns the number of faces moved."""
+    moved = 0
+    for o in bpy.context.scene.objects:
+        if o.type != 'MESH':
+            continue
+        mats = [s.material for s in o.material_slots]
+        real = [m for m in mats if m is not None]
+        if not real or len(real) == len(mats):
+            continue
+        keep = {}
+        for i, m in enumerate(mats):
+            if m is not None:
+                keep[i] = len(keep)
+        me = o.data
+        idx = [p.material_index for p in me.polygons]
+        # the faces a boolean's cutter made are cut faces and interior walls (a grip skin's inner surface, a part's
+        # section): when the part's first material wears a normal map they take its plain twin, so the pebble and the
+        # paint grain stay on the outside surfaces (score loop r5, 10/11/2026)
+        twin = plain_twin(real[0])
+        target = len(real) if twin is not None else 0
+        new = []
+        for i in idx:
+            if i in keep:
+                new.append(keep[i])
+            else:
+                new.append(target); moved += 1
+        me.materials.clear()
+        for m in real:
+            me.materials.append(m)
+        if twin is not None and moved:
+            me.materials.append(twin)
+        for p, i in zip(me.polygons, new):
+            p.material_index = i
+    return moved
+
+
+def set_backface_culling():
+    """Back-face culling on every material whose faces all belong to closed, outward-facing solids (score loop r4,
+    10/11/2026). Every exported material was double-sided, which doubles the fragment work on the closed opaque shells
+    and draws both faces of the lens glass. A material stays double-sided when any mesh using it is open (a text
+    plane, a screen, a window, a mirror plane) or has a negative volume (inside out), since culling would hide those
+    from the side that matters. Returns (materials culled, materials left double-sided)."""
+    open_use = set()
+    why = {}
+    seen = set()
+    for o in bpy.context.scene.objects:
+        if o.type != 'MESH' or not o.data.polygons:
+            continue
+        me = o.data
+        closed = _closed_and_outward(o)
+        for slot in o.material_slots:
+            if slot.material is not None:
+                seen.add(slot.material.name)
+                if not closed:
+                    open_use.add(slot.material.name)
+                    why.setdefault(slot.material.name, []).append(o.name)
+    culled = 0
+    for m in bpy.data.materials:
+        if m.name not in seen:
+            continue
+        on = m.name not in open_use
+        m.use_backface_culling = on
+        culled += on
+    for name, objs in sorted(why.items()):
+        print('  double-sided', name, 'because of', ', '.join(sorted(objs)[:6]) + (' ...' if len(objs) > 6 else ''))
+    return culled, len(seen) - culled
+
+
+def _closed_and_outward(o):
+    """True when the object's mesh (modifiers as exported, scale applied) has no boundary or non-manifold edge after
+    welding vertices within a micron, and a positive signed volume. Loose edges are ignored."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev = o.evaluated_get(dg)
+    me = ev.to_mesh()
+    try:
+        bm = bmesh.new(); bm.from_mesh(me)
+        bm.transform(o.matrix_world)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-3)
+        # (a loose edge, such as the axis edge a revolved profile leaves, has no face and is not exported)
+        if any(len(e.link_faces) != 2 for e in bm.edges if e.link_faces):
+            bm.free()
+            return False
+        vol = 0.0
+        for f in bm.faces:
+            vs = [v.co for v in f.verts]
+            for i in range(1, len(vs) - 1):
+                vol += vs[0].dot(vs[i].cross(vs[i + 1])) / 6.0
+        bm.free()
+        return vol > 0
+    finally:
+        ev.to_mesh_clear()
+
+
+def long_path(p):
+    """p made absolute and, on Windows, given the extended-length prefix, so files past the 260-character path limit
+    can be written (round 2, 10/11/2026)."""
+    p = os.path.abspath(p)
+    if os.name == 'nt' and not p.startswith('\\\\?\\'):
+        p = '\\\\?\\' + p.replace('/', '\\')
+    return p
+
+
+def export_glb(path, **kw):
+    """bpy.ops.export_scene.gltf into a short temporary folder, then the GLB copied to path (round 2, 10/11/2026):
+    Blender's exporter cannot write past the Windows path limit, which an export into a session scratchpad passed."""
+    import shutil
+    tmp = tempfile.mkdtemp(prefix='p2p-glb-')
+    try:
+        out = os.path.join(tmp, os.path.basename(path))
+        bpy.ops.export_scene.gltf(filepath=out, **kw)
+        dest = long_path(path)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copyfile(out, dest)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return path
+
+
+def render_still(path):
+    """Render the scene's camera to a PNG at path, through a short temporary folder (score loop r3, 10/11/2026): the
+    render's own write fails past the Windows path limit ("cannot save"), as the exporter's did (export_glb)."""
+    import shutil
+    tmp = tempfile.mkdtemp(prefix='p2p-png-')
+    sc = bpy.context.scene
+    try:
+        sc.render.filepath = os.path.join(tmp, 'still.png')
+        bpy.ops.render.render(write_still=True)
+        dest = long_path(path)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copyfile(sc.render.filepath, dest)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print('RENDERED', path)
+    return path
+
+
 def detach_normal_maps(out_dir, rel_prefix='textures/'):
     """Before a glTF export: write each normal map as a PNG into out_dir and point its materials at it through
     material extras (normalMap: path relative to the GLB's folder, normalScale, uvTileMm) instead of a glTF
     normalTexture. An embedded texture makes three's GLTFLoader throw under node ("self is not defined"), which the
     GLB tests would hit; the app applies the maps from the extras. Returns a function that relinks them, so Blender's
-    own renders keep the finish."""
+    own renders keep the finish.
+
+    Round 2 (10/11/2026): out_dir goes through long_path(), so an export into a deep folder (a session scratchpad) no
+    longer fails with FileNotFoundError once textures/ passes the 260-character path limit. The folder is still
+    written next to the GLB: the GLB's extras name the maps relative to it."""
     import shutil
+    out_dir = long_path(out_dir)
     os.makedirs(out_dir, exist_ok=True)
     relink = []
     for mat in bpy.data.materials:
@@ -526,7 +742,7 @@ def detach_normal_maps(out_dir, rel_prefix='textures/'):
         if not nm or not tex:
             continue
         fname = MAP_FILES.get(tex.image.name, tex.image.name + '.png')
-        shutil.copyfile(os.path.join(_TEX_DIR, tex.image.name + '.png'), os.path.join(out_dir, fname))
+        shutil.copyfile(os.path.join(os.path.abspath(_TEX_DIR), tex.image.name + '.png'), os.path.join(out_dir, fname))
         mat['normalMap'] = rel_prefix + fname
         mat['normalScale'] = round(nm.inputs['Strength'].default_value, 3)
         mat['uvTileMm'] = TILE_MM
@@ -683,13 +899,25 @@ def body_mount(throat_d, face_outer_d, lug_count, contact_count, flange_y, chrom
     ring = revolve('mount', face, ring_thetas(160), True, chrome, sharp_deg=30)
     extras = []
     rs = (rw + ro) / 2
+    # Score loop r6 (10/11/2026): the screw heads and the spring lock pin stood 0.06 and 0.75 mm proud of the face, so
+    # they ran into the rear plate of every mounted lens (292 triangle pairs on the DSLR, 1,436 on the Z8) and the
+    # ring was not where the flange distance puts the lens. They now sit in round pockets sunk 0.5 mm into the face and
+    # their tops stay at or under it: the ring's front is the flange plane, and nothing of the body stands past it.
+    half = (ro - rw) / 2                # the ring's half width: the Z mount's is 1.2 mm, so its heads are smaller
+    r_screw, r_pin = min(0.95, half - 0.35), min(1.25, half - 0.35)
+    pockets = [(r_screw + 0.2, math.radians(45 + 90 * k)) for k in range(4)] + [(r_pin + 0.2, math.radians(lock_pin_deg))]
+    for k, (pr, th) in enumerate(pockets):
+        cut = revolve(f'mountPocket{k}', [(0, fy - 0.5), (pr, fy - 0.5), (pr, fy + 0.2), (0, fy + 0.2)], ring_thetas(32), True, None, sharp_deg=30)
+        cut.location = (rs * math.sin(th), 0, rs * math.cos(th))
+        bpy.context.view_layer.update()
+        boolean_diff(ring, cut)
     for k in range(4):
         th = math.radians(45 + 90 * k)
-        extras.append(disc(f'mountScrew{k}', 0.95, 0.06, black, axis='Y', loc=(rs * math.sin(th), fy, rs * math.cos(th)),
-                           ch=0.03, seg=20))
+        extras.append(disc(f'mountScrew{k}', r_screw, 0.3, black, axis='Y', loc=(rs * math.sin(th), fy - 0.5, rs * math.cos(th)),
+                           ch=0.05, seg=20))
     th = math.radians(lock_pin_deg)
-    extras.append(disc('lockPin', 1.25, 0.5, chrome, axis='Y', loc=(rs * math.sin(th), fy, rs * math.cos(th)), ch=0.2,
-                       dome=0.25, seg=24))
+    extras.append(disc('lockPin', r_pin, 0.3, chrome, axis='Y', loc=(rs * math.sin(th), fy - 0.5, rs * math.cos(th)), ch=0.15,
+                       dome=0.15, seg=24))
     ring = join([ring] + extras, 'mount')
     lips = []
     span = TAU / lug_count

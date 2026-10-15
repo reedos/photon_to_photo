@@ -44,7 +44,10 @@ describe('normalizeScenario', () => {
   it('clamps shutter and iso to their documented ranges', () => {
     const s = normalizeScenario({ shutter: 999, iso: 999999 });
     expect(s.shutter).toBeLessThanOrEqual(30);
-    expect(s.iso).toBeLessThanOrEqual(51200);
+    expect(s.iso).toBeLessThanOrEqual(102400); // the D850's and Z8's expanded maximum
+    // base ISO 64 (native 64-25,600) is kept, not raised to 100; the expanded floor is ISO 32
+    expect(normalizeScenario({ iso: 64 }).iso).toBe(64);
+    expect(normalizeScenario({ iso: 10 }).iso).toBe(32);
   });
 
   it('falls back to the default lens for an unknown id, rather than throwing', () => {

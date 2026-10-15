@@ -121,7 +121,7 @@
       "medium": "air",
       "sd": 36.44,
       "sdSource": "estimated-from-marginal-ray",
-      "label": "air gap, G1 to G2 (focus group gap d11; patent gives 14.505 at infinity, 17.427 at intermediate, 28.403 at close focus -- see notes, no VariableGap entry recorded because the patent states magnification, not object distance, at the close-focus condition)"
+      "label": "air gap, G1 to G2 (focus group gap d11; patent gives 14.505 at infinity, 17.427 at intermediate, 28.403 at close focus -- recorded in focus.gaps)"
     },
     {
       "r": null,
@@ -325,8 +325,24 @@
   },
   "focus": {
     "method": "inner",
+    "gaps": [
+      {
+        "surface": 10,
+        "atInfinity": 14.505,
+        "atClose": 28.403,
+        "closeObjectDistance": 3598.9,
+        "note": "d11, the G1-to-G2 gap (this file's surface 10 = patent surface 11), patent values at infinity (14.505) and at the close state (28.403, beta = -0.153); the patent's intermediate state (17.427, beta = -0.033) is recorded in the surface label. closeObjectDistance is DERIVED, not patent-stated: the distance from the sensor whose paraxial d-line image lands on the sensor with these two gaps, 3598.9 mm, where the engine's own magnification is -0.1530 (the patent's printed beta) -- and equals Nikon's 3.6 m minimum focus distance. The intermediate state reproduces beta = -0.0333 (patent -0.033) at 15.12 m. See research/lenses-n500fl.md."
+      },
+      {
+        "surface": 15,
+        "atInfinity": 36.105,
+        "atClose": 22.207,
+        "closeObjectDistance": 3598.9,
+        "note": "d16, the G2-to-stop gap (this file's surface 15 = patent surface 16), patent values at infinity (36.105) and at the close state (22.207); the intermediate state is 33.183. d11 + d16 is 50.610 mm in all three states, so G2 moves as one unit and the back focus Bf = 87.772 does not change. Same derived closeObjectDistance as d11."
+      }
+    ],
     "minFocusM": 3.6,
-    "minFocusSource": "Nikon USA product page, https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview , accessed 9/28/2026: \"Minimum Focus Distance: 11.9 ft. (3.6m)\" from the focal plane. This is the tied product's own spec (evidence 'spec'), not the patent's close-focus condition (the patent's Example 1 gives only a close-focus magnification, β = -0.153, not an object distance -- see notes)."
+    "minFocusSource": "Nikon USA product page, https://www.nikonusa.com/p/af-s-nikkor-500mm-f4e-fl-ed-vr/20053/overview , accessed 9/28/2026: \"Minimum Focus Distance: 11.9 ft. (3.6m)\" from the focal plane. This is the tied product's own spec (evidence 'spec'). The patent's close state gives only a magnification, β = -0.153, not an object distance; solved with the patent's own d11 and d16 it falls at 3.599 m from the sensor, the same as this spec (see gaps and research/lenses-n500fl.md)."
   },
   "iris": {
     "blades": 9,
@@ -343,7 +359,7 @@
     "Open item, ED-glass count: Nikon markets this lens with 2 ED elements, but THREE elements in this patent example share the same nd=1.49782/vd=82.57 (surfaces 10, 19 and 24 -- L15, L32 and L35, each the rear/cemented element of a different doublet). The patent gives no glass names, only nd/vd/theta_gf, so which two (if any) of these three correspond to Nikon's marketed 'ED' elements cannot be determined from the patent text alone; recorded as an open question rather than guessed.",
     "Elements/groups counted the same way as p500.json: the front protective filter glass (surfaces 1-2, plate: \"filter\") is a plane-parallel element with no optical power and is excluded from both the elements and groups counts, matching how Nikon's own spec (16/12) evidently also excludes it (16 power elements: L11,L12,L13,L14,L15,L21,L22,L23,L31,L32,L33,L34,L35,L36,L37,L38; 12 groups by cementing: G1 = L11 | L12 | L13 | (L14+L15) = 4 groups; G2 = L21 | (L22+L23) = 2 groups; G3a = (L31+L32) = 1 group; G3b = L33 | (L34+L35) = 2 groups; G3c = L36 | L37 | L38 = 3 groups; total 4+2+1+2+3 = 12).",
     "No aspheric surfaces are printed in Example 1's table (checked the patent text for an aspheric-coefficient section; none present for this example), consistent with an all-spherical telephoto design.",
-    "Focus: patent explicitly labels this an inner-focus design, G2 moving toward the image side for near focus (text: '第2レンズ群G2を光軸に沿って像側へ移動させることにより、無限遠物体から近距離物体への合焦を行う'), with the aperture stop fixed. Two variable air gaps are printed, d11 (surface 11, G1-to-G2 gap; this file's surface index 10) and d16 (surface 16, G2-to-stop gap; this file's surface index 15), at three focus states (infinity / intermediate / close). No VariableGap entries are recorded in `focus.gaps` because the patent's close-focus row gives only a magnification (β = -0.153 at close, -0.033 at intermediate), not an object distance in mm, and computing an equivalent object distance from β would require re-deriving the close-focus system's principal-plane shift (the whole prescription's spacings change between focus states) -- doable in principle but not attempted here to avoid a number that looks patent-stated but is actually a multi-step derivation; the raw d11/d16 values themselves are recorded verbatim in each gap surface's own label instead.",
+    "Focus: patent explicitly labels this an inner-focus design, G2 moving toward the image side for near focus (text: '第2レンズ群G2を光軸に沿って像側へ移動させることにより、無限遠物体から近距離物体への合焦を行う'), with the aperture stop fixed. Two variable air gaps are printed, d11 (surface 11, G1-to-G2 gap; this file's surface index 10) and d16 (surface 16, G2-to-stop gap; this file's surface index 15), at three focus states (infinity / intermediate / close). Both are recorded in focus.gaps (10/12/2026; before that the engine moved the whole optic as a stand-in). The patent's close row gives only a magnification (beta = -0.153 at close, -0.033 at intermediate); the engine's paraxial solve of the patent's own gap values reproduces both (-0.1530 and -0.0333), which also checks the transcription, and puts the close state 3598.9 mm from the sensor, equal to Nikon's 3.6 m minimum focus distance. closeObjectDistance is that derived value, not a patent-stated number.",
     "Image stabilization: the patent's G3b (this file's L33, L34, L35, surfaces 20-24 / indices 19-23) is the shift (VR) group, moving perpendicular to the optical axis for stabilization; not a focus group. Not modeled as a VariableGap since it does not change t values, only lateral position.",
     "Every semi-diameter is sdSource='estimated-from-marginal-ray', run via .local/n500fl/paraxial.py (a copy of .local/lens-tele/paraxial.py, same method: marginal ray sized from the stated Fno at surface 1, plus a paraxial chief ray at the stated half field 2ω/2 = 2.5175°, summed) -- the patent prints no effective/clear diameters for any surface, same situation as p200/p300/p400/p500.",
     "halfFieldDeg = 2.5175 is derived by halving the patent's own printed 2ω = 5.035° (not independently stated by the patent as a half-angle).",

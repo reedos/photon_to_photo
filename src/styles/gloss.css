@@ -1,0 +1,20 @@
+/* Glossary term notes in the app (src/app/gloss.ts, score loop r2). The term reads as text with a dotted underline;
+   activating it opens one shared definition popover. */
+button.gloss { all: unset; display: inline; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
+  text-decoration: underline dotted; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 2px; cursor: help; border-radius: 2px; }
+button.gloss:hover { text-decoration-style: solid; }
+button.gloss:focus-visible { outline: 2px solid var(--accent, #ffb14e); outline-offset: 1px; }
+.gloss-pop { position: fixed; inset: auto; margin: 0; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--line-2, #314958);
+  border-radius: 6px; background: #0f1922; color: var(--ink, #e8eef2); font: 13px/1.5 var(--sans, system-ui, sans-serif);
+  box-shadow: 0 10px 30px #000a; text-transform: none; letter-spacing: normal; text-align: left; }
+.gloss-pop b { display: block; margin-bottom: 4px; color: var(--accent, #ffb14e); font-weight: 600; }
+.gloss-pop p { margin: 0 0 8px; }
+.gloss-pop a { color: var(--accent, #ffb14e); font-size: 12px; }
+/* a term in parentheses keeps its brackets on its own line (gloss.ts, score loop r5) */
+.gloss-keep { white-space: nowrap; }
+/* score loop r6: on the reference pages a note button's tap target is at least 24 px tall even in a one-line paragraph (WCAG 2.5.8):
+   "aperture" in the Method page's copy measured 22 px. The pseudo-element extends the target, not the text. It is scoped to the page
+   body copy because inside the app's clipped one- and two-line bands (the tour) it would add scroll height. */
+#reference-main button.gloss { position: relative; }
+#reference-main button.gloss::before { content: ""; position: absolute; inset: -4px -2px; }

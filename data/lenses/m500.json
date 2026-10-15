@@ -171,6 +171,8 @@
       "medium": "glass",
       "nd": 1.75575,
       "vd": 24.71,
+      "thetaGF": 0.6291,
+      "thetaGFSource": "JP 7695611 B2 (JP 2023-023323 A), Table 26, First Example: conditional expression (2) thetagFp1 = 0.6291, the partial dispersion ratio (ng - nF)/(nF - nC) of the positive lens with the smallest Abbe number in the first lens group G1; rows (7) vdp1 = 24.71 and (15) ndp1 = 1.756 identify it as this element. Read 10/11/2026 via r.jina.ai from patents.google.com/patent/JP7695611B2/en.",
       "sd": 21.1,
       "sdSource": "estimated-from-marginal-ray",
       "label": "G1 rear pair cemented interface / rear"

@@ -7,6 +7,8 @@ import type * as look from '../../app/look';
 
 export interface SensorHandle {
   group: THREE.Group;
+  /** The plate's material, for the studio reflections (lens.ts). */
+  plateMat: THREE.MeshPhysicalMaterial;
   update(model: Model): void;
   dispose(): void;
 }
@@ -15,19 +17,22 @@ export function buildSensor(lookMod: typeof look): SensorHandle {
   const group = new THREE.Group();
   group.name = 'lens-sensor';
 
+  // The camera's own coated sensor surface (look.ts sensorArrayMaterial, LOOK.md "Silicon die and pixel array"),
+  // lit by the studio panels lens.ts hands it: its sheen shifts across the plate with the viewing angle. Score loop
+  // r2: the old flat navy fill with an emissive glow read as an unlit quad, not as a sensor.
   const plateMat = lookMod.sensorArrayMaterial();
-  // A restrained presentation fill makes the silicon read as a surface at this
-  // scale; it is not a color-filter diagram or a measured reflectance claim.
-  plateMat.color.set(0x3b536b);
-  plateMat.emissive.set(0x122030);
-  plateMat.emissiveIntensity = 0.3;
-  plateMat.roughness = 0.3;
+  plateMat.roughness = 0.24;
+  // Seen from the cutaway's angle the plate mirrors a dark part of the studio, so for this material only the
+  // environment is turned 0.8 rad about the optical axis (picked from a sweep of rotations), which puts a softbox
+  // panel along the plate's reflection: the silicon shows a soft, angle-dependent sheen across its face instead of a
+  // flat dark fill (score loop r2). Look only, no data.
+  plateMat.envMapRotation.set(0, 0, -0.8);
   const plate = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.3), plateMat);
   plate.frustumCulled = false;
 
   // The format's own rectangle, outlined so the plate reads as the 36 x 24 mm (or whatever format) chip it is,
   // not a dark shape lost in the void (R1-12).
-  const edgeMat = new THREE.LineBasicMaterial({ color: 0xc9ced4, transparent: true, opacity: 0.5 });
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0xc9ced4, transparent: true, opacity: 0.32 });
   edgeMat.toneMapped = false;
   const edgeGeo = new THREE.BufferGeometry();
   const edge = new THREE.Line(edgeGeo, edgeMat);
@@ -48,6 +53,7 @@ export function buildSensor(lookMod: typeof look): SensorHandle {
 
   return {
     group,
+    plateMat,
     update(model) {
       const key = `${model.sensor.format.id}:${model.lens.id}`;
       const z = model.system.surfaces[model.system.surfaces.length - 1].z;

@@ -1,6 +1,6 @@
 import type { Store, AppState } from './store';
-import { compute } from './engine-api';
-import { TOUR, PIPELINE, PIPELINE_GUIDE, pipelinePixels, rowWindow, type PipelineStage } from './learning-model';
+import { compute, bodyForLens } from './engine-api';
+import { TOUR, PIPELINE, PIPELINE_GUIDE, pipelinePixels, rowWindow, tourStop, tourText, type PipelineStage } from './learning-model';
 import { pipelineSample } from './pipeline-sample';
 import { createPipelineTestSample } from './pipeline-test-sample';
 import { sensorFor } from '../engine/data';
@@ -9,8 +9,16 @@ import '../styles/learning.css';
 import { emit, on } from './bus';
 import { learningInsights } from './learning-insights';
 import { drawReadout } from './readout-visual';
+import { LENS_FACTS } from './rig-cards';
+import { fmtFno } from './units';
+import { glossify } from './gloss';
+import type { Model } from '../engine/model-types';
+
+/** The lens as the selector names it ("50 mm f/1.8"), never the model id ("n50") (score loop r1). */
+const lensDisplayName = (m: Model) => LENS_FACTS[m.scenario.lens]?.label.replace(/\s+lens\s*\(.*$/, '') ?? `${m.lens.focalLength} mm`;
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+
 
 export function mountLearning(store: Store, startTour = false, startLesson: string | null = null): void {
   const launch = document.createElement('button');
@@ -25,8 +33,8 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   placeLaunch(); phone.addEventListener('change', placeLaunch);
   const journey = document.createElement('section');
   journey.id = 'journey'; journey.hidden = true; journey.setAttribute('aria-label', 'Follow the light');
-  journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p><p id="journey-caption" role="status"></p><details id="journey-more"><summary>More</summary><p id="journey-more-text"></p><button type="button" class="btn" id="journey-physics" aria-haspopup="dialog" aria-controls="journey-reading">Physics & practical use ↗</button></details></div>
-    <nav aria-label="Tour controls"><button class="btn" id="journey-prev" aria-label="Previous tour stop">‹</button><button class="btn" id="journey-play">Play</button><button class="btn" id="journey-next" aria-label="Next tour stop">Next ›</button><button class="btn" id="journey-restart">Restart</button><button class="btn" id="journey-close" aria-label="Close tour">×</button></nav>`;
+  journey.innerHTML = `<div class="journey-copy"><label class="journey-label" for="journey-stop">Follow the light</label><select id="journey-stop" aria-label="Tour stop">${TOUR.map((s, i) => `<option value="${i}">${i + 1} / ${TOUR.length} · ${s.title}</option>`).join('')}</select><p id="journey-text" role="status"></p><p id="journey-caption" aria-hidden="true"></p><details id="journey-more"><summary>More</summary><p id="journey-more-text"></p><button type="button" class="btn" id="journey-physics" aria-haspopup="dialog" aria-controls="journey-reading">Physics & practical use ↗</button></details></div>
+    <nav aria-label="Tour controls"><button class="btn" id="journey-prev" aria-label="Previous tour stop">‹</button><button class="btn" id="journey-play">Play</button><button class="btn" id="journey-next" aria-label="Next stop">Next<span class="tour-stop-word"> stop</span> ›</button><button class="btn journey-shot" id="journey-shot" hidden>▶ Play the shot</button><button class="btn" id="journey-restart">Restart</button><button class="btn" id="journey-close" aria-label="Close tour">×</button></nav>`;
   el('viewer').prepend(journey);
   const reading = document.createElement('dialog');
   reading.id = 'journey-reading'; reading.setAttribute('aria-labelledby', 'journey-reading-title');
@@ -41,32 +49,39 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   phone.addEventListener('change', () => { el<HTMLDetailsElement>('journey-more').open = !phone.matches; });
   const lesson = document.createElement('section');
   lesson.id = 'sensor-lesson'; lesson.hidden = true; lesson.setAttribute('aria-label', 'Sensor to photo');
-  lesson.innerHTML = `<header><div><span class="journey-label">Inside your camera · Sensor → Photo</span><h2 id="lesson-title">Read the sensor</h2></div><button class="btn" id="lesson-close">← Camera</button></header>
+  lesson.innerHTML = `<header><div><span class="journey-label">Inside the camera · Sensor → Photo</span><h2 id="lesson-title">Read the sensor</h2></div><button class="btn" id="lesson-close">← Camera</button></header>
     <div class="lesson-toolbar"><div class="lesson-tabs" role="group" aria-label="Sensor lessons"><button class="btn" id="lesson-readout" aria-pressed="true">Readout</button><button class="btn" id="lesson-pipeline" aria-pressed="false">Image pipeline</button></div>
     <div class="lesson-playback"><button class="btn" id="lesson-play">Play scan</button><button class="btn" id="lesson-replay">Restart</button><span id="lesson-timing">Time expanded for visibility</span></div></div>
-    <div id="readout-lesson"><p>Rows collect light for the same duration, but start at different times. Watch a moving edge bend as it is read row by row.</p>
+    <div id="readout-lesson"><p class="lesson-lead"><b>The sensor counts electrons and turns each count into a whole number.</b> <span id="adc-plain" class="lesson-plain"></span></p><p>Rows collect light for the same duration, but start at different times. Watch a moving edge bend as it is read row by row. <span id="scan-mode-text" class="lesson-mode"></span> <button type="button" class="btn lesson-mode-switch" id="scan-mode-switch"></button></p>
       <canvas id="readout-visual" width="760" height="210" role="img" aria-label="Electronic scan, charge well and digital conversion"></canvas>
-      <div class="row-demo" id="row-demo" role="img" aria-label="Row exposure timing"></div>
       <label class="lesson-control" for="scan-progress">Scan progress <output id="scan-value" aria-hidden="true"></output><input id="scan-progress" type="range" min="0" max="100" step="0.1" value="50"></label>
-      <p id="scan-detail" class="lesson-note"></p>
       <div class="charge-demo"><div><label class="lesson-control" for="charge-level">Collected charge <output id="charge-value" aria-hidden="true"></output><input id="charge-level" type="range" min="0" max="100" value="25"></label><meter id="charge-meter" aria-label="Fraction of full well" min="0" max="100" value="25">25%</meter></div><p id="adc-value" role="status"></p></div>
-      <p id="charge-detail" class="lesson-note"></p><details class="lesson-context"><summary>How this applies to a real photograph</summary><p class="lesson-note">Try it: a fast shutter reduces motion blur within a row; a fast scan reduces skew between rows. The moving edge is a schematic at 4 sensor widths/s; the dashed line marks its first-row exposure midpoint. Charge and ADC illustrate a separately selected pixel. Mechanical curtains have their own timing. Skew is not added to your photo.</p></details>
+      <details id="readout-howto" class="lesson-howto"><summary>How to read this</summary><p id="readout-legend" class="lesson-note"><b>How to read it.</b> Each small square is a pixel in its Bayer filter color (red, green or blue); its brightness is the light it has collected so far. A dark edge sweeps left to right, and a pixel stops gathering light once the edge covers it. Lower rows start later, so the boundary leans: rolling-shutter skew. Gold tick left of a row: collecting now; blue tick right of it: already read. Dashed line: the edge at the first row’s mid-exposure. Right: the selected pixel’s charge becomes a number through the ADC (gain, then the black-level offset, then rounding). Schematic, not the photo.</p></details>
+      <div class="row-demo" id="row-demo" role="img" aria-label="Row exposure timing"></div>
+      <p id="scan-detail" class="lesson-note"></p>
+      <details class="lesson-technical"><summary>Technical details: bits, noise and full well</summary><p id="charge-detail" class="lesson-note"></p></details><details class="lesson-context"><summary>How this applies to a real photograph</summary><p class="lesson-note">Try it: a fast shutter reduces motion blur within a row; a fast scan reduces skew between rows. The moving edge is a schematic at 4 sensor widths/s; the dashed line marks its first-row exposure midpoint. Charge and ADC illustrate a separately selected pixel. Mechanical curtains have their own timing. Skew is not added to the real photographs.</p></details>
     </div>
-    <div id="pipeline-lesson" hidden><label class="lesson-control">Processing stage<select id="pipeline-stage">${PIPELINE.map(([id, title], i) => `<option value="${id}">${i + 1}. ${title}</option>`).join('')}</select></label>
+    <div id="pipeline-lesson" hidden><label class="lesson-control sr-only">Processing stage<select id="pipeline-stage">${PIPELINE.map(([id, title], i) => `<option value="${id}">${i + 1}. ${title}</option>`).join('')}</select></label>
       <div id="pipeline-route" aria-label="Processing sequence">${PIPELINE.map(([id, title], i) => `<button class="btn" data-stage="${id}" aria-label="${title}">${i + 1}<span>${['Raw', 'Color', 'Balance', 'Matrix', 'Display'][i]}</span></button>`).join('')}</div>
       <div class="pipeline-picture"><canvas id="pipeline-canvas" width="600" height="400" role="button" tabindex="0" aria-label="Choose a sample in the pipeline image. Click a spot or use arrow keys; Enter centers the sample."></canvas><i id="pipeline-region" aria-hidden="true"></i><canvas id="pipeline-crop" width="128" height="128" role="img" aria-label="Enlarged selected sample of the processing stage"></canvas><span class="pipeline-crop-label" aria-hidden="true">16 × 16 samples</span><i id="pipeline-wipe" hidden></i></div>
       <div class="pipeline-sample-tools"><span>Tap the image to move the enlarged sample. Arrow keys move it; Enter centers it.</span><button type="button" class="btn" id="pipeline-center">Center sample</button></div>
       <label class="lesson-control" for="pipeline-progress">Processing journey<input id="pipeline-progress" type="range" min="0" max="1000" value="0"></label>
-      <p class="pipeline-look"><b>Look for</b><span id="pipeline-look-for"></span></p><p id="pipeline-description" role="status"></p><p class="lesson-note">Illustrative test sample · not RAW data from your JPEG. This color sample uses illustrative white-balance gains and a color matrix, not calibrated camera data. Intermediate stages are shown without display encoding.</p>
-    </div><p id="lesson-shot" class="lesson-note" role="status"></p>`;
+      <p class="pipeline-look"><b>Look for</b><span id="pipeline-look-for"></span></p><p id="pipeline-description" role="status"></p><p class="lesson-note">Illustrative test sample · not RAW data from a photograph. This color sample uses illustrative white-balance gains and a color matrix, not calibrated camera data. Intermediate stages are shown without display encoding.</p>
+    </div><p id="lesson-shot" class="lesson-note" role="status"></p><div class="lesson-scroll-cue" id="lesson-scroll-cue" aria-hidden="true" hidden>↓ More below: scroll</div>`;
   el('view').append(lesson);
+  lesson.addEventListener('scroll', () => updateScrollCue(), { passive: true });
   const shortcuts = document.createElement('div'); shortcuts.className = 'lesson-shortcuts';
   shortcuts.innerHTML = '<button class="btn" id="open-readout">Sensor readout</button><button class="btn" id="open-pipeline">Image pipeline</button>';
   el('scenario').append(shortcuts);
   let index = 0, playing = false, timer = 0, entering = false;
   let mode: 'readout' | 'pipeline' = 'readout';
   let returnState: Pick<AppState, 'piece' | 'cameraPart'> | null = null;
-  let tourReturn: Pick<AppState, 'piece' | 'cameraPart'> | null = null;
+  /** Where the tour began, put back when it closes: the level and part, and the view the tour changes on its way
+   *  (Outside or Cutaway, the Rays chip, the inspector tab) (score loop r3: closing left Cutaway and Parts on). */
+  let tourReturn: (Pick<AppState, 'piece' | 'cameraPart'> & { pin: string | null; view: string | null; rays: string | null; tab: string | null }) | null = null;
+  /** The stop the reader last saw, so Guided tour resumes there (Restart begins again); kept for the session. */
+  const savedStop = () => { try { const v = Number(sessionStorage.getItem('p2p.tourStop')); return Number.isInteger(v) && v > 0 && v < TOUR.length ? v : 0; } catch { return 0; } };
+  const saveStop = (stop: number) => { try { sessionStorage.setItem('p2p.tourStop', String(stop)); } catch { /* optional convenience */ } };
   let lessonOpener: HTMLElement | null = null;
   let lessonModel = compute(store.get().scenario);
   let animation = 0, animating = false, animationTime = 0, lastFrame = 0;
@@ -80,12 +95,14 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el('lesson-play').textContent = mode === 'readout' ? 'Play scan' : 'Play pipeline';
   }
   function showInsights() {
-    const insight = learningInsights(lessonModel)[index];
+    const insight = learningInsights(lessonModel)[TOUR[index].id];
     el('journey-reading-title').textContent = TOUR[index].title;
-    el('journey-reading-context').textContent = TOUR[index].text;
-    el('journey-equation').textContent = insight.equation;
-    el('journey-live').textContent = insight.live;
-    el('journey-use').textContent = insight.use;
+    // glossary terms open their definition in place (score loop r2); each term is linked once per dialog
+    const seen = new Set<string>();
+    glossify(el('journey-reading-context'), TOUR[index].more, seen); // the desktop band has no More panel; this is its depth
+    glossify(el('journey-equation'), insight.equation, seen);
+    glossify(el('journey-live'), insight.live, seen);
+    glossify(el('journey-use'), insight.use, seen);
   }
   const pipelineData = () => {
     const key = `${lessonModel.scenario.format}:${lessonModel.scenario.iso}:${lessonModel.scenario.sensor ?? ''}`;
@@ -163,16 +180,37 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     el('scan-value').textContent = `${(time * 1000).toFixed(2)} ms`;
     el('scan-progress').setAttribute('aria-valuetext', `${(time * 1000).toFixed(2)} milliseconds`);
     const scanEvidence = model.sensor.figs.readoutS;
-    const basis = scanEvidence?.ev === 'reported' ? (scanEvidence.loc?.includes('low --') ? 'Reported estimate, low confidence; see Evidence.' : 'Reported measurement, full-frame silent Mode 1; see Evidence.') : 'Assumed illustrative scan time.';
-    el('scan-detail').textContent = `${model.sensor.name}: ${(model.sensor.readoutS * 1000).toFixed(2)} ms between the first and last row starts; ${(sc.shutter * 1000).toFixed(2)} ms exposure per row. ${basis} A fast shutter can reduce blur while row-to-row motion still causes skew.`;
+    const basis = scanEvidence?.ev === 'reported' ? (scanEvidence.loc?.includes('low --') ? 'Reported estimate, low confidence; see Evidence.' : scanEvidence.loc?.includes('secondary source only') ? 'Reported by one third-party measured list (secondary source); see Evidence.' : 'Reported measurement of the full-frame electronic (silent) shutter, Mode 1; see Evidence.') : 'Assumed illustrative scan time.';
+    // Score-loop r1 (10/11/2026): this scan is the ELECTRONIC readout. With the mechanical shutter selected, the
+    // curtains set the row timing instead, and no curtain travel time is wired in the data, so say the scan does not apply.
+    // Score loop r2: lead with the framing, not a contradiction at the end of the note, and offer the switch.
+    // Score loop r6: the mirrorless body (Nikon Z8) has no mechanical shutter at all, so the stored shutterType
+    // (default 'mechanical') must not be read for it; the body decides, as the Fire-shutter gate does.
+    const electronicOnly = bodyForLens(sc.lens) === 'mirrorless';
+    const mechanical = !electronicOnly && sc.shutterType === 'mechanical';
+    el('scan-mode-text').textContent = electronicOnly
+      ? 'This body has no mechanical shutter, so this electronic scan sets every row’s timing.'
+      : mechanical
+        ? 'This lesson shows the camera’s silent electronic shutter. Your current setting uses the mechanical curtains, shown at Fire shutter; their travel time is not modeled here.'
+        : 'Your current setting uses this electronic shutter, so this scan sets each row’s timing.';
+    el('scan-mode-switch').hidden = electronicOnly;
+    el('scan-mode-switch').textContent = mechanical ? 'Use the electronic shutter' : 'Back to the mechanical shutter';
+    glossify(el('scan-detail'), `${model.sensor.name}, electronic shutter: ${(model.sensor.readoutS * 1000).toFixed(2)} ms between the first and last row starts; ${(sc.shutter * 1000).toFixed(2)} ms exposure per row. ${basis} A fast shutter can reduce blur while row-to-row motion still causes skew (rolling-shutter skew).`);
     const fraction = Number(el<HTMLInputElement>('charge-level').value) / 100;
     const electrons = fraction * model.sensor.fullWellE, code = readout(spec, electrons, sc.iso);
-    el('charge-value').textContent = `${Math.round(electrons).toLocaleString()} e−`;
+    el('charge-value').textContent = `${Math.round(electrons).toLocaleString()} electrons`;
     el('charge-level').setAttribute('aria-valuetext', `${Math.round(electrons).toLocaleString()} electrons, ${Math.round(fraction * 100)} percent of full well`);
     el<HTMLMeterElement>('charge-meter').value = fraction * 100;
-    const adcText = `${Math.round(electrons).toLocaleString()} e− → ${analogGain(spec, sc.iso).toFixed(3)} DN/e− → ${code.toLocaleString()} DN${code === maxDn(spec) ? ' · ADC clipped' : ''}`;
+    // The whole conversion, offset included, so the chain multiplies out (score loop r1: 14,782 × 0.429 is 6,341, not 6,856).
+    const adcText = `${Math.round(electrons).toLocaleString()} e− × ${analogGain(spec, sc.iso).toFixed(4)} DN/e− + ${Math.round(spec.blackLevelDn).toLocaleString()} DN black level${model.sensor.figs.blackLevelDn?.ev === 'assumed' ? ' (a fixed model value, assumed)' : ''} → ${code.toLocaleString()} DN${code === maxDn(spec) ? ' · ADC clipped' : ''}`;
     if (el('adc-value').textContent !== adcText) el('adc-value').textContent = adcText;
-    el('charge-detail').textContent = `ISO ${sc.iso} · ${spec.bitDepth}-bit ADC · ${model.sensor.readNoiseE.toFixed(2)} e− RMS read noise. Conversion shown at zero sampled read noise, including black level and rounding. Full well: ${Math.round(model.sensor.fullWellE).toLocaleString()} e−. The pixel view shows stochastic noise.`;
+    // The same conversion in plain words, so the equation below is a check on a sentence a reader has already read (score loop r6)
+    const black = Math.round(spec.blackLevelDn), clipped = code === maxDn(spec);
+    const plainText = clipped
+      ? `Here: ${Math.round(electrons).toLocaleString()} electrons is more than the converter can number, so it stops at its top value, ${code.toLocaleString()}.`
+      : `Here: ${Math.round(electrons).toLocaleString()} electrons × ${analogGain(spec, sc.iso).toFixed(2)} = ${(code - black).toLocaleString()}, plus ${black.toLocaleString()} for the black level = ${code.toLocaleString()}.`;
+    if (el('adc-plain').textContent !== plainText) el('adc-plain').textContent = plainText;
+    glossify(el('charge-detail'), `ISO ${sc.iso} · ${spec.bitDepth}-bit analog-to-digital converter (ADC), ${(2 ** spec.bitDepth).toLocaleString('en-US')} levels · ${model.sensor.readNoiseE.toFixed(2)} electrons RMS read noise (the electronics' own random error; e− means electrons). DN is the raw digital number; the black level is a fixed offset added so noise below zero is not cut off. Shown without the random noise, rounded to whole DN. Full well (the most charge a pixel holds): ${Math.round(model.sensor.fullWellE).toLocaleString()} electrons. The Pixel view shows the random noise.`);
     drawReadout(el<HTMLCanvasElement>('readout-visual'), time, model.sensor.readoutS, sc.shutter, fraction, code, spec.bitDepth);
   }
   function paintAnimation() {
@@ -193,10 +231,32 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     paintAnimation();
     if (animationTime >= duration()) pauseLesson(); else animation = requestAnimationFrame(animate);
   }
+  /** Score loop r3: the readout stop asks the reader to scrub the scan and watch the charge become a number, but the
+   *  ADC line sat below the lesson's fold. Beside the model the lesson scrolls just far enough to show it; on a phone
+   *  it starts at the drawing, with the scan slider and the ADC line right under it. */
+  function revealLessonPayoff() {
+    if (lesson.hidden || mode !== 'readout') return;
+    const header = lesson.querySelector('header')?.getBoundingClientRect().height ?? 0;
+    const box = lesson.getBoundingClientRect();
+    if (phone.matches) {
+      const top = el('readout-visual').getBoundingClientRect().top;
+      lesson.scrollTop += Math.max(0, top - box.top - header - 6);
+    } else {
+      const bottom = el('adc-value').getBoundingClientRect().bottom;
+      // clear of the scroll cue riding the lesson's bottom edge
+      if (bottom > box.bottom - 34) lesson.scrollTop += bottom - box.bottom + 34;
+    }
+    updateScrollCue();
+  }
+  /** A visible cue while the lesson has more below its fold (score loop r3). */
+  function updateScrollCue() {
+    el('lesson-scroll-cue').hidden = lesson.hidden || lesson.scrollTop + lesson.clientHeight >= lesson.scrollHeight - 30;
+  }
   function refresh() {
     if (lesson.hidden) return;
+    requestAnimationFrame(updateScrollCue);
     el<HTMLButtonElement>('lesson-play').disabled = false;
-    el('lesson-shot').textContent = mode === 'pipeline' ? 'Illustrative controlled color-chart sample · not RAW data from your JPEG' : `Current camera model · ${lessonModel.scenario.lens} · f/${lessonModel.scenario.fno} · ISO ${lessonModel.scenario.iso}`;
+    el('lesson-shot').textContent = mode === 'pipeline' ? 'Illustrative controlled color-chart sample · not RAW data from a photograph' : `Current camera model · ${lessonModel.sensor.name} · ${lensDisplayName(lessonModel)} · ${fmtFno(lessonModel.scenario.fno)} · ISO ${lessonModel.scenario.iso}`;
     if (mode === 'pipeline') paintPipeline(); else paintReadout();
   }
   function hideLesson(restore = false) {
@@ -235,34 +295,132 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     }
     refresh();
   }
+  /** The settings' name on the current layout: the inspector tab beside the model, the Settings sheet on a phone. */
+  const controlsName = () => el('tab-controls')?.textContent?.trim() || 'Controls';
+  /** A stop that names a slider brings it into view: beside the model the inspector turns to Controls and the
+   *  slider is marked for a moment; on a phone the Settings button that opens it is marked instead, since the sheet
+   *  would cover the tour. */
+  let cueTimer = 0;
+  function cueControl(id: string | undefined) {
+    document.querySelectorAll('.tour-cue').forEach(node => node.classList.remove('tour-cue'));
+    window.clearTimeout(cueTimer);
+    if (!id) return;
+    const tab = el('tab-controls');
+    let target: Element | null = tab;
+    if (tab.getAttribute('role') === 'tab') {
+      if (tab.getAttribute('aria-selected') !== 'true') tab.click();
+      target = el(id).closest('.sc-group');
+      target?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    target?.classList.add('tour-cue');
+    cueTimer = window.setTimeout(() => target?.classList.remove('tour-cue'), 2600);
+  }
   function go(next: number) {
     index = Math.max(0, Math.min(TOUR.length - 1, next)); const stop = TOUR[index];
-    entering = true; hideLesson(); store.setPiece(stop.piece); store.setCameraPart(stop.part); entering = false;
-    if (stop.lesson) openLesson(stop.lesson);
+    // A tour stop is part of the tour's one history entry, not a level change of its own.
+    const before = store.get();
+    entering = true; hideLesson(); store.withoutHistory(() => { store.setPiece(stop.piece); store.setCameraPart(stop.lesson ? null : stop.part); }); entering = false;
+    // The stop's words describe its own picture. A level or part change frames that picture itself; when the stop's
+    // level and part are already showing (the first stop on the camera overview, Restart, stepping back) the reader
+    // may have orbited since, so frame it again, as Reset view does (score loop r4: stop 1 sat over the back of the camera).
+    if (store.get().piece === before.piece && store.get().cameraPart === before.cameraPart) emit('reset-view', {});
+    if (stop.lesson) { openLesson(stop.lesson); requestAnimationFrame(revealLessonPayoff); }
     el<HTMLSelectElement>('journey-stop').value = String(index);
-    el('journey-text').textContent = stop.text; el('journey-caption').textContent = stop.text; el('journey-more-text').textContent = stop.text;
+    // the finished tour starts over next time; any other stop is where it resumes
+    saveStop(index === TOUR.length - 1 ? 0 : index);
+    const text = tourText(stop, controlsName());
+    // The band's words carry glossary notes like the reading dialog (score loop r5: "depth of field", "diffraction" and
+    // "blur disks" sat there undefined). The aria-hidden phone caption stays plain text (it cannot hold buttons).
+    const seenTerms = new Set<string>();
+    glossify(el('journey-text'), text, seenTerms); el('journey-caption').textContent = text; glossify(el('journey-more-text'), stop.more, seenTerms);
+    cueControl(stop.control);
     el<HTMLDetailsElement>('journey-more').open = !phone.matches;
     if (reading.open) reading.close();
     showInsights();
     el<HTMLButtonElement>('journey-prev').disabled = index === 0;
-    el('journey-next').textContent = index === TOUR.length - 1 ? 'Finish ✓' : 'Next ›';
+    // "stop" drops out below 400 px (learning.css): "Next stop ›" was 75 px in a 72 px box at 320 (score loop r5). The name
+    // keeps its visible words (WCAG 2.5.3): "Next stop", and "Finish tour" on the last one.
+    const last = index === TOUR.length - 1, nextBtn = el('journey-next');
+    if (last) nextBtn.textContent = 'Finish ✓'; else nextBtn.innerHTML = 'Next<span class="tour-stop-word"> stop</span> ›';
+    nextBtn.setAttribute('aria-label', last ? 'Finish tour' : 'Next stop');
+    // the last stop ends on the payoff, not an errand (score loop r2): one button opens Play the shot
+    el('journey-shot').hidden = stop.id !== 'photo';
     schedule();
+    // The stop is in the address (tour=4), so a reload or a shared link resumes there (score loop r2).
+    if (!journey.hidden && tourStop(location.search) !== index) history.replaceState(history.state, '', tourUrl(true));
   }
-  function closeTour() {
+  // The open tour is one browser history entry (?tour=1): Back closes it and returns to where it began, Forward
+  // reopens it. Closing it with its own button steps back out of that entry when the tour added it.
+  function tourUrl(on: boolean): URL {
+    const url = new URL(location.href);
+    if (on) url.searchParams.set('tour', String(index + 1)); else url.searchParams.delete('tour');
+    return url;
+  }
+  function closeTour(fromHistory = false) {
     if (reading.open) reading.close();
     pause(); hideLesson(); journey.hidden = true; launch.setAttribute('aria-expanded', 'false');
-    if (tourReturn) { entering = true; store.setPiece(tourReturn.piece); store.setCameraPart(tourReturn.cameraPart); entering = false; }
+    document.body.classList.remove('tour-active'); cueControl(undefined);
+    if (tourReturn && !fromHistory) {
+      const back = tourReturn;
+      entering = true;
+      store.withoutHistory(() => { store.setPiece(back.piece, back.pin); store.setCameraPart(back.cameraPart); if (back.piece !== 'camera') store.setPin(back.pin); });
+      entering = false;
+      restoreView(back);
+    }
     tourReturn = null; launch.focus({ preventScroll: true });
+    if (fromHistory) return;
+    if (history.state?.p2p === 'tour') { refocusLaunch = true; history.back(); }
+    else history.replaceState(history.state, '', tourUrl(false));
   }
-  function begin() {
-    tourReturn = { piece: store.get().piece, cameraPart: store.get().cameraPart };
-    journey.hidden = false; launch.setAttribute('aria-expanded', 'true'); go(0); el('journey-stop').focus({ preventScroll: true });
+  // Stepping back out of the tour's history entry restores the page's #fragment, and Chrome clears focus to <body>
+  // just after that popstate, so a keyboard or screen-reader user lost their place when the tour closed (WCAG 2.4.3,
+  // score loop r2). The launcher takes focus again once the traversal has settled.
+  let refocusLaunch = false;
+  function settleFocus() {
+    if (!refocusLaunch) return;
+    refocusLaunch = false;
+    requestAnimationFrame(() => { if (!document.activeElement || document.activeElement === document.body) launch.focus({ preventScroll: true }); });
   }
-  launch.onclick = () => journey.hidden ? begin() : closeTour();
-  el('journey-close').onclick = closeTour;
+  const pressedView = () => document.querySelector('#hud-switches [data-view][aria-pressed="true"], .rig-view [data-view][aria-pressed="true"]')?.getAttribute('data-view') ?? null;
+  const selectedTab = () => document.querySelector('.studio-tabs [role="tab"][aria-selected="true"]')?.id ?? null;
+  /** After the level is back (and its rig has applied the part it shows), the view controls return to how they were. */
+  function restoreView(back: NonNullable<typeof tourReturn>) {
+    const apply = () => {
+      if (back.view && pressedView() !== back.view) document.querySelector<HTMLButtonElement>(`.rig-view [data-view="${back.view}"]`)?.click();
+      const rays = document.getElementById('rays-chip');
+      if (back.rays && rays && !rays.hidden && rays.getAttribute('aria-pressed') !== back.rays) rays.click();
+      if (back.tab && selectedTab() !== back.tab) document.getElementById(back.tab)?.click();
+    };
+    apply(); requestAnimationFrame(apply);
+  }
+  function begin(fromHistory = false, stop = 0) {
+    tourReturn = { piece: store.get().piece, cameraPart: store.get().cameraPart, pin: store.get().pin ?? null, view: pressedView(),
+      rays: document.getElementById('rays-chip')?.getAttribute('aria-pressed') ?? null, tab: selectedTab() };
+    index = stop;
+    if (!fromHistory && tourStop(location.search) === null) history.pushState({ p2p: 'tour' }, '', tourUrl(true));
+    journey.hidden = false; launch.setAttribute('aria-expanded', 'true'); document.body.classList.add('tour-active');
+    go(stop); el('journey-stop').focus({ preventScroll: true });
+  }
+  window.addEventListener('popstate', () => {
+    settleFocus();
+    const want = tourStop(location.search);
+    if (want !== null && journey.hidden) begin(true, want);
+    else if (want === null && !journey.hidden) closeTour(true);
+    else if (want !== null && want !== index) { pause(); go(want); }
+  });
+  launch.onclick = () => journey.hidden ? begin(false, savedStop()) : closeTour();
+  el('journey-close').onclick = () => closeTour();
   el('journey-prev').onclick = () => { pause(); go(index - 1); };
   el('journey-next').onclick = () => { pause(); if (index === TOUR.length - 1) closeTour(); else go(index + 1); };
   el('journey-restart').onclick = () => { pause(); go(0); };
+  el('journey-shot').onclick = () => {
+    pause(); closeTour();
+    document.querySelector<HTMLButtonElement>('.shot-launch')?.click();
+  };
+  el('scan-mode-switch').onclick = () => {
+    pause(); pauseLesson();
+    store.set({ shutterType: store.get().scenario.shutterType === 'mechanical' ? 'electronic' : 'mechanical' });
+  };
   el('journey-stop').onchange = () => { pause(); go(Number(el<HTMLSelectElement>('journey-stop').value)); };
   el('journey-play').onclick = () => {
     if (playing) pause(); else { if (index === TOUR.length - 1) go(0); playing = true; el('journey-play').textContent = 'Pause'; schedule(); }
@@ -305,8 +463,10 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
   window.addEventListener('resize', () => { if (!lesson.hidden && mode === 'readout') paintReadout(); });
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
-    if (!lesson.hidden) { event.stopImmediatePropagation(); closeLesson(); }
-    else if (!journey.hidden) { event.stopImmediatePropagation(); closeTour(); }
+    // From the tour's own band, Escape closes the tour (and the stop's lesson with it); elsewhere a lesson goes first.
+    if (!journey.hidden && (event.target as Element | null)?.closest?.('#journey')) { event.preventDefault(); event.stopImmediatePropagation(); closeTour(); }
+    else if (!lesson.hidden) { event.stopImmediatePropagation(); closeLesson(); }
+    else if (!journey.hidden) { event.preventDefault(); event.stopImmediatePropagation(); closeTour(); }
   }, true);
   let previous = store.get();
   store.subscribe(state => {
@@ -321,6 +481,6 @@ export function mountLearning(store: Store, startTour = false, startLesson: stri
     }
     previous = state; lessonModel = compute(state.scenario); showInsights(); refresh();
   });
-  if (startTour) begin();
+  if (startTour) begin(true, tourStop(location.search) ?? 0);
   else if (startLesson === 'readout' || startLesson === 'pipeline') openLesson(startLesson);
 }

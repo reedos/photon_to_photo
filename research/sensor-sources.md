@@ -237,12 +237,24 @@ claimed to be the OM-1/E-M1 III chip: <https://www.zwoastro.com/product/asi294/>
 
 ## Generic facts
 
-**PRNU, typical percentage** (reported): I could not find a figure specific to any of the three
-chosen sensors. As a representative, named example: onsemi's NOII4SM6600A datasheet states
-**1.5% RMS** photo-response non-uniformity for that commercial CMOS sensor.
-<https://www.onsemi.com/pdf/datasheet/noii4sm6600a-d.pdf>. General academic/industry discussion
-consistently places typical CMOS PRNU in the roughly 1–2% RMS range, of which this is one
-concretely cited data point, not a universal constant.
+**PRNU, typical percentage** (reported for other cameras; assumed for the D850 and Z8; revised 10/11/2026, score
+loop r3): **0.4% RMS**. Jim Kasson measures PRNU by averaging 128-256 flat-field raw frames at base ISO (which
+removes shot noise) and taking the standard deviation of each raw channel after a high-pass kernel that removes
+lighting falloff:
+
+- Nikon D4: "the kernel size makes the difference between the PRNU being about 0.4% and 0.3%" (99x99 and 7x7
+  kernels). <https://blog.kasson.com/the-last-word/sensor-photon-transfer-analysis-prnu>, 12/11/2014.
+- Sony a9, ISO 100: "approaching an asymptote of between 0.3% and 0.4%", "almost twice as much as the Nikon D5".
+  <https://blog.kasson.com/the-last-word/sony-a9-prnu>, 5/28/2017.
+- Nikon D5: "slightly under 0.2%". <https://blog.kasson.com/?p=14261>, 3/31/2016.
+- Nikon Z9: spectra only, no percentage (<https://blog.kasson.com/z9/nikon-z9-prnu-spectra/>, 2/5/2022).
+
+No D850 or Z8 figure was found. 0.4% (the upper end, with Kasson's standard 99x99 kernel, which also picks up some
+dust) stands in for both; `data/sensors.json generic.prnu.typicalPercent` records it as reported with
+`appliedEv: "assumed"`, and the model's `prnuPercent` fig is labeled assumed. It replaces 1.5% RMS from the onsemi
+NOII4SM6600A industrial sensor datasheet (<https://www.onsemi.com/pdf/datasheet/noii4sm6600a-d.pdf>), which made the
+green mid-gray SNR at f/4, 1/250 s, ISO 100 read 41.2 instead of about 52. PRNU is fixed-pattern noise: the SNR
+readout is the spatial SNR across a uniform patch, which the cards now say.
 
 **Dark current, doubling temperature** (reported): Teledyne Vision Solutions' "Dark Current"
 learning-center page states dark-current effects are "halved for every 6-7°C of cooling"
@@ -277,6 +289,35 @@ summarizing the standard, since the ISO standard's own full text is paywalled):
 - The standard itself: ISO 12232:2019, "Photography — Digital still cameras — Determination of
   exposure index, ISO speed ratings, standard output sensitivity, and recommended exposure index",
   <https://www.iso.org/standard/73758.html> (title/scope only — full text not read, it's paywalled).
+
+**The model's ISO against ISO 12232 (derived, score loop r4, 10/12/2026).** The two constants above give what a
+metered 18% gray should read. The sensor-plane exposure of a correct reflected-light meter reading is
+H = pi K T / (4 S) lux s (ISO 2720, K = 12.5, T the lens transmission; from E = pi L T / (4 N^2) and N^2/t = L S / K),
+and the raw clip sits at H_sat = 78 / S, so the gray holds pi K T / (4 x 78) of saturation: 12.6% with T = 1 (the
+standard's own 18%/sqrt(2) = 12.7%), 11.3% with this project's assumed T = 0.9. The model gives a green pixel
+6.5% (D850, ISO 100, bench scene), 0.8 stop less. (r4 to r5: the cause was how Claff's effective-QE figure was used: data.ts
+scaled the Gaussian model so its green peak equalled that figure, 44% for the D850; no measured ISO had been found.)
+
+**Measured ISO found (reported, score loop r6, 10/14/2026).** Bill Claff's "DxOMark Derived Measured ISO" chart
+(<https://www.photonstophotos.net/Charts/Measured_ISO.htm>) carries the DxOMark ISO Sensitivity measurements, and its
+embedded series data gives each body's factor (measured ISO = factor x the ISO setting): **Nikon D850 0.699 (-0.52 EV)**,
+**Nikon Z 8 0.740 (-0.43 EV)** (the Z 9 is 0.704, the D810 and D800 are near it; the chart's fit is over the settings that
+conform). Read from the chart's data directly 10/14/2026 (series 'Nikon D850', factor 0.699, factorev -0.52, e.g. the ISO 100
+point measures about ISO 70; series 'Nikon Z 8', factor 0.740, factorev -0.43). Claff's investigation page
+(<https://www.photonstophotos.net/Investigations/DxOMark_ISO_Sensitivities.htm>) says DxOMark measures sensor saturation on the
+central portion of the raw image, and defines the shift so that a negative value means "the camera sensor records light as if
+ISO were" that many stops lower than the setting; most cameras sit about -0.33 EV. DxOMark's own definition page did not load
+(HTTP 404/no definition text), so "saturation-based" rests on Claff's description. It is a third-party measurement of one body.
+
+How it is used: ISO 12232's saturation-based speed puts a metered gray at pi K T / (4 x 78) = 11.3% of the raw clip at the
+ISO the speed is rated at; at the camera's measured ISO (factor x setting) the same exposure sits at factor x 11.3%: **7.9%
+for the D850, 8.4% for the Z8**. data.ts `calibratedGreenPeak` scales the three Gaussian amplitudes together (red, green and
+blue keep the fitted ratios) until the engine's own arithmetic (5500 K daylight, the 16 bins, the green sensitivity, the fill
+factor, the ADC clip) gives that level; the green peak becomes about 0.52 for both bodies (the Z8's own Claff figure is also 44%). That is a derived effective
+figure, not a published peak QE, and it sits above Claff's 44% (his figure is "something more like the product of QE and fill
+factor" derived from the measured ISO by a method he does not give, so it is kept as the starting scale and a cross-check).
+No QE was invented. src/engine/measured-iso.test.ts checks that the model's metered gray lands within 1% of the target.
+The sensor card and Method page show the expected and the model's levels.
 
 **How ISO invariance is measured** (reported): shoot the same scene twice at identical aperture and
 shutter speed — once at a high ISO (correctly exposed in-camera), once at a low ISO (deliberately
@@ -348,3 +389,13 @@ exactly the LCG/HCG mechanism the three chosen Sony/Sony-family sensors all use:
    `IMX455AQK-K_Flyer.pdf` for the security/surveillance "-K" variant) were fetched and read in
    full; only the consumer "-C"/"color" variant's figures are used in `data/sensors.json`, since
    that's the variant Sony states is for "consumer use digital still camera."
+
+## Low-pass filter (added 10/14/2026, score loop r5)
+
+The Models page and the two Blender body scripts used to name the filter stack "IR cut, low-pass, cover glass". Neither body has an optical low-pass filter (OLPF), so the label and card copy now read "IR cut and cover glass". Sources, read 10/14/2026:
+
+- **Nikon D850**: Nikon's D850 product brochure says the image sensor is designed without an optical low-pass filter (OLPF), so light reaches the sensor directly (https://brochures.nikon-asia.com/Brochures/DSLR/Brochure_D850.pdf; the PDF text could not be extracted by the fetch tool here, the wording was read from search excerpts of that brochure and PetaPixel's launch report, https://petapixel.com/2017/08/23/nikon-d850-announced-first-45-7mp-bsi-sensor-4k-video-3300). Nikon Japan's FAQ on low-pass-filter-less models also lists the D850 (below).
+- **Nikon D850 and Z 8**: Nikon Japan, "Digital cameras that are low-pass-filter-less or have the low-pass filter disabled" (Q&A, nij.nikon.com, https://nij.nikon.com/support/faq/products/article?articleNo=000055724) lists the DSLR models "D850 / D810 / D500" and the mirrorless models "Z9 / Z8 / Z7II / Z7" as optical-low-pass-filter-less (read directly 10/14/2026).
+- Nikon's English Z 8 pages were found but none states "no low-pass filter" in words; the Japanese FAQ above is the primary Nikon source for the Z 8.
+
+The 2 mm filter-stack thickness stays a representative placeholder (see Task C in `research/exteriors.md`); only its composition changed.

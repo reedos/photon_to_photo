@@ -1,0 +1,26 @@
+name: gates
+# The browser gates (tools/test-*.mjs and tools/accuracy/*.mjs) against a production build. They are slower than the
+# checks workflow (about 25 minutes), so they run on pull requests to main, on demand, and nightly. The gates start
+# Chrome with ANGLE/D3D11, so the job runs on Windows, where Chrome is preinstalled. Not yet run on GitHub (score loop r4).
+on:
+  pull_request: { branches: [main] }
+  workflow_dispatch:
+  schedule: [{ cron: '17 9 * * *' }]
+permissions: { contents: read }
+concurrency:
+  group: gates-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  gates:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: node tools/run-gates.mjs --prod
+        env: { P2P_GATE_TIMEOUT: '900' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: gate-logs, path: shots/gates, retention-days: 7 }

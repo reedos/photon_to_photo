@@ -1,7 +1,8 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs';
-const base=process.env.P2P_URL;
-if(!base||new URL(base).hostname!=='127.0.0.1')throw new Error('Set P2P_URL to the isolated preview');
+import {gateServer} from './preview.mjs';
+const server=await gateServer(),base=server.url;
+if(new URL(base).hostname!=='127.0.0.1')throw new Error('P2P_URL must be an isolated local server');
 const phase=process.env.AUDIT_PHASE||'after';
 const directory=`shots/astra-ex1/${phase}`;fs.mkdirSync(directory,{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
@@ -40,6 +41,6 @@ try {
     }
     await page.close();
   }
-} finally {await browser.close();}
+} finally {await browser.close();await server.close();}
 fs.writeFileSync(`${directory}/report.json`,JSON.stringify(results,null,2));
 process.exitCode=results.some(r=>r.overflow||r.errors.length||(phase==='after'&&(r.smallTargets.length||(r.accent&&r.accent!=='#e6ba82'))))?1:0;

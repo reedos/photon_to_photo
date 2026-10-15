@@ -5,8 +5,8 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace-views { display: flex; align-items: stretch; gap: 4px; flex: 0 0 40px; padding: 0 20px; background: #0d141c; border-bottom: 1px solid var(--line); }
 .workspace-views button { border: 0; border-bottom: 2px solid transparent; padding: 0 18px; background: transparent; color: var(--muted); font: 600 12px var(--sans); cursor: pointer; }
 .workspace-views button[aria-selected="true"] { color: #f4d2a2; border-color: #e6ba82; background: linear-gradient(0deg,#e6ba8214,transparent); }
-.workspace-views > span { margin-left: auto; align-self: center; color: var(--muted); font: 10px var(--mono); }
-.workspace.viewport-studio .wrap > #expand-model { position: absolute; z-index: 3; right: 14px; top: calc(var(--bar) + 5px); width: auto; margin: 0; height: 30px; border: 1px solid var(--line-2); border-radius: 4px; background: #192734; color: var(--ink); padding: 0 10px; font: 600 10px var(--sans); cursor: pointer; }
+.workspace-views > span { margin-left: auto; align-self: center; color: var(--muted); font: 11px var(--mono); }
+.workspace.viewport-studio .wrap > #expand-model { position: absolute; z-index: 3; right: 14px; top: calc(var(--bar) + 5px); width: auto; margin: 0; height: 30px; border: 1px solid var(--line-2); border-radius: 4px; background: #192734; color: var(--ink); padding: 0 10px; font: 600 11px var(--sans); cursor: pointer; }
 .workspace-views > span { margin-right: 118px; }
 .workspace.viewport-studio.model-expanded .stage .body { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr); }
 .workspace.viewport-studio.model-expanded :is(.studio-sidebar,#studio-exposure,#model-experiments) { display: none; }
@@ -17,11 +17,11 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio .view { flex: 1 1 0; height: auto; min-height: 100px; }
 .workspace.viewport-studio #model-tools { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 12px; flex: none; background: #101923; border-bottom: 1px solid var(--line); }
 .workspace.viewport-studio .stage:not([data-level="camera"]) #model-tools { display: none; }
-.workspace.viewport-studio #model-tools :is(.layer-chip,.mode button) { min-height: 32px; padding: 0 10px; font-size: 10px; }
-.workspace.viewport-studio #model-tools .shot-launch { position: static; margin-left: auto; min-height: 32px; padding: 4px 10px!important; font-size: 10px; box-shadow: none; }
-.workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 32px; padding: 0 10px; font-size: 10px; color: var(--accent); border-color: var(--accent); }
+.workspace.viewport-studio #model-tools :is(.layer-chip,.mode button) { min-height: 32px; padding: 0 10px; font-size: 11px; }
+.workspace.viewport-studio #model-tools .shot-launch { position: static; margin-left: auto; min-height: 32px; padding: 4px 10px!important; font-size: 11px; box-shadow: none; }
+.workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 32px; padding: 0 10px; font-size: 11px; color: var(--accent); border-color: var(--accent); }
 .workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) { display: flex; flex-direction: column; justify-content: center; gap: 2px; line-height: 1.1; }
-.workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) small { display: block; font: 8px/1.1 var(--sans); color: var(--muted); text-transform: none; letter-spacing: 0; }
+.workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) small { display: block; font: 11px/1.15 var(--sans); color: var(--muted); text-transform: none; letter-spacing: 0; }
 .workspace.viewport-studio #model-tools .shot-launch { background: color-mix(in srgb, var(--accent) 15%, #101923); }
 .action-short { display: none; }
 #equipment-controls { display: contents; }
@@ -30,17 +30,17 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .inspector-tab-row .studio-tabs { flex: 1; min-width: 0; }
 #inspector-size { display: none; }
 .workspace.viewport-studio .light-playback label { display: grid; grid-template-columns: minmax(0,1fr); gap: 0; min-width: 0; }
-.workspace.viewport-studio .light-playback .playback-caption { display: flex; justify-content: space-between; gap: 8px; font: 10px/1.2 var(--sans); }
-.workspace.viewport-studio .light-playback .playback-caption small { font: 9px/1.2 var(--sans); color: var(--muted); }
-.workspace.viewport-studio .light-playback input { height: 22px; margin: 0; }
+.workspace.viewport-studio .light-playback .playback-caption { display: flex; justify-content: space-between; gap: 8px; font: 11px/1.2 var(--sans); }
+.workspace.viewport-studio .light-playback .playback-caption small { font: 11px/1.2 var(--sans); color: var(--muted); }
+.workspace.viewport-studio .light-playback input { height: 24px; margin: 0; }
 .workspace.viewport-studio .light-playback button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 .workspace.viewport-studio .hud-btns-phone { flex: 0 0 auto; gap: 8px; padding: 5px 12px; }
 .workspace.viewport-studio .hud-btns-phone .hint { display: none; }
 .zoom-controls { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
-.zoom-controls span { color: var(--muted); font: 10px var(--mono); }
+.zoom-controls span { color: var(--muted); font: 11px var(--mono); }
 .workspace.viewport-studio .zoom-controls .btn { min-width: 36px; min-height: 36px; padding: 0; font: 20px var(--sans); border-color: #8da8c14d; background: #15212c; }
 .workspace.viewport-studio .zoom-controls .btn:hover { background: #233849; border-color: #9bc8e8; }
-.workspace.viewport-studio #part-position { font-size: 10px; margin-left: 10px; }
+.workspace.viewport-studio #part-position { font-size: 11px; margin-left: 10px; }
 .workspace.viewport-studio .studio-sidebar { height: 100%; min-height: 0; overflow: hidden; background: #101820; }
 .workspace.viewport-studio .step .t, .workspace.viewport-studio .step.deep .t { font: 600 17px/1.2 var(--display); }
 .studio-share { flex: none; margin-left: auto; }
@@ -62,8 +62,8 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 .workspace.viewport-studio #model-experiments > .perspective-launch-row { grid-column: 1 / -1; }
 .workspace.viewport-studio #model-experiments:not(:has(> :not([hidden]) ~ :not([hidden]))) > :not([hidden]) { grid-column: 1 / -1; }
 .workspace.viewport-studio #model-experiments > div { min-width: 0; padding: 5px 10px; gap: 6px; }
-.workspace.viewport-studio #model-experiments .btn { font-size: 10px; padding-inline: 9px; }
-.workspace.viewport-studio #model-experiments span { font-size: 10px; }
+.workspace.viewport-studio #model-experiments .btn { font-size: 11px; padding-inline: 9px; }
+.workspace.viewport-studio #model-experiments span { font-size: 11px; }
 .workspace.viewport-studio .rain-launch { flex: 0 0 auto; margin-block: 5px; min-height: 36px; }
 .workspace.viewport-studio #photo-study-panel { flex: 1; min-height: 0; overflow: hidden; }
 .study-loading { color: var(--muted); text-align: center; padding: 40px 20px; }
@@ -78,7 +78,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 @media (max-width: 760px) {
   .workspace-views { flex-basis: 36px; padding: 0 8px; }
   .workspace-views { padding-right: 102px; }
-  .workspace.viewport-studio .wrap > #expand-model { right: 8px; top: calc(var(--bar) + 3px); padding-inline: 7px; font-size: 9px; }
+  .workspace.viewport-studio .wrap > #expand-model { right: 8px; top: calc(var(--bar) + 3px); padding-inline: 7px; font-size: 11px; }
   .workspace.viewport-studio .hud.tl { display: none; }
   .workspace-views button { flex: 1; padding-inline: 10px; font-size: 11px; }
   .workspace-views > span { display: none; }
@@ -97,26 +97,32 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio .sc-controls { gap: 3px 8px; }
   .workspace.viewport-studio .sc-controls input[type="range"] { height: 28px; }
   .workspace.viewport-studio .part-nav { width: auto; min-width: 0; }
-  .workspace.viewport-studio .part-nav .btn { min-height: 34px; padding-inline: 9px; font-size: 9px; }
+  .workspace.viewport-studio .part-nav .btn { min-height: 34px; padding-inline: 9px; font-size: 11px; }
   .workspace.viewport-studio #part-position, .zoom-controls span { display: none; }
   .workspace.viewport-studio .hud-btns-phone { padding: 4px 8px; }
   .zoom-controls { gap: 4px; }
   .workspace.viewport-studio .zoom-controls .btn { min-width: 34px; min-height: 34px; }
   .workspace.viewport-studio #model-tools { padding: 3px 8px; }
-  .workspace.viewport-studio #model-tools :is(.layer-chip,.mode button) { min-height: 30px; padding: 0 5px; font-size: 8px; letter-spacing: 0; }
-  .workspace.viewport-studio #model-tools .shot-launch { min-height: 30px; padding: 3px 6px!important; font-size: 8px; letter-spacing: 0; }
-  .workspace.viewport-studio #compact-fire { min-height: 30px; padding: 0 7px; font-size: 9px; }
+  .workspace.viewport-studio #model-tools :is(.layer-chip,.mode button) { min-height: 30px; padding: 0 5px; font-size: 11px; letter-spacing: 0; }
+  .workspace.viewport-studio #model-tools .shot-launch { min-height: 30px; padding: 3px 6px!important; font-size: 11px; letter-spacing: 0; }
+  .workspace.viewport-studio #compact-fire { min-height: 30px; padding: 0 7px; font-size: 11px; }
   .workspace.viewport-studio #model-tools .action-name { display: none; }
   .workspace.viewport-studio #model-tools .action-short { display: inline; }
-  .workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) small { font-size: 8px; white-space: nowrap; }
+  .workspace.viewport-studio #model-tools :is(#compact-fire,.shot-launch) small { font-size: 11px; white-space: nowrap; }
   .workspace.viewport-studio .light-playback .playback-caption { font-size: 0; }
-  .workspace.viewport-studio .light-playback .playback-caption small { font-size: 8px; }
+  .workspace.viewport-studio .light-playback .playback-caption small { font-size: 11px; }
   .workspace.viewport-studio #model-experiments > div { padding: 3px 6px; }
-  .workspace.viewport-studio #model-experiments .btn { width: 100%; min-height: 32px; padding-inline: 3px; font-size: 9px; }
+  .workspace.viewport-studio #model-experiments .btn { width: 100%; min-height: 32px; padding-inline: 3px; font-size: 11px; }
   .workspace.viewport-studio #model-experiments span { display: none; }
   .workspace.viewport-studio .light-playback { padding-block: 3px; }
-  .workspace.viewport-studio .light-playback > span { display: none; }
-  .workspace.viewport-studio .rain-launch { margin: 3px 8px; min-height: 32px; font-size: 10px; }
+  /* the strip's note stays on a phone, under the scrubber (Reed's decision 3: the loupe's "not individual real-time
+     photons" must be said there too); its two phrases never break mid-phrase and the dot trails the first, so no
+     line starts with a lone dot */
+  .workspace.viewport-studio .light-playback { flex-wrap: wrap; row-gap: 0; }
+  .workspace.viewport-studio .light-playback > .playback-note { order: 3; flex: 1 0 100%; max-width: none; padding: 0 2px 2px; line-height: 1.35; }
+  .workspace.viewport-studio .playback-note > span { display: inline; white-space: nowrap; }
+  .workspace.viewport-studio .playback-note > span:first-child::after { content: " ·"; }
+  .workspace.viewport-studio .rain-launch { margin: 3px 8px; min-height: 32px; font-size: 11px; }
   .workspace.viewport-studio .rx-head { grid-template-columns: 70px minmax(0,1fr) minmax(0,1fr); }
   .workspace.viewport-studio #studio-exposure .rig-exposure { padding-block: 4px; }
   .workspace.viewport-studio .rx-control input { height: 28px; }
@@ -133,13 +139,13 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 }
 @media (max-width: 599px) and (max-height: 680px) {
   .workspace.viewport-studio .stage .body { grid-template-rows: minmax(0,1fr) 148px; }
-  .workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 30px; padding: 0 7px; font-size: 9px; color: var(--accent); border-color: var(--accent); }
+  .workspace.viewport-studio #compact-fire { display: inline-flex; min-height: 30px; padding: 0 7px; font-size: 11px; color: var(--accent); border-color: var(--accent); }
   .workspace.viewport-studio #model-tools { gap: 4px; }
   .workspace.viewport-studio .lv-read:not(.lv-status) { right: 6px; bottom: 6px; width: 142px; padding: 5px 7px; gap: 3px; }
-  .workspace.viewport-studio .lv-read-row, .workspace.viewport-studio .lv-read-row b { font-size: 9px; }
-  .workspace.viewport-studio .lv-read-h .chip { font-size: 8px; min-height: 14px; height: 14px; }
-  .workspace.viewport-studio .lv-read .lv-ctl-k { font-size: 9px; }
-  .workspace.viewport-studio .lv-crumb { top: 5px; font-size: 9px; }
+  .workspace.viewport-studio .lv-read-row, .workspace.viewport-studio .lv-read-row b { font-size: 11px; }
+  .workspace.viewport-studio .lv-read-h .chip { font-size: 11px; min-height: 14px; height: 14px; }
+  .workspace.viewport-studio .lv-read .lv-ctl-k { font-size: 11px; }
+  .workspace.viewport-studio .lv-crumb { top: 5px; font-size: 11px; }
   .workspace.viewport-studio.model-expanded .stage .body { grid-template-rows: minmax(0,1fr); }
 }
 @media (max-width: 599px) {
@@ -151,14 +157,14 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   body #phone-settings::backdrop { background: transparent; }
   body #phone-settings > header { padding: 8px 12px; }
   body #phone-settings h2 { font-size: 15px; }
-  body #phone-settings header p { font-size: 10px; }
+  body #phone-settings header p { font-size: 11px; }
   .phone-settings-scroll { padding: 0 12px 12px; }
   .phone-settings-scroll > section { padding-block: 10px; }
   #phone-settings .sc-controls { gap: 8px; }
   .workspace.viewport-studio .studio-kit { position: relative; padding: 3px 8px; gap: 8px; z-index: 7; }
   #equipment-toggle { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 3px 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
   #equipment-summary { min-width: 0; font: 11px/1.35 var(--sans); overflow-wrap: anywhere; }
-  #equipment-toggle b { flex: none; border: 1px solid var(--line-2); border-radius: 3px; padding: 5px 7px; font: 10px var(--sans); color: var(--accent); }
+  #equipment-toggle b { flex: none; border: 1px solid var(--line-2); border-radius: 3px; padding: 5px 7px; font: 11px var(--sans); color: var(--accent); }
   #equipment-controls { display: none; }
   .equipment-open #equipment-controls { display: grid; position: absolute; top: 100%; left: 0; right: 0; gap: 10px; padding: 12px; background: #14202c; border: 1px solid var(--line-2); box-shadow: 0 12px 24px #0008; }
   .workspace.viewport-studio #equipment-controls label { display: grid; grid-template-columns: 56px minmax(0,1fr); align-items: center; font-size: 11px; }
@@ -167,7 +173,7 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 @media (max-width: 359px) { .workspace.viewport-studio .studio-sidebar { grid-template-columns: minmax(0,1fr); } }
 @media (max-width: 599px) and (max-height: 680px) {
   .workspace.viewport-studio .stage .body { position: relative; }
-  #inspector-size { display: block; flex: none; align-self: stretch; padding: 0 7px; border: 1px solid var(--line); background: #192734; color: var(--ink); font: 9px var(--sans); cursor: pointer; }
+  #inspector-size { display: block; flex: none; align-self: stretch; padding: 0 7px; border: 1px solid var(--line); background: #192734; color: var(--ink); font: 11px var(--sans); cursor: pointer; }
   .workspace.viewport-studio.inspector-expanded:not(.model-expanded) .studio-sidebar { position: absolute; z-index: 6; bottom: 0; left: 0; right: 0; height: min(55dvh, 320px); box-shadow: 0 -8px 24px #0008; }
 }
 @media (max-width: 599px) and (max-height: 600px) {
@@ -205,10 +211,13 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
   .workspace.viewport-studio.phone-settings-layout .stage .body { grid-template-rows: minmax(0,1fr) 112px; }
   .workspace.viewport-studio.phone-settings-layout.model-expanded .stage .body { grid-template-rows: minmax(0,1fr); }
   .workspace.viewport-studio.phone-settings-layout .studio-sidebar { grid-template-columns: minmax(0,1fr); }
-  .workspace.viewport-studio.phone-settings-layout .parts-head:has(#card-go[hidden]) { display: none; }
-  .workspace.viewport-studio.phone-settings-layout .studio-tabs [aria-controls="phone-settings"] { color: var(--ink); }
-  .workspace.viewport-studio.phone-settings-layout .studio-tabs #tab-explain { color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
-  .workspace.viewport-studio.phone-settings-layout #inspector-size { display: block; flex: none; padding: 0 7px; border: 1px solid var(--line); background: #192734; color: var(--ink); font: 9px var(--sans); cursor: pointer; }
+  .workspace.viewport-studio.phone-settings-layout .parts-head:has(#card-go[hidden]), .workspace.viewport-studio.phone-settings-layout .parts-head:not(:has(#card-go)) { display: none; } /* r3: Go inside sits in the card on taller phones */
+  .workspace.viewport-studio.phone-settings-layout .studio-tabs #tab-controls { color: var(--ink); }
+  /* Parts is a button here, not a tab (score loop r3), but it names the pane that is in view under the model: aria-current
+     marks it and the underline shows it (score loop r6), while Settings, a launcher for a sheet, keeps its plain look */
+  .workspace.viewport-studio.phone-settings-layout .studio-tabs #tab-explain { color: var(--ink); box-shadow: none; }
+  .workspace.viewport-studio.phone-settings-layout .studio-tabs #tab-explain[aria-current="true"] { color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
+  .workspace.viewport-studio.phone-settings-layout #inspector-size { display: block; flex: none; padding: 0 7px; border: 1px solid var(--line); background: #192734; color: var(--ink); font: 11px var(--sans); cursor: pointer; }
   .workspace.viewport-studio.phone-settings-layout .stage .body { position: relative; }
   .workspace.viewport-studio.phone-settings-layout.inspector-expanded:not(.model-expanded) .studio-sidebar { position: absolute; z-index: 6; bottom: 0; left: 0; right: 0; height: min(55dvh,320px); box-shadow: 0 -8px 24px #0008; }
   /* Keep model navigation above the expanded inspector, never underneath its
@@ -227,4 +236,405 @@ html:has(body.viewport-studio), body.viewport-studio { height: 100%; overflow: h
 @media (max-width: 760px) {
   .workspace.viewport-studio .light-playback input,
   .workspace.viewport-studio .lv-ctl-row input[type="range"] { height: 44px; }
+}
+
+/* Tablet portrait (review loop 10/10/2026, E-05): beside the inspector the model column is ~460 px wide, and the
+   part position plus the Zoom label pushed the zoom-in button under the inspector. Keep the arrows, drop the words. */
+@media (min-width: 761px) and (max-width: 900px) {
+  .workspace.viewport-studio #part-position, .workspace.viewport-studio .zoom-controls span { display: none; }
+  .workspace.viewport-studio .part-nav :is(#part-prev, #part-next) span { display: none; }
+  .workspace.viewport-studio .hud-btns-phone { gap: 6px; padding-inline: 10px; }
+  /* The playback strip's note moves under the scrubber, which was squeezed to ~120 px (E-15). */
+  .workspace.viewport-studio .light-playback { flex-wrap: wrap; row-gap: 0; }
+  .workspace.viewport-studio .light-playback > span { order: 3; flex: 1 0 100%; max-width: none; padding-left: 2px; }
+  .workspace.viewport-studio .light-playback .playback-caption small { font-size: 11px; }
+}
+
+/* Landscape phones (review loop r1, 10/11/2026). A 320-430 px tall screen cannot hold the one-screen studio: the chrome
+   took ~255 px, left the model a 100 px strip and clipped the playback, experiment and navigation rows inside
+   overflow:hidden boxes a finger could not scroll (WCAG 1.3.4, 1.4.10). Here the page scrolls instead: the top bar
+   scrolls away, the lede drops, and below the slim chrome the model and the inspector sit side by side in a band one
+   screen tall. The model column scrolls on its own when its controls do not fit under a view at least 220 px tall.
+   :not(#_):not([data-workspace-view="photos"]) lifts these rules over the stacked phone rules above without a pile of !important. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 480px) {
+  html:has(body.viewport-studio:not([data-workspace-view="photos"])), body.viewport-studio:not(#_):not([data-workspace-view="photos"]) { height: auto; overflow: visible; overflow-x: clip; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .topbar { position: absolute; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .wrap { height: auto; min-height: 100dvh; overflow: visible; padding-bottom: 0; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .wrap > .stage { flex: none; overflow: visible; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .level-why { display: none; }
+  /* A short flick snaps the level tabs to the top, and then the tabs, the crumb and the model band fill the screen. */
+  html:has(body.viewport-studio:not([data-workspace-view="photos"])) { scroll-snap-type: y proximity; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) :is(.wrap, #steps) { scroll-snap-align: start; scroll-margin-top: 0; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .step { min-height: 36px; padding-block: 4px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .inspection-context { min-height: 0; padding-block: 2px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .stage .body { position: relative; display: grid; flex: none; height: calc(100dvh - var(--steps-h, 37px)); min-height: 0;
+    grid-template-columns: minmax(0,1fr) clamp(220px, 34vw, 310px); grid-template-rows: minmax(0,1fr); overflow: hidden; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .stage:has(.inspection-context:not([hidden])) .body { height: calc(100dvh - var(--steps-h, 37px) - 33px); }
+  body.workspace.viewport-studio.model-expanded:not(#_):not([data-workspace-view="photos"]) .stage .body { grid-template-columns: minmax(0,1fr); }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .viewer { grid-row: 1; grid-column: 1; height: 100%; overflow-x: hidden; overflow-y: auto; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .view { flex: 1 0 auto; height: auto; min-height: max(220px, 60dvh); }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .studio-sidebar { position: static; grid-row: 1; grid-column: 2; height: 100%; min-height: 0;
+    display: flex; flex-direction: column; overflow: hidden; border-left: 1px solid var(--line); border-top: 0; box-shadow: none; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .studio-sidebar > .inspector-tab-row { flex: none; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .studio-sidebar > :is(.panel,.scenario) { flex: 1 1 auto; min-height: 0; max-height: none; overflow: auto; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) #inspector-size { display: none; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .hud-btns-phone { position: static; inset: auto; }
+  /* The settings drawer becomes a side sheet over the inspector's column, so the model stays in view beside it. */
+  body.workspace.viewport-studio.phone-settings-open:not(#_):not([data-workspace-view="photos"]) .wrap { padding-bottom: 0; padding-right: min(360px, 48vw); }
+  body:not(#_):not([data-workspace-view="photos"]) #phone-settings { inset: 0 0 0 auto; width: min(360px, 48vw); height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 14px 0 0 14px; }
+  /* The focus level's two sliders: the phone's one short strip along the view's bottom edge, so the cone and its
+     pins keep the middle of a 220-320 px tall view (the inset sits top-right on a view this short, phone-frame.ts). */
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .lv-ctl { left: 12px; right: 12px; width: auto; bottom: 6px; padding: 4px 10px 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; background: rgba(0,0,0,.72); }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .lv-ctl > .lv-ctl-k { display: none; }
+  /* The guided tour (ux, integration r1): its band takes the tool row's place, so the band and a 220 px model fill
+     the band under the level tabs; Fire and the layer switches wait for the tour to close. */
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .viewer:has(#journey:not([hidden])) #model-tools { display: none; }
+  /* the tour's band names the stop and steps back, so the deep levels' way-back line waits too */
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .stage:has(#journey:not([hidden])) .inspection-context { display: none; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .stage:has(#journey:not([hidden])) .body { height: calc(100dvh - var(--steps-h, 37px)); }
+  /* Expand model (ux): the level tabs step aside too, so the model column takes the whole screen above its one row of
+     navigation */
+  body.workspace.viewport-studio.model-expanded:not(#_):not([data-workspace-view="photos"]) .stage .body,
+  body.workspace.viewport-studio.model-expanded:not(#_):not([data-workspace-view="photos"]) .stage:has(.inspection-context:not([hidden])) .body,
+  body.workspace.viewport-studio.model-expanded:not(#_):not([data-workspace-view="photos"]) .stage:has(#journey:not([hidden])) .body { height: 100dvh; }
+  body.workspace.viewport-studio.model-expanded:not(#_):not([data-workspace-view="photos"]) .viewer { display: flex; flex-direction: column; overflow: hidden; }
+  body.workspace.viewport-studio.model-expanded:not(#_):not([data-workspace-view="photos"]) .view { flex: 1 1 auto; min-height: 0; }
+}
+
+/* Short portrait phones (680 px tall or less, such as 320x568 and 360x640; review loop r1): the one-screen studio
+   left the model 115-210 px, too short for the loupe's reading card or the focus level's sliders to sit beside the model, and the pins went under them. As on a
+   landscape phone the page scrolls instead; the view keeps 240 px and the inspector follows the model's controls.
+   No scroll snap here: the page ends within a snap distance of the level tabs, and snapping would hide its last
+   rows. With Settings open the workspace is one screen again, as the drawer layout expects. */
+@media (max-width: 599px) and (max-height: 680px) and ((orientation: portrait) or (max-width: 479px)) {
+  html:has(body.viewport-studio:not([data-workspace-view="photos"]):not(.phone-settings-open)), body.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) { height: auto; overflow: visible; overflow-x: clip; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .topbar { position: absolute; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .wrap { height: auto; min-height: 100dvh; overflow: visible; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .wrap > .stage { flex: none; overflow: visible; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .stage .body { display: block; flex: none; height: auto; overflow: visible; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .viewer { height: auto; overflow: visible; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .view { flex: none; height: 240px; min-height: 240px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .studio-sidebar { position: static; height: auto; min-height: 0; overflow: visible; box-shadow: none; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .studio-sidebar > :is(.panel,.scenario) { max-height: none; overflow: visible; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) #inspector-size { display: none; }
+  /* score loop r6: the Focus level also holds a two-line inset note above its inset and a 80 px card of sliders under the model, so its 240 px
+     view left the cone ~110 px and a pin had no place beside it (320x568); it gets 30 px more here, the page scrolls anyway */
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open):has(#stage-section[data-level="cone"]) .view { height: 270px; min-height: 270px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open) .hud-btns-phone { position: static; inset: auto; }
+}
+
+/* A desktop arranges the model column so the view keeps the height (score loop r1: the model had 541 of 900 px on a
+   desktop under five stacked rows). Integration note: visual's landscape-phone variant of this layout gave way to
+   the landscape-phone scrolling layout (access), which keeps every control reachable. */
+@media (min-width: 1024px) and (min-height: 600px) {
+  /* The viewer's rows step aside: its children join the body's grid, the view takes the whole left column, the part
+     navigation floats over its foot, and the light strip and the experiments sit under the inspector on the right. */
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .body {
+    display: grid; grid-template-columns: minmax(0,1fr) var(--side-w, 340px); grid-template-rows: auto minmax(0,1fr) auto auto auto; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer { display: contents; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > * { grid-column: 1; grid-row: 6; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) #model-tools { grid-column: 1; grid-row: 1; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .view { grid-column: 1; grid-row: 2 / 6; min-height: 0; height: auto; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .hud-btns-phone {
+    grid-column: 1; grid-row: 2 / 6; align-self: end; position: relative; z-index: 4; height: 40px; box-sizing: border-box;
+    padding: 3px 8px; background: var(--ground); border-top: 1px solid var(--line); pointer-events: none; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .studio-sidebar { grid-column: 2; grid-row: 1 / 3; min-height: 0; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .light-playback { grid-column: 2; grid-row: 3; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .rain-launch { grid-column: 2; grid-row: 4; margin: 3px 8px; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) #model-experiments { grid-column: 2; grid-row: 5; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .hud-btns-phone > * { pointer-events: auto; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .hud-btns-phone .btn { min-height: 32px; background: #0b1117; }
+  /* the navigation row is opaque ground, so cutaway rays end at its top edge instead of running behind PREVIOUS
+     (score loop r2); the camera is already framed above this row (stage.ts) */
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .view .hud.bl { bottom: 48px; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) #model-experiments { border-left: 1px solid var(--line); }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .light-playback { border-left: 1px solid var(--line); flex-wrap: wrap; row-gap: 2px; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .light-playback > label { flex: 1; min-width: 0; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .light-playback > .playback-note { order: 3; flex: 1 0 100%; max-width: none; padding: 0 2px; line-height: 1.35; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .playback-note > span { display: inline; white-space: nowrap; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .playback-note > span:first-child::after { content: " ·"; }
+  /* in the narrow side column the strip's title gives way to its caption */
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .light-playback .playback-caption { font-size: 0 !important; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .viewer > .light-playback .playback-caption small { margin-left: auto; white-space: nowrap; }
+}
+/* A desktop: the equipment row rides in the workspace tabs' row, between the tabs and the gesture hint. */
+@media (min-width: 1024px) and (min-height: 600px) {
+  body.workspace.viewport-studio .studio-kit { position: fixed; z-index: 5; top: var(--bar); left: 270px; right: 350px; height: 40px; box-sizing: border-box;
+    padding: 2px 0; background: transparent; border: 0; }
+  body.workspace.viewport-studio[data-workspace-view="photos"] .studio-kit { display: none; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) #model-experiments { grid-template-columns: minmax(0,1fr); }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) #model-experiments > div { display: flex; align-items: center; gap: 8px; padding: 4px 10px; }
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) #model-experiments > div > .btn { flex: none; }
+  body.workspace.viewport-studio .studio-kit select { height: 32px; }
+  body.workspace.viewport-studio .studio-kit .learn-launch, body.workspace.viewport-studio .studio-share #share-btn { min-height: 32px; }
+}
+/* The gesture hint gets its own band at the right of the tabs row, between the equipment row and Expand model; the
+   equipment row ends where that band begins, so Share never sits on the hint (score loop r2: a 64 px overlap at
+   1440x900 clipped "Drag to orbit" to "bit"). The hint can shrink with an ellipsis but never slides under Share.
+   Narrower than 1366 px the band is too small for both, and the hint steps aside as before. */
+@media (min-width: 1366px) and (min-height: 600px) {
+  body.workspace.viewport-studio .studio-kit { right: 440px; }
+  body.workspace.viewport-studio .workspace-views > span { flex: 0 1 auto; min-width: 0; max-width: 282px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (min-width: 1024px) and (max-width: 1365px) and (min-height: 600px) {
+  body.workspace.viewport-studio .workspace-views > span { display: none; }
+  body.workspace.viewport-studio .studio-kit { right: 120px; gap: 6px; }
+  body.workspace.viewport-studio .studio-kit label { font-size: 0; gap: 0; }
+  body.workspace.viewport-studio .studio-kit #kit-body { width: 100px; }
+  body.workspace.viewport-studio .studio-kit #kit-lens { width: 140px; }
+}
+
+/* The equipment row ended 350 px from the right edge with Share this view, but the gesture hint beside Expand model
+   starts about 414 px from it, so Share covered "Drag to orbit" at every desktop width (score loop r2, seen at
+   1366x768). The row now ends 430 px from the edge, clear of the hint; below 1500 px that leaves the row too little
+   room, so the hint steps aside there as it already does below 1366 px (the canvas's own label still says it). */
+@media (min-width: 1366px) and (min-height: 600px) {
+  body.workspace.viewport-studio .studio-kit { right: 430px; }
+}
+@media (min-width: 1366px) and (max-width: 1499px) and (min-height: 600px) {
+  body.workspace.viewport-studio .studio-kit { right: 350px; }
+  body.workspace.viewport-studio .workspace-views > span { display: none; }
+}
+
+/* Integration note (score loop r1): ux's short-landscape layout gave way to the landscape-phone layout above
+   (access), which keeps every control reachable from 568x320 up. Expand model below is ux's. */
+/* Expand model is a full-viewport mode on every width: the site bar, the workspace rows, the tool strips and the
+   inspector step aside, and the model fills the screen above one row of part navigation, zoom and the way back. */
+body.workspace.viewport-studio.model-expanded :is(.topbar, .workspace-views, .studio-kit, .steps, .level-why, .inspection-context, #model-tools, #model-experiments, .light-playback, .rain-launch, .studio-sidebar, #journey) { display: none !important; }
+.workspace.viewport-studio.model-expanded .wrap { padding-top: 0; height: 100dvh; }
+.workspace.viewport-studio.model-expanded .stage .body { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr); height: auto; }
+.workspace.viewport-studio.model-expanded .viewer { grid-row: 1 / -1; }
+.workspace.viewport-studio.model-expanded .hud-btns-phone #expand-model { flex: none; min-height: 34px; padding: 0 10px; border: 1px solid var(--accent); border-radius: 4px; background: #192734; color: var(--accent); font: 600 11px var(--sans); cursor: pointer; }
+
+/* The playback strip's honesty note ("Illustrative packets · not individual real-time photons", "Computed paths ·
+   slowed to reveal the journey"): two lines beside the scrubber on a wide view, and on a phone one line under it at
+   the 10.5 px type floor (Reed, decision 3, review loop 10/11/2026). */
+.playback-note > span { display: block; }
+@media (max-width: 760px) {
+  .workspace.viewport-studio .light-playback { flex-wrap: wrap; row-gap: 0; }
+  .workspace.viewport-studio .light-playback > .playback-note { display: block; order: 3; flex: 1 0 100%; max-width: none; margin: -2px 0 1px;
+    font: 11px/1.3 var(--sans); color: var(--muted); white-space: normal; overflow: visible; }
+  .workspace.viewport-studio .light-playback > .playback-note > span { display: inline; }
+}
+/* With the tour band open on a phone the strip sat partly under the Settings/Parts sheet bar and the honesty note,
+   its last line, was covered (score loop r2, decision 3). The note moves up beside the play button, in the caption's
+   place, and the strip loses a line: button | note over scrubber. */
+@media (max-width: 760px) {
+  body.tour-active.workspace.viewport-studio .light-playback { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto;
+    column-gap: 10px; row-gap: 0; align-items: center; }
+  body.tour-active.workspace.viewport-studio .light-playback > .btn { grid-column: 1; grid-row: 1 / 3; }
+  body.tour-active.workspace.viewport-studio .light-playback > label { grid-column: 2; grid-row: 2; }
+  body.tour-active.workspace.viewport-studio .light-playback .playback-caption { display: none; }
+  body.tour-active.workspace.viewport-studio .light-playback > .playback-note { grid-column: 2; grid-row: 1; order: 0; margin: 2px 0 0;
+    white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.3; }
+}
+
+/* Score loop r2 (ux, 10/11/2026). A landscape phone's inspector column is ~310 px tall: the part list kept its rows
+   and squeezed the picked part's card into the last ~90 px, a box inside a box. The column now scrolls as one, and
+   a newly picked part scrolls it until the card's heading is at the top (ui.ts revealCard). */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 480px) {
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .studio-sidebar > .panel > .panel-scroll { display: block; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) .studio-sidebar > .panel #card:not([hidden]) { max-height: none; overflow: visible; }
+}
+
+/* Score loop r2 (ux): on a desktop the equipment row (fixed, studio-kit) ended 350 px from the right while the gesture
+   hint sat 138-414 px from it, so Share covered "Drag to orbit". The hint keeps a slot of its own at most 300 px wide
+   (an ellipsis if a longer one ever comes), and the equipment row ends 16 px before that slot. */
+@media (min-width: 1366px) and (min-height: 600px) {
+  body.workspace.viewport-studio .workspace-views > span { flex: 0 1 auto; min-width: 0; max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  body.workspace.viewport-studio .studio-kit { right: calc(20px + 118px + 300px + 16px); }
+}
+
+/* Score loop r2 (ux): one way inside a selected part. Beside the model the card carries "Go inside" (workspace.ts
+   #card-go), so the camera's in-view crumb drops its copy of the button while the card shows it. */
+@media (min-width: 761px) {
+  body.workspace.viewport-studio:has(#studio-explain:not([hidden]) #card:not([hidden]) #card-go:not([hidden])) .rig-crumb .rc-link { display: none; }
+}
+/* A tablet's tool row (600-900 px, E-10): beside the inspector the row is ~460 px, and the two action buttons wrapped
+   onto three cramped lines ("FIRE / SHUTTER / Current settings"). Here they show their short one-line labels
+   ("● Fire", "▶ Play"); the full names stay in their accessible names and titles. */
+@media (min-width: 600px) and (max-width: 900px) {
+  .workspace.viewport-studio #model-tools :is(#compact-fire, .shot-launch) small { display: none; }
+  .workspace.viewport-studio #model-tools :is(#compact-fire, .shot-launch) .action-name { display: none; }
+  .workspace.viewport-studio #model-tools :is(#compact-fire, .shot-launch) .action-short { display: inline; white-space: nowrap; }
+}
+/* The view's messages (a lens switch that limits the aperture, Link copied) sat centered over the top of the view,
+   across the level's title and settings line. They now sit at the view's top right, clear of that readout, and on a
+   narrow view along its foot (score loop r2). */
+.workspace.viewport-studio .view > .toast { left: auto; right: 16px; transform: none; max-width: min(440px, calc(100% - 32px)); }
+@media (max-width: 760px) {
+  .workspace.viewport-studio .view > .toast { top: auto; bottom: 10px; right: 10px; max-width: calc(100% - 20px); }
+}
+
+/* Touch targets (score loop r2). The phone's main stepping controls were 27-34 px, under the 44 px touch guidance
+   (WCAG 2.5.5 AAA; Apple's Human Interface Guidelines and Material use 44 pt and 48 dp). On a touch screen the part
+   arrows and the zoom buttons grow to 44 px wide, and a transparent hit area (the pins' own ::before trick, app.css)
+   carries the part row, the zoom buttons, Expand model and the way-back link to 44 px tall without moving the
+   layout around the model. */
+.workspace.viewport-studio .zoom-controls .btn { justify-content: center; }
+@media (pointer: coarse) {
+  .workspace.viewport-studio .part-nav :is(#part-prev, #part-next) { min-width: 44px; justify-content: center; }
+  .workspace.viewport-studio .zoom-controls .btn { min-width: 44px; }
+  .workspace.viewport-studio :is(.part-nav .btn, .zoom-controls .btn, .inspection-back) { position: relative; }
+  .workspace.viewport-studio :is(.part-nav .btn, .zoom-controls .btn)::before { content: ""; position: absolute; inset: -5px 0; } /* r6: 10 px above was tried and covered the model's center where the raised sheet puts this row 5 px under it (test-workspace); the rows below take the area under the button */
+  .workspace.viewport-studio .inspection-back::before { content: ""; position: absolute; inset: -10px -4px; }
+  .workspace.viewport-studio #expand-model::before { content: ""; position: absolute; inset: -9px 0; }
+  .workspace.viewport-studio.model-expanded .hud-btns-phone #expand-model { position: relative; }
+}
+/* score loop r3: on a desktop the "Focal length & perspective" launch sits under the readout buttons in the side column
+   (perspective-study.ts), the same height and width as they are, instead of alone at the column's foot */
+#scenario > .perspective-launch-row { padding: 0; margin-top: 6px; }
+#scenario > .perspective-launch-row .perspective-launch { min-height: 36px; }
+
+/* Score loop r3 (ux, 10/11/2026). */
+/* Expand model on a desktop: the desktop grid's two columns come from a rule with an id in its selector (the
+   :has(#journey) guard), so the expanded body's one column lost to it and the view kept 1100 of 1440 px with an
+   empty column beside it. The expanded rule now carries the same guard. */
+@media (min-width: 1024px) and (min-height: 600px) {
+  body.workspace.viewport-studio.model-expanded .stage:not(:has(#journey:not([hidden]))) .body { grid-template-columns: minmax(0,1fr); }
+}
+/* The Focus level's prompt names its setting as a link to it (workspace.ts). */
+.level-why .why-link, .level-why .why-expand { all: unset; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.level-why .why-expand { display: none; }
+@media (max-width: 760px) { .level-why .why-expand { display: inline; } }
+.level-why .why-link:focus-visible, .level-why .why-expand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* a 24 px hit area around the one-line link (WCAG 2.5.8), without moving the line */
+.level-why .why-link, .level-why .why-expand { position: relative; }
+.level-why .why-link::before, .level-why .why-expand::before { content: ""; position: absolute; inset: -6px -2px; }
+/* A tour stop that opens a lesson (Read the sensor, the image pipeline) gives it the model's own rows: the part
+   navigation, zoom and the experiments row step aside while the lesson covers the model, and on a phone the lesson
+   takes the whole column under the tour band instead of a 320 px box over an empty band. A fade at its foot says
+   there is more below. */
+.workspace.viewport-studio .viewer:has(#sensor-lesson:not([hidden])) :is(.hud-btns-phone, #model-experiments) { display: none; }
+@media (max-width: 760px) and (min-height: 821px) { /* shorter phones keep their own flexible tour frame (learning.css) */
+  .workspace.viewport-studio .viewer:has(#journey:not([hidden])):has(#sensor-lesson:not([hidden])) .view { height: auto; min-height: 0; flex: 1 1 auto; }
+}
+#sensor-lesson::after { content: ""; display: block; position: sticky; bottom: calc(-1 * clamp(12px, 2vw, 24px)); height: 28px; margin-top: -28px;
+  background: linear-gradient(transparent, var(--surface)); pointer-events: none; }
+/* The phone tour's buttons keep their arrows on the same line (360 px: "NEXT STOP" over "›"). */
+#journey nav .btn { white-space: nowrap; }
+/* A phone's picked camera part: the card (raised as a sheet) carries the part's name, Go inside and its close
+   button, so the in-view crumb with its own Go inside no longer floats over the part the camera has just framed. */
+@media (max-width: 760px) and (min-height: 780px) {
+  body.workspace.viewport-studio:has(#studio-explain.has-selection) .rig-crumb { display: none; }
+}
+/* A camera part's card now carries its live value on the subline (ui.ts): it is read, so it takes the muted text
+   color (the faint one measured 4.0:1 on the card, under the 4.5:1 AA floor). */
+.workspace #card .card-sub { color: var(--muted); }
+/* The Pixel level's reading header stays one line ("REFERENCE PIXEL / · RED" wrapped at 1440 px). */
+.lv-read-h .lv-ctl-k[data-k="heading"] { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The first-look handling hint in the desktop's bottom bar (workspace.ts); it leaves at the first drag or scroll. */
+.workspace.viewport-studio .orbit-hint { display: none; }
+@media (min-width: 1024px) and (min-height: 600px) and (pointer: fine) {
+  body.workspace.viewport-studio .hud-btns-phone > .orbit-hint:not([hidden]) { display: block; flex: 0 1 auto; min-width: 0; align-self: center; margin-left: 8px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); font: 11px var(--mono); pointer-events: none; }
+  body.workspace.viewport-studio.model-expanded .hud-btns-phone > .orbit-hint { display: none; }
+}
+
+/* Score loop r3 (WCAG 1.4.10 Reflow): with the 44 px touch widths above, the part row (Previous, Overview, Next,
+   Reset view, then the zoom pair) needs about 350 px, so on a 320 px phone, and in the ~340 px model column of a
+   568x320 phone on its side, Zoom in was pushed past the edge and clipped. Where the row is that narrow, Reset view
+   shows its ↺ mark in place of its two words (the words stay its accessible name; the mark has empty alt text) and
+   Overview gives up a little padding. The row then ends at about 308 px. */
+@media (max-width: 359px), (max-width: 640px) and (orientation: landscape) and (min-width: 480px) and (max-height: 500px) {
+  /* !important over type-floor.css's phone floor for .part-nav .btn; that sheet leaves font-size: 0 text alone */
+  .workspace.viewport-studio .part-nav #reset-view { font-size: 0 !important; letter-spacing: 0; gap: 0; min-width: 44px; padding-inline: 0; justify-content: center; }
+  .workspace.viewport-studio .part-nav #reset-view::after { content: "↺" / ""; font: 400 18px/1 var(--sans); }
+  .workspace.viewport-studio .part-nav #part-overview { padding-inline: 8px; }
+}
+
+/* Score loop r4 (ux). At 1024-1279 px the first-look hint ("Drag to orbit · Scroll to zoom · Pick a numbered part")
+   was cut to "Drag to orbit · ·" by the bar's own buttons. Where the bar has no room for it, the hint is one small caption
+   over the model's foot, above the bar, and wraps if it must. */
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 600px) and (pointer: fine) {
+  body.workspace.viewport-studio .stage:not(:has(#journey:not([hidden]))) .hud-btns-phone > .orbit-hint:not([hidden]) {
+    position: absolute; left: 12px; bottom: calc(100% + 8px); margin: 0; max-width: calc(100% - 24px); overflow: visible;
+    white-space: normal; text-overflow: clip; padding: 3px 8px; background: #0b1117d9; border-radius: 3px; }
+}
+/* Score loop r5 (ux): that caption sits over the model's foot, where the deep levels keep their cards (at 1024x768 it
+   covered the Focus level's Off-center slider). The deep levels' pins and cards already say how to handle the model, so
+   the first-look line belongs to the camera level alone. */
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 600px) and (pointer: fine) {
+  body.workspace.viewport-studio .stage:not([data-level="camera"]) .hud-btns-phone > .orbit-hint { display: none; }
+}
+
+/* Score loop r4 (ux): on a phone on its side the model band was 234 px of a 353 px column and the "Focal length &
+   perspective" bar sat below the fold. The Fire and Play the shot buttons drop their second line (their names carry the
+   meaning), and the two bars around the model lose their padding, so the model gains about 30 px and the bar is in view. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 480px) {
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) #model-tools { padding-block: 2px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) #model-tools :is(#compact-fire,.shot-launch) small { display: none; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) #model-tools :is(.layer-chip,.mode button,#compact-fire,.shot-launch) { min-height: 28px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) #model-experiments > div { padding: 0 8px; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]) #model-experiments .btn { min-height: 28px; }
+}
+
+/* Score loop r4 (access, 10/12/2026): 44 px touch targets. Round 2 gave the part row, the zoom pair, Expand model and the way
+   back a transparent 44 px hit area around their 27-34 px boxes. The rest of the phone's chrome had none: the tool
+   launchers (32-34 px), the experiments and the Pixel launcher (32), Share (36), the equipment row (40), the level tabs
+   (40), the view tabs (35), the tour (30) and the Pixel reading's Details chip (24). A real 44 px box for each would take
+   about 50 px from a ~370 px model view (and hide two of the Pixel pins at 360x780), so on a touch screen each gets the
+   same kind of hit area, sized to its own height; only the controls the layout can afford grow: the top bar's Menu
+   (the bar is 52 px), the inspector's tab row (inside its fixed dock) and the tour's stop picker. */
+@media (pointer: coarse) {
+  body.workspace.viewport-studio :is(#compact-fire, .shot-launch, #model-experiments .btn, .perspective-launch, .rain-launch, .light-playback .btn, #share-btn,
+    #equipment-toggle, .step, .learn-launch, .workspace-views button, .lv-read-more, .studio-tabs button, #inspector-size, #journey nav .btn) { position: relative; }
+  body.workspace.viewport-studio :is(#compact-fire, .shot-launch, #model-experiments .btn, .perspective-launch, .rain-launch)::before { content: ""; position: absolute; inset: -9px 0; } /* r6: 32 to 34 px boxes, a 44 px hit area */
+  body.workspace.viewport-studio :is(.light-playback .btn, .workspace-views button)::before { content: ""; position: absolute; inset: -9px 0; }
+  /* score loop r5: the tour's controls are 30 px boxes (the band is 108 px tall); a 44 px tall hit area (the width stays the box: 320 px has no room for more) */
+  body.workspace.viewport-studio #journey nav .btn::before { content: ""; position: absolute; inset: -8px 0; }
+  body.workspace.viewport-studio :is(#share-btn, #equipment-toggle, .step, .learn-launch)::before { content: ""; position: absolute; inset: -7px 0; }
+  body.workspace.viewport-studio .lv-read-more::before { content: ""; position: absolute; inset: -10px -6px; }
+  body.workspace.viewport-studio #journey-more > summary::before { content: ""; position: absolute; inset: -8px 0; }
+  body.workspace.viewport-studio .menu-btn { height: 44px; }
+  body.workspace.viewport-studio .studio-tabs button, body.workspace.viewport-studio #inspector-size { min-height: 44px; }
+  body.workspace.viewport-studio .inspector-tab-row { min-height: 44px; }
+}
+@media (pointer: coarse) and (max-width: 760px) {
+  body.workspace.viewport-studio:not(#_) .studio-sidebar { grid-template-rows: 44px minmax(0,1fr); }
+}
+
+/* Score loop r4 (WCAG 2.5.7): the tap-only way to turn and tip the model (ui.ts), in the Controls above More settings. */
+.rotate-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 12px 0 0; }
+.rotate-k { grid-column: 1 / -1; font: 500 11px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rotate-controls .btn { min-height: 44px; padding: 0 4px; justify-content: center; gap: 4px; font-size: 11px; letter-spacing: 0; white-space: normal; text-align: center; line-height: 1.15; }
+@media (max-width: 420px) { .rotate-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Score loop r4: on the shortest phones (320x568) the Settings and Parts tabs started at y 550, 18 px above the fold. The tool
+   row drops the second line of its two buttons ("Current settings", "Photo story"; their full names stay in their accessible
+   names and titles), and the experiments row loses its padding: the tab row starts about 30 px higher. */
+@media (max-width: 359px) and (max-height: 600px) and ((orientation: portrait) or (max-width: 479px)) {
+  .workspace.viewport-studio #model-tools :is(#compact-fire, .shot-launch) small { display: none; }
+  .workspace.viewport-studio #model-tools { padding-block: 2px; }
+  .workspace.viewport-studio #model-experiments > div { padding-block: 0 2px; }
+  .workspace.viewport-studio .hud-btns-phone { padding-block: 2px; }
+}
+/* the Play button's own offsets (shot-launch.css, for its place over the view) must not move it once it is positioned here */
+body.workspace.viewport-studio #model-tools .shot-launch { right: auto; bottom: auto; }
+/* the readings' label and chip wrapped nowhere: "SHARPNESS CRITERION" and its chip ran out of a 140-200 px tile in the Controls column
+   (clipped at the panel's edge once More settings is open, which a tablet now starts with, score loop r4) */
+.workspace .kpi .kl { flex-wrap: wrap; white-space: normal; }
+
+/* Score loop r5: on a phone 600 px tall or less (320x568) the Settings and Parts tabs started at y 538 to 654 of 568, so the two
+   main ways into the controls and the part list were off the first screen and the page had to be scrolled to find them. Here
+   the tab row is fixed to the foot of the screen (the 44 px row the inspector already has) and the page keeps 44 px under its
+   last row. With Settings open the workspace is one screen again and the row is back in its place. */
+@media (max-width: 599px) and (max-height: 600px) and ((orientation: portrait) or (max-width: 479px)) {
+  /* a control scrolled into view (a keyboard focus, scrollIntoView) stops above the fixed row, not under it (WCAG 2.4.11) */
+  html:has(body.viewport-studio:not([data-workspace-view="photos"]):not(.phone-settings-open):not(.model-expanded)) { scroll-padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open):not(.model-expanded) .studio-sidebar { grid-template-rows: auto; }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open):not(.model-expanded) .studio-sidebar > .inspector-tab-row {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; min-height: 44px; background: #101820; border-top: 1px solid var(--line-2); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body.workspace.viewport-studio:not(#_):not([data-workspace-view="photos"]):not(.phone-settings-open):not(.model-expanded) .wrap { padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Score loop r6 (WCAG 2.5.8 holds at 24 px; this is the 44 px guideline for a finger): the Parts rows are 34 px tall and sit edge to edge, so a
+   transparent hit area has no room to grow; on a touch phone the rows themselves are 44 px. A tablet's playback and Focus sliders were exactly
+   24 px tall; with a touch screen they are 40 px (the thin track stays where it was, centered). */
+@media (pointer: coarse) and (max-width: 760px) {
+  .workspace.viewport-studio #parts button { min-height: 44px; }
+}
+@media (pointer: coarse) and (min-width: 761px) {
+  .workspace.viewport-studio .light-playback input[type="range"], .workspace.viewport-studio .lv-ctl-row input[type="range"] { height: 40px; }
 }

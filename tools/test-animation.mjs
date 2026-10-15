@@ -16,9 +16,10 @@ try {
       const frame = window.requestAnimationFrame.bind(window);
       window.requestAnimationFrame = callback => frame(timestamp => callback(timestamp - 25));
     });
-    await page.goto(process.env.P2P_URL || server.url);
+    // The site root is now the photo opening, so enter the studio directly; there is no synthetic photo to wait for.
+    await page.goto(new URL('?piece=camera', process.env.P2P_URL || server.url).href);
     await page.waitForFunction(() => window.p2p?.pieces.camera);
-    await page.waitForFunction(() => !document.getElementById('pin-photo').disabled, { timeout: 120000 });
+    await page.evaluate(() => window.p2p.pieces.camera.ready());
     await page.locator('#learn-launch').click();
     for (const [stop, piece] of [[1, 'lens'], [3, 'cone']]) {
       await page.locator('#journey-stop').selectOption(String(stop));
@@ -33,13 +34,13 @@ try {
       assert.equal(await page.evaluate(p => window.p2p.pieces[p].light().progress, piece), .65);
       await page.screenshot({ path: `shots/animation/${piece}-${width}.png` });
     }
-    await page.locator('#journey-stop').selectOption('4');
+    await page.locator('#journey-stop').selectOption('6');
     await page.waitForFunction(() => window.p2p.pieces.loupe?.photons);
     assert.equal((await page.evaluate(() => window.p2p.pieces.loupe.photons())).playing, false);
     await page.locator('.light-playback:visible button').click();
     await page.waitForTimeout(200);
     assert.equal((await page.evaluate(() => window.p2p.pieces.loupe.photons())).playing, true);
-    await page.locator('#journey-stop').selectOption('5');
+    await page.locator('#journey-stop').selectOption('7');
     assert.equal((await page.evaluate(() => window.p2p.pieces.loupe.photons())).playing, false);
     await page.locator('#lesson-replay').click(); await page.locator('#lesson-play').click();
     await page.waitForFunction(() => Number(document.getElementById('scan-progress').value) > 25);
@@ -49,7 +50,7 @@ try {
     await page.locator('#scan-progress').fill('100'); assert.equal(await page.locator('.scan-row.read').count(), 8);
     await page.locator('#sensor-lesson').evaluate(e => e.scrollTop = 0);
     await page.screenshot({ path: `shots/animation/readout-${width}.png` });
-    await page.locator('#journey-stop').selectOption('6');
+    await page.locator('#journey-stop').selectOption('8');
     await page.locator('#lesson-replay').click(); await page.locator('#lesson-play').click();
     await page.waitForFunction(() => document.getElementById('pipeline-stage').value === 'demosaic').catch(async error => {
       console.error({ width, errors, state: await page.evaluate(() => ({ stage: document.getElementById('pipeline-stage').value, button: document.getElementById('lesson-play').textContent, hidden: document.hidden, progress: document.getElementById('pipeline-progress').value })) }); throw error;
@@ -64,9 +65,14 @@ try {
     await page.locator('#pipeline-route [data-stage="wb"]').click();
     assert.ok((await page.locator('#pipeline-progress').getAttribute('aria-valuetext')).includes('White balance'));
     await page.locator('#pipeline-route [data-stage="tone"]').click();
-    assert.equal(await page.evaluate(() => { const c = document.getElementById('pipeline-canvas'); return c.getContext('2d').getImageData(0, 0, c.width, c.height).data.every((v, i) => v === window.p2p.render().rgba[i]); }), true);
-    await page.locator('#journey-physics summary').click();
+    assert.equal(await page.evaluate(() => { const c = document.getElementById('pipeline-canvas'); const s = window.p2p.pipelineSample(); return c.width === s.width && c.height === s.height && c.getContext('2d').getImageData(0, 0, c.width, c.height).data.every((v, i) => v === s.rgba[i]); }), true, 'final stage is the processed test chart byte for byte');
+    // Physics & practical use moved from an inline <details> into a reading dialog behind the tour's More (83ac566).
+    // Desktop keeps More open with its summary hidden; phones collapse it behind the summary.
+    if (await page.locator('#journey-more summary').isVisible()) await page.locator('#journey-more summary').click();
+    await page.locator('#journey-physics').click();
+    await page.locator('#journey-reading').waitFor({ state: 'visible' });
     assert.ok((await page.locator('#journey-use').textContent()).includes('white balance'));
+    await page.locator('#journey-reading-close').click();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
     assert.deepEqual(errors, []); console.log(`animation ${width}: passed`); await page.close();
   }

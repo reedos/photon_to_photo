@@ -5,11 +5,9 @@ import { BINS, V_LAMBDA, sensorFor } from '../engine/data';
 import { samplePixel } from '../engine/sensor';
 import { cfaColorAt } from '../engine/pipeline';
 import { makeRng } from '../engine/rng';
-import { photonsPerPixelPerBin } from '../engine/exposure';
+import { photonsPerPixelPerBin, ASSUMED_LENS_TRANSMISSION } from '../engine/exposure';
 import { daylightAt, sceneDefaultCctK, sceneDefaultLux } from '../engine/scenes';
 import { illuminantSpectralIrradiance } from '../engine/scene';
-
-const ASSUMED_LENS_TRANSMISSION = 0.9; // camera.ts's labeled default transmission assumption
 
 export type PixelSample = PixelState & { objectPoint: [number, number, number]; depthMm: number };
 

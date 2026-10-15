@@ -27,7 +27,7 @@
 .workspace #parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 0 10px; gap: 0 8px; }
 .workspace #parts li { display: block; min-width: 0; }
 .workspace #parts button { padding: 5px 3px; min-height: 32px; gap: 6px; grid-template-columns: 20px minmax(0, 1fr); }
-.workspace #parts .pn { width: 18px; height: 18px; font-size: 10px; }
+.workspace #parts .pn { width: 18px; height: 18px; font-size: 11px; }
 .workspace #parts .pt { font-size: 12px; }
 .workspace #parts .pk { display: none; }
 .workspace #card:not([hidden]) { min-height: 0; overflow: auto; align-content: start; gap: 10px; }
@@ -38,7 +38,7 @@
 .topnav a[aria-current="page"]::after { transform: scaleX(1); }
 .workspace #card h3 { padding-right: 24px; }
 @media (max-width: 1000px) {
-  .workspace .topnav .navlink { font-size: 10px; padding-inline: 7px; }
+  .workspace .topnav .navlink { font-size: 11px; padding-inline: 7px; }
 }
 @media (max-width: 760px) {
   .workspace #studio-actions { display: block; }
@@ -49,14 +49,25 @@
   .workspace .hud-btns-phone { padding: 4px 10px; }
   .workspace .hud-btns-phone .hint { display: none; }
   .workspace .part-nav { width: 100%; }
-  .workspace .part-nav .btn { min-height: 36px; padding-inline: 12px; font-size: 10px; justify-content: center; }
-  #part-position { margin-left: auto; font-size: 10px; }
+  .workspace .part-nav .btn { min-height: 36px; padding-inline: 12px; font-size: 11px; justify-content: center; }
+  #part-position { margin-left: auto; font-size: 11px; }
   .workspace .panel { height: 470px; max-height: none; padding: 10px; }
   .workspace #parts { gap: 0 5px; }
   .workspace #parts button { min-height: 44px; padding: 4px 0; gap: 4px; }
   .workspace #parts .pt { font-size: 11px; }
   .workspace #card:not([hidden]) { padding: 10px; }
-  .workspace #card-go { font-size: 10px; padding-inline: 8px; }
-  .workspace .parts-head #card-go { width: auto; min-height: 36px; padding-inline: 7px; font-size: 9px; }
+  .workspace #card-go { font-size: 11px; padding-inline: 8px; }
+  .workspace .parts-head #card-go { width: auto; min-height: 36px; padding-inline: 7px; font-size: 11px; }
   .workspace .topnav .navlink { font-size: 12px; padding: 0 4px; }
+}
+
+/* The smallest phones (340 px wide or less, score loop r2): five equal 64 px cells ran "CAMERA" and its dot into
+   the screen edge and the Optics border. Tour takes only its word's width, and the level names get a little more
+   room and a tighter dot, still above the 10.5 px type floor (design/LOOK.md). */
+@media (max-width: 340px) {
+  body.workspace.viewport-studio .steps { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
+  body.workspace.viewport-studio .steps .learn-launch { padding-inline: 7px; }
+  body.workspace.viewport-studio .step { padding-inline: 3px; }
+  body.workspace.viewport-studio .step .top { gap: 4px; }
+  body.workspace.viewport-studio .step .t { font-size: 12.5px; letter-spacing: 0; }
 }

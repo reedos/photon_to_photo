@@ -22,6 +22,7 @@ it('retries a failed housing request and then reuses the recovered asset', async
   const materialFactory = {
     matteInternalMaterial: () => new THREE.MeshStandardMaterial(),
     rubberGripMaterial: () => new THREE.MeshStandardMaterial(),
+    machinedSectionTexture: () => null,
   } as unknown as typeof look;
 
   const failed = await Promise.allSettled([

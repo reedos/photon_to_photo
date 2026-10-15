@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Store, formatShutter, queryFromState, scenarioFromQuery } from './store';
+import { Store, formatShutter, queryFromState, scenarioFromQuery, urlForState } from './store';
 
 describe('scenarioFromQuery', () => {
   it('reads every field the URL contract documents', () => {
@@ -193,5 +193,75 @@ describe('a subject distance travels with its lens', () => {
     expect(store.get().scenario.subjectM).toBe(10);
     store.set({ scene: 'bench' });
     expect(store.get().scenario.subjectM).toBeUndefined();
+  });
+});
+
+describe('browser history (review loop 10/11/2026)', () => {
+  it('restore() returns to the entry level but keeps the shot as the reader left it', () => {
+    const store = new Store({ scenario: { lens: 'n50', fno: 4 }, piece: 'loupe' });
+    const earlier = queryFromState({ ...store.get(), piece: 'lens', cameraPart: 'glass' });
+    store.set({ fno: 8 });
+    store.restore(earlier);
+    expect(store.get().piece).toBe('lens');
+    expect(store.get().cameraPart).toBe('glass');
+    expect(store.get().scenario.fno).toBe(8);
+  });
+
+  it('restore() ignores an entry the store did not write (the opening)', () => {
+    const store = new Store({ piece: 'cone' });
+    store.restore('');
+    expect(store.get().piece).toBe('cone');
+  });
+
+  it('urlForState keeps the renderer and tour parameters and the hash, and drops junk', () => {
+    const store = new Store(scenarioFromQuery('?piece=bogus&lens=zzz&fno=999'));
+    const url = urlForState(store.get(), 'http://x/?piece=bogus&lens=zzz&fno=999&gl=webgl2&tour=1#rp-card');
+    expect(url.searchParams.get('piece')).toBe('camera');
+    expect(url.searchParams.get('lens')).toBe(store.get().scenario.lens);
+    expect(url.searchParams.get('fno')).toBe(String(store.get().scenario.fno));
+    expect(url.searchParams.get('gl')).toBe('webgl2');
+    expect(url.searchParams.get('tour')).toBe('1');
+    expect(url.hash).toBe('#rp-card');
+  });
+
+  it('urlForState keeps the open view, photograph, detail, shot and tour stop (score loop r2)', () => {
+    const store = new Store({ piece: 'camera' });
+    const url = urlForState(store.get(), 'http://x/?view=photos&photo=fox-portrait&crop=face-whiskers&shot=mallard&tour=4#rp-card');
+    expect(Object.fromEntries(['view', 'photo', 'crop', 'shot', 'tour'].map(k => [k, url.searchParams.get(k)])))
+      .toEqual({ view: 'photos', photo: 'fox-portrait', crop: 'face-whiskers', shot: 'mallard', tour: '4' });
+  });
+
+  it('requestedFno() names the f-number a change asked for while its listeners run, and only then', () => {
+    const store = new Store({ scenario: { lens: 'n50', fno: 4 } });
+    const seen: (number | undefined)[] = [];
+    store.subscribe(() => seen.push(store.requestedFno()));
+    store.set({ lens: 'n500', fno: 5.6 });
+    store.set({ iso: 800 });
+    expect(seen).toEqual([undefined, 5.6, undefined]);
+    expect(store.requestedFno()).toBeUndefined();
+  });
+});
+
+describe('a deeper level part in the URL (sel=, score loop r3)', () => {
+  it('round-trips a deeper level pick and drops it on the camera level or with junk', () => {
+    const store = new Store({ piece: 'cone', pin: 'bokeh-disk' });
+    const query = queryFromState(store.get());
+    expect(new URLSearchParams(query).get('sel')).toBe('bokeh-disk');
+    expect(scenarioFromQuery(query).pin).toBe('bokeh-disk');
+    expect(scenarioFromQuery('?piece=camera&sel=iris').pin).toBeUndefined();
+    expect(scenarioFromQuery('?piece=lens&sel=<script>').pin).toBeUndefined();
+  });
+  it('setPin records a pick on the level, and a level change clears it unless one is given', () => {
+    const store = new Store({ piece: 'lens' });
+    store.setPin('iris');
+    expect(store.get().pin).toBe('iris');
+    store.setPiece('cone');
+    expect(store.get().pin).toBeNull();
+    store.setPiece('lens', 'front-element');
+    expect(store.get().pin).toBe('front-element');
+    store.showCameraOverview();
+    expect(store.get().pin).toBeNull();
+    store.setPin('iris');
+    expect(store.get().pin ?? null).toBeNull();
   });
 });

@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { gateServer } from './preview.mjs';
 const output=process.env.P2P_AUDIT_OUTPUT||'shots/discovery-entry';mkdirSync(output,{recursive:true});
-const base=process.env.P2P_URL||'http://127.0.0.1:47743/';
+const server=await gateServer(),base=server.url;
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 const errors=[];
 try {
@@ -35,6 +36,8 @@ try {
  await page.screenshot({path:output+'/markers-phone.png'});
  await page.locator('#pins .pin:visible').last().click();await page.evaluate(()=>window.p2p.settle());
  assert.equal(await page.locator('#pins .pin.on .lbl').isVisible(),true,'selected marker keeps its name');
- assert.deepEqual(await page.evaluate(()=>[document.documentElement.scrollWidth,document.documentElement.scrollHeight]),[320,568]);
+ // no sideways overflow; a phone 680 px tall or less scrolls the page on purpose since review loop r1 (studio-shell.css), so
+ // the model view keeps 240 px instead of 115
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),320);
  assert.deepEqual(errors,[]);writeFileSync(output+'/report.json',JSON.stringify({passed:true,markers,errors},null,2));console.log('PASS first visit choices, remembered choice, deep links, shot entry, separate phone markers, selected label, no overflow/errors');
-}finally{await browser.close()}
+}finally{await browser.close();await server.close()}

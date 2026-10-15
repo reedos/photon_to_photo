@@ -15,6 +15,9 @@
   --ink: #f0f0fa;
   --muted: #aab2b9;
   --faint: #6b747c;
+  /* --faint is for decoration and large text (4.4:1 on the ground, 3.7:1 on a raised surface). Small data text, a sub-line, a
+     note, a key in a card, takes this one: 5.0:1 on --raise, 4.6:1 on the lightest card (score loop r4, WCAG 1.4.3) */
+  --faint-text: #808a92;
   --gutter: clamp(16px, 4.4vw, 72px);
 
   /* the shared accent: The Intelligence Factory's amber (Reed, 09/28/2026: one signature style) */
@@ -59,7 +62,7 @@
   --sans: "Manrope", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 
-  --bar: 60px;
+  --bar: 52px; /* score loop r6: one top bar height for every page (it was 60 here and 52 in the app, so the brand and nav jumped 4 px on navigation) */
 }
 
 /* Light theme is deliberately skipped for the 3D scene (see design/LOOK.md, "Light theme"): the whole visual

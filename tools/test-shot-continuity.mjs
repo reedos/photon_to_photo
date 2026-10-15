@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { decodePng } from './accuracy/png.mjs';
+import { gateServer } from './preview.mjs';
+const server = await gateServer();
 const output=process.env.P2P_AUDIT_OUTPUT||'shots/shot-continuity';mkdirSync(output,{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 const page=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'no-preference'});
@@ -18,7 +20,7 @@ function compare(a,b){
   return {changed,max};
 }
 try {
-  await page.goto(new URL('?piece=camera&lens=m50',process.env.P2P_URL||'http://127.0.0.1:47748/').href);
+  await page.goto(new URL('?piece=camera&lens=m50',server.url).href);
   await page.waitForFunction(()=>window.p2p?.pieces.camera);await page.evaluate(()=>window.p2p.pieces.camera.ready());
   await page.locator('.shot-launch').click();await page.locator('#shot-dialog[data-ready="true"]').waitFor();await seek(0);
   for(const width of [1366,390,320]){
@@ -62,4 +64,4 @@ try {
   });
   assert.ok(sourceDifference<=1,`native photo raster preserves supplied JPEG (${sourceDifference})`);
   assert.deepEqual(report.errors,[]);console.log(`PASS ${report.frames.length} normal-motion handoff frames; deterministic scrub, pause, process tracks, reduced motion, unchanged finish`);
-}finally{writeFileSync(`${output}/report.json`,JSON.stringify(report,null,2));await browser.close();}
+}finally{writeFileSync(`${output}/report.json`,JSON.stringify(report,null,2));await browser.close();await server.close();}

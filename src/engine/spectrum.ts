@@ -69,6 +69,13 @@ export const BINS24: Bins = bins(24, VISIBLE_LO_NM, VISIBLE_HI_NM);
 
 // ---- wavelength -> color --------------------------------------------------------------------------------------
 
+/** Color-matching functions as plain functions of wavelength (nm): the shape of color.ts's CMFs and data.ts's CMF. */
+export interface SpectralCmfs {
+  xbar: (nm: number) => number;
+  ybar: (nm: number) => number;
+  zbar: (nm: number) => number;
+}
+
 export interface WavelengthColor {
   /** CIE 1931 XYZ tristimulus values for a unit-radiance monochromatic source at this wavelength (i.e. the raw
    *  color-matching-function values themselves, not integrated against any spectrum). */
@@ -77,7 +84,9 @@ export interface WavelengthColor {
    *  clamped to [0, 1]: relative brightness across wavelengths (violet and deep red are dim; 555 nm is bright)
    *  is preserved so callers can scale/tone-map a whole spectrum consistently. */
   linear: Vec3;
-  /** `linear` clamped to [0, 1] and encoded with the sRGB opto-electronic transfer function, ready to draw. */
+  /** The display color, ready to draw: `linear` scaled so its largest channel is 1 (design/LOOK.md's
+   *  display-brightness normalization, a display convention and not a power claim), then encoded with the sRGB
+   *  opto-electronic transfer function. Zero outside VISIBLE_LO_NM..VISIBLE_HI_NM. */
   srgb: Vec3;
 }
 
@@ -142,9 +151,20 @@ function srgbEncode(c: number): number {
  * wavelength"). A stub fitted analytically to the CIE 1931 CMFs (see the module comment above) until data/color
  * lands with a measured table (ENGINE.md); the signature is meant to stay stable across that swap.
  */
-export function wavelengthColor(nm: number): WavelengthColor {
-  const xyz: Vec3 = [xBar(nm), yBar(nm), zBar(nm)];
+export function wavelengthColor(nm: number, cmf?: SpectralCmfs): WavelengthColor {
+  // R-S1: callers drawing light pass the cited 1 nm CIE table (data.ts's spectralColor); the analytic fit stays the
+  // default for pure-math callers. The fit's tails are wrong in hue: once normalized, its 742.5 and 767.5 nm
+  // came out green ([0,255,0]) where the CIE table gives red.
+  const xyz: Vec3 = cmf ? [cmf.xbar(nm), cmf.ybar(nm), cmf.zbar(nm)] : [xBar(nm), yBar(nm), zBar(nm)];
   const linear = gamutClip(xyzToLinearSrgb(xyz));
-  const srgb: Vec3 = [srgbEncode(linear[0]), srgbEncode(linear[1]), srgbEncode(linear[2])];
+  // R-S1 (10/10/2026 correctness review): design/LOOK.md's spectral color rule asks for display-brightness
+  // normalization so the ends of the visible range do not collapse to black. Without it the lens cutaway drew its
+  // 742.5 and 767.5 nm rays as [0,0,0] and its 392.5 nm rays as [0,0,47] on the black stage, and photon rain (which
+  // normalized on its own) painted the same wavelengths in different colors. Hue comes from the CMFs; the largest
+  // channel is set to 1 for every visible wavelength.
+  const peak = Math.max(linear[0], linear[1], linear[2]);
+  const visible = nm >= VISIBLE_LO_NM && nm <= VISIBLE_HI_NM && peak > 0;
+  const display: Vec3 = visible ? [linear[0] / peak, linear[1] / peak, linear[2] / peak] : [0, 0, 0];
+  const srgb: Vec3 = [srgbEncode(display[0]), srgbEncode(display[1]), srgbEncode(display[2])];
   return { xyz, linear, srgb };
 }

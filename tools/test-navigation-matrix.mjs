@@ -27,7 +27,9 @@ async function rest(piece) {
     const p = window.p2p;
     return p.framing().piece === piece && !p.framing().moving
       && document.querySelector('#veil').classList.contains('off')
-      && (piece !== 'loupe' || (p.pieces.loupe.state().hasPixel && p.pieces.loupe.state().diveStage === 'well'));
+      // The loupe no longer dives from a photo to the well (synthetic photos were removed, c6209df): it opens on
+      // the well and is at rest once its controlled pixel sample has resolved.
+      && (piece !== 'loupe' || (p.pieces.loupe.state().hasPixel && !p.pieces.loupe.state().pendingPixel));
   }, piece);
   await page.waitForTimeout(60);
 }
@@ -72,7 +74,11 @@ try {
     for (const id of levels) {
       await level(id);
       await page.locator('#tab-explain').click();
-      const parts = await page.locator('#parts [data-part-id]').evaluateAll(nodes => nodes.map(n => n.dataset.partId));
+      const rows = await page.locator('#parts [data-part-id]').evaluateAll(nodes => nodes.map(n => n.dataset.partId));
+      // The list opens with an Overview row (ui.ts renderPanel) that clears the selection rather than picking a part.
+      assert.equal(rows[0], 'overview', `${lens}:${id}: parts list starts with its Overview row`);
+      const parts = rows.slice(1);
+      assert.ok(parts.length > 0 && !parts.includes('overview'), `${lens}:${id}: parts list has parts after Overview`);
       for (const part of parts) {
         await page.locator(`#parts [data-part-id="${part}"]`).click();
         await rest(id);
@@ -87,6 +93,14 @@ try {
           `${lens}:${id}/${part}: camera follows the actual part, not its displaced numbered marker`);
         report.parts.push(shot);
       }
+      await page.locator(`#parts [data-part-id="${parts[0]}"]`).click();
+      await rest(id);
+      await page.locator('#parts [data-part-id="overview"]').click();
+      await rest(id);
+      assert.equal(await page.evaluate(() => window.p2p.framing().selected), null, `${lens}:${id}: Overview row clears the selection`);
+      assert.equal(await page.locator('#parts [data-part-id="overview"]').getAttribute('aria-pressed'), 'true');
+      await page.locator(`#parts [data-part-id="${parts.at(-1)}"]`).click();
+      await rest(id);
       await page.locator('#part-overview').click();
       await rest(id);
       assert.equal(await page.evaluate(() => window.p2p.framing().selected), null);
@@ -108,6 +122,9 @@ try {
     console.log(`${backend}: ${lens}: 12 directed edges and all parts passed`);
   }
   await level('camera');
+  // the Camera tab from a deeper level returns to the part the visitor came from, as the breadcrumb does (score loop r6): start from the overview
+  await page.locator('#part-overview').click();
+  await rest('camera');
   await page.locator('#parts [data-part-id="sensor"]').click();
   for (const lens of lineup) {
     const body = ['z35','m50','z800'].includes(lens) ? 'mirrorless' : 'dslr';

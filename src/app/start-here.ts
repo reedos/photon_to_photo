@@ -8,12 +8,12 @@ export function mountStartHere(): void {
   document.getElementById('topnav')!.prepend(entry);
   const dialog = document.createElement('dialog');
   dialog.id = 'start-here'; dialog.setAttribute('aria-labelledby', 'start-here-title');
-  dialog.innerHTML = `<header><div><p class="start-eyebrow">PHOTON TO PHOTO</p><h2 id="start-here-title">How does light become a photograph?</h2></div><button type="button" class="btn start-close" aria-label="Close introduction">×</button></header>
+  dialog.innerHTML = `<header><div><p class="start-eyebrow">A real moment. An invisible journey.</p><h2 id="start-here-title">A photograph starts with <em>light.</em></h2></div><button type="button" class="btn start-close" aria-label="Close introduction">×</button></header>
     <p class="start-intro">Choose a way in. You can switch paths anytime.</p>
     <div class="start-paths">
       <button type="button" data-start="model"><span class="start-art camera-art" aria-hidden="true"><i></i></span><strong>Explore the camera</strong><span>Rotate the model. Open it up. Try the controls.</span><b>Explore →</b></button>
-      <button type="button" data-start="shot"><span class="start-art light-art" aria-hidden="true"><i></i></span><strong>Play a shot</strong><span>Follow light through glass, charge, and data to an image.</span><b>Follow the light →</b></button>
-      <button type="button" data-start="photos"><span class="start-art photo-art" aria-hidden="true"><i></i></span><strong>Explore my photos</strong><span>Look closely at real photographs and the choices behind them.</span><b>See the photographs →</b></button>
+      <button type="button" data-start="shot"><span class="start-art light-art" aria-hidden="true"><i></i></span><strong>Play the shot</strong><span>Follow light through glass, charge, and image data.</span><b>Play the shot →</b></button>
+      <button type="button" data-start="photos"><span class="start-art photo-art" aria-hidden="true"><i></i></span><strong>Explore real photographs</strong><span>Look closely at real photographs and how they were made.</span><b>See the photographs →</b></button>
     </div><p class="start-foot">Drag to orbit · Scroll or pinch to zoom · Select a numbered part</p>`;
   document.body.append(dialog);
   let source: HTMLElement | null = null;

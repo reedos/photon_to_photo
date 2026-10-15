@@ -18,7 +18,7 @@ try {
   for(const lens of ['s35','n50','n500','n500fl','z35','m50','z800']) {
    await p.evaluate(lens=>window.p2p.set({lens}),lens);
    for(const piece of ['camera','lens','cone','loupe']) {
-    await p.locator(`#steps [data-piece="${piece}"]`).click();await rest();
+    await p.locator(`#steps [data-piece="${piece}"]`).click();await p.waitForFunction(piece=>window.p2p.framing().piece===piece,piece);await rest();
     const state=await p.evaluate(()=>({frame:window.p2p.framing(),render:window.p2p.render(),overflow:document.documentElement.scrollWidth>innerWidth||document.documentElement.scrollHeight>innerHeight}));
     assert.equal(state.frame.piece,piece);assert.ok([...state.frame.position,...state.frame.target].every(Number.isFinite));assert.equal(state.render,null);assert.equal(state.overflow,false);
     report.cases.push({backend,lens,piece});
@@ -33,7 +33,7 @@ try {
   const picks=p.locator('#rp-picks button');await picks.first().waitFor();
   for(let i=0;i<await picks.count();i++){await picks.nth(i).click();await p.waitForFunction(()=>{const i=document.querySelector('#rp-img');return i.complete&&i.naturalWidth>0});}
   await p.locator('#rp-img').evaluate(i=>i.decode());await p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await p.screenshot({path:`${out}/${backend}-photos.png`});await p.locator('#workspace-model').click();
-  for(const [width,height]of [[390,844],[320,568]]){await p.setViewportSize({width,height});await rest();assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth||document.documentElement.scrollHeight>innerHeight),false);const panel=await p.locator('.studio-sidebar').boundingBox();const parts=await p.locator('#studio-explain').boundingBox();assert.ok(parts.width>=panel.width-2,'parts use reclaimed photo column');await p.screenshot({path:`${out}/${backend}-${width}.png`});}
+  for(const [width,height]of [[390,844],[320,568]]){await p.setViewportSize({width,height});await rest();/* a phone 680 px tall or less scrolls the model workspace on purpose (review loop r1); nothing overflows sideways */assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth||(innerHeight>680&&document.documentElement.scrollHeight>innerHeight)),false);const panel=await p.locator('.studio-sidebar').boundingBox();const parts=await p.locator('#studio-explain').boundingBox();assert.ok(parts.width>=panel.width-2,'parts use reclaimed photo column');await p.screenshot({path:`${out}/${backend}-${width}.png`});}
   await p.close();
  }
  assert.deepEqual(report.errors,[]);assert.equal(report.workers.some(u=>/render-worker|example-worker/.test(u)),false,'no synthetic scene workers');report.passed=true;console.log('PASS 56 lens/level paths, both backends, lessons, gallery and phone layouts without synthetic render workers');

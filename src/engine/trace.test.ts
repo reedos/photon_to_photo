@@ -48,6 +48,25 @@ describe('traceRay: status coverage', () => {
     expect(outsideIrisInsideSd.blockedAt).toBe(0);
   });
 
+  // R-L5 (10/10/2026 correctness review): realized clear apertures can extend past where two surfaces cross (s35's
+  // L12/L13 air space crosses at h = 16.0 mm inside sd 17.7-18.0 mm; 100 such crossings across the 20 lenses). A
+  // ray there used to be traced backward through the overlap; it meets the element edge instead.
+  it('edge contact: a ray beyond the knife edge of an element is vignetted, one inside it passes', () => {
+    // equiconvex R = 20 mm, 1 mm center thickness: the surfaces meet where 2 (20 - sqrt(400 - h^2)) = 1, h = 4.444 mm
+    const surfaces: TraceSurface[] = [
+      { z: 0, c: 1 / 20, k: 0, a: [], sd: 8, kind: 'refract', mediumAfter: 'glass' },
+      { z: 1, c: -1 / 20, k: 0, a: [], sd: 8, kind: 'refract', mediumAfter: 'air' },
+      { z: 60, c: 0, k: 0, a: [], sd: 100, kind: 'image', mediumAfter: 'air' },
+    ];
+    const sys: TraceSystem = { surfaces, index: constantIndex({ glass: 1.5 }) };
+    expect(traceRay(sys, { o: [0, 3, -10], d: [0, 0, 1], nm: D }).status).toBe('ok');
+    const beyond = traceRay(sys, { o: [0, 6, -10], d: [0, 0, 1], nm: D }); // inside sd = 8, past the 4.44 mm edge
+    expect(beyond.status).toBe('vignetted');
+    expect(beyond.blockedAt).toBe(1);
+    // the clear-aperture survey's mode still propagates virtually (realize.ts sizes sd with it)
+    expect(traceRay(sys, { o: [0, 6, -10], d: [0, 0, 1], nm: D }, { ignoreVignetting: true }).status).toBe('ok');
+  });
+
   it('missed: a ray that cannot reach a curved surface at all', () => {
     const surfaces: TraceSurface[] = [
       { z: 0, c: 1 / 5, k: 0, a: [], sd: 4, kind: 'refract', mediumAfter: 'glass' }, // R=5 sphere

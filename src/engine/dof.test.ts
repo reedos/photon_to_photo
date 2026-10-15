@@ -23,21 +23,6 @@ describe('hyperfocal distance (golden)', () => {
     expect(H / 1000).toBeCloseTo(10.47, 2);
   });
 
-  it('pupilMag = 1 is the default and matches explicit pupilMag = 1', () => {
-    expect(hyperfocal(50, 8, 0.03, 1)).toBeCloseTo(hyperfocal(50, 8, 0.03), 12);
-  });
-
-  it('pupil magnification > 1 (larger exit pupil, more blur per unit defocus) lengthens the hyperfocal distance', () => {
-    // A bigger exit pupil produces more blur for the same physical defocus, so to keep an infinity point's blur
-    // within the same circle of confusion the lens must be focused farther away: H grows with pupilMag (H is
-    // proportional to 1/N_eff = pupilMag/N).
-    const f = 50;
-    const H1 = hyperfocal(f, 8, 0.03, 1);
-    const H2 = hyperfocal(f, 8, 0.03, 1.3);
-    expect(H2).toBeGreaterThan(H1);
-    // H - f is exactly the f^2/(N_eff c) term, which does scale linearly with pupilMag.
-    expect(H2 - f).toBeCloseTo((H1 - f) * 1.3, 6);
-  });
 });
 
 describe('dofLimits (golden, hand-derived independently of dofLimits() itself)', () => {
@@ -130,16 +115,6 @@ describe('blurDiameter', () => {
     const far1 = blurDiameter(f, N, focus, 3500);
     const far2 = blurDiameter(f, N, focus, 5000);
     expect(far2).toBeGreaterThan(far1);
-  });
-
-  it('pupil magnification scales blur diameter linearly (exit-pupil model)', () => {
-    const f = 50,
-      N = 8,
-      focus = 3000,
-      point = 2000;
-    const base = blurDiameter(f, N, focus, point, 1);
-    const scaled = blurDiameter(f, N, focus, point, 1.4);
-    expect(scaled).toBeCloseTo(base * 1.4, 9);
   });
 
   it('is symmetric under swapping which of focus/point is nearer, up to the sign that abs() removes', () => {

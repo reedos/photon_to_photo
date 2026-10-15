@@ -27,13 +27,14 @@ try {
         if(p&&!m.hooks)m.hooks=performance.now();
         if(p?.pieces.camera.state().loaded&&!m.models)m.models=performance.now();
         if(p&&document.querySelector('#veil')?.classList.contains('off')&&!document.querySelector('.rx-fire')?.disabled&&!m.usable){m.usable=performance.now();p.gpuIdle().then(()=>m.gpuReady=performance.now());}
-        if(p?.render()&&!m.photo)m.photo=performance.now();
-        if(!m.photo||!m.gpuReady)requestAnimationFrame(frame);
+        // There is no first synthetic photo to mark since c6209df; startup ends when the models are loaded and the GPU is idle.
+        if(!m.models||!m.gpuReady)requestAnimationFrame(frame);
       }requestAnimationFrame(frame);
     });
     for(const cache of ['cold','warm']) {
       if(cache==='cold')await page.goto('http://127.0.0.1:47721/?piece=camera&lens=n50');else await page.reload();
-      await page.waitForFunction(()=>window.startup?.marks.photo&&window.startup?.marks.gpuReady);
+      await page.waitForFunction(()=>window.startup?.marks.models&&window.startup?.marks.gpuReady);
+      assert.equal(await page.evaluate(()=>window.startup.workers.some(w=>/render-worker|example-worker/.test(w.url||''))),false,'no synthetic-render worker at startup');
       await page.evaluate(()=>window.p2p.settle());
       await page.screenshot({path:`${out}/${name}-${cache}.png`});
       const result=await page.evaluate(()=>({...window.startup,resources:performance.getEntriesByType('resource').map(e=>({name:e.name.split('/').slice(-2).join('/'),start:e.startTime,end:e.responseEnd,duration:e.duration,transfer:e.transferSize,size:e.decodedBodySize})),navigation:performance.getEntriesByType('navigation')[0].toJSON()}));

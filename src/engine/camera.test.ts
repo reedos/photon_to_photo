@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compute, lensFans, pointBundle } from './camera';
+import { compute, lensFans, maxChord, pointBundle } from './camera';
 import { FORMATS } from './formats';
 import { cocFor, hyperfocal, dofLimits } from './dof';
 import { irisTest } from './iris';
@@ -85,8 +85,7 @@ describe('compute(): golden — hyperfocal and DOF limits vs. hand-computed thin
   // conversion camera.ts applies is internally consistent and small relative to the meter-scale distances
   // involved — not a second, independent derivation of the offset itself (dof.ts's own golden tests in
   // dof.test.ts already check hyperfocal()/dofLimits() against a hand calculation).
-  const thinHyperfocal = hyperfocal(c.efl, 8, coc, c.pupilMag);
-  const thinLimits = dofLimits(c.efl, 8, coc, 3000, c.pupilMag);
+  const thinHyperfocal = hyperfocal(c.efl, 8, coc);
 
   // The principal-plane-to-sensor offset for a ~50 mm lens with a total length around 140 mm is on the order
   // of tens of mm (see docs/engine/e4.md for the measured value on this lens) — under 0.1% of the 3 m focus
@@ -94,8 +93,12 @@ describe('compute(): golden — hyperfocal and DOF limits vs. hand-computed thin
   // difference" the golden test asks for.
   const offsetMm = Math.abs(c.P - (model.realized.sensorZ + (model.realized.afOffset ?? 0)));
 
-  it('hyperfocal matches the thin-lens value within the principal-plane offset', () => {
-    expect(Math.abs(model.focus.hyperfocalMm - thinHyperfocal)).toBeLessThan(offsetMm + 1);
+  // Score-loop r1 (10/11/2026): H is solved with the real exit pupil (camera.ts exactHyperfocalMm). The far limit at
+  // infinity depends on the entrance pupil, so H stays within 1% of the textbook f^2/(N c) + f (thin lens, distances
+  // from the principal plane) even though p50's pupil magnification is 1.32 (the 1% slack is the focus breathing of
+  // c.efl at 3 m and the sensor-to-pupil offset). The old pupilMag-scaled H was 32% long.
+  it('hyperfocal is within 2% of the textbook f^2/(N c) + f', () => {
+    expect(Math.abs(model.focus.hyperfocalMm / thinHyperfocal - 1)).toBeLessThan(0.02);
   });
 
   // F1 (09/30/2026, Astra-6 review): near/far now solve against the REAL exit pupil and focused/defocused
@@ -234,6 +237,32 @@ describe('lensFans', () => {
     }
   });
 
+  // Score loop r2 (10/11/2026): the fans start on the focused plane. Before, they came from infinity whatever the
+  // focus, so n50 f/1.8 focused at 3 m landed its on-axis d-line fan over 373 um and n500 at 8.91 m over 3.8 mm.
+  it('at any focus, the on-axis d-line fan at f/8 lands within 2 x CoC, and starts at the entry plane', () => {
+    const chord = (pts: number[][]) => {
+      let b = 0;
+      for (const a of pts) for (const c of pts) b = Math.max(b, Math.hypot(a[0] - c[0], a[1] - c[1]));
+      return b;
+    };
+    const cases: [string, number | null][] = [
+      ['p50', 3], ['p50', 0.5], ['n50', 3], ['n50', null], ['s35', 0.4], ['n500', 8.91], ['n500', 3.5], ['n500', null],
+      ['z35', 1], ['m50', 3], ['z800', 15],
+    ];
+    for (const [lens, focusM] of cases) {
+      const base = compute(baseScenario({ lens, focusM }));
+      const model = compute(baseScenario({ lens, focusM, fno: Math.max(8, base.lens.maxFno) }));
+      const [set] = lensFans(model, { fields: [0], nms: [FRAUNHOFER_D_NM], rays: 15 });
+      expect(set.sourceDistMm).toBe(model.focus.distanceMm);
+      const ok = set.paths.filter((p) => p.status === 'ok');
+      expect(ok.length, `${lens} ${focusM}`).toBeGreaterThan(10);
+      const d = chord(ok.map((p) => p.pts[p.pts.length - 1] as number[]));
+      expect(d, `${lens} focused at ${focusM ?? 'infinity'}`).toBeLessThan(2 * model.figs.cocMm.v);
+      // the drawn start point is on the plane in front of the first surface, not meters away at the object
+      for (const p of set.paths) expect(p.pts[0][2]).toBeGreaterThan(model.system.surfaces[0].z - 50);
+    }
+  });
+
   it('field fractions map to the realized half field in degrees', () => {
     const model = compute(baseScenario());
     const fans = lensFans(model, { fields: [0, 1], nms: [550], rays: 3 });
@@ -263,6 +292,40 @@ describe('pointBundle', () => {
     // and paraxial.imageOf, is what is checked here, against 5%; the remaining few-percent gap from a real
     // ray trace is aberrations plus the paraxial (not full) treatment of the exit pupil location itself.
     expect(rel).toBeLessThan(0.05);
+  });
+
+  // R-C1 (10/10/2026 correctness review): realize.ts puts the full-aperture best focus on the sensor, 104 um in
+  // front of n50's paraxial image of the focus plane. The closed form used to cut the cone at that paraxial image
+  // instead of at the sensor, so at f/16 (aberrations negligible) it predicted 0 at the focus distance against a
+  // traced 6.1 um, 16.7 um at 3.5 m against 2.1 um, and 40.5 um at 10 m against 33.8 um.
+  it('predictedBlurMm is cut at the actual sensor plane: it tracks the d-line trace at f/16 near and far from focus', () => {
+    const model = compute(baseScenario({ lens: 'n50', fno: 16, focusM: 3, format: 'ff' }));
+    expect(Math.abs(model.realized.realization.afOffset)).toBeGreaterThan(0.05); // the case this guards
+    for (const pointDistMm of [1500, 2500, 3000, 3500, 10000]) {
+      const b = pointBundle(model, { pointDistMm, fieldFrac: 0, rays: 400, nms: [FRAUNHOFER_D_NM] });
+      // 0.6 um absolute floor: the residual stopped-down spherical blur near the conjugate of the sensor
+      expect(Math.abs(b.diameterMm - b.predictedBlurMm)).toBeLessThan(0.0006 + 0.05 * b.diameterMm);
+    }
+  });
+
+  // R-L5 (10/10/2026 correctness review): no drawn ray may run backward between two real surfaces with a positive
+  // axial gap (that only happens through crossed surfaces). s35 wide open at its 0.3 m close focus had 16 of 208
+  // drawn fan rays doing so at its L12/L13 air space and its G1 rear.
+  it('every ok ray moves forward between refracting surfaces (no tracing through crossed element edges)', () => {
+    for (const lens of ['s35', 'z800', 'p105', 'p135']) {
+      const model = compute(baseScenario({ lens, fno: 1, focusM: lens === 's35' ? 0.3 : 3, format: 'ff' }));
+      const surfs = model.system.surfaces;
+      for (const set of lensFans(model, { fields: [0, 0.7, 1], nms: [450, 587.5618, 650], rays: 15 })) {
+        for (const p of set.paths) {
+          if (p.status !== 'ok') continue;
+          for (let i = 1; i < surfs.length; i++) {
+            const a = surfs[i - 1], b = surfs[i];
+            if (a.kind !== 'refract' || b.kind !== 'refract' || b.z - a.z <= 1e-6 || a.mediumAfter === b.mediumAfter) continue;
+            expect(p.pts[i + 1][2], `${lens} surface ${i}`).toBeGreaterThanOrEqual(p.pts[i][2] - 1e-6);
+          }
+        }
+      }
+    }
   });
 
   it('on-axis rays at the focus distance almost all pass at a modest aperture, and any that do not are ' +
@@ -402,5 +465,104 @@ describe('model.motion (SHARED CONTRACT)', () => {
     expect(withMotion.figs.motionBlurPx).toBeDefined();
     expect(withMotion.figs.motionBlurPx.v).toBeCloseTo(withMotion.motion!.blurPx, 9);
     expect(without.figs.motionBlurPx).toBeUndefined();
+  });
+});
+
+// Score-loop r1 (10/11/2026): the reported hyperfocal distance is a real one. Focusing at H keeps infinity sharp
+// (far = Infinity), and the near limit there is about H/2, across short, normal, retrofocus and telephoto designs
+// with pupil magnifications from 0.16 to 4.6. The old dof.ts value left n500 f/8 with a finite far limit of 323 m.
+describe('compute(): hyperfocal distance (exact, real exit pupil)', () => {
+  for (const [lens, fno] of [['p20', 8], ['s35', 4], ['n50', 4], ['p85', 8], ['n500', 8], ['z800', 8]] as const) {
+    it(`${lens} f/${fno}: focusing at H gives far = Infinity and near close to H/2`, () => {
+      const atInf = compute(baseScenario({ lens, fno, focusM: null }));
+      const H = atInf.focus.hyperfocalMm;
+      expect(Number.isFinite(H)).toBe(true);
+      const atH = compute(baseScenario({ lens, fno, focusM: H / 1000 }));
+      expect(atH.focus.hyperfocalMm).toBeCloseTo(H, 6);
+      expect(atH.focus.farMm).toBe(Infinity);
+      // H/2 holds for distances from the entrance pupil; these are from the sensor, so a short lens whose pupil sits
+      // ~0.1 m in front of the sensor (p20) lands a few percent off.
+      expect(Math.abs(atH.focus.nearMm / (H / 2) - 1)).toBeLessThan(0.08);
+      // Just inside H the far limit is finite again: H is the nearest such focus, not merely one of them.
+      const inside = compute(baseScenario({ lens, fno, focusM: (H * 0.97) / 1000 }));
+      expect(Number.isFinite(inside.focus.farMm)).toBe(true);
+    });
+  }
+});
+
+// Score loop r3 (10/11/2026): the bokeh disk is reported as the sensor records it. The widest chord over 16 equally
+// weighted bins made an in-focus n50 point read 96 um (set by 392.5 nm) against a 29 um CoC.
+describe('pointBundle: recorded (sensor-weighted) disk', () => {
+  const bins = Array.from({ length: 16 }, (_, i) => 380 + 25 * (i + 0.5));
+  it('recordedByBin sums to 1 and the violet and deep-red ends carry little of the recorded light', () => {
+    const model = compute(baseScenario({ lens: 'n50', fno: 4, focusM: 3 }));
+    const w = model.exposure.recordedByBin;
+    expect(w.reduce((a, b) => a + b.w, 0)).toBeCloseTo(1, 10);
+    const at = (nm: number) => w.find((b) => b.nm === nm)!.w;
+    expect(at(392.5)).toBeLessThan(0.01);
+    expect(at(767.5)).toBeLessThan(0.01);
+    expect(at(542.5)).toBeGreaterThan(0.1);
+  });
+  it('a point inside the depth of field records within the CoC (n50 f/4, focus 3 m, point 2.98 m)', () => {
+    const model = compute(baseScenario({ lens: 'n50', fno: 4, focusM: 3 }));
+    const b = pointBundle(model, { pointDistMm: 2980, fieldFrac: 0, rays: 130, nms: bins });
+    expect(b.recordedDiameterMm).toBeLessThanOrEqual(b.cocMm);
+    expect(b.diameterMm).toBeGreaterThan(2 * b.cocMm); // the unweighted extent, set by 392.5 nm, is still reported
+    expect(b.recordedWeightByNm.find((r) => r.nm === 392.5)!.w).toBeLessThan(0.05);
+  });
+  it('a defocused point: recorded disk is 0.85-1.05 of the d-line disk (a uniform disk holds 90% within 0.95 D)', () => {
+    const model = compute(baseScenario({ lens: 'n50', fno: 4, focusM: 3 }));
+    const b = pointBundle(model, { pointDistMm: 1500, fieldFrac: 0, rays: 130, nms: bins, dLine: true });
+    const r = b.recordedDiameterMm / b.dLineDiameterMm!;
+    expect(r).toBeGreaterThan(0.85);
+    expect(r).toBeLessThan(1.05);
+    expect(b.recordedDiameterMm).toBeLessThan(b.diameterMm);
+  });
+});
+
+// Score loop r4 (10/12/2026): EV100 of the settings versus EV100 of the scene, and the model's raw level for a metered
+// 18% gray against what ISO 12232 expects (the offset is stated on the sensor card and the Method page).
+describe('exposure: scene EV100 and the metered gray level', () => {
+  it('the bench scene (10,000 lux) is EV100 12.2 by the ISO 2720 meter equation; f/2.8 1/250 ISO 100 is 10.9', () => {
+    const m = compute(baseScenario({ lens: 'n50', fno: 2.8, shutter: 1 / 250, iso: 100, focusM: 3 }));
+    expect(m.exposure.ev100).toBeCloseTo(10.94, 1);
+    expect(m.exposure.sceneEv100).toBeCloseTo(Math.log2((0.18 * 10000 / Math.PI) * 100 / 12.5), 9);
+    expect(m.exposure.sceneEv100).toBeCloseTo(12.16, 1);
+  });
+  it('the metered raw fraction does not depend on ISO or on the settings chosen', () => {
+    const a = compute(baseScenario({ lens: 'n50', fno: 2.8, shutter: 1 / 250, iso: 100, focusM: 3 }));
+    const b = compute(baseScenario({ lens: 'n50', fno: 8, shutter: 1 / 60, iso: 1600, focusM: 3 }));
+    expect(b.exposure.grayRawFractionMetered / a.exposure.grayRawFractionMetered).toBeGreaterThan(0.97);
+    expect(b.exposure.grayRawFractionMetered / a.exposure.grayRawFractionMetered).toBeLessThan(1.03);
+  });
+  it('ISO 12232 expects about 11% of saturation for a metered 18% gray; the model gives a green pixel less', () => {
+    const m = compute(baseScenario({ lens: 'n50', focusM: 3 }));
+    expect(m.exposure.isoExpectedRawFraction).toBeCloseTo((Math.PI * 12.5 * 0.9) / (4 * 78), 9);
+    expect(m.exposure.isoExpectedRawFraction).toBeGreaterThan(0.10);
+    expect(m.exposure.isoExpectedRawFraction).toBeLessThan(0.12);
+    expect(m.exposure.grayRawFractionMetered).toBeLessThan(m.exposure.isoExpectedRawFraction);
+    expect(m.exposure.grayRawFractionMetered).toBeGreaterThan(0.05);
+  });
+});
+
+describe('maxChord (score loop r6: hull and squared distances, not all pairs)', () => {
+  const brute = (pts: { x: number; y: number }[]) => {
+    let best = 0;
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) best = Math.max(best, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y));
+    return best;
+  };
+  it('matches the all-pairs answer on random clouds, lines, duplicates and tiny sets', () => {
+    let seed = 12345;
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2 ** 32; };
+    for (const n of [0, 1, 2, 3, 5, 40, 400, 1500]) {
+      const cloud = Array.from({ length: n }, () => ({ x: (rnd() - 0.5) * 0.3, y: (rnd() - 0.5) * 0.2 }));
+      expect(maxChord(cloud)).toBeCloseTo(brute(cloud), 12);
+    }
+    const line = Array.from({ length: 30 }, (_, i) => ({ x: i * 0.01, y: i * 0.02 }));
+    expect(maxChord(line)).toBeCloseTo(brute(line), 12);
+    const same = Array.from({ length: 10 }, () => ({ x: 0.5, y: -0.25 }));
+    expect(maxChord(same)).toBe(0);
+    const ring = Array.from({ length: 360 }, (_, i) => ({ x: Math.cos((i * Math.PI) / 180), y: Math.sin((i * Math.PI) / 180) }));
+    expect(maxChord(ring)).toBeCloseTo(2, 12);
   });
 });

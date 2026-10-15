@@ -161,8 +161,12 @@ The full-effect tier, judged against what the brief calls for when nothing is bu
 
 **Pass tests**
 
-- Full AO/GTAO, full PMREM environment resolution, full ghost-path count are all actually present in the capture
+- Full PMREM environment resolution, full ghost-path count are all actually present in the capture
   (not silently running at a lower tier by mistake) — compare against the Phone rules table's desktop-high row.
+- AO/GTAO is **deferred** (Reed's decision 4, 10/11/2026): on three 0.186.1 GTAO does not compile on the WebGPU
+  backend with the anti-aliasing the stage keeps (`docs/rendering-spike.md`, test (d)), and the non-multisampled
+  prepass that would avoid that is not built. Its absence is not a Desktop-axis failure; a capture that shows AO
+  without that prepass, or with anti-aliasing turned off to get it, is. See `design/LOOK.md`, Post-processing rules.
 - 60fps target is met or the capture states the measured frame time next to the screenshot/clip (a screenshot alone
   can't prove frame rate; a recording or a stated measurement must accompany any desktop-tier review that claims
   the perf bar is met).

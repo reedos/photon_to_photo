@@ -236,13 +236,13 @@ worked around here. Neither JSON file is committed by this workstream.
 
 ## Known limits
 
-- **Flat/near-flat substrate approximation in `diffract`.** The grating vector `grad(phi)(h)` is computed as a
-  purely radial vector in the GLOBAL x-y plane, then projected onto the local surface tangent plane. This is
-  EXACT for a flat DOE substrate (`c = 0`, both transcribed patents' diffractive surfaces are on essentially flat
-  or very weakly curved interfaces) and a good approximation for a mildly curved one, but is not an intrinsic
-  (surface-parametrization-exact) computation of the grating vector on a strongly curved substrate. No lens
-  transcribed so far needs that; if one does, `diffract` would need the grating vector computed from the
-  surface's own local coordinate frame rather than a global-plane projection.
+- **The tangent-plane projection in `diffract` is exact (corrected 10/11/2026, score loop r2).** The grating
+  vector `grad(phi)(h)` is computed as a radial vector in the global x-y plane, then projected onto the local
+  surface tangent plane. For a rotationally symmetric phase written in the radial height h, the projection points
+  along the meridional tangent with length dphi/dh * cos(theta), theta being the surface slope, and that is
+  exactly dphi/ds, the phase gradient along the curved surface. So it holds on a curved substrate as well; an
+  earlier note here called it a flat-substrate approximation. `tools/review-loop/optics.mjs` traces the same step
+  intrinsically (arc-length gradient along the meridian) as an independent check.
 - **Evanescent order and ordinary TIR are not distinguished.** Both report `RayStatus` `'tir'` (per the task
   brief: "a failure status like TIR"); a caller wanting to tell them apart would need a new status value, which
   this workstream did not add since nothing currently consumes that distinction and `RayStatus` is read

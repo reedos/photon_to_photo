@@ -9,7 +9,7 @@
 .rig-exposure .rx-scrub:focus-visible,
 .rig-exposure .rx-pause:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .rig-exposure .rx-time { font: 400 10.5px/1.5 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.rig-exposure .rx-status { margin: 0; font-size: 11px; line-height: 1.45; color: var(--faint); }
+.rig-exposure .rx-status { margin: 0; font-size: 11px; line-height: 1.45; color: var(--faint-text); }
 .rig-exposure .rx-status:empty { display: none; }
 /* The settings trade is disabled during a shot; make room for its inspection controls. */
 .rig-exposure:is([data-playback="playing"], [data-playback="paused"]) .rx-eq { display: none; }

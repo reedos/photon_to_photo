@@ -1,0 +1,26 @@
+/* The type floor (design/LOOK.md: UI text 10.5-11 px; mono uppercase labels 11 px). Score loop r1 found 9-10 px
+   captions and buttons on the camera, lens and loupe levels at desktop and phone sizes. These rules raise exactly
+   those to the floor, each only where it was under it (never lowering anything already larger); they are !important
+   because the sizes they replace are set at several specificities across the level stylesheets, which load in module
+   order. Text hidden on purpose with font-size: 0 (a phone's long playback caption) is left alone.
+   tools/test-type-floor.mjs holds the visible text to this floor. */
+body.workspace :is(
+  #expand-model, #model-tools .layer-chip, #model-tools .mode button, #model-tools .action-name, #model-tools .action-short,
+  #model-tools small, #compact-fire, .perspective-launch, .control-help, .lesson-shortcuts .btn,
+  .light-playback .playback-caption small, #model-experiments .btn, #model-experiments span
+) { font-size: 10.5px !important; }
+body.workspace :is(.workspace-views > span, #part-position, .zoom-controls span, #parts .pn, .chip, .light-playback > span, .rig-teach span) {
+  font-size: 11px !important;
+}
+@media (min-width: 761px) and (min-height: 501px) {
+  body.workspace .light-playback .playback-caption { font-size: 10.5px !important; }
+  body.workspace .light-playback > span { max-width: 250px; line-height: 1.4; }
+  /* the strip keeps the height it had with the old three-line 9 px note, so the guided tour's model frame stays the
+     same size from stop to stop (tools/test-guided-layout.mjs) */
+  body.workspace .light-playback { min-height: 52px; box-sizing: border-box; }
+}
+/* phone-only sizes that sat at 9-10 px; on a wide screen these are already larger */
+@media (max-width: 760px) {
+  body.workspace :is(#equipment-toggle b, .learn-launch, #model-tools .model-gestures, .part-nav .btn, #inspector-size, .rain-launch) {
+    font-size: 10.5px !important; }
+}

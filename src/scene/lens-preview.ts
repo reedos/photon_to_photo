@@ -25,12 +25,19 @@ async function main() {
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL });
   await renderer.init();
   const backend = (renderer.backend as unknown as { isWebGPUBackend?: boolean }).isWebGPUBackend ? 'webgpu' : 'webgl2';
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  // Always at least 2 device px per CSS px on this developer page: the focus ring's fine knurl aliased at 1x even with
+  // MSAA (score loop r2). The app's own stage keeps its quality governor; this page has no frame budget to keep.
+  renderer.setPixelRatio(2);
   renderer.setSize(canvas.clientWidth || window.innerWidth, canvas.clientHeight || window.innerHeight, false);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 5000);
   const pmrem = look.buildEnvironmentAndLights(renderer, scene);
+  // The camera studio's softbox environment (look.ts buildStudioEnvironment), as on the Camera level, so the barrel's
+  // paint, rubber and metal read with the same reflections here as in the app (score loop r2).
+  const studio = look.buildStudioEnvironment(renderer);
+  scene.environment = studio.texture;
+  look.addStudioLights(scene);
   // This standalone preview's whole frame is filled by the barrel's own anodized-black metal (metalness 1),
   // unlike the cutaway piece's usual framing where mostly-transparent glass elements dominate the shot -- a
   // fully metallic, near-black base color reflects almost nothing but the environment, and the shared PMREM
@@ -147,6 +154,11 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err);
-  if (statusEl) statusEl.textContent = `Error: ${(err as Error).message}`;
+  // the exception goes to the console; the reader gets the main page's plain message and the 2D reference (score loop r2)
+  console.error('lens-preview.ts: the 3D view could not start', err);
+  if (!statusEl) return;
+  statusEl.textContent = 'The 3D view could not start. Reload to try again, or use another browser with hardware acceleration enabled. ';
+  const a = document.createElement('a');
+  a.href = 'reference.html'; a.textContent = 'Read the 2D reference'; a.style.color = 'inherit';
+  statusEl.append(a);
 });

@@ -19,6 +19,8 @@
       "filterStackThicknessMm": 2.0
     },
     "envelopeMm": { "width": 146.0, "height": 124.0, "depth": 78.5 },
+    "depthNote": "The model's 78.5 mm runs from the rear plate to the grip front. The eyepiece housing and eyecup stand 7.8 mm behind the plate: the model's own length, since no published eyepiece length was found, set at the most that CIPA's 10% rule (as reported) lets a maker leave out of a 78.5 mm depth. Nikon does not say whether its figure includes them. So the two bodies' depths are not directly comparable: the DSLR's 78.5 mm leaves its eyepiece out, the mirrorless body's 83 mm includes its eyecup.",
+    "shapeNote": "Traced from Nikon's manual drawings: the outline width, the prism's cheeks, the control positions. The model's own, generic shapes: the grip's profile (its finger channel and bulge), the prism's front rake, the mount boss and the eyepiece length.",
     "mirror": { "widthMm": 36, "heightMm": 34, "restAngleDeg": 45, "hingeEdge": "top" },
     "shutter": { "type": "vertical-travel two-curtain focal-plane", "travelDistanceMm": 24 },
     "namedComponents": [
@@ -27,7 +29,7 @@
       "sensorPackage", "sensorDie", "pixelArray", "filterStack", "bondWires", "rearScreen",
       "topDials", "releaseModeDial", "commandDialFront", "commandDialRear", "shutterButton",
       "lensReleaseButton", "afModeLever", "strapLug", "portDoor", "hotShoe", "shellClosed",
-      "shellCut", "mirrorBox"
+      "shellCut", "mirrorBox", "eyepieceOptics", "battery", "afModule"
     ]
   },
   "mirrorless": {
@@ -48,6 +50,8 @@
       "filterStackThicknessMm": 2.0
     },
     "envelopeMm": { "width": 144.0, "height": 118.5, "depth": 83.0 },
+    "depthNote": "The model's 83 mm runs from the grip front to the back of the viewfinder eyecup, so it includes the eyecup; the DSLR's 78.5 mm leaves its eyepiece out, so the two depths are not directly comparable.",
+    "shapeNote": "Traced from Nikon's manual drawings: the outline width, the viewfinder hump's width, the control positions. The model's own, generic shapes: the grip's profile (its finger channel and bulge), the hump's front rake and the mount boss.",
     "shutter": { "type": "none (electronic only)", "note": "Z8 has no mechanical shutter" },
     "evf": { "magnification": 0.8 },
     "ibis": { "travelMm": 2, "axes": 5 },
@@ -56,7 +60,7 @@
       "pixelArray", "filterStack", "bondWires", "ibisPlate", "evf", "evfHousing", "evfEyecup",
       "evfPanel", "rearScreen", "topDials", "buttonCluster", "commandDialFront",
       "commandDialRear", "shutterButton", "lensReleaseButton", "afModeLever", "strapLug",
-      "portDoor", "hotShoe", "shellClosed", "shellCut"
+      "portDoor", "hotShoe", "shellClosed", "shellCut", "battery"
     ]
   }
 }

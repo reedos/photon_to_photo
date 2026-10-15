@@ -1,17 +1,18 @@
 // Depth of field: hyperfocal distance, near/far limits, and the image-side defocus blur diameter of an arbitrary
-// point, thin-lens and pupil-magnification-corrected. Workstream E2 (engine/closed-form). See docs/engine/e2.md.
+// point, for a thin lens. Workstream E2 (engine/closed-form). See docs/engine/e2.md.
 //
 // Distance convention: `focus` and `point` below are object distances in the positive-distance photographic
-// convention of thinlens.ts. For the plain (pupilMag = 1) formulas, treat them as measured from the front
-// principal plane (exact for a thin lens; the usual photographic approximation for a real one). When correcting
-// for pupil magnification (pupilMag != 1), the physically correct reference for these same distances is the
-// entrance pupil, not the front principal plane - it is the entrance pupil's size and position that set the cone
-// of light an off-axis or defocused point sends into the lens. This module does not have the entrance pupil's own
-// offset from the front principal plane (that is E1b's Cardinal.ep, from an actual traced system); a caller
-// combining this with a real lens should pass distances measured from Cardinal.ep.z. The pupilMag = 1 default
-// treats the two references as coincident, which is exact for a thin lens and the standard approximation
-// otherwise (H. H. Nasse, "Depth of Field and Bokeh", Zeiss Camera Lens News 2010, frames pupil-magnification
-// corrections the same way: relative to the entrance pupil).
+// convention of thinlens.ts, measured from the front principal plane. These are the textbook THIN-LENS formulas
+// (entrance pupil = exit pupil = principal planes, pupil magnification 1). They are exact for a thin lens and are
+// kept as the hand-checkable reference the tests compare against.
+//
+// Score-loop r1 (10/11/2026): an earlier `pupilMag` parameter scaled the aperture by the pupil magnification p
+// while still measuring every distance from the principal planes. That is not a consistent model: the far limit at
+// infinity depends only on the ENTRANCE pupil's diameter and position, and the defocus blur depends on the exit
+// pupil's diameter AND its axial position together. Scaling one without the other put H off by about a factor of p
+// (n50 f/4: 29.5 m against a true ~23.2 m; n500 f/8 about 4x the other way). The parameter is gone. For a real,
+// thick lens the engine uses camera.ts instead: exactDofNearFar (near/far), exactHyperfocalMm (H) and
+// exitPupilBlurDiameterMm (blur), which all use the real exit pupil and the real paraxial conjugates.
 
 import type { Format } from './types';
 import { imageDistance, objectDistance } from './thinlens';
@@ -38,7 +39,7 @@ export function cocFor(format: Format, divisor: number = 1500): number {
  * lens (focal length f, mm; f-number N; positive-distance convention) is focused at `focus`. `point` may be
  * `Infinity` for a point at infinity.
  *
- * Derivation (thin lens, pupilMag = 1): a point at distance p converges to an image at distance v_p = imageDistance
+ * Derivation (thin lens): a point at distance p converges to an image at distance v_p = imageDistance
  * (p, f) from the rear principal plane. If the sensor sits at the focus conjugate v_s = imageDistance(focus, f)
  * instead, the cone of light from the entrance pupil (diameter D = f/N) has been cut by similar triangles at
  * fraction |v_p - v_s| / v_p of its way to the apex at v_p, so the blur-disk diameter is
@@ -47,21 +48,15 @@ export function cocFor(format: Format, divisor: number = 1500): number {
  * 3rd ed., ch. 10, or Kingslake, "Optics in Photography", ch. 6); re-derived here so it is guaranteed consistent
  * with `hyperfocal`/`dofLimits` below, which invert exactly this relation.
  *
- * Pupil-magnification correction: after the lens, the cone that actually converges toward the image is bounded by
- * the EXIT pupil, not the entrance pupil. Modeling the exit pupil as a simple scaled copy of the entrance pupil
- * (diameter D_exit = pupilMag * D, per Cardinal.pupilMag = xp.r / ep.r in src/engine/types.ts) and using the same
- * image-side distances gives
- *   blur = pupilMag * D * |v_p - v_s| / v_p
- * This ignores the (usually small, relative to typical defocus distances) axial offset between the rear principal
- * plane and the actual exit pupil; see the module doc above for when that matters.
+ * Thin lens only. For a real lens, use camera.ts exitPupilBlurDiameterMm (real exit-pupil size and position).
  *
  * `focus` may also be `Infinity` (camera focused at infinity - the natural translation of Scenario.focusM = null
  * in src/engine/types.ts). imageDistance(Infinity, f) is the indeterminate form Infinity/Infinity, so that case is
  * special-cased directly to its well-defined limit v_s -> f as focus -> Infinity (same limit `point` already uses
  * below), rather than routed through imageDistance.
  */
-export function blurDiameter(f: number, N: number, focus: number, point: number, pupilMag: number = 1): number {
-  const D = (f / N) * pupilMag;
+export function blurDiameter(f: number, N: number, focus: number, point: number): number {
+  const D = f / N;
   const vs = Number.isFinite(focus) ? imageDistance(focus, f) : f; // focused at infinity: sensor sits at v = f
   const vp = Number.isFinite(point) ? imageDistance(point, f) : f; // a point at infinity images at v = f
   return (D * Math.abs(vp - vs)) / vp;
@@ -72,18 +67,17 @@ export function blurDiameter(f: number, N: number, focus: number, point: number,
  * Hyperfocal distance H (mm): the focus distance beyond which everything out to infinity is within the permissible
  * circle of confusion c (mm), for focal length f (mm) and f-number N.
  *
- * Derivation: set `blurDiameter(f, N, H, Infinity, pupilMag)` = c and solve for H. With D = (f/N)*pupilMag,
+ * Derivation: set `blurDiameter(f, N, H, Infinity)` = c and solve for H. With D = f/N,
  * v_H = imageDistance(H, f):
  *   c = D (v_H - f) / f   =>   v_H = f + cf/D
  * Substituting v_H = fH/(H-f) and solving the resulting linear equation in H gives the closed form
- *   H = f^2 / (N_eff * c) + f,   N_eff = N / pupilMag
- * which is the classic hyperfocal formula (with N replaced by N_eff when pupilMag != 1) - see e.g. Ray, "Applied
+ *   H = f^2 / (N * c) + f
+ * which is the classic hyperfocal formula - see e.g. Ray, "Applied
  * Photographic Optics", ch. 10. Verified against the golden case 50 mm f/8 c = 0.03 mm -> H = 10.47 m in
  * dof.test.ts (hand-derivation, independent of this function, in the test file).
  */
-export function hyperfocal(f: number, N: number, c: number, pupilMag: number = 1): number {
-  const Neff = N / pupilMag;
-  return (f * f) / (Neff * c) + f;
+export function hyperfocal(f: number, N: number, c: number): number {
+  return (f * f) / (N * c) + f;
 }
 
 export interface DofLimits {
@@ -95,10 +89,10 @@ export interface DofLimits {
 
 /**
  * Near and far distance limits (mm) for a lens of focal length f, f-number N and circle of confusion c, focused at
- * `focus` (mm, from the front principal plane / entrance pupil - see module doc). Optional `pupilMag` applies the
- * same exit-pupil correction as `blurDiameter`.
+ * `focus` (mm, from the front principal plane - see module doc). Thin lens only; camera.ts exactDofNearFar is the
+ * real-lens version.
  *
- * Derivation: solve `blurDiameter(f, N, focus, p, pupilMag)` = c for p on each side of focus.
+ * Derivation: solve `blurDiameter(f, N, focus, p)` = c for p on each side of focus.
  * Near (p < focus, so v_p > v_s): c = D(v_p - v_s)/v_p  =>  v_p = v_s / (1 - c/D)
  * Far  (p > focus, so v_p < v_s): c = D(v_s - v_p)/v_p  =>  v_p = v_s / (1 + c/D)
  * then p = objectDistance(v_p, f) in each case. The far limit is infinite whenever the solved v_p <= f (no real
@@ -111,10 +105,9 @@ export interface DofLimits {
  * vm = f/(1 + c/D) is always < f, so far correctly comes out Infinity (as it must - focused at infinity, nothing is
  * ever "too far"), and near falls out of the same vn formula as the finite-focus case.
  */
-export function dofLimits(f: number, N: number, c: number, focus: number, pupilMag: number = 1): DofLimits {
-  const Neff = N / pupilMag;
-  const D = f / Neff;
-  const H = hyperfocal(f, N, c, pupilMag);
+export function dofLimits(f: number, N: number, c: number, focus: number): DofLimits {
+  const D = f / N;
+  const H = hyperfocal(f, N, c);
   const vs = Number.isFinite(focus) ? imageDistance(focus, f) : f; // focused at infinity: sensor sits at v = f
 
   const vn = vs / (1 - c / D);

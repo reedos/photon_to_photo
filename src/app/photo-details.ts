@@ -1,4 +1,4 @@
-import catalog from "../../public/examples/examples.json";
+import catalog from 'virtual:p2p-facts/examples';
 /** Hand-picked regions in the published JPEGs, normalized from their top-left corner.
  * These are observations of the existing photographs, never a simulated refocus. */
 interface Detail { label: string; rect: readonly [number, number, number, number]; note: string }
@@ -6,8 +6,12 @@ export const PHOTO_DETAILS: Record<string, readonly Detail[]> = Object.fromEntri
   catalog.examples.map(photo => [photo.id, photo.details.map(detail => ({ ...detail, rect: detail.rect as [number, number, number, number] }))]),
 );
 
-/** No animation loop, new image assets, or physics-worker requests. Reuses the loaded JPEG. */
-export function mountPhotoDetails(img: HTMLImageElement, frame: HTMLElement, note: HTMLElement) {
+/** A detail's name in a shared link: "Bird & nest" is crop=bird-nest. */
+export const detailSlug = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+/** No animation loop, new image assets, or physics-worker requests. Reuses the loaded JPEG. `onPick` hears the
+ *  reader's own choice of a detail (null for Full photo), so the Real photos view can keep it in the address. */
+export function mountPhotoDetails(img: HTMLImageElement, frame: HTMLElement, note: HTMLElement, onPick?: (slug: string | null) => void) {
   const noteRow = document.createElement('div'); noteRow.className = 'rp-note-wrap'; note.before(noteRow);
   const readExplanation = document.createElement('button'); readExplanation.type = 'button'; readExplanation.className = 'btn rp-read-explanation'; readExplanation.textContent = 'Read explanation'; readExplanation.setAttribute('aria-haspopup', 'dialog');
   noteRow.append(note, readExplanation);
@@ -66,8 +70,9 @@ export function mountPhotoDetails(img: HTMLImageElement, frame: HTMLElement, not
   img.addEventListener('load', loaded);
   img.addEventListener('error', () => { ready = false; select(-1); controls.querySelectorAll('button').forEach(button => { button.disabled = true; }); });
   new ResizeObserver(layout).observe(frame);
-  frame.addEventListener('keydown', event => { if (event.key === 'Escape' && active >= 0) { select(-1); controls.querySelector('button')?.focus(); } });
-  controls.addEventListener('keydown', event => { if (event.key === 'Escape') { select(-1); controls.querySelector('button')?.focus(); } });
+  const pick = (index: number) => { const changed = index !== active; select(index); if (changed) onPick?.(index < 0 ? null : detailSlug(details[index].label)); };
+  frame.addEventListener('keydown', event => { if (event.key === 'Escape' && active >= 0) { pick(-1); controls.querySelector('button')?.focus(); } });
+  controls.addEventListener('keydown', event => { if (event.key === 'Escape') { pick(-1); controls.querySelector('button')?.focus(); } });
   return {
     setPhoto(id: string, description: string, title: string, highResolutionSource?: string) {
       fullSource = highResolutionSource; cropImage.removeAttribute('src');
@@ -76,9 +81,15 @@ export function mountPhotoDetails(img: HTMLImageElement, frame: HTMLElement, not
       controls.hidden = !details.length; controls.replaceChildren();
       ['Full photo', ...details.map(detail => detail.label)].forEach((label, i) => {
         const button = document.createElement('button'); button.type = 'button'; button.className = 'btn'; button.textContent = label; button.disabled = true;
-        button.onclick = () => select(i - 1); controls.append(button);
+        button.onclick = () => pick(i - 1); controls.append(button);
       });
       select(-1);
     },
+    /** The detail a link names (crop=bird-nest), or the full photo for null or a name this photo does not have. */
+    showDetail(slug: string | null) {
+      const index = slug ? details.findIndex(detail => detailSlug(detail.label) === slug) : -1;
+      if (index !== active) select(index);
+    },
+    detail(): string | null { return active < 0 ? null : detailSlug(details[active].label); },
   };
 }

@@ -4,7 +4,7 @@ import { on } from './bus';
 import '../styles/shot-launch.css';
 export function mountShotLauncher(store:Store) {
   const button=document.createElement('button');button.className='btn shot-launch';button.innerHTML='<span class="action-name">▶ Play the shot</span><span class="action-short">▶ Play</span><small><span class="action-name">Guided photo story</span><span class="action-short">Photo story</span></small>';button.type='button';
-  button.setAttribute('aria-label','Play the shot: guided photo story');
+  button.setAttribute('aria-label','Play the shot: guided photo story');button.title='Play the shot: a guided photo story';
   document.getElementById('view')!.append(button);
   let show:((source:HTMLElement,example?:Example)=>void)|undefined;
   let opening=false;
@@ -14,6 +14,9 @@ export function mountShotLauncher(store:Store) {
     finally{opening=false;button.disabled=false;if(show)source.replaceChildren(...label);}
   }
   button.onclick=()=>void open(button);
+  // The player's code is fetched and evaluated while the camera sits idle, so the first tap does not wait for it (score loop r4)
+  const idle=(window as unknown as {requestIdleCallback?:(cb:()=>void,o?:{timeout:number})=>void}).requestIdleCallback;
+  (idle??((cb:()=>void)=>window.setTimeout(cb,3000)))(()=>{void import('./shot-player').catch(()=>{});},{timeout:10000});
   on('play-photo',({example,source})=>void open(source,example));
   store.subscribe(state=>button.hidden=state.piece!=='camera');button.hidden=store.get().piece!=='camera';
 }

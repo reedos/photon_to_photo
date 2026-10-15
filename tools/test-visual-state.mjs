@@ -26,18 +26,11 @@ try {
   });
   await page.goto(url+'?lens=n50');
   await page.waitForFunction(()=>window.p2p?.pieces.camera?.state().loaded);
-  await page.waitForFunction(()=>document.querySelector('#finalimg-canvas').getAttribute('aria-busy')==='false');
   assert.equal(await page.locator('#compact-fire').getAttribute('aria-label'),'Fire shutter');
   assert.equal(await page.locator('#sc-focus').isVisible(),true);
   assert.equal(await page.locator('#sc-fno').isVisible(),true);
-  // A tap on the still-visible previous photo must not open a stale pixel during the debounce.
-  const staleTap=await page.evaluate(()=>{
-    window.p2p.set({iso:200});
-    const photo=document.querySelector('#finalimg-canvas');photo.click();
-    return {piece:window.p2p.framing().piece,disabled:photo.getAttribute('aria-disabled')};
-  });
-  assert.deepEqual(staleTap,{piece:'camera',disabled:'true'});results.push('old-photo tap blocked during render');
-  await page.waitForFunction(()=>document.querySelector('#finalimg-canvas').getAttribute('aria-disabled')==='false');
+  // The stale-photo tap check went with the synthetic final image (c6209df); guard that it stays removed.
+  assert.equal(await page.locator('#finalimg,#finalimg-canvas').count(),0,'removed synthetic photo stays absent');results.push('no synthetic photo to tap');
   // A failed obsolete body/lens request must not poison a newer completed rig.
   let obsolete;
   await page.route('**/models/lenses/m50.glb',route=>{obsolete=route;});
@@ -72,8 +65,11 @@ try {
     await page.evaluate(()=>window.p2p.piece('camera'));
     await page.evaluate(()=>window.p2p.pieces.camera.ready());
     await page.locator('#part-overview').click();
+    assert.equal(await page.locator('#compact-fire').isVisible(),true,'Fire is in the model toolbar');
     await page.locator('#tab-controls').click();
-    for(const control of ['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
+    // On phones Controls opens a settings drawer that hides the model toolbar while open (ccccefb), so Fire is
+    // checked before opening it there and is pressed after the drawer closes below.
+    for(const control of width<600?['#sc-focus','#sc-fno']:['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
     await page.locator('#sc-focus').press('End');
     await page.locator('#sc-focus').press('Home');
     assert.equal(await page.evaluate(()=>window.p2p.scenario().focusM*1000),await page.evaluate(()=>window.p2p.model().lens.closestFocusMm));
@@ -102,11 +98,12 @@ try {
     await page.locator('[data-view="cutaway"]').click();
     await page.evaluate(()=>window.p2p.settle());
     assert.equal(await page.locator('.rig-teach').count(),0);
-    for(const control of ['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
+    for(const control of width<600?['#sc-focus','#sc-fno']:['#compact-fire','#sc-focus','#sc-fno'])assert.equal(await page.locator(control).isVisible(),true);
     await page.locator('[data-view="outside"]').click();
     if(width<600)await page.locator('#phone-settings-close').click();
     await page.evaluate(()=>window.p2p.settle());
     assert.equal(await page.locator('.rig-teach').count(),3);
+    assert.equal(await page.locator('#compact-fire').isVisible(),true,'Fire returns with the toolbar');
     assert.ok((await page.locator('.pins .pin:visible').count())>=4);
     await page.screenshot({path:`shots/audit/visual-state/${width}-persistent-controls.png`});
     results.push(`${width}px: toolbar Fire and Controls sliders visible and operable by keyboard/pointer`);
@@ -116,7 +113,10 @@ try {
       for(const piece of ['camera','lens','cone']) {
         await page.evaluate(piece=>window.p2p.piece(piece),piece);
         await page.locator('#tab-explain').click();
-        const parts=await page.locator('#parts button').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.partId,label:n.querySelector('.pt').textContent,number:n.querySelector('.pn').textContent})));
+        const rows=await page.locator('#parts button').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.partId,label:n.querySelector('.pt').textContent,number:n.querySelector('.pn').textContent})));
+        // The list opens with an Overview row (number 0) that clears the selection; parts follow it, numbered from 1.
+        assert.deepEqual(rows[0],{id:'overview',label:'Overview',number:'0'});
+        const parts=rows.slice(1);
         assert.ok(parts.length>0);
         for(const part of parts) {
           await page.locator(`#parts [data-part-id="${part.id}"]`).click();

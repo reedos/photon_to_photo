@@ -44,6 +44,24 @@ describe('independent pixel sample lifecycle', () => {
     expect(dive).not.toHaveBeenCalled();
   });
 
+  it('hooks.sample() returns the resolved sample on screen, not null', async () => {
+    const model = dslr(); handle.update(model, model.scenario); await tick();
+    expect(handle.hooks!.sample()).toEqual(handle.hooks!.probe().pixel);
+    expect(handle.hooks!.sample()).not.toBeNull();
+    expect(state().hasPixel).toBe(true);
+  });
+
+  it('a failed sample shows an error with no stale pixel, and the next sample recovers the same seeded pixel', async () => {
+    const model = dslr(); handle.update(model, model.scenario); await tick();
+    const resolved = handle.hooks!.sample();
+    handle.hooks!.failNextSample(); await tick();
+    expect(state().hasPixel).toBe(false);
+    expect(state().pixelError).toMatch(/could not be calculated/);
+    handle.update(model, model.scenario); await tick(); // activate()/update() resample when no pixel is held
+    expect(state().pixelError).toBe('');
+    expect(handle.hooks!.sample()).toEqual(resolved);
+  });
+
   it('replaces the sample when aperture, shutter, ISO, or sensor settings change', async () => {
     const first = dslr(); handle.update(first, first.scenario); await tick();
     const initial = handle.hooks!.probe().pixel;
@@ -85,6 +103,39 @@ describe('independent pixel sample lifecycle', () => {
     expect(state().hasPixel).toBe(true);
     expect(handle.hooks!.probe().pixel.fullWell).toBe(first.sensor.fullWellE);
     expect(dive).not.toHaveBeenCalled();
+  });
+
+  // R-P6 (10/10/2026 correctness review): the displayed sample was reseeded on every refresh, so changing ISO
+  // alone moved the electron count (2,885 -> 2,721 e- for ISO 100 -> 1600) though gain acts after collection.
+  it('keeps the same electrons when only ISO changes, and changes the raw value', async () => {
+    const first = dslr(); handle.update(first, first.scenario); await tick();
+    const low = { ...handle.hooks!.probe().pixel };
+    const next = compute({ ...first.scenario, iso: 1600 });
+    handle.update(next, next.scenario); await tick();
+    const high = handle.hooks!.probe().pixel;
+    expect(high.photonsMean).toBe(low.photonsMean);
+    expect(high.electrons).toBe(low.electrons);
+    expect(high.dn).toBeGreaterThan(low.dn);
+    const again = compute({ ...first.scenario });
+    handle.update(again, again.scenario); await tick();
+    expect(handle.hooks!.probe().pixel).toEqual(low); // returning to a setting returns its reading
+  });
+
+  // score loop r6: a slider drag changes the scenario on every input event; the sample waits for the next animation frame, so the events
+  // of one frame share one sample, and the same electrons come out as from an undeferred sample
+  it('holds the sample for the next frame while events arrive and returns the undeferred reading', async () => {
+    vi.stubGlobal('requestAnimationFrame', (cb: () => void) => setTimeout(cb, 16));
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id));
+    const first = dslr(); handle.update(first, first.scenario); await tick();
+    const base = { ...handle.hooks!.probe().pixel };
+    for (const iso of [200, 400, 800, 1600]) { const m = compute({ ...first.scenario, iso }); handle.update(m, m.scenario); }
+    expect(state().hasPixel).toBe(false);
+    expect(state().pendingPixel).toBe(true);
+    await tick();
+    expect(state().hasPixel).toBe(true);
+    const last = handle.hooks!.probe().pixel;
+    expect(last.electrons).toBe(base.electrons); // ISO acts after collection
+    expect(last.dn).toBeGreaterThan(base.dn);
   });
 
   it('returns the same controlled stochastic draw from the determinism probe', async () => {

@@ -45,6 +45,12 @@ export interface Surface {
   /** Set on a layer's FRONT surface when the medium after it is a thin molded resin layer bonded to the element that
    *  follows (a hybrid asphere). Traced like any medium; counted as part of that element, as makers count it. */
   layer?: 'resin';
+  /** The partial dispersion ratio theta_g,F = (ng - nF)/(nF - nC) of the medium after this surface, when the source
+   *  states it (for example a patent's conditional-expression table). Only used when the glass has no exact catalog
+   *  match: the model glass then reproduces nd, vd AND this theta_g,F (see lens.ts, modelIndexAt). Never estimated. */
+  thetaGF?: number;
+  /** Where thetaGF comes from (document, table, row). Required whenever thetaGF is set. */
+  thetaGFSource?: string;
   /** A diffractive (Phase Fresnel / DOE) phase profile superimposed on this surface, recording the patent's phase
    *  formula (see `DoeSpec` below for the transcription shape, normalized by lens.ts's `normalizeDoe` into
    *  types.ts's `Doe`, the engine's canonical form; loadLens then scales it like an even asphere's -- see lens.ts's

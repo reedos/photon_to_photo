@@ -1,5 +1,5 @@
 /* One working surface; supporting explanations remain available on demand. */
-.workspace { --bar: 52px; }
+/* the bar height is the shared token (tokens.css, base.css) now; score loop r6 */
 .workspace .wrap { display: block; padding: var(--bar) 0 64px; }
 .workspace .page-head { position: absolute; width: 1px !important; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .workspace .wrap > .stage { width: 100%; margin: 0; border-radius: 0; border-left: 0; border-right: 0; }
@@ -22,7 +22,7 @@
 .workspace .hud.tl .sub { font-size: 11px; }
 .workspace .hud.tr { top: 14px; right: 16px; }
 .workspace .hud-btns-phone { display: block; padding: 4px 16px; min-height: 24px; border-top: 1px solid var(--line); }
-.workspace .hud-btns-phone .hint { margin: 0; max-width: none; font-size: 10px; line-height: 1.5; }
+.workspace .hud-btns-phone .hint { margin: 0; max-width: none; font-size: 11px; line-height: 1.5; }
 .studio-sidebar { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; border-left: 1px solid var(--line); background: #13171b; }
 .workspace summary { cursor: pointer; color: var(--muted); font-size: 11px; padding: 8px 0; }
 .studio-tabs { display: flex; border-block: 1px solid var(--line); }
@@ -36,8 +36,12 @@
 .workspace .ctl-head { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
 .workspace .ctl-head label { font-size: 12px; }
 .workspace .ctl-head output { margin-left: auto; font-size: 12px; }
+/* Score loop r5: when the aperture readout carries its "(model f/x)" it wraps to a second line and the Aperture slider sat lower than the
+   Focus slider beside it. The paired Focus head reserves the same two lines, so the tracks share one baseline. */
+.workspace .sc-controls:has(#sc-fno-note:not([hidden])) .sc-group:has(#sc-focus) .ctl-head { min-height: 36.2px; }
+.workspace .sc-controls > #sc-fno-note { grid-column: 1 / -1; max-width: none; }
 .workspace .sc-controls input[type="range"] { width: 100%; height: 32px; margin: 4px 0 0; }
-.control-help { color: var(--muted); font-size: 10px; line-height: 1.4; margin: 0; }
+.control-help { color: var(--muted); font-size: 11px; line-height: 1.4; margin: 0; }
 .studio-advanced { border-top: 1px solid var(--line); margin-top: 16px; }
 .workspace .studio-advanced .sc-format { margin-top: 12px; }
 .workspace .sc-seg { flex-wrap: wrap; }
@@ -62,14 +66,14 @@
 .workspace .rx-control input { display: block; width: 100%; min-width: 0; height: 40px; margin: 0; accent-color: var(--accent); }
 .workspace .rx-control input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .workspace .rig-teach i { animation: none; }
-.workspace .rx-status { grid-column: 1; font-size: 10px; }
+.workspace .rx-status { grid-column: 1; font-size: 11px; }
 .workspace .exposure-details { grid-column: 2; grid-row: 1 / span 3; min-width: 190px; max-width: 320px; }
 .workspace .exposure-details summary { padding: 10px 0; }
 .workspace .exposure-details[open] { max-width: 360px; }
 .workspace .rx-playback { grid-column: 1; grid-template-columns: auto minmax(100px, 1fr); gap: 12px; padding-top: 6px; }
 .workspace .rx-playback-head { gap: 8px; }
 .workspace .rx-scrub-label { font-size: 0; }
-.workspace .rx-phase { font-size: 10px; }
+.workspace .rx-phase { font-size: 11px; }
 .workspace .rx-scrub { height: 36px; }
 .workspace [hidden] { display: none !important; }
 .workspace :is(select, summary, [role="tab"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -79,10 +83,10 @@
   .workspace .exposure-details { min-width: 0; grid-column: 1; grid-row: auto; max-width: none; }
 }
 @media (max-width: 760px) {
-  .workspace { --bar: 48px; }
+  /* --bar: 48px on a phone comes from base.css for every page (score loop r6) */
   .workspace .topbar { height: 48px; }
   .studio-kit { padding: 6px 10px; gap: 8px; }
-  .studio-kit label { display: grid; gap: 2px; flex: 1; font-size: 9px; min-width: 0; }
+  .studio-kit label { display: grid; gap: 2px; flex: 1; font-size: 11px; min-width: 0; }
   .studio-kit select { width: 100%; max-width: none; height: 34px; padding-left: 5px; font-size: 11px; }
   #studio-actions { display: none; }
   .workspace .step { min-height: 40px; padding: 8px; }
@@ -91,14 +95,14 @@
   .workspace .view { flex: none; height: clamp(240px, 34svh, 360px); min-height: 240px; }
   .workspace .hud.tl { top: 10px; left: 12px; }
   .workspace .hud.tl .ttl { font-size: 18px; }
-  .workspace .hud.tl .sub { max-width: 210px; font-size: 10px; }
+  .workspace .hud.tl .sub { max-width: 210px; font-size: 11px; }
   .workspace .hud.tr { top: 10px; right: 10px; }
-  .workspace .rig-teach span { font-size: 10px; letter-spacing: 0; padding: 4px 5px; }
+  .workspace .rig-teach span { font-size: 11px; letter-spacing: 0; padding: 4px 5px; }
   .workspace .hud-btns-phone { padding: 4px 10px; display: flex; align-items: center; gap: 10px; }
-  .workspace .hud-btns-phone .hint { font-size: 9px; padding: 0; text-align: left; }
+  .workspace .hud-btns-phone .hint { font-size: 11px; padding: 0; text-align: left; }
   .workspace .hud-btns-phone .hud-btns { border: 0; flex-shrink: 0; }
   .workspace .hud-btns-phone .hud-row { display: flex; gap: 6px; }
-  .workspace .hud-btns-phone .btn { min-height: 36px; padding: 0 5px; font-size: 9px; border: 1px solid var(--line); }
+  .workspace .hud-btns-phone .btn { min-height: 36px; padding: 0 5px; font-size: 11px; border: 1px solid var(--line); }
   .workspace .part-nav #part-prev span, .workspace .part-nav #part-next span { display: none; }
   .workspace .part-nav #reset-view { padding-inline: 8px; white-space: nowrap; }
   .studio-sidebar { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 39px auto; overflow: visible; border-left: 0; border-top: 1px solid var(--line); }
@@ -117,13 +121,23 @@
   .workspace .kpis { grid-template-columns: 1fr; }
   .workspace #studio-exposure .rig-exposure { padding: 7px 10px; grid-template-columns: 1fr; gap: 0; }
   .workspace .rx-head { grid-template-columns: 78px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-  .workspace .rx-fire { padding: 0 5px; font-size: 10px; white-space: normal; }
-  .workspace .rx-control { font-size: 10px; }
+  .workspace .rx-fire { padding: 0 5px; font-size: 11px; white-space: normal; }
+  .workspace .rx-control { font-size: 11px; }
   .workspace .rx-status { display: none; }
   .workspace .exposure-details { grid-column: 1; grid-row: auto; max-width: none; }
-  .workspace .exposure-details summary { padding: 4px 0; font-size: 10px; }
+  .workspace .exposure-details summary { padding: 4px 0; font-size: 11px; }
   .workspace .rx-playback { grid-template-columns: auto minmax(80px, 1fr); }
   .workspace .rx-pause { min-height: 36px; }
   .workspace .rx-phase { max-width: 100px; }
   .workspace .inspection-context { padding: 5px 10px; }
 }
+
+/* Score loop r6: one plain line under the sliders saying what the aperture, shutter and ISO do to the light and the noise.
+   It spans both slider columns and reads at the body-copy size and a brighter gray than the quiet help lines. */
+.sc-live { grid-column: 1 / -1; margin: 0; padding: 8px 10px; border-left: 3px solid var(--accent, #ffb14e); background: color-mix(in srgb, var(--accent, #ffb14e) 7%, transparent);
+  color: var(--ink, #e8eef2); font: 400 12.5px/1.45 var(--sans, system-ui, sans-serif); }
+.sc-live:empty { display: none; }
+/* the ISO value's "Hi (expanded)" qualifier sits on its own quiet line under the number; the Shutter head beside it keeps the same two
+   lines so the two tracks share one baseline (as the aperture note does for Focus above) */
+.workspace .sc-group:has(#sc-iso) .ctl-head output small { display: block; text-align: right; }
+.workspace .sc-controls:has(#sc-iso-v small) .sc-group:has(#sc-shutter) .ctl-head { min-height: 36.2px; }

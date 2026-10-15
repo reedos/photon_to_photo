@@ -6,9 +6,10 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { decodePng } from './accuracy/png.mjs';
+import { gateServer } from './preview.mjs';
 
-const url = process.env.P2P_URL;
-if (!url) throw new Error('Set P2P_URL to the production candidate for graphics recovery.');
+// P2P_URL may name a production candidate; without it gateServer() builds and serves one.
+const server = await gateServer(), url = server.url;
 const output = process.env.P2P_AUDIT_OUTPUT || 'shots/graphics-recovery';
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true,
@@ -104,7 +105,7 @@ async function exercise(backend) {
   try {
     await page.goto(entry.href);
     await page.waitForFunction(expected => window.p2p?.backend() === expected, backend);
-    await page.waitForFunction(() => window.p2p.render()?.scenario.lens === 'n50'
+    await page.waitForFunction(() => window.p2p.scenario().lens === 'n50'
       && window.p2p.framing().piece === 'camera' && !window.p2p.framing().moving);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     test.initialGeometry = await capture(page, backend, 'before-loss');
@@ -219,7 +220,7 @@ async function exercise(backend) {
       && window.p2p.framing().piece === 'cone', backend);
     await page.waitForFunction(() => !document.querySelector('#veil').classList.contains('err')
       && document.querySelector('#veil').classList.contains('off'));
-    await page.waitForFunction(() => window.p2p.render()?.scenario.iso === 800
+    await page.waitForFunction(() => window.p2p.scenario().iso === 800
       && window.p2p.scenario().fno === 8 && !window.p2p.framing().moving);
     test.urlAfterRestore = page.url();
     test.afterState = await page.evaluate(() => ({ scenario: window.p2p.scenario(), piece: window.p2p.framing().piece }));
@@ -250,14 +251,58 @@ async function exercise(backend) {
   }
 }
 
+// The Models page (score loop r2): a lost WebGL2 context shows the recovery veil with Restore 3D view, and Restore
+// reloads the same kit with real geometry.
+async function exerciseModels() {
+  const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  page.setDefaultTimeout(45000);
+  const test = { page: 'models.html', backend: 'webgl2' };
+  try {
+    await page.goto(new URL('models.html?body=mirrorless&lens=z35&gl=webgl2', url).href);
+    await page.waitForFunction(() => window.p2pModels?.ready && document.querySelector('#veil').classList.contains('off'));
+    test.injection = await page.evaluate(() => {
+      const ext = document.querySelector('#gl').getContext('webgl2')?.getExtension('WEBGL_lose_context');
+      if (!ext) throw new Error('WEBGL_lose_context is unavailable.');
+      ext.loseContext();
+      return { api: 'WEBGL_lose_context' };
+    });
+    await page.waitForFunction(() => {
+      const veil = document.querySelector('#veil');
+      return veil.classList.contains('err') && !veil.classList.contains('off') && veil.getAttribute('role') === 'alert'
+        && /lost the 3D view/.test(document.querySelector('#veil-msg').textContent)
+        && document.querySelector('#model-retry').textContent === 'Restore 3D view';
+    });
+    await page.screenshot({ path: `${output}/models-webgl2-lost-page.png` });
+    const previousTimeOrigin = await page.evaluate(() => performance.timeOrigin);
+    const navigation = page.waitForFunction(old => performance.timeOrigin !== old, previousTimeOrigin);
+    await page.locator('#model-retry').click();
+    await navigation;
+    await page.waitForFunction(() => window.p2pModels?.ready && document.querySelector('#veil').classList.contains('off'));
+    test.urlAfterRestore = page.url();
+    assert.match(test.urlAfterRestore, /body=mirrorless/, 'models: Restore keeps the body');
+    assert.match(test.urlAfterRestore, /lens=z35/, 'models: Restore keeps the lens');
+    test.restoredGeometry = await capture(page, 'models-webgl2', 'restored');
+    assert.ok(test.restoredGeometry.changedPixels > 500 && test.restoredGeometry.brightPixels > 25, 'models: Restore reloads real rendered geometry');
+    test.passed = true;
+    return test;
+  } finally {
+    report.cases.push(test);
+    await context.close();
+  }
+}
+
 try {
   for (const backend of ['webgl2', 'webgpu']) {
     const test = await exercise(backend);
     console.log(`PASS ${backend} graphics recovery`, JSON.stringify({ initial: test.initialGeometry,
       lost: test.lostGeometry, restored: test.restoredGeometry, urlAfterRestore: test.urlAfterRestore }));
   }
+  const models = await exerciseModels();
+  console.log('PASS models.html webgl2 graphics recovery', JSON.stringify({ restored: models.restoredGeometry, urlAfterRestore: models.urlAfterRestore }));
   report.passed = true;
 } finally {
   writeFileSync(`${output}/report.json`, JSON.stringify(report, null, 2));
   await browser.close();
+  await server.close();
 }

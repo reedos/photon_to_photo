@@ -46,9 +46,11 @@ for (const m of Object.values(lensModules)) {
     });
 
     it(`the corner passes about ${CORNER_PUPIL} of the pupil diameter (mechanical vignetting, the cat's eye)`, () => {
-      // wide angles lose a little more to rays no element can pass at all (20 mm: 0.35), so the band is 0.3 to 0.8
+      // wide angles lose a little more to rays no element can pass at all, and since the physical-edge caps
+      // (edges.ts, 10/11/2026) to glass no real element can have: 20 mm passes 0.255 of the meridional pupil (0.35
+      // before the caps; p20 L15 against L14 costs most of it). So the band is 0.2 to 0.8.
       const f = passFraction(systemAt(get(), null), get().realization.halfFieldDeg, 81);
-      expect(f).toBeGreaterThan(0.3);
+      expect(f).toBeGreaterThan(0.2);
       expect(f).toBeLessThan(0.8);
     });
 

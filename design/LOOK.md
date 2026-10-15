@@ -142,6 +142,11 @@ Contrast, text pairs actually used on screen:
 Every text color clears AA at minimum, and everything but `--faint` clears AAA. `--faint` is reserved the same way
 intelligence_factory reserves it: uppercase mono labels ≥11px, never a sentence.
 
+**The 3D ground (10/11/2026).** Every 3D view (the camera level, the three deep dives, the models page) clears to
+`--ground` (#000), the same black as the landing page and the ghosted camera views. The deep dives used to clear to a
+navy #080d14 that read as a second background beside the camera level (score loop r1). `--surface` stays the color
+of panels and chrome, never of the void the hardware stands in.
+
 ### Light theme
 
 **Skipped, deliberately, because it is not cheap here.** Intelligence Factory's UI chrome could plausibly re-skin
@@ -323,6 +328,14 @@ flat/dead with no environment to reflect (one of the clearest "default Three.js 
   ring, a well's fill glow. Implementation note for the rendering workstream: keep physics-value emissive output in
   a separate render pass/AOV from the AO-affected beauty pass, or gate AO's multiply by a "this is a light source"
   flag per material.
+  **Status 10/11/2026: deferred on every tier (Reed's decision 4).** Reed allowed AO on the desktop tier only if it
+  keeps anti-aliasing, WebGPU included. On three 0.186.1, `ao()` (GTAONode) fails to compile on the WebGPU backend
+  whenever the renderer is created with `antialias: true` (`textureGather` on a multisampled depth texture;
+  `docs/rendering-spike.md`, test (d)), and the stage keeps MSAA because the fat ray lines and the thin barrel edges
+  depend on it. The workable route the spike names, a separate non-multisampled depth/normal prepass feeding GTAO
+  while the beauty pass keeps MSAA, composited before the physics-color passes, is not built yet. Until it is, the
+  studio panels and the rim and kicker lights carry the crevice separation, and no capture should be judged as if
+  AO were present.
 - **Bloom**: **off by default everywhere.** Clarity beats glow — this is the brief's own bar, and Ryan Sael's
   reference already proves you don't need bloom to look expensive; the plane-of-focus scene reads as high-end
   through geometry, materials and lighting alone, no glow. Where a bloom pass is used at all (a single tightly-
@@ -398,6 +411,7 @@ Same three families as Intelligence Factory, so both sites read as one hand:
 | Tab/segment switch (mode toggle, layer switch) | `cubic-bezier(0.22, 1, 0.36, 1)` | 150ms | |
 | **Dive between scale levels** (the camera path across a level change) | `cubic-bezier(0.65, 0, 0.35, 1)` (slow in, fast middle, slow out) | `900ms + 220ms × decades crossed`, capped at 2400ms | camera path is a **logarithmic** dolly along the optical axis, not a linear zoom — crossing from meters to micrometers (~6 decades) must not feel six times longer than crossing one decade in a way that's proportionally jarring; the log path is what makes the felt speed roughly constant across a huge span. The scale badge (below) updates its exponent continuously during the dive, not just at the endpoints. |
 | What fades during a dive | outgoing level's HUD labels/pins fade over the first 120ms, incoming level's over the last 150ms; the 3D geometry itself never fades — it scales/recedes, because faking a level's geometry disappearing would misrepresent what's actually there | | |
+| First visit to a level (the pipelines compile behind a veil) | veil dims the last frame of the level just left to 30%; the cue reads "Preparing the view · <level>" | until the scene draws (about 1 to 2 s on a dev server) | The HUD title and subline keep the **outgoing** level's words for the whole wait and change when the new scene draws, so no frame shows one level's picture under another's name (score loop r5). The levels use unrelated units, so there is no continuous dive between them; this is the honest stand-in. |
 | Physics-driven change (f-stop, ISO, focus distance, focal length slider) | **no decorative easing** | see below | |
 
 **Physics updates must be immediate or physically timed, never decorative.** Two cases, and a change must fall
@@ -608,7 +622,7 @@ Every set piece must stay readable at phone width; what drops is *effect budget*
 |---|---|---|
 | Phone | Bloom (already off by default, so nothing to drop), AO radius/samples reduced, PMREM environment resolution reduced, ghost-path count capped lower, particle/spark count for photon rain reduced (density *ratio* preserved, not absolute count — the scale badge's number must still be true at whatever count is actually drawn, so reduce and re-badge together, never reduce silently) | Real geometry (element count, barrel shape, iris blade count), the spectral rule (wavelength colors never get cheaper), evidence chips, HUD numbers, the scale badge, pins and labels at legible size (never shrink below the type scale's minimum), physically-timed motion durations |
 | Tablet/desktop mid | AO, reduced PMREM resolution | everything phone keeps, plus fuller AO and ghost paths |
-| Desktop high | full AO/GTAO, full PMREM, full ghost-path count, the single tightly-thresholded highlight-bloom pass if enabled | — |
+| Desktop high | full AO/GTAO (deferred, see Post-processing rules), full PMREM, full ghost-path count, the single tightly-thresholded highlight-bloom pass if enabled | — |
 
 A quality governor picks the tier from measured frame time, not device sniffing (matches the brief's own
 "quality governor with tiers" ask) — the table above is what each tier is allowed to touch, not how the governor

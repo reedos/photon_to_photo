@@ -1,5 +1,12 @@
 .topnav a[aria-current="page"] { color: var(--ink); }
 .topnav a[aria-current="page"]::after { transform: scaleX(1); }
 @media (min-width: 901px) and (max-width: 1150px) {
-  .topnav .navlink { padding-inline: 7px; font-size: 10px; letter-spacing: .06em; }
+  .topnav .navlink { padding-inline: 7px; font-size: 11px; letter-spacing: .06em; }
 }
+/* Start here leads the menu on every page (score loop r2). It takes its neighbors' color, not the accent (score loop r4): the accent and the
+   current page's underline were two highlights in one bar on every page but the opening, so the eye could not tell where the
+   reader was. Only the current page carries the underline. */
+/* (no color of its own: it matches its neighbors) */
+/* Score loop r3: Back to the opening marks the Start here button (a button inside the workspace) as the current place. */
+.topnav button.navlink[aria-current="page"] { color: var(--ink); }
+.topnav button.navlink[aria-current="page"]::after { transform: scaleX(1); }

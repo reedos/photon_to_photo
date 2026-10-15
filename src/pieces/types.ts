@@ -37,6 +37,9 @@ export interface PieceContext {
   dive(to: CameraFrame): void;
   /** Rendered-pixel taps on the final image (the loupe) and other app events: see src/app/bus.ts. */
   bus: typeof import('../app/bus');
+  /** The stage draws on demand (score loop r2): a piece that changes its meshes outside update(), tick() or an input
+   *  event (an asset that arrives later, a debounced rebuild) asks for the next frames with this. */
+  invalidate?(): void;
 }
 
 /** A second viewport the stage renders after the main view (scissored), e.g. a magnified detail of the image
@@ -63,8 +66,15 @@ export interface PieceProbe {
 export interface PartCard {
   kicker: string;              // e.g. "Level 1 · the iris"
   title: string;
+  /** An explicit mono subtitle; when absent the title's final parenthetical becomes one (ui.ts splitTitle). */
+  sub?: string;
   body: string;                // plain prose, one or two short paragraphs (no HTML)
+  /** Score loop r4: the expert detail behind a long card, shown under a "More detail" disclosure. `body` leads with one
+   *  plain sentence or two; whatever needs terms like paraxial or longitudinal color goes here. */
+  more?: string;
   specs: { k: string; v: string; fig?: import('../engine/types').Fig }[];
+  /** Rows kept under a "More settings" disclosure, for a card whose full list is longer than a first read needs (score loop r5). */
+  moreSpecs?: { k: string; v: string; fig?: import('../engine/types').Fig }[];
 }
 
 export interface CameraFrame {
@@ -82,8 +92,16 @@ export interface PieceHandle {
   selectionFrame?(id: string): CameraFrame;
   probes: PieceProbe[];
   dispose(): void;
-  /** Called every drawn frame while the piece is shown (physically timed mechanisms, arriving photons, dives). */
-  tick?(dtMs: number, nowMs: number): void;
+  /** Called every animation frame while the piece is shown (physically timed mechanisms, arriving photons, dives).
+   *  Returns whether it changed what the scene draws this frame: the stage skips drawing a frame in which nothing
+   *  moved (score loop r2). A tick that returns nothing counts as animated, so the frame is drawn. */
+  tick?(dtMs: number, nowMs: number): boolean | void;
+  /** update() in two parts, for the idle precompile of a hidden level (score loop r6): the slow part (tracing the rays) runs here in short
+   *  tasks, and the function it resolves to applies the result at once, as update() would. null: cancelled (a newer model arrived). */
+  prepareUpdate?(model: Model, scenario: Scenario): Promise<(() => void) | null>;
+  /** Draws, at full quality and now, any model change the piece has deferred (a coarse drag preview with the full trace
+   *  owed, score loop r6). The stage calls it before a forced (settle) frame. */
+  flush?(): void;
   /** The reader has taken control of the view by orbiting, panning or zooming. */
   onViewInteraction?(): void;
   /** Extra viewports to draw this frame (see Inset). */
@@ -92,6 +110,9 @@ export interface PieceHandle {
   hooks?: Record<string, (...args: any[]) => any>;
   activate?(): void;
   deactivate?(): void;
+  /** What activate() does to the scene's own materials (the studio reflections), with none of the page's chrome, so the
+   *  stage can compile this level's pipelines while another level is shown (score loop r5). */
+  prepare?(): void;
   /** The part list or a pin picked one of this piece's probes (null clears it): the piece highlights the part. */
   select?(id: string | null): void;
 }

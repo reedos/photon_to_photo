@@ -25,7 +25,10 @@ try {
     for (const id of ids) {
       await page.locator('#part-next').click(); assert.equal(await detail(), id);
       assert.equal(await page.locator('#parts button:visible').count(), ids.length + 1, 'every part and Overview remain visible after selecting a part');
-      assert.equal(await page.locator('#studio-explain').evaluate(el => el.scrollTop), 0, 'the part list is not scrolled away');
+      // A wide inspector keeps the part list at the top. A phone's ~110 px dock scrolls itself to the new part's card
+      // instead (ux r1, ui.ts revealCard), so there the card's heading must be on screen in the dock.
+      if (width >= 760) assert.equal(await page.locator('#studio-explain').evaluate(el => el.scrollTop), 0, 'the part list is not scrolled away');
+      else assert.ok(await page.waitForFunction(() => { const p = document.querySelector('#studio-explain').getBoundingClientRect(), h = document.querySelector('#card h3')?.getBoundingClientRect(); return !h || (h.top >= p.top - 1 && h.top < p.bottom); }, null, { timeout: 3000 }).then(() => true, () => false), 'the picked part card heading shows in the phone dock');
       const transport = await page.locator('.part-nav').boundingBox();
       assert.ok(transport.y >= 0 && transport.y + transport.height <= height, 'previous/next stay in view');
       if (width > 760) {
@@ -46,8 +49,9 @@ try {
       const door = await page.locator('#card-go').boundingBox();
       assert.ok(door && door.y + door.height <= height, 'Go inside is visible without scrolling');
       await page.locator('#card-go').click();
+      await page.waitForFunction((want) => new URLSearchParams(location.search).get('piece') === want, piece);
       assert.equal(new URL(page.url()).searchParams.get('piece'), piece);
-      await page.locator('.inspection-back').click(); assert.equal(await detail(), part);
+      await page.locator('.inspection-back').click(); await page.waitForFunction(() => window.p2p.framing().piece === 'camera'); assert.equal(await detail(), part);
       assert.deepEqual(await page.evaluate(() => window.p2p.scenario()), shot, 'drill/return preserves the shot');
     }
     await page.reload(); await page.waitForFunction(() => window.p2p?.pieces.camera);

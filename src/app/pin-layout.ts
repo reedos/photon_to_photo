@@ -13,7 +13,9 @@ export function spreadPins(anchors: PinAnchor[], width: number, height: number, 
     const candidates = [{ x: anchor.x, y: anchor.y }];
     // Fixed candidates avoid iterative oscillation while orbiting. Prefer moving away from the model's center.
     const outward = Math.atan2(anchor.y - height / 2, anchor.x - width / 2);
-    for (let ring = 1; ring <= 4; ring++) for (let step = 0; step < 12; step++) {
+    // Rings 5 and 6 (score loop r5): a phone on its side has a ~340x220 view, where a crowded cluster beside an inset ran
+    // out of room after four rings and its last pins went missing; farther out they keep their numbers, on a longer leader.
+    for (let ring = 1; ring <= 6; ring++) for (let step = 0; step < 12; step++) {
       const angle = outward + step * Math.PI / 6;
       candidates.push({ x: anchor.x + Math.cos(angle) * gap * ring * .75, y: anchor.y + Math.sin(angle) * gap * ring * .75 });
     }

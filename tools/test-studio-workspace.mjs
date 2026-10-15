@@ -2,10 +2,11 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { gateServer } from './preview.mjs';
 
 const output = process.env.P2P_AUDIT_OUTPUT || 'shots/studio-workspace';
 mkdirSync(output, { recursive: true });
-const base = process.env.P2P_URL || 'http://127.0.0.1:47743/';
+const server = await gateServer(), base = server.url;
 const entry = new URL('?piece=camera&lens=m50', base);
 if (process.env.P2P_BACKEND === 'webgl2') entry.searchParams.set('gl', 'webgl2');
 const report = { url: entry.href, samples: [], errors: [], checks: [] };
@@ -34,10 +35,14 @@ async function sample(name) {
   });
   report.samples.push({name,...data});
   await page.screenshot({ path:`${output}/${name}.png` });
-  assert.ok(data.document[0] <= data.viewport[0]+1 && data.document[1] <= data.viewport[1]+1, `${name}: document must fit viewport`);
+  // The model workspace on a phone 680 px tall or less scrolls on purpose (studio-shell.css, review loop r1): its view
+  // keeps 240 px. It still never overflows sideways, and every control below is checked on the first screen.
+  const shortModel = data.view === 'model' && data.viewport[0] <= 599 && data.viewport[1] <= 680;
+  assert.ok(data.document[0] <= data.viewport[0]+1 && (shortModel || data.document[1] <= data.viewport[1]+1), `${name}: document must fit viewport`);
   assert.deepEqual(data.scroll,[0,0], `${name}: no document displacement`);
   const selectors = data.view === 'photos' ? ['#rp-img','#rp-play','#rp-match','#rp-picks'] : ['#gl','#zoom-in','#zoom-out','#part-next','#part-prev'];
-  if(data.view==='model' && data.frame.piece==='camera') selectors.push('#compact-fire');
+  // Expand model is a full-viewport mode (ux r1): the tool row with Fire steps aside there, by design
+  if(data.view==='model' && data.frame.piece==='camera' && !name.endsWith('-expanded')) selectors.push('#compact-fire');
   for (const selector of selectors) {
     const r = data.boxes[selector];
     assert.ok(r && r.x>=-1 && r.y>=-1 && r.right<=data.viewport[0]+1 && r.bottom<=data.viewport[1]+1 && r.w>0 && r.h>0, `${name}: ${selector} is in viewport`);
@@ -60,7 +65,7 @@ async function sample(name) {
   }
   if(data.view === 'model') assert.ok(data.boxes['#gl'].w >= Math.min(260,data.viewport[0]-30) && data.boxes['#gl'].h>=100, `${name}: usable canvas area`);
   if(data.view === 'model') {
-    const clipped=await page.locator('.light-playback button, .light-playback input, #model-experiments .btn, .rain-launch').evaluateAll(nodes=>nodes.filter(el=>el.checkVisibility()).filter(el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit!==el&&!el.contains(hit);}).map(el=>el.textContent?.trim()||el.getAttribute('aria-label')));
+    const clipped=await page.locator('.light-playback button, .light-playback input, #model-experiments .btn, .rain-launch').evaluateAll(nodes=>{/* a short phone's page scrolls: bring each control on screen first, then put the page back */const out=nodes.filter(el=>el.checkVisibility()).filter(el=>{el.scrollIntoView({block:'nearest'});const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit!==el&&!el.contains(hit);}).map(el=>el.textContent?.trim()||el.getAttribute('aria-label'));window.scrollTo(0,0);return out;});
     assert.deepEqual(clipped,[],`${name}: animation controls and experiments are not clipped or covered`);
   }
   console.log(name, data.boxes['#gl'] || data.boxes['#rp-img']);
@@ -137,7 +142,10 @@ try {
       assert.equal(await page.evaluate(()=>document.activeElement.id),'equipment-toggle');
     }
     for(const piece of ['camera','lens','cone','loupe']) {
-      await page.locator(`#steps [data-piece="${piece}"]`).click(); await rest(); await sample(`${name}-${piece}`);
+      await page.locator(`#steps [data-piece="${piece}"]`).click(); await rest();
+      // the Camera tab from a deeper level returns to the part the visitor came from, as the breadcrumb does (score loop r6): its card is open over the experiments, so start from the overview
+      if(piece==='camera') { await page.locator('#part-overview').click(); await rest(); }
+      await sample(`${name}-${piece}`);
       if(width===320 && ['lens','loupe'].includes(piece)) {
         const button=page.locator('.light-playback:visible button');
         await button.click(); assert.equal(await button.getAttribute('aria-pressed'),'true');
@@ -150,7 +158,8 @@ try {
         await page.locator('#expand-model').click(); await rest();
       }
     }
-    if(height<680 && width<600) {
+    // a phone 680 px tall or less scrolls instead and has no size button (studio-shell.css, review loop r1)
+    if(height<680 && width<600 && await page.locator('#inspector-size').isVisible()) {
       const before=await page.locator('.studio-sidebar').boundingBox();
       await page.locator('#inspector-size').click();
       assert.ok((await page.locator('.studio-sidebar').boundingBox()).height>before.height*1.5,'explicit inspector expansion exposes more controls');
@@ -173,4 +182,4 @@ try {
   assert.equal(report.errors.length,0,report.errors.join('\n'));
   report.passed=true;
 } catch(error) { report.failure=String(error.stack||error); await page.screenshot({path:`${output}/failure.png`}).catch(()=>{}); throw error;
-} finally { writeFileSync(`${output}/report.json`,JSON.stringify(report,null,2)); await browser.close(); }
+} finally { writeFileSync(`${output}/report.json`,JSON.stringify(report,null,2)); await browser.close(); await server.close(); }

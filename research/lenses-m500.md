@@ -1,5 +1,9 @@
 # Mirrorless super-telephoto (m500) — research note
 
+> **Status (10/14/2026): transcribed and tested, not registered.** `data/lenses/m500.json` is not in `LENS_DESIGNS`
+> (`src/engine/data.ts`), so the app never offers or draws it; the product lineup uses `z800` for the Nikon Z super-telephoto.
+> The file stays because four unit tests use it as a second diffractive example. See `data/lenses/README.md`.
+
 Agent: lens-m500. File: `data/lenses/m500.json`. Accessed date for every source below: 9/28/2026,
 unless stated otherwise.
 

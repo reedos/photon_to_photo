@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { gateServer } from './preview.mjs';
+const server = await gateServer();
 const output = process.env.P2P_AUDIT_OUTPUT || 'shots/photo-details';
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-unsafe-webgpu', '--ignore-gpu-blocklist'] });
@@ -22,7 +24,13 @@ async function sample(name) {
       const r = el.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
       return { label: el.textContent, hit: hit === el || el.contains(hit), width: r.width, height: r.height };
     });
-    return { full: crop.hidden, source: img.getAttribute('src'), original: document.querySelector('#rp-img').currentSrc,
+    // Since daae1cd the crop reads the example's full-resolution original (examples.json fullImage) when one
+    // exists, else the displayed JPEG; either way it is an unmodified supplied file, never a re-encoded copy.
+    // The frame may show a smaller WebP copy (srcset, score loop r3); its src attribute is still the supplied JPEG.
+    const shown = new URL(document.querySelector('#rp-img').getAttribute('src'), location.href).href;
+    const example = window.__examples.find(e => shown.endsWith('/examples/' + e.image));
+    const original = example?.fullImage ? new URL('examples/' + example.fullImage, location.href).href : shown;
+    return { full: crop.hidden, source: img.src, original,
       crop: { x: box.x, y: box.y, right: box.right, bottom: box.bottom },
       frame: { x: frame.x, y: frame.y, right: frame.right, bottom: frame.bottom }, buttons,
       document: [document.documentElement.scrollWidth, document.documentElement.scrollHeight], viewport: [innerWidth, innerHeight] };
@@ -53,8 +61,9 @@ async function explanationMatches(name, escape = false) {
   assert.ok(await trigger.evaluate(el => document.activeElement===el), 'closing returns focus to Read explanation');
 }
 try {
-  await page.goto(new URL('?piece=camera&lens=m50', process.env.P2P_URL || 'http://127.0.0.1:47747/').href);
+  await page.goto(new URL('?piece=camera&lens=m50', server.url).href);
   await page.waitForFunction(() => window.p2p && document.querySelector('#veil').classList.contains('off'));
+  await page.evaluate(async () => { window.__examples = (await (await fetch('examples/examples.json')).json()).examples; });
   await page.locator('#workspace-photos').click();
   for (let i = 0; i < 6; i++) {
     await page.locator('#rp-picks button').nth(i).click();
@@ -96,5 +105,5 @@ try {
   console.log(`PASS ${report.samples.length} real-photo detail captures, zero console errors`);
 } finally {
   writeFileSync(`${output}/report.json`, JSON.stringify(report,null,2));
-  await browser.close();
+  await browser.close(); await server.close();
 }
