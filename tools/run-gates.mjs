@@ -6,6 +6,11 @@
 //   node tools/run-gates.mjs --prod               # builds the app and serves that build (what ships), not the dev server
 //   node tools/run-gates.mjs navigation selection # only gates whose name contains one of these words
 //   P2P_GATE_TIMEOUT=600 node tools/run-gates.mjs # per-gate timeout in seconds (default 900)
+//   node tools/run-gates.mjs --shard=2/8          # only the 2nd of 8 deterministic slices (or P2P_GATES_SHARD=2/8)
+//
+// --shard=i/N (1-based) deals the sorted gate list out round-robin, so gate k goes to shard (k mod N) + 1: every gate
+// lands in exactly one shard and the N shards together run exactly the gates one unsharded run would. CI runs the
+// shards as a parallel job matrix (.github/workflows/gates.yml) because the full serial run outlasts one job's timeout.
 //
 // Gates that build their own server (cone, lens, test-startup, test-runtime-reliability, ...) still do; the
 // accuracy gates get P2P_PREVIEW_PORT=47671 so they don't collide with a preview on the default 47501.
@@ -27,7 +32,17 @@ const TIMEOUT_S = Number(process.env.P2P_GATE_TIMEOUT) || 900;
 // in learning.css broke every later rule in the built CSS below 901 px; four gates failed on the build for three rounds
 // and passed on the dev server, and the failures were called environmental).
 const prod = process.argv.includes('--prod') || process.env.P2P_GATES_PROD === '1';
-const filters = process.argv.slice(2).filter((a) => a !== '--prod');
+const shardArg = process.argv.find((a) => a.startsWith('--shard='))?.slice('--shard='.length) ?? process.env.P2P_GATES_SHARD;
+const filters = process.argv.slice(2).filter((a) => a !== '--prod' && !a.startsWith('--shard='));
+let shard = null;
+if (shardArg) {
+  const m = /^(\d+)\/(\d+)$/.exec(shardArg.trim());
+  shard = m && { index: Number(m[1]), total: Number(m[2]) };
+  if (!shard || shard.total < 1 || shard.index < 1 || shard.index > shard.total) {
+    console.error(`run-gates: --shard must be i/N with 1 <= i <= N, got "${shardArg}"`);
+    process.exit(2);
+  }
+}
 
 // The shipped body GLBs must match a fresh build of their Blender scripts (score loop r6, 10/11/2026: both were stale for
 // two rounds because the check was opt-in). It rebuilds both bodies, about 40 s, so it needs Blender; without Blender it is
@@ -38,7 +53,8 @@ const gates = [
   ...readdirSync(join(ROOT, 'tools')).filter((f) => /^test-.*\.mjs$/.test(f)).sort().map((f) => `tools/${f}`),
   ...['cone', 'lens', 'loupe'].map((f) => `tools/accuracy/${f}.mjs`),
   ...(blender ? ['tools/check-glb-fresh.mjs'] : []),
-].filter((g) => !filters.length || filters.some((w) => g.includes(w)));
+].filter((g) => !filters.length || filters.some((w) => g.includes(w)))
+  .filter((_, k) => !shard || k % shard.total === shard.index - 1);
 
 async function startProd() {
   // its own output folder: gates that build and serve their own copy (the budgets) write to dist-gates meanwhile
@@ -106,7 +122,7 @@ const dev = process.env.P2P_URL ? null : prod ? await startProd() : await startD
 const url = process.env.P2P_URL || dev.url;
 const env = { ...process.env, P2P_URL: url, P2P_PREVIEW_PORT: process.env.P2P_PREVIEW_PORT || '47671' };
 mkdirSync(join(ROOT, 'shots/gates'), { recursive: true });
-console.log(`run-gates: ${gates.length} gates against ${url}`);
+console.log(`run-gates: ${gates.length} gates${shard ? ` (shard ${shard.index}/${shard.total})` : ''} against ${url}`);
 const results = [];
 try {
   for (const gate of gates) {
