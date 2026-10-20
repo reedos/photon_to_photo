@@ -10,17 +10,29 @@ permissions: { contents: read }
 concurrency:
   group: gates-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+# One serial run of all ~60 gates (about 90 minutes of gates on windows-latest, plus the build) never fit in one job's
+# 90-minute timeout, so the gates are dealt round-robin across a matrix of shards (run-gates.mjs --shard=i/N) that run in
+# parallel. Every gate still runs exactly once per workflow run; on the 10/2026 nightly timings the busiest
+# shard has about 30 minutes of gates.
 jobs:
   gates:
+    name: gates (shard ${{ matrix.shard }}/8)
     runs-on: windows-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: node tools/run-gates.mjs --prod
+      - run: node tools/run-gates.mjs --prod --shard=${{ matrix.shard }}/8
         env: { P2P_GATE_TIMEOUT: '900' }
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: gate-logs, path: shots/gates, retention-days: 7 }
+        with:
+          name: gate-logs-shard-${{ matrix.shard }}
+          path: shots/gates
+          retention-days: 7
