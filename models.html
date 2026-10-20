@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex"> <!-- Asset inspection tool; excluded from search results. -->
-<title>Camera Models</title>
+<title>Models · Photon to Photo</title>
 <meta name="description" content="The scripted-Blender camera bodies and lenses, the lens mounted as it seats, rotatable, with a cutaway and every named part selectable.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<!-- not render-blocking: a stalled fonts.googleapis.com (captive portal, filtered network) must not stop the first paint; the stacks fall back to system fonts until it arrives -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="/src/styles/tokens.css">
 <link rel="stylesheet" href="/src/styles/base.css">
 <link rel="stylesheet" href="/src/styles/app.css">
@@ -25,28 +26,77 @@
   #model-retry { display: none; }
   .mv-veil.err #model-retry { display: inline-flex; }
   .mv-body .panel-scroll { grid-auto-rows: max-content; }
-  .mv-sel { min-height: 118px; }
-  .mv-sel .none { color: var(--faint); }
-  .parts .pn { font-size: 10px; }
+  .mv-body .mv-sel { min-height: 118px; }
+  .mv-body .mv-sel .none { color: var(--faint); }
+  .parts .pn { font-size: 11px; }
   #facts { white-space: pre-line; }
   .mv-lens button { padding: 0 12px; }
   @media (max-width: 760px) { .mv-lens { max-width: calc(100vw - 20px); overflow-x: auto; scrollbar-width: none; }
     .mv-lens button { padding: 0 9px; font-size: 10.5px; white-space: nowrap; } }
+  /* score loop r3: at 360 px and below the five lens chips need ~345 px, so the strip cut off "No lens" with nothing
+     to say it scrolled; the chips wrap onto two rows instead, each row filling the strip */
+  @media (max-width: 360px) { .mv-lens { flex-wrap: wrap; overflow: visible; } .mv-lens button { flex: 1 0 auto; justify-content: center; min-height: 34px; } }
+  /* the selection's title is an h2 under the page's h1 (it was an h3: axe heading-order), set as the card titles are */
+  .mv-body .mv-sel #sel-t { margin: 0; font: 600 30px/.95 var(--display); text-transform: uppercase; letter-spacing: .005em; }
   .mv-group { margin: 10px 0 0; font: 500 10.5px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .mv-body #sel-d.none { color: var(--muted); }
+  /* score loop r5: the selected part's card stays on top of the list's own scroll (it scrolled away with the 55 rows), and the
+     list scrolls under it; a flex column, because a sticky grid item can only move inside its own grid row */
+  .mv-body .panel-scroll { display: flex; flex-direction: column; gap: 22px; }
+  .mv-body .panel-scroll > * { flex: none; }
+  .mv-body .mv-sel { position: sticky; top: 0; z-index: 4; box-shadow: 0 14px 12px -8px var(--ground); }
+  .mv-body .parts button { scroll-margin-top: 200px; scroll-margin-bottom: 40px; }
+  /* the selected part, named and pointed at on the model itself, as the camera workspace's pins do */
+  .mv-label { position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; }
+  .mv-label[hidden] { display: none; }
+  .mv-label i { position: absolute; width: 14px; height: 14px; box-sizing: border-box; border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 0 0 3px rgba(0,0,0,.55); }
+  .mv-label.behind i { border-style: dashed; }
+  .mv-label b { position: absolute; height: 1px; background: var(--accent); transform-origin: 0 50%; }
+  .mv-label span { position: absolute; padding: 4px 7px; font: 600 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    color: var(--ink); background: rgba(11,17,23,.93); border-left: 2px solid var(--accent); }
+  .mv-body .mv-sel .mv-vis { margin: 0; font: 500 11px/1.4 var(--mono); letter-spacing: .02em; color: var(--accent); }
+  .mv-body .mv-sel .mv-vis[hidden] { display: none; }
+  /* the whole page scrolls on a tablet or a phone: the model stays pinned under the site bar, the card pinned under the model,
+     and the list scrolls beneath both (the model was off-screen when a part was picked from the list) */
   @media (max-width: 1100px) {
-    .mv-body .viewer { height: 64svh; min-height: 360px; }
+    :root { --mv-view-h: clamp(250px, 40svh, 460px); }
+    .mv-body .viewer { position: sticky; top: calc(var(--bar) + env(safe-area-inset-top, 0px)); z-index: 5; height: var(--mv-view-h); min-height: 0; align-self: start; }
     .mv-body .panel { height: auto; }
+    .mv-body .panel-scroll { overflow: visible; }
+    /* score loop r6: the card sticks under the viewer's MEASURED height (models.ts writes --mv-view-real), not under the height
+       this rule asked for: a later rule gave the viewer 470 px while this one assumed 338, and the model covered the card */
+    :root { --mv-view-real: var(--mv-view-h); }
+    .mv-body .mv-sel { top: calc(var(--bar) + env(safe-area-inset-top, 0px) + var(--mv-view-real)); }
+    .mv-body .parts button { scroll-margin-top: calc(var(--bar) + var(--mv-view-real) + 200px); scroll-margin-bottom: 40px; }
   }
   @media (max-width: 760px) {
-    .mv-body .view { height: 100%; }
+    /* the pinned model is short: its three switch rows become two compact ones, and the pinned card is a compact strip */
+    .mv-body .hud.tr { left: 8px; right: 8px; top: 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .mv-body .hud.tr .mode button { min-height: 34px; padding: 0 9px; font-size: 10.5px; }
+    .mv-body .mv-sel { padding: 12px 14px 12px; gap: 6px; min-height: 0; }
+    .mv-body .mv-sel #sel-t { font-size: 24px; }
+    .mv-body .mv-sel p { font-size: 13px; line-height: 1.5; }
+    .mv-body .panel-scroll { padding-top: 0; }
+  }
+  @media (max-width: 760px) {
+    .mv-body .view { height: 100%; display: flex; flex-direction: column; }
+    /* score loop r6: the viewer holds its pinned height (it was min-height 470 px, taller than the 40svh the card was placed under);
+       the card is tall enough for its title and first lines, and scrolls inside when a long description would push the list off */
+    :root { --mv-view-h: clamp(330px, 52svh, 470px); }
+    .mv-body .viewer { min-height: 0; }
+    .mv-body .mv-sel { max-height: max(120px, calc(100svh - var(--bar) - env(safe-area-inset-top, 0px) - var(--mv-view-real) - 120px)); overflow-y: auto; }
     .hud.tr { gap: 6px; }
+    /* score loop r5: the body, lens and view controls sat over the model and hid part of the camera at 320 px. They make a bar
+       above the canvas here, as the studio does, and the model takes what is left (models.ts sizes it from the canvas). */
+    .mv-body .hud.tr { position: static; order: -1; flex: none; flex-direction: row; flex-wrap: wrap; align-items: stretch; justify-content: center; padding: 8px 10px; background: #000; border-bottom: 1px solid var(--line); }
+    .mv-body .hud.tr .mv-lens { order: 3; flex: 1 1 100%; max-width: none; justify-content: center; }
+    .mv-body .view canvas { position: static; flex: 1 1 0; min-height: 0; height: auto; }
   }
 </style>
 </head>
 <body class="mv-body">
 <header class="topbar">
-  <a class="brand" href="./index.html" data-return-view aria-label="Photon to Photo, the camera">
+  <a class="brand" href="./index.html?start=1" aria-label="Photon to Photo, the opening">
     <span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>
     <span class="brand-t">Photon to Photo</span>
   </a>
@@ -62,7 +112,9 @@
     <span aria-hidden="true"></span>Menu
   </button>
 </header>
-<div class="body">
+<noscript><style>.mv-veil{display:none}</style><main class="body" style="padding:24px 16px"><h1 style="margin:0 0 12px;font-size:clamp(24px,7vw,36px);line-height:1.1">The models need JavaScript</h1><p>JavaScript is off or blocked in this browser, so the 3D kit cannot start. Turn it on and reload. <a href="./index.html">Back to the opening</a></p></main></noscript>
+<main class="body">
+  <h1 class="sr-only">Camera models</h1>
   <section class="viewer" aria-label="Camera model">
     <div class="view" id="view">
       <canvas id="gl" aria-label="Camera and lens. Drag to rotate, pinch or scroll to zoom, tap a part to select it."></canvas>
@@ -82,6 +134,7 @@
         <div class="hud-btns"><button type="button" class="btn" id="reset">Reset view</button></div>
         <span class="backend-chip" id="backend"><span class="dot2"></span><span>…</span></span>
       </div>
+      <div class="mv-label" id="mv-label" hidden aria-hidden="true"><b></b><i></i><span></span></div>
       <div class="mv-veil" id="veil"><p id="veil-msg" role="status">Loading the model</p><button type="button" class="btn" id="model-retry">Retry</button></div>
     </div>
   </section>
@@ -89,8 +142,9 @@
     <div class="panel-scroll">
       <div class="card mv-sel" id="sel">
         <span class="k">Selected part</span>
-        <h3 id="sel-t">Nothing yet</h3>
+        <h2 id="sel-t">Select a part</h2>
         <p id="sel-d" class="none">Tap any part of the camera or lens, or pick one from the list. Inside parts switch the view to the cutaway.</p>
+        <p id="sel-vis" class="mv-vis" hidden></p>
       </div>
       <div>
         <div class="parts-head"><span class="eyebrow" id="parts-k">Parts</span><button type="button" class="btn" id="clear" disabled>Clear</button></div>
@@ -104,7 +158,7 @@
       <p class="intro" id="facts"></p>
     </div>
   </aside>
-</div>
+</main>
 <script type="module" src="/src/app/models.ts"></script>
 </body>
 </html>

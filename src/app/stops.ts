@@ -12,4 +12,14 @@ export const THIRD_STOP_SHUTTER = [
   1 / 40, 1 / 30, 1 / 25, 1 / 20, 1 / 15, 1 / 13, 1 / 10, 1 / 8, 1 / 6, 1 / 5, 1 / 4, 0.3, 0.4, 0.5, 0.6, 0.8,
   1, 1.3, 1.6, 2, 2.5, 3.2, 4, 5, 6, 8, 10, 13, 15, 20, 25, 30,
 ];
-export const THIRD_STOP_ISO = [100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 5000, 6400, 8000, 10000, 12800, 16000, 20000, 25600, 32000, 40000, 51200];
+export const THIRD_STOP_ISO = [64, 80, 100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 5000, 6400, 8000, 10000, 12800, 16000, 20000, 25600, 32000, 40000, 51200];
+
+/** "ISO 64", or "ISO 32,000 · Hi (expanded)" above the body's native range (D850 and Z8: native ISO 64-25,600,
+ *  data/d850.json and data/z8.json sensor.isoRange), "Lo (expanded)" below it. */
+export function isoLabel(iso: number, range?: { nativeMin: number; nativeMax: number }): string {
+  const base = `ISO ${Math.round(iso).toLocaleString('en-US')}`;
+  if (!range) return base;
+  if (iso > range.nativeMax * 1.001) return `${base} · Hi (expanded)`;
+  if (iso < range.nativeMin * 0.999) return `${base} · Lo (expanded)`;
+  return base;
+}

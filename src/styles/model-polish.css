@@ -35,6 +35,6 @@
   .workspace.viewport-studio #model-tools #hud-switches { width: auto; flex: 0 0 auto; }
   .workspace.viewport-studio:not(.rig-detail)[data-model-view="outside"] #model-tools .model-gestures {
     display: block; order: 2; flex: 0 0 100%; margin: 0; text-align: center;
-    color: #c4d1dc; font: 10px/1.35 var(--sans); letter-spacing: 0;
+    color: #c4d1dc; font: 11px/1.35 var(--sans); letter-spacing: 0;
   }
 }

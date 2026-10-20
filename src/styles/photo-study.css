@@ -7,18 +7,18 @@
 .rp-heading-text { min-width: 0; }
 .rp-navigation { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
 .rp-navigation .btn { width: 36px; min-height: 36px; padding: 0; font-size: 17px; }
-.rp-count { color: var(--muted); font: 10px/1 var(--mono); white-space: nowrap; }
-#rp-card .eyebrow { margin: 0 0 5px; font-size: 9px; letter-spacing: .13em; }
+.rp-count { color: var(--muted); font: 11px/1 var(--mono); white-space: nowrap; }
+#rp-card .eyebrow { margin: 0 0 5px; font-size: 11px; letter-spacing: .13em; }
 #rp-card h2 { margin: 0; font-size: clamp(20px, 2.4vw, 32px); line-height: 1.12; font-weight: 500; }
 #rp-card .rp-compare { min-height: 0; max-width: none; grid-template-columns: minmax(0, 1fr) minmax(280px, 330px); gap: 22px; border: 0; }
 #rp-card .rp-photo { min-height: 0; height: 100%; border: 0; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
 .rp-image-frame { position: relative; min-height: 0; flex: 1; display: grid; place-items: center; background: #050707; border: 1px solid #2b3433; overflow: hidden; }
 #rp-card #rp-img { width: 100%; height: 100%; min-height: 0; max-height: 100%; aspect-ratio: auto; object-fit: contain; background: transparent; }
-#rp-card #rp-credit { padding: 0; border: 0; text-transform: none; letter-spacing: 0; font: 10px/1.35 var(--sans); color: var(--muted); }
+#rp-card #rp-credit { padding: 0; border: 0; text-transform: none; letter-spacing: 0; font: 11px/1.35 var(--sans); color: var(--muted); }
 .rp-image-status { position: absolute; margin: 0; padding: 12px; background: #080d10df; text-align: center; font-size: 12px; }
 .rp-image-frame > .btn { position: absolute; top: calc(50% + 30px); }
 .rp-detail-controls { display: flex; gap: 5px; flex-shrink: 0; }
-.rp-detail-controls .btn { flex: 1; min-width: 0; min-height: 32px; padding: 4px 6px; font-size: 10px; line-height: 1.2; }
+.rp-detail-controls .btn { flex: 1; min-width: 0; min-height: 32px; padding: 4px 6px; font-size: 11px; line-height: 1.2; }
 .rp-detail-controls .btn[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); background: var(--surface); }
 .rp-detail-controls .btn:disabled { opacity: .5; }
 .rp-detail-crop { position: absolute; inset: 0; overflow: hidden; background: #050707; }
@@ -28,7 +28,7 @@
 .rp-detail-map { position: absolute; right: 8px; top: 8px; width: clamp(54px, 12%, 100px); border: 1px solid #dcece7; box-shadow: 0 2px 12px #000b; }
 #rp-card .rp-detail-map img { display: block; width: 100%; height: auto; aspect-ratio: auto; object-fit: contain; }
 .rp-detail-map span { position: absolute; box-sizing: border-box; border: 2px solid #defce8; background: #a8e7c518; }
-.rp-detail-badge { position: absolute; left: 8px; bottom: 8px; padding: 4px 6px; background: #07110ee6; color: #d7e6e0; font: 9px/1.3 var(--mono); }
+.rp-detail-badge { position: absolute; left: 8px; bottom: 8px; padding: 4px 6px; background: #07110ee6; color: #d7e6e0; font: 11px/1.3 var(--mono); }
 .rp-note-wrap { min-width: 0; min-height: 0; }
 .rp-read-explanation { display: none; }
 .rp-explanation-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100svh - 48px); box-sizing: border-box; margin: auto; padding: 22px; border: 1px solid #718f84; background: #101a18; color: #e4eee9; overflow: auto; }
@@ -39,13 +39,15 @@
 .rp-explanation-dialog p { margin: 0; font: 14px/1.6 var(--sans); }
 .rp-explanation-dialog .btn { min-height: 40px; }
 #rp-card .rp-side { grid-column: auto; padding: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; overflow: auto; scrollbar-width: thin; }
-#rp-card .rp-settings { font-size: 10px; line-height: 1.5; letter-spacing: .025em; color: var(--muted); }
+#rp-card .rp-settings { font-size: 11px; line-height: 1.5; letter-spacing: .025em; color: var(--muted); }
 .rp-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .rp-facts div { min-width: 0; }
-.rp-facts dt { color: var(--muted); font: 9px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+.rp-facts dt { color: var(--muted); font: 10.5px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; }
 .rp-facts dd { margin: 5px 0 4px; color: var(--ink); font: 500 clamp(13px, 1.25vw, 17px)/1.25 var(--mono); overflow-wrap: anywhere; }
-.rp-facts span { display: block; color: var(--muted); font: 10px/1.4 var(--sans); white-space: normal; }
-.rp-insight-title { margin: 2px 0 -7px; color: var(--accent); font: 10px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+.rp-facts span { display: block; color: var(--muted); font: 11px/1.4 var(--sans); white-space: normal; }
+.rp-match-why { margin: 0; color: var(--muted); font: 12px/1.45 var(--sans); }
+.rp-match-why[hidden] { display: none; }
+.rp-insight-title { margin: 2px 0 -7px; color: var(--accent); font: 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .1em; }
 #rp-card .rp-note { font-size: 13px; line-height: 1.55; margin: 0; }
 .rp-actions { display: grid; grid-template-columns: 1fr; gap: 7px; }
 .rp-actions .btn { min-height: 40px; width: 100%; }
@@ -53,8 +55,8 @@
 #rp-card .rp-picks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(110px, 1fr); grid-template-columns: none; gap: 8px; padding: 0 0 4px; margin: 0; max-width: none; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
 #rp-card .rp-pick { display: grid; grid-template-columns: 58px minmax(0, 1fr); grid-template-rows: 1fr 1fr; align-items: center; gap: 0 7px; padding: 4px; border-color: var(--line); }
 #rp-card .rp-pick img { grid-row: 1 / 3; width: 58px; height: 48px; aspect-ratio: auto; margin: 0; object-fit: cover; }
-#rp-card .rp-pick-t { padding: 0; font-size: 10px; line-height: 1.15; align-self: end; }
-#rp-card .rp-pick-k { padding: 0; font-size: 9px; letter-spacing: 0; align-self: start; }
+#rp-card .rp-pick-t { padding: 0; font-size: 11px; line-height: 1.15; align-self: end; }
+#rp-card .rp-pick-k { padding: 0; font-size: 11px; letter-spacing: 0; align-self: start; }
 #rp-card .rp-pick[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); }
 @media (max-width: 1050px) { #rp-card .rp-pick { grid-template-columns: 1fr; gap: 3px; } #rp-card .rp-pick img { width: 100%; grid-row: auto; height: 50px; } #rp-card .rp-pick-t, #rp-card .rp-pick-k { display: none; } }
 @media (min-width: 761px) and (max-height: 680px) {
@@ -64,7 +66,7 @@
   .rp-facts span { display: none; }
   #rp-card .rp-note { max-height: 78px; overflow: auto; font-size: 12px; line-height: 1.5; }
   .rp-actions { grid-template-columns: 1fr 1fr; }
-  .rp-actions .btn { min-height: 38px; padding: 5px; font-size: 10px; }
+  .rp-actions .btn { min-height: 38px; padding: 5px; font-size: 11px; }
 }
 @media (max-width: 760px) {
   #rp-card { gap: 8px; padding: 10px 12px; }
@@ -72,23 +74,26 @@
   #rp-card .sc-head { gap: 10px; }
   .rp-navigation { gap: 5px; }
   .rp-navigation .btn { width: 30px; min-height: 34px; }
-  .rp-count { font-size: 9px; }
-  #rp-card .eyebrow { font-size: 8px; margin-bottom: 4px; }
+  .rp-count { font-size: 11px; }
+  #rp-card .eyebrow { font-size: 11px; letter-spacing: .08em; margin-bottom: 4px; }
   #rp-card .rp-compare { grid-template-columns: 1fr; grid-template-rows: minmax(130px, 1fr) auto; gap: 9px; }
   #rp-card .rp-photo { gap: 3px; }
-  #rp-card #rp-credit { font-size: 8px; max-height: 22px; overflow: auto; }
+  #rp-card #rp-credit { font-size: 11px; line-height: 1.35; }
   #rp-card .rp-side { gap: 7px; overflow: visible; }
-  #rp-card .rp-settings { font-size: 9px; }
+  #rp-card .rp-settings { font-size: 11px; }
   .rp-facts { padding: 7px 0; gap: 8px; }
   .rp-facts dd { font-size: 15px; margin: 3px 0 0; }
   .rp-facts span { display: none; }
   .rp-insight-title { display: none; }
   #rp-card .rp-note { font-size: 11px; line-height: 1.4; max-height: 47px; overflow: auto; }
-  .rp-note-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 78px; align-items: center; gap: 8px; }
-  #rp-card .rp-note-wrap .rp-note { overflow: hidden; }
-  .rp-read-explanation { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 3px 5px; font-size: 9px; line-height: 1.2; color: var(--accent); }
+  .rp-note-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 96px; align-items: center; gap: 8px; }
+  /* score loop r6: the note was cut mid-sentence ("helps isolate this small") with no sign that more existed; it now ends in an
+     ellipsis after three lines (two on a short phone), and Read explanation beside it opens the whole text */
+  #rp-card .rp-note-wrap .rp-note { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
+  .rp-read-explanation { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 3px 8px; font-size: 11px; line-height: 1.2; color: var(--accent); white-space: normal; text-align: center; position: relative; }
+  .rp-read-explanation::before { content: ""; position: absolute; inset: -6px 0; }
   .rp-actions { grid-template-columns: 1fr 1fr; }
-  .rp-actions .btn { min-height: 38px; padding: 5px; font-size: 10px; }
+  .rp-actions .btn { min-height: 38px; padding: 5px; font-size: 11px; }
   #rp-card .rp-picks { gap: 5px; grid-auto-columns: minmax(48px, 1fr); }
   #rp-card .rp-pick { display: block; padding: 2px; }
   #rp-card .rp-pick img { height: 40px; }
@@ -97,6 +102,25 @@
   #rp-card h2 { font-size: 18px; }
   #rp-card .eyebrow, #rp-card #rp-credit, #rp-card .rp-settings { display: none; }
   #rp-card .rp-note { max-height: 31px; }
+  #rp-card .rp-note-wrap .rp-note { -webkit-line-clamp: 2; line-clamp: 2; }
   #rp-card .rp-compare { grid-template-rows: minmax(90px, 1fr) auto; }
   #rp-card .rp-pick img { height: 30px; }
 }
+
+/* Wide screens (review loop 10/11/2026, E-11): a title beside a 58 px thumbnail in a 110 px column broke into four
+   lines ("Sheep in / the / mountain / valley"). The columns start at 168 px, a title keeps to two lines, and the
+   lens and f-number stay on one. */
+@media (min-width: 1051px) {
+  #rp-card .rp-picks { grid-auto-columns: minmax(168px, 1fr); }
+  #rp-card .rp-pick-t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  #rp-card .rp-pick-k { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #rp-card .rp-pick { text-align: left; }
+}
+
+/* Score loop r2 (ux, 10/11/2026). The strip of photographs scrolls sideways when it is wider than the card: the edge
+   that has more fades out, so the cut-off thumbnail reads as "more this way" (examples.ts sets the classes). */
+#rp-card .rp-picks.more-after { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 72px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 72px), transparent); }
+#rp-card .rp-picks.more-before { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 72px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 72px), transparent); }
+#rp-card .rp-picks.more-before.more-after { -webkit-mask-image: linear-gradient(to right, transparent, #000 72px, #000 calc(100% - 72px), transparent); mask-image: linear-gradient(to right, transparent, #000 72px, #000 calc(100% - 72px), transparent); }
+/* The photograph's own Share button: a word, beside the arrows' glyph buttons. */
+.rp-navigation .btn.rp-share { width: auto; padding: 0 12px; font-size: 11px; }

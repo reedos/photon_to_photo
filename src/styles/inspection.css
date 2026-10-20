@@ -19,10 +19,23 @@
 .inspection-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .inspection-here { color: var(--ink); }
 .inspection-note { margin-left: auto; font-size: 11px; color: var(--muted); }
+.inspection-why { display: none; }
 @media (max-width: 760px) {
   .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .step { min-height: 48px; padding: 12px 6px; }
   .step .t, .step.deep .t { font-size: 14px; }
   .inspection-context { padding: 7px 12px; gap: 4px 8px; font-size: 11px; }
   .inspection-note { display: none; }
+  /* score loop r6: the level's reason folds behind "Why?" on the deep levels, so the model keeps the rows it took (about 60 px) */
+  .inspection-context:not([hidden]) { min-height: 34px; padding-block: 2px; }
+  .inspection-context:not([hidden]) .inspection-back { flex: none; white-space: nowrap; }
+  .inspection-why { display: inline-flex; align-items: center; position: relative; flex: none; margin-left: auto; min-height: 28px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 3px; background: transparent; color: var(--accent); font: 600 11px var(--mono); letter-spacing: .04em; cursor: pointer; }
+  .inspection-why::before { content: ""; position: absolute; inset: -8px 0; }
+  .inspection-why[aria-expanded="true"] { background: #e6ba8222; }
+  .inspection-why:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .inspection-context:not([hidden]) + .level-why { display: none; }
+  body.why-open .inspection-context:not([hidden]) + .level-why { display: block; }
 }
+.chip[data-evidence-note] { cursor: help; }
+/* where the reason is not shown at all (a landscape phone), the toggle has nothing to open */
+@media (max-height: 500px) and (orientation: landscape) { .inspection-why { display: none; } }

@@ -1,7 +1,9 @@
 {
  "lens": "z35",
  "clipped": [],
- "notes": [],
+ "notes": [
+  "element 1 stands 0.5 mm past the barrel front: the prescription (data/lenses) puts its front vertex there and no source found places the real filter-ring face; kept as prescribed"
+ ],
  "glb": "public/models/lenses/z35.glb",
  "mount": "nikonZ",
  "flangeMm": 16.0,

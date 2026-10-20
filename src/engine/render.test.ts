@@ -126,6 +126,35 @@ describe('Finding S2 -- white balance and the color-matrix fit convert energy to
   );
 });
 
+// Score loop r4 (10/12/2026): white balance made a gray card neutral at the wb stage, and the color matrix (trained on
+// the scene-lit XYZ, no adaptation to the display white) put the light's color back: 126,104,75 at 4000 K.
+describe('the color matrix keeps a gray card neutral at any scene color temperature', () => {
+  for (const cct of [4000, 5500, 9000]) {
+    it(`a spectrally flat 0.18 patch is R = G = B within 1% in the wb, ccm and tone stages at ${cct} K`, () => {
+      const light = daylightAt(cct);
+      const savedBench = SCENES.bench;
+      SCENES.bench = () => ({
+        billboards: [flatBillboard('neutral', [0, 0, 3000], 20000, 20000, () => 0.18)],
+        illuminant: { spectrum: light, lux: 1000 },
+      });
+      try {
+        const model = compute(baseScenario({ lens: 'n50', cct, lux: 1000, fno: 4, shutter: 1 / 125, iso: 100 }));
+        const result = renderImage(model, { width: 80, height: 54, seed: 42 });
+        const idx = (27 * 80 + 40) * 3;
+        for (const stage of ['wb', 'ccm', 'tone']) {
+          const px = [result.stages[stage][idx], result.stages[stage][idx + 1], result.stages[stage][idx + 2]];
+          for (let k = 0; k < 3; k++) expect(Math.abs(px[k] / px[1] - 1), `${stage} channel ${k} at ${cct} K`).toBeLessThan(0.01);
+        }
+        const o = (27 * 80 + 40) * 4;
+        expect(Math.abs(result.rgba[o] - result.rgba[o + 1])).toBeLessThanOrEqual(1);
+        expect(Math.abs(result.rgba[o + 2] - result.rgba[o + 1])).toBeLessThanOrEqual(1);
+      } finally {
+        SCENES.bench = savedBench;
+      }
+    });
+  }
+});
+
 describe('Finding S3 -- binned raw pixels must include the mean dark charge', () => {
   it("a 30 s, zero-lux dark frame's binned raw mean matches the loupe's own per-pixel electron mean, both " +
     'reflecting darkCurrentEPerS * exposureS (EMVA 1288 release 3.1, sec. 3.1, eq. (19))',

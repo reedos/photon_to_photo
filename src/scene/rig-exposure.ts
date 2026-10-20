@@ -70,8 +70,8 @@ export function createExposure(d: ExposureDeps) {
   hud.innerHTML = `
     <div class="rx-head">
       <button type="button" class="btn rx-fire" title="Fire the shutter (F)">Fire shutter <kbd>F</kbd></button>
-      <label class="rx-control"><span>Drag to focus <output class="rx-focus-value"></output></span><input class="rx-focus" type="range" min="0" max="${FOCUS_STEPS - 1}" step="1" aria-label="Focus distance"></label>
-      <label class="rx-control"><span>Adjust aperture <output class="rx-aperture-value"></output></span><input class="rx-aperture" type="range" min="0" step="1" aria-label="Aperture"></label>
+      <label class="rx-control"><span>Drag to focus <output class="rx-focus-value" aria-hidden="true"></output></span><input class="rx-focus" type="range" min="0" max="${FOCUS_STEPS - 1}" step="1" aria-label="Focus distance"></label>
+      <label class="rx-control"><span>Adjust aperture <output class="rx-aperture-value" aria-hidden="true"></output></span><input class="rx-aperture" type="range" min="0" step="1" aria-label="Aperture"></label>
     </div>
     <span class="rx-k">Exposure</span>
     <div class="rx-row rx-pprow"><span>Photons per pixel <small>18% gray</small></span><b class="rx-pp">0</b></div>
@@ -82,7 +82,7 @@ export function createExposure(d: ExposureDeps) {
     <div class="rx-tl" aria-hidden="true" hidden></div>
     <div class="rx-playback" hidden>
       <div class="rx-playback-head"><button type="button" class="btn rx-pause">Pause</button><span class="rx-phase"></span></div>
-      <label class="rx-scrub-label">Inspect the exposure<input class="rx-scrub" type="range" min="0" max="1000" step="1" value="0" aria-label="Exposure playback position"></label>
+      <label class="rx-scrub-label">Inspect the exposure<input class="rx-scrub" type="range" min="0" max="1000" step="1" value="0" aria-label="Exposure playback position" aria-valuetext="Not started, fire the shutter first"></label>
       <span class="rx-time"></span>
     </div>
     <p class="rx-status" role="status" aria-live="polite"></p>
@@ -173,8 +173,11 @@ export function createExposure(d: ExposureDeps) {
     if (!shotModel) { tl.hidden = true; return; }
     tl.hidden = false;
     const total = segs.reduce((a, x) => a + x.realMs * x.factor, 0) || 1;
-    const label = (x: Seg) => (x.name === 'release' ? 'Mirror up' : x.name === 'return' ? 'Mirror down' : `Open ${fmtShutterS(m.scenario.shutter)}`);
-    const html = segs.map((x) => `<span>${label(x)}</span>`).join('') + '<i></i>';
+    // Score loop r4: a short segment cannot hold "Mirror down" (it showed "RROR DO"), so each label has shorter forms that
+    // are picked by the segment's width below; the full words stay in the tooltip and the accessible name.
+    const labels = (x: Seg): string[] => x.name === 'release' ? ['Mirror up', 'Up', '↑'] : x.name === 'return' ? ['Mirror down', 'Down', '↓']
+      : [`Open ${fmtShutterS(m.scenario.shutter)}`, 'Open', ''];
+    const html = segs.map((x) => `<span title="${labels(x)[0]}" aria-label="${labels(x)[0]}">${labels(x)[0]}</span>`).join('') + '<i></i>';
     const plan = `${segs.length}:${total.toFixed(0)}:${m.scenario.shutter}`;
     if (tlPlan !== plan) { tl.innerHTML = html; tlPlan = plan; }
     // Segment widths and the native slider share the same visual-time coordinate.
@@ -186,7 +189,13 @@ export function createExposure(d: ExposureDeps) {
       const v = x.realMs * x.factor;
       const on = elapsedVis >= acc && elapsedVis < acc + v;
       const el = spans[i] as HTMLElement | undefined;
-      if (el) { el.className = on ? 'on' : ''; el.style.flex = String(v) + ' 1 0'; }
+      if (el) {
+        el.className = on ? 'on' : ''; el.style.flex = String(v) + ' 1 0';
+        // the room the segment gets, against about 6.6 px per mono character at 10.5 px plus its padding
+        const room = tl.clientWidth ? tl.clientWidth * v / total - 8 : Infinity, forms = labels(x);
+        const text = forms.find((f) => f.length * 6.6 <= room) ?? forms.at(-1)!;
+        if (el.textContent !== text) el.textContent = text;
+      }
       acc += v;
     });
   }
@@ -213,22 +222,58 @@ export function createExposure(d: ExposureDeps) {
 
   // ---- the mechanism nodes -------------------------------------------------------------------------------------
   let pivot: THREE.Group | null = null;
+  let subPivot: THREE.Group | null = null;
   let mirrorUp = 0;             // radians the hinge turns to lift the mirror (sign found from the model's geometry)
+  let subFold = 0;              // radians the sub-mirror folds against the main mirror's back
+  const hingeRest = new THREE.Vector3(), hingeUp = new THREE.Vector3();
   const base = new Map<string, THREE.Vector3>();
+  let blades: { front: THREE.Object3D[]; rear: THREE.Object3D[]; base: Map<THREE.Object3D, number> } | null = null;
   let scan: THREE.Mesh | null = null;
   let readScan: THREE.Mesh | null = null;
 
+  /** The mirror's pose for a lift fraction s (0 down, 1 up): see mirrorPhases. */
+  function poseMirror(s: number) {
+    if (!pivot) return;
+    const p = mirrorPhases(s);
+    pivot.rotation.x = mirrorUp * p.lift;
+    pivot.position.set(hingeRest.x, hingeRest.y + (hingeUp.y - hingeRest.y) * p.rise, hingeRest.z + (hingeUp.z - hingeRest.z) * p.back);
+    if (subPivot) subPivot.rotation.x = subFold * p.fold;
+  }
+
   function rigMechanism() {
     const mirror = d.node('mirror');
-    if (mirror && !pivot) {
-      // hinge the main mirror (and the sub-mirror it carries) at its top edge
+    const hinge = d.node('mirrorHinge'), up = d.node('mirrorHingeUp'), subHinge = d.node('subMirrorHinge');
+    if (mirror && !pivot && hinge && up && mirror.parent) {
+      // The body exports its hinges (blender/dslr_v2.py mirror_hinges, score loop r1, 10/11/2026): the mirror turns
+      // liftDeg about its top edge while that hinge rides to mirrorHingeUp, so the raised mirror lies flat under the
+      // focusing screen, clear of the throat and the light cone; the sub-mirror first folds foldDeg about its own hinge
+      // against the main mirror's back.
+      const parent = mirror.parent;
+      pivot = new THREE.Group();
+      parent.add(pivot);
+      pivot.position.copy(parent.worldToLocal(hinge.getWorldPosition(new THREE.Vector3())));
+      hingeRest.copy(pivot.position);
+      hingeUp.copy(parent.worldToLocal(up.getWorldPosition(new THREE.Vector3())));
+      pivot.updateMatrixWorld(true);
+      pivot.attach(mirror);
+      mirrorUp = THREE.MathUtils.degToRad((hinge.userData.liftDeg as number) ?? 45);
+      const sub = d.node('subMirror');
+      if (sub && subHinge) {
+        subPivot = new THREE.Group();
+        parent.add(subPivot);
+        subPivot.position.copy(parent.worldToLocal(subHinge.getWorldPosition(new THREE.Vector3())));
+        subPivot.updateMatrixWorld(true);
+        subPivot.attach(sub);
+        pivot.attach(subPivot);
+        subFold = THREE.MathUtils.degToRad((subHinge.userData.foldDeg as number) ?? 0);
+      } else if (sub) pivot.attach(sub);
+    } else if (mirror && !pivot) {
+      // a body without hinge markers: hinge the main mirror (and the sub-mirror it carries) at its top edge
       const box = new THREE.Box3().setFromObject(mirror);
       pivot = new THREE.Group();
-      pivot.position.set(0, box.max.y, (box.min.z + box.max.z) / 2 + (box.max.z - box.min.z) / 2 * 0);
-      // the top edge: the vertex row with the largest y sits at one z end of the box
-      const topZ = sampleTopZ(mirror);
-      pivot.position.z = topZ;
+      pivot.position.set(0, box.max.y, sampleTopZ(mirror));
       mirror.parent!.add(pivot);
+      hingeRest.copy(pivot.position); hingeUp.copy(pivot.position);
       pivot.attach(mirror);
       const sub = d.node('subMirror');
       if (sub) pivot.attach(sub);
@@ -242,6 +287,17 @@ export function createExposure(d: ExposureDeps) {
     for (const n of ['shutterCurtainFront', 'shutterCurtainRear']) {
       const o = d.node(n);
       if (o && !base.has(n)) base.set(n, o.position.clone());
+    }
+    if (!blades) {
+      // curtains exported blade by blade (dslr_v2.py, score loop r1) fold into a stack where they wait
+      const kids = (n: string) => (d.node(n)?.children ?? []).filter((c) => (c as THREE.Mesh).isMesh);
+      const front = kids('shutterCurtainFront'), rear = kids('shutterCurtainRear');
+      if (front.length > 1 && rear.length > 1) {
+        const bottom = (o: THREE.Object3D) => new THREE.Box3().setFromObject(o).min.y;
+        const byBottom = (a: THREE.Object3D, b: THREE.Object3D) => bottom(a) - bottom(b);
+        blades = { front: [...front].sort(byBottom), rear: [...rear].sort(byBottom), base: new Map() };
+        for (const b of [...front, ...rear]) blades.base.set(b, b.position.y);
+      }
     }
     const px = d.node('pixelArray');
     if (px && !scan) {
@@ -288,6 +344,28 @@ export function createExposure(d: ExposureDeps) {
     if (!f || !r || !px) return;
     const b = new THREE.Box3().setFromObject(px);
     const h = b.max.y - b.min.y;
+    if (blades) {
+      // Blade by blade: deployed, the blades span the gate edge to edge; waiting, they fold into a stack at the
+      // gate's edge with the spacing the rear curtain has at rest. The front curtain's top blade and the rear
+      // curtain's bottom blade carry the leading edge across the gate at the same speed as before (h per travel),
+      // and the others stop when they reach their place in the stack (front) or in the deployed curtain (rear).
+      const { front, rear } = blades;
+      const height = (o: THREE.Object3D) => { const bx = new THREE.Box3().setFromObject(o); return bx.max.y - bx.min.y; };
+      const restBottom = (o: THREE.Object3D) => new THREE.Box3().setFromObject(o).min.y - (o.position.y - blades!.base.get(o)!);
+      const place = (o: THREE.Object3D, bottom: number) => { o.position.y = blades!.base.get(o)! + bottom - restBottom(o); };
+      const n = front.length, bh = height(front[0]);
+      const pitch = (h - bh) / (n - 1);
+      const stack = (restBottom(rear[rear.length - 1]) - restBottom(rear[0])) / (rear.length - 1);
+      front.forEach((o, i) => {
+        const deployed = b.min.y + i * pitch, stowed = b.min.y - bh - (n - 1 - i) * stack;
+        place(o, Math.max(stowed, deployed - frontOpen * h));
+      });
+      rear.forEach((o, i) => {
+        const deployed = b.min.y + i * (h - height(o)) / (rear.length - 1), stowed = b.max.y + i * stack;
+        place(o, Math.max(deployed, stowed - rearClosed * h));
+      });
+      return;
+    }
     const fb = base.get('shutterCurtainFront')!, rb = base.get('shutterCurtainRear')!;
     const fCenter = new THREE.Box3().setFromObject(f).getCenter(new THREE.Vector3()).y - (f.position.y - fb.y);
     const rCenter = new THREE.Box3().setFromObject(r).getCenter(new THREE.Vector3()).y - (r.position.y - rb.y);
@@ -345,7 +423,7 @@ export function createExposure(d: ExposureDeps) {
   }
 
   function restoreMechanism() {
-    if (pivot) pivot.rotation.x = heldUp ? mirrorUp : 0;
+    poseMirror(heldUp ? 1 : 0);
     if (base.size) curtainPose(0, 0);
     if (scan) scan.visible = false;
     if (readScan) readScan.visible = false;
@@ -534,12 +612,12 @@ export function createExposure(d: ExposureDeps) {
         ...(seg.name === 'exposure' ? ['1 dot ≈ ' + fmtPow10(dotPhotons) + ' photons'] : [])];
       d.badge.show(badgeJoin(...parts).toUpperCase());
       if (seg.name === 'release') {
-        if (pivot) pivot.rotation.x = mirrorUp * smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.8)));
+        poseMirror(smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.8))));
         setMirror(false);
         curtainPose(0, 0);
         shownFraction = 0;
       } else if (seg.name === 'exposure') {
-        if (pivot) pivot.rotation.x = mirrorUp;
+        poseMirror(1);
         setMirror(true);
         const shutterMs = m.scenario.shutter * 1000;
         if (dslr) {
@@ -563,7 +641,7 @@ export function createExposure(d: ExposureDeps) {
         shownFraction = 1;
         setMirror(false);
         if (dslr) curtainPose(1, 1);
-        if (pivot) pivot.rotation.x = mirrorUp * (1 - smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.6))));
+        poseMirror(1 - smooth(Math.min(1, local / (RELEASE_LAG_MS * 0.6))));
       }
     }
     renderPhotons();
@@ -571,20 +649,22 @@ export function createExposure(d: ExposureDeps) {
     readout(m);
   }
 
-  function tick(now: number, _dt: number) {
+  /** True when it moved the mechanism or the photons this frame (the stage draws on demand, score loop r2). */
+  function tick(now: number, _dt: number): boolean {
     syncModel();
     const m = d.model();
-    if (!m) return;
+    if (!m) return false;
     if (running && shotModel) {
-      if (paused) return; // seek/pause already rendered the frozen frame; keep all buffers untouched
+      if (paused) return false; // seek/pause already rendered the frozen frame; keep all buffers untouched
       if (!paused) elapsedVis = Math.min(totalVisualMs(), anchorElapsed + Math.max(0, now - anchorNow));
       const finished = !paused && elapsedVis >= totalVisualMs();
       if (finished) running = false;
       renderFrame();
-      if (finished) { announce('Shot complete. Replay or drag the timeline to inspect.'); d.afterFire?.(); }
-    } else {
-      readout(m);
+      if (finished) { announce('Shot complete. Fire again, or drag the timeline to inspect.'); d.afterFire?.(); }
+      return true;
     }
+    readout(m);
+    return false;
   }
 
   let paintedReadout: { model: Model; fraction: number; running: boolean; enabled: boolean; body: string; note: { key: string; text: string } | null } | null = null;
@@ -613,11 +693,22 @@ export function createExposure(d: ExposureDeps) {
     q('.rx-k').textContent = `Exposure · ${fmtShutter(m.scenario.shutter)}`;
     q('.rx-pp').textContent = Math.round(pp).toLocaleString('en-US');
     q('.rx-all').textContent = sci(m.exposure.photonsMidGray * m.sensor.widthPx * m.sensor.heightPx * f);
-    const well = m.figs.fullWellE?.v as number | undefined;
-    const fill = well ? Math.min(1, (m.exposure.electronsMidGray * f) / well) : 0;
+    // Score loop r5 (10/14/2026): "full" is the lower of the full well and the ADC clip (model.exposure.usableE). The old figure
+    // was a share of the well only, so a patch past the ADC clip read "19% full, SNR 99" while the raw value sat at its maximum,
+    // and a patch 1,600x past the well read "100% full, SNR 250" (the PRNU ceiling). A clipped value has no meaningful SNR.
+    const usable = m.exposure.usableE;
+    const e = m.exposure.electronsMidGray * f;
+    const clipped = usable > 0 && e >= usable;
+    const fill = usable > 0 ? Math.min(1, e / usable) : 0;
     (q('.rx-well i') as HTMLElement).style.width = `${(fill * 100).toFixed(1)}%`;
-    q('.rx-wellk').textContent = well ? `Well ${(fill * 100).toFixed(fill < 0.1 ? 1 : 0)}% full` : 'Well';
-    q('.rx-snr').textContent = f >= 1 ? `signal to noise ${m.exposure.snrMidGray.toFixed(0)}` : '';
+    // Score-loop r1 (10/11/2026): the figure is the green-filter pixel's MEAN (model.exposure.electronsMidGray); the
+    // loupe's reference pixel is one sampled exposure of whichever filter sits at the sensor center. Name both.
+    const byAdc = m.exposure.limitedBy === 'adc';
+    q('.rx-wellk').textContent = usable > 0
+      ? (clipped ? (byAdc ? 'Clipped at the ADC' : 'Well full, clipped') : byAdc ? `${(fill * 100).toFixed(fill < 0.1 ? 1 : 0)}% of the ADC range` : `Well ${(fill * 100).toFixed(fill < 0.1 ? 1 : 0)}% full`)
+      : 'Well';
+    q('.rx-wellk').setAttribute('title', `A green pixel at 18% gray, on average. The raw value stops following the light at ${Math.round(usable).toLocaleString('en-US')} electrons at this ISO (${byAdc ? 'the ADC maximum, below the full well' : 'the full well'}).`);
+    q('.rx-snr').textContent = f >= 1 ? (clipped ? 'Signal to noise n/a (clipped)' : `Signal to noise ${m.exposure.snrMidGray.toFixed(0)}`) : '';
     // The moving-subject streak (shared contract with the scenes stream): hidden whenever there's no motion
     // reading yet, whether that's because the subject is off or because the scenes stream hasn't merged its own
     // edit to compute() (model.motion undefined) -- both read the same way to this panel (R3 brief, "code
@@ -647,7 +738,7 @@ export function createExposure(d: ExposureDeps) {
     if (running) return;
     rigMechanism();
     if (!pivot) return;
-    pivot.rotation.x = up ? mirrorUp : 0;
+    poseMirror(up ? 1 : 0);
     if (mirrorIsUp !== up) { mirrorIsUp = up; d.onMirror?.(up); }
   }
 
@@ -656,11 +747,19 @@ export function createExposure(d: ExposureDeps) {
     cancel();
     // Releasing a loaded body must not leave its mirror inside a stale, rotated hinge group.
     if (pivot) {
+      poseMirror(0);
       pivot.rotation.x = 0;
       const parent = pivot.parent;
+      if (subPivot) {
+        subPivot.rotation.x = 0;
+        if (parent) for (const child of [...subPivot.children]) parent.attach(child);
+        subPivot.removeFromParent(); subPivot = null;
+      }
       if (parent) for (const child of [...pivot.children]) parent.attach(child);
       pivot.removeFromParent(); pivot = null;
     }
+    if (blades) for (const [o, y] of blades.base) o.position.y = y;
+    blades = null;
     base.clear();
     if (readScan) { readScan.removeFromParent(); (readScan.material as THREE.Material).dispose(); readScan = null; }
     if (scan) { scan.removeFromParent(); scan.geometry.dispose(); (scan.material as THREE.Material).dispose(); scan = null; }
@@ -688,4 +787,14 @@ export function createExposure(d: ExposureDeps) {
 }
 
 function smooth(t: number) { return t * t * (3 - 2 * t); }
+
+/** The DSLR mirror's lift, staged over one fraction s (0 down, 1 up), each part eased: the sub-mirror folds flat
+ *  against the main mirror's back first (fold), the hinge rises (rise) and then rides back toward the shutter (back),
+ *  and the mirror turns from 45 degrees to flat (lift), so its front edge never passes the mirror box's front and its
+ *  rear edge comes over the folded shutter blades only once it is high enough to clear them. The staging is checked
+ *  against the exported body in src/scene/bodies/blender-glb.test.ts; going down plays it in reverse. */
+export function mirrorPhases(s: number): { fold: number; rise: number; back: number; lift: number } {
+  const k = (start: number, span: number) => smooth(Math.max(0, Math.min(1, (s - start) / span)));
+  return { fold: k(0, 0.3), rise: k(0.15, 0.45), back: k(0.2, 0.5), lift: k(0.3, 0.7) };
+}
 function fmtShutter(t: number) { return fmtShutterS(t); }

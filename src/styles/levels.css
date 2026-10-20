@@ -10,9 +10,9 @@
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-width: 0; }
 .lv-ctl-k { margin: 0 0 2px; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 .lv-ctl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0 12px; min-width: 0; cursor: pointer; }
-.lv-ctl-l { font: 500 11px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lv-ctl-l { font: 500 11px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); /* wraps instead of being cut: WCAG 1.4.12 text spacing at 320 px (score loop r4) */ min-width: 0; overflow-wrap: anywhere; }
 .lv-ctl-row output { font: 500 13px/1.3 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.lv-ctl-row input[type="range"] { grid-column: 1 / -1; height: 22px; }
+.lv-ctl-row input[type="range"] { grid-column: 1 / -1; height: 24px; } /* 24 px: the WCAG 2.5.8 target size at every width (review loop r1) */
 
 /* ---------- the loupe's way back: a breadcrumb like the camera's detail modes (.rig-crumb) ---------- */
 .lv-crumb { position: absolute; left: var(--gutter); top: 98px; display: flex; align-items: center; gap: 10px; margin: 0;
@@ -21,7 +21,7 @@
 .lv-crumb[hidden] { display: none; }
 .lv-crumb .lv-back { all: unset; cursor: pointer; color: var(--accent); padding: 8px 0; }
 .lv-crumb .lv-back:hover { color: var(--ink); }
-.lv-crumb .lv-back:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+.lv-crumb .lv-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .lv-crumb .lv-sep { color: var(--faint); }
 .lv-crumb .lv-here { color: var(--ink); white-space: nowrap; }
 
@@ -32,8 +32,13 @@
 .lv-read.lv-status { left: 50%; top: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); width: min(320px, calc(100% - 40px)); text-align: center; pointer-events: auto; }
 .lv-read .lv-ctl-k { margin: 0; }
 .lv-read-condition { margin: 0; font: 11px/1.45 var(--sans); color: var(--muted); }
+/* the short form of the line above, shown only where a phone hides the long one (score loop r2) */
+.lv-read-condition-short { display: none; margin: 0; grid-column: 1 / -1; font: 10.5px/1.35 var(--sans); color: var(--muted); }
+.lv-read-row small { font-size: inherit; color: var(--muted); }
 .lv-read-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12.5px; color: var(--muted); }
 .lv-read-row b { font: 500 13px/1.2 var(--mono); color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lv-read-row b.lv-clipped { color: var(--accent); white-space: normal; text-align: right; }
+.lv-read-row:has(b.lv-clipped) > span { white-space: nowrap; } /* raw value at the ADC maximum (score-loop r1) */
 .lv-read-well { height: 5px; background: var(--raise); border: 1px solid var(--line); }
 .lv-read-well i { display: block; height: 100%; width: 0; background: var(--charge); }
 
@@ -51,7 +56,7 @@
   /* phones: the two sliders side by side in one short card, so the cone keeps the middle of the view */
   .lv-ctl { left: 12px; right: 12px; width: auto; bottom: 58px; padding: 8px 12px 4px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
   .lv-ctl-k { display: none; }
-  .lv-ctl-row input[type="range"] { height: 20px; }
+  .lv-ctl-row input[type="range"] { height: 24px; }
   .lv-crumb { top: 56px; left: 12px; right: 12px; font-size: 10.5px; gap: 4px 7px; flex-wrap: wrap; }
   .lv-crumb .lv-here { white-space: normal; }
   .lv-read { right: 12px; bottom: 58px; width: 176px; padding: 8px 10px 8px; gap: 4px; }
@@ -61,8 +66,12 @@
   .lv-read .lv-ctl-k { display: block; }
   /* the inset captions carry their scale now ("Edge of frame · 200×"): a tighter tracking keeps them on one line
      inside a phone-sized inset (R2-07) */
-  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame::after {
+  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame .inset-label {
     letter-spacing: .05em; }
+  /* score loop r5: a phone's caption (a second line on a 96-110 px inset) sat over the bright bokeh dots and the spot diagram;
+     it gets the dark backing the Pixel scale badge has (rgba(0,0,0,.45), 3 px radius), the text where it was */
+  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame .inset-label {
+    left: 5px; top: 5px; right: auto; width: fit-content; max-width: calc(100% - 12px); padding: 2px 3px; border-radius: 3px; background: rgba(0, 0, 0, .45); }
   /* The phone's bottom band: the scale badge gets its own row above the backend chip instead of running under
      it (UI-07), wrapping if it has to, never clipped. */
   .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .hud.bl {
@@ -71,18 +80,149 @@
     padding-right: 96px; font-size: 11px; line-height: 1.35; }
 }
 
-/* The inset captions on levels 2-4 at the type scale's 11 px floor (UI-18). */
-.view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame::after {
-  font-size: 11px; white-space: nowrap; }
+/* The inset captions on levels 2-4 at the type scale's 11 px floor (UI-18). A compact inset (phone-frame.ts compactInsetRect,
+   ~100-170 px wide) is narrower than "Edge of frame · 300×", so the caption wraps inside the frame instead of running
+   through its right border (review loop r1, 10/11/2026). */
+.view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame .inset-label {
+  font-size: 11px; line-height: 1.2; right: 8px; white-space: normal; overflow-wrap: anywhere; }
 
 /* ---------- an inset's footprint in the piece overlay, so pins and their labels keep off it (R2-06) ----------
    Invisible itself; its one note line ("1 square = 1 pixel") sits on the inset's top edge, right-aligned. */
 .lv-inset-guard { position: absolute; pointer-events: none; }
 .lv-inset-guard[hidden] { display: none; }
 .lv-inset-note { position: absolute; right: 0; top: 0; font: 500 10.5px/1 var(--mono); letter-spacing: .06em;
-  text-transform: uppercase; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  /* no CSS uppercase: it turned "458 µm across" into "458 ΜM ACROSS", a 1000x wrong unit (score loop r1). The
+     guard writes the note through upperKeepMicro() instead. */
+  color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
+  /* the legend sits on the 3D picture, which is bright in places (wireframe, glass); a dark backing (80% black: 5.9:1 for the muted text even over a pure white pixel) keeps its 11 px text above 4.5:1
+     there, as the inset's own caption has (score loop r6, 2.7 to 3.3:1 on a bright pixel before) */
+  box-sizing: border-box; padding: 2px 5px; border-radius: 3px; background: rgba(0, 0, 0, .8); }
+.lv-inset-note.lv-inset-note-wrap { white-space: normal; text-align: right; line-height: 1.3;
+  /* a legend is prose: sentence case in the UI sans at the 11 px floor, phrases kept whole (score loop r3) */
+  font: 500 11px/1.3 var(--sans); letter-spacing: 0; overflow-wrap: anywhere; max-width: calc(100vw - 16px); }
+.lv-inset-note.lv-inset-note-wrap .nw { white-space: nowrap; }
+/* score loop r6: one phrase per line, right-aligned; the separator dots stay in the text but are not drawn */
+.lv-inset-note.lv-inset-note-wrap .ph { display: block; width: fit-content; max-width: 100%; margin-left: auto; }
+.lv-inset-note.lv-inset-note-wrap .sep { display: none; }
+.lv-inset-note.lv-inset-note-wrap .brk { display: block; }
 .lv-inset-note[hidden] { display: none; }
 
 /* ---------- the loupe readout's evidence: one chip for the whole reading (R2-08) ---------- */
 .lv-read-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
-.lv-read-h .chip { height: 17px; min-height: 17px; font-size: 10px; }
+.lv-read-h .chip { height: 17px; min-height: 17px; font-size: 11px; }
+
+/* Phone workspace (review loop 10/10/2026, E-02/E-03): the studio's chrome leaves the view only ~260-330 px tall,
+   so cards placed for the old 62svh phone view sat in the middle of the model and hid every pin under them.
+   The cone's controls drop to the view's bottom edge (the scale badge is off on that level), and the loupe's
+   reading becomes one compact strip along the top edge, so the pixel stack and its pins keep the middle. Short
+   phones (height 680 px or less) keep studio-shell.css's corner readout: their ~115 px view has no room for a strip. */
+@media (max-width: 760px) {
+  body.workspace.viewport-studio .lv-ctl { bottom: 6px; padding: 4px 10px 0; background: rgba(0,0,0,.72); }
+}
+/* ...and the same strip on the scrolling short phones (studio-shell.css: portrait 680 px or less, landscape 500 px or
+   less), whose view is 220-240 px tall again (review loop r1). */
+@media (max-width: 760px) and (min-height: 681px), (max-width: 599px) and (max-height: 680px) and ((orientation: portrait) or (max-width: 479px)),
+  (max-height: 500px) and (orientation: landscape) and (min-width: 480px) {
+  body.workspace.viewport-studio .lv-read:not(.lv-status) { top: 6px; bottom: auto; left: 8px; right: 8px; width: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 14px; padding: 5px 10px 6px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-h { grid-column: 1 / -1; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) :is(.lv-read-condition, .lv-read-well) { display: none; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-condition-short { display: block; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-row small { display: none; } /* band in the tooltip */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-why { display: none; } /* the sentence under the reading waits for room (score loop r6) */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-extra { display: flex; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-row { font-size: 11px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-row b { font-size: 12px; }
+}
+
+/* Score loop r6 (WCAG 1.4.12): with a reader's own text spacing the strip grows taller than the view's free height and covered the
+   whole model and the badge under it at 360x780. It keeps clear of the scale badge's rows (80 px at the foot) and scrolls inside
+   itself instead; loupe.ts makes it focusable while it scrolls. The default strip (60 to 90 px) is far under the cap. */
+@media (max-width: 760px) and (min-height: 681px), (max-width: 599px) and (max-height: 680px) and ((orientation: portrait) or (max-width: 479px)) {
+  body.workspace.viewport-studio .lv-read:not(.lv-status) { max-height: calc(100% - 80px); overflow-y: auto; overscroll-behavior: contain; }
+}
+
+/* A phone on its side (review loop 10/11/2026): the view is only ~250 px tall, so the cone's sliders take the
+   phone's one-row strip along the bottom edge, and the loupe's reading becomes a short card in the top-right
+   corner (loupe.ts pans the pixel stack left of it). */
+@media (orientation: landscape) and (min-width: 480px) and (max-height: 500px) {
+  body.workspace.viewport-studio .lv-ctl { left: 10px; right: auto; width: min(420px, calc(100% - 20px)); bottom: 6px; padding: 4px 10px 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; background: rgba(0,0,0,.72); }
+  body.workspace.viewport-studio .lv-ctl .lv-ctl-k { display: none; }
+  body.workspace.viewport-studio .lv-ctl-row input[type="range"] { height: 24px; } /* the WCAG 2.5.8 24 px target here too (score loop r2; it was 20 px) */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) { top: 6px; right: 8px; bottom: auto; width: 204px; padding: 6px 10px; gap: 2px;
+    left: auto; grid-template-columns: minmax(0, 1fr); } /* integration r1: one column, in the corner, over the strip rule above */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) :is(.lv-read-condition, .lv-read-well) { display: none; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-condition-short { display: block; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-row small { display: none; } /* band in the tooltip */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-why { display: none; } /* the sentence under the reading waits for room (score loop r6) */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-row { font-size: 11px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-row b { font-size: 12px; }
+}
+/* The workspace hides the backend chip, so the phone badge's 96 px reserve for it only wrapped the badge onto a
+   second line over the model (review loop 10/11/2026). */
+@media (max-width: 760px) {
+  body.workspace .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .scale-badge {
+    padding-right: 0; }
+}
+/* The compact insets (phone-frame.ts) can be as narrow as ~135 px: their caption keeps its magnification on one
+   line at the 10.5 px type floor (design/LOOK.md) with tighter tracking. */
+@media (max-width: 760px), (orientation: landscape) and (min-width: 480px) and (max-height: 500px) {
+  .view:has(> .piece-overlay:is([data-piece="lens"], [data-piece="cone"], [data-piece="loupe"]):not([hidden])) .inset-frame .inset-label {
+    font-size: 10.5px; letter-spacing: .02em; }
+}
+
+/* The loupe reading on the smallest phones (340 px wide or less, score loop r2): the two-column strip covered half of
+   the 240 px view and hid five of the stack's six pins. There it is one line of short labels under its heading
+   ("Photons 27,255  e⁻ 1,707  Well 3.1%  Raw 1,279"), and Details opens the full two-column reading. Each long label
+   stays in the accessibility tree (visually hidden); the short one is for the eye only. */
+.lv-read .lv-s, .lv-read .lv-read-more { display: none; }
+@media (max-width: 340px), (max-width: 760px) and (max-height: 760px) and (orientation: portrait) { /* r6: the 360x740 view is ~256 px; its four-row reading covered a third of it */
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-more { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px;
+    margin: -3px -4px -3px 0; pointer-events: auto; cursor: pointer; border: 1px solid var(--line-2); border-radius: 3px; background: #15212c;
+    color: var(--ink); font: 600 11px/1 var(--sans); }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-more:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-h .lv-ctl-k { margin-right: auto; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open):not([hidden]) { display: flex; flex-wrap: wrap; align-items: baseline;
+    column-gap: 10px; row-gap: 1px; padding: 4px 8px 5px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-h { flex: 1 0 100%; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-mean { display: none; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-row { gap: 4px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-row b { font-size: 11px; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-l { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-s { display: inline; }
+}
+
+/* Integration r2: the portrait-phone strip carried the reading's heading ("Reference pixel · red", teaching) and the
+   short conditions line ("Red pixel · 18% gray · f/4 ...", physics) on two rows, and the taller strip covered the
+   photons pin at 360x780. On a portrait phone wider than 340 px the conditions line takes the heading's row, beside
+   the Calc. chip; it names the pixel's color first, and the heading stays in the accessibility tree. */
+@media (min-width: 341px) and (max-width: 760px) and (orientation: portrait) {
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-h { grid-row: 1; grid-column: 1 / -1; justify-content: flex-end; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-h .lv-ctl-k { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status) .lv-read-condition-short { grid-row: 1; grid-column: 1 / -1; align-self: center;
+    padding-right: 52px; white-space: normal; /* wraps rather than cutting the conditions to "ISO 1…" (WCAG 1.4.12, score loop r4) */ }
+}
+/* ...and on the smallest phones (340 px or less, the one-line reading above) the same: the conditions line shares
+   the heading's line, before the Calc. chip and Details, so the closed reading stays two lines (integration r2). */
+@media (max-width: 340px), (max-width: 760px) and (max-height: 760px) and (orientation: portrait) {
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-h { flex: 0 0 auto; }
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-h .lv-ctl-k { position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* score loop r3: the line wraps onto a second row beside Calc. and Details instead of being cut to "R." */
+  body.workspace.viewport-studio .lv-read:not(.lv-status):not(.lv-read-open) .lv-read-condition-short { order: -1; flex: 1 1 150px; min-width: 0;
+    white-space: normal; }
+  /* "OFF CENTER" was cut to "OFF CENT…" in its 70 px column: the labels lose their tracking here, not their words */
+  body.workspace.viewport-studio .lv-ctl-l { letter-spacing: .02em; }
+}
+
+/* The Pixel level's caption ("Controlled 18% gray · 1 dot = 657 photons") lay straight over the tiles' edges on a phone, with
+   nothing behind it (score loop r4). It gets the same dark plate the pin labels have, sized to its text. */
+.view:has(> .piece-overlay[data-piece="loupe"]:not([hidden])) .scale-badge:not([hidden]),
+body.workspace .view:has(> .piece-overlay[data-piece="loupe"]:not([hidden])) .scale-badge:not([hidden]) {
+  justify-self: start; width: fit-content; max-width: 100%; box-sizing: border-box; padding: 4px 8px; background: rgba(11,16,21,.8); text-shadow: none; }
+/* score loop r6: one-word glosses under the reading's technical labels, and the sentence that explains the raw value */
+.lv-read-row .lv-gloss { display: block; font-size: 11px; line-height: 1.25; color: var(--muted); opacity: .85; }
+.lv-read-why { margin: 2px 0 0; font: 11.5px/1.4 var(--sans); color: var(--ink); }

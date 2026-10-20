@@ -1,10 +1,13 @@
 .learn-launch { min-height: 36px; padding-inline: 14px; color: var(--accent); }
 .light-playback { display: flex; align-items: center; gap: 12px; padding: 6px 14px; border-top: 1px solid var(--line); background: #131b23; flex: 0 0 auto; }
 .light-playback .btn { min-height: 34px; white-space: nowrap; font-size: 11px; }
-.light-playback label { flex: 1; display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--muted); }
+.light-playback label { flex: 1; display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); }
 .light-playback input { width: 100%; min-width: 30px; height: 28px; accent-color: var(--accent); }
-.light-playback > span { max-width: 130px; font: 9px/1.5 var(--mono); color: var(--muted); }
+.playback-note > span { display: block; }
+.light-playback > span { max-width: 205px; font: 10.5px/1.4 var(--mono); color: var(--muted); }
 .workspace .viewer:has(#sensor-lesson:not([hidden])) > .light-playback { display: none; }
+/* The camera level's 'Try the shutter, aperture or focus ring' line does not describe a lesson (score loop r1). */
+.workspace:has(#sensor-lesson:not([hidden])) .level-why { display: none; }
 #journey-physics { flex: none; align-self: flex-start; min-height: 36px; margin-top: 4px; padding: 5px 10px; font-size: 11px; color: var(--accent); }
 .lesson-playback { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
 .lesson-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -13,16 +16,16 @@
 .lesson-context { grid-column: 1 / -1; font-size: 11px; color: var(--muted); margin-top: 6px; }
 .lesson-context summary { cursor: pointer; color: var(--accent); }
 .lesson-playback .btn { min-height: 32px; font-size: 11px; }
-.lesson-playback span { color: var(--muted); font: 10px var(--mono); margin-left: auto; }
+.lesson-playback span { color: var(--muted); font: 11px var(--mono); margin-left: auto; }
 #readout-visual { position: static; inset: auto; width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 7px; box-sizing: border-box; }
 #pipeline-route { display: flex; gap: 4px; margin: 6px 0; }
 #pipeline-route .btn { flex: 1; min-width: 0; padding: 6px 3px; height: auto; min-height: 38px; font: 12px var(--mono); flex-direction: column; gap: 3px; }
-#pipeline-route .btn span { display: block; font: 10px/1.4 var(--sans); white-space: normal; }
+#pipeline-route .btn span { display: block; font: 11px/1.4 var(--sans); white-space: normal; }
 #pipeline-route [aria-pressed="true"] { background: #273b47; border-color: #9acfe7; color: #e0f3ff; }
 #pipeline-wipe { position: absolute; top: 0; bottom: 0; width: 2px; background: #d5f4ff; box-shadow: 0 0 14px 3px #87cee9; pointer-events: none; }
 #journey { box-sizing: border-box; height: 132px; min-height: 132px; padding: 10px 16px; background: #1b2025; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 16px; overflow: hidden; }
 .journey-copy { min-width: 0; height: 100%; flex: 1; display: flex; flex-direction: column; overflow: auto; }
-.journey-label { display: block; color: var(--accent); font: 10px var(--mono); letter-spacing: .04em; margin-bottom: 4px; }
+.journey-label { display: block; color: var(--accent); font: 11px var(--mono); letter-spacing: .04em; margin-bottom: 4px; }
 #journey select { width: 100%; border: 0; padding: 2px 20px 2px 0; color: var(--ink); background: #1b2025; font: 600 14px var(--sans); }
 #journey p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 #journey-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
@@ -39,20 +42,27 @@
 #journey nav .btn { padding: 0 10px; min-height: 36px; }
 #journey .btn:disabled { opacity: .45; cursor: default; }
 .lesson-shortcuts { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-.lesson-shortcuts .btn { flex: 1; min-height: 36px; padding: 0 6px; font-size: 10px; }
+.lesson-shortcuts .btn { flex: 1; min-height: 36px; padding: 0 6px; font-size: 11px; }
 #sensor-lesson { position: absolute; inset: 0; z-index: 65; background: var(--surface); padding: clamp(12px, 2vw, 24px); overflow: auto; }
 #sensor-lesson header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 #sensor-lesson h2 { margin: 0; font: 600 26px var(--display); }
 #sensor-lesson header { position: sticky; top: -24px; z-index: 2; padding-block: 4px; background: var(--surface); }
 #sensor-lesson p { font-size: 12px; line-height: 1.5; max-width: 80ch; margin: 9px 0; }
-#sensor-lesson .lesson-note { color: var(--muted); font-size: 11px; }
+#sensor-lesson .lesson-note { color: #c6cdd3; font-size: 12px; }
+/* score loop r6: the plain-words conversion in the lead reads at body size; the rest of the arithmetic waits under Technical details */
+#sensor-lesson .lesson-lead { font-size: 14px; }
+#sensor-lesson .lesson-lead .lesson-plain { font-weight: 400; color: var(--charge, #5ce1c6); }
+.lesson-technical { margin-top: 8px; }
+.lesson-technical summary { cursor: pointer; color: var(--accent); font: 600 12px/1.6 var(--sans); padding: 4px 0; }
+.lesson-technical .lesson-note { margin: 4px 0 0; }
 .lesson-tabs { display: flex; gap: 6px; margin: 12px 0; }
 .lesson-tabs [aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 .lesson-control { display: block; font-size: 12px; }
 .lesson-control input { display: block; width: 100%; height: 32px; accent-color: var(--accent); }
 .lesson-control output { float: right; font: 11px var(--mono); }
+.lesson-control select { min-height: 32px; margin-left: 6px; padding: 0 6px; font-size: 13px; }
 .row-demo { display: grid; gap: 2px; margin: 8px 0; }
-.scan-row { display: grid; grid-template-columns: 18px 1fr 65px; align-items: center; gap: 8px; font: 9px var(--mono); color: var(--muted); }
+.scan-row { display: grid; grid-template-columns: 18px 1fr 65px; align-items: center; gap: 8px; font: 11px var(--mono); color: var(--muted); }
 .scan-row i { position: relative; display: block; height: 7px; background: #26313a; }
 .scan-row i::after { content: ''; position: absolute; top: -1px; bottom: -1px; left: var(--scan); width: 2px; background: var(--ink); }
 .scan-row b { position: absolute; height: 7px; min-width: 1px; background: #6c7780; }
@@ -61,17 +71,23 @@
 .charge-demo { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 18px; border-block: 1px solid var(--line); padding: 10px 0; }
 .charge-demo meter { width: 100%; }
 #adc-value { font-family: var(--mono); color: var(--charge); }
-.pipeline-picture { position: relative; width: min(100%, 45vh); max-width: 600px; margin: 10px auto; }
+/* score loop r5: the sample fills its column (up to 600 px) instead of a 45vh postage stamp with 150 px of empty space under it */
+.pipeline-picture { position: relative; width: min(100%, 58vh); max-width: 600px; margin: 10px auto; }
 #pipeline-canvas { position: static; inset: auto; display: block; width: 100%; height: auto; background: #16191d; }
 #pipeline-crop { width: 80px; height: 80px; position: absolute; inset: auto 6px 6px auto; border: 2px solid var(--accent); background: #15191c; image-rendering: pixelated; }
 #pipeline-canvas { cursor:crosshair; }
 #pipeline-region { position:absolute;display:block;border:1px solid var(--accent);box-shadow:0 0 0 1px #0009;pointer-events:none; }
-.pipeline-crop-label { position:absolute;right:6px;bottom:89px;background:#10161ee8;color:var(--ink);padding:3px 5px;font:9px var(--mono);pointer-events:none; }
-.pipeline-sample-tools { display:flex;gap:10px;align-items:center;font-size:10px;line-height:1.5;color:var(--muted); }
-.pipeline-sample-tools .btn { flex-shrink:0;min-height:36px;font-size:10px;padding:4px 8px; }
+.pipeline-crop-label { position:absolute;right:6px;bottom:89px;background:#10161ee8;color:var(--ink);padding:3px 5px;font:11px var(--mono);pointer-events:none; }
+.pipeline-sample-tools { display:flex;gap:10px;align-items:center;font-size:11px;line-height:1.5;color:var(--muted); }
+.pipeline-sample-tools .btn { flex-shrink:0;min-height:36px;font-size:11px;padding:4px 8px; }
 #sensor-lesson .pipeline-look { border-left:2px solid var(--accent);padding:8px 10px;background:#17212b;font-size:12px; }
-.pipeline-look b { display:block;color:var(--accent);font-size:10px;text-transform:uppercase;margin-bottom:4px; }
+.pipeline-look b { display:block;color:var(--accent);font-size:11px;text-transform:uppercase;margin-bottom:4px; }
 #sensor-lesson { touch-action: pan-y; }
+/* score loop r3: a visible cue while the lesson continues below its fold; it rides the scroller's bottom edge */
+.lesson-scroll-cue { position: sticky; bottom: calc(-1 * clamp(12px, 2vw, 24px)); z-index: 2; margin: 0 calc(-1 * clamp(12px, 2vw, 24px)); padding: 6px 12px; text-align: center; font: 11px var(--mono); color: var(--accent); background: linear-gradient(#0000, var(--surface) 45%); pointer-events: none; }
+.lesson-scroll-cue[hidden] { display: none; }
+/* score loop r4: the lesson's last note line clears the cue, so it is never read through the fade */
+#sensor-lesson #lesson-shot { margin-bottom: 34px; }
 .specs dt, .rp-pick-k, .rp-card figcaption, .rp-card .note { color: var(--muted); }
 .specs .spec-evidence { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 .show-lesson > :not(#sensor-lesson) { visibility: hidden; }
@@ -80,39 +96,47 @@
 @media (min-width: 1000px) {
   #readout-lesson { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 24px; }
   #readout-lesson > p:first-child { grid-column: 1 / -1; }
-  #readout-visual { grid-column: 1; grid-row: 2 / span 2; align-self: center; background: #0d141c; }
-  #row-demo { grid-column: 2; grid-row: 2; }
-  #readout-lesson > .lesson-control { grid-column: 2; grid-row: 3; }
-  #scan-detail { grid-column: 2; grid-row: 4 / span 2; }
-  #readout-lesson .charge-demo { grid-column: 1; grid-row: 4; border: 0; padding: 0; }
-  #charge-detail { grid-column: 1; grid-row: 5; }
+  /* score loop r6: the how-to paragraph and its shutter-mode switch sit right under the lead, above the diagrams */
+  #readout-lesson > p:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  #readout-visual { grid-column: 1; grid-row: 3 / span 2; align-self: center; background: #0d141c; }
+  #row-demo { grid-column: 2; grid-row: 3; }
+  #readout-lesson > .lesson-control { grid-column: 2; grid-row: 4; }
+  #scan-detail { grid-column: 2; grid-row: 5; }
+  /* score loop r3: the drawing's key, in HTML text at the 11 px floor (it was drawn into the canvas at about 8 px) */
+  #readout-lesson .charge-demo { grid-column: 1; grid-row: 5; border: 0; padding: 0; }
+  .lesson-technical { grid-column: 1; grid-row: 6; align-self: start; }
+  #readout-howto { grid-column: 2; grid-row: 6; align-self: start; }
   #readout-lesson > p:last-child { grid-column: 1 / -1; }
   #pipeline-lesson { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); column-gap: 20px; }
   #pipeline-lesson > .lesson-control:first-child { grid-column: 2; grid-row: 1; }
-  #pipeline-route { grid-column: 2; grid-row: 2; }
-  #pipeline-lesson .pipeline-picture { grid-column: 1; grid-row: 1 / span 4; align-self: center; }
+  #pipeline-route { grid-column: 2; grid-row: 1; }
+  #pipeline-lesson .pipeline-picture { grid-column: 1; grid-row: 1 / span 4; align-self: start; }
   #pipeline-lesson > .lesson-control[for="pipeline-progress"] { grid-column: 1; grid-row: 5; }
-  #pipeline-lesson > .pipeline-look { grid-column: 2; grid-row: 3; }
-  #pipeline-description { grid-column: 2; grid-row: 4; }
-  #pipeline-lesson > .lesson-note { grid-column: 2; grid-row: 5; }
+  #pipeline-lesson > .pipeline-look { grid-column: 2; grid-row: 2; }
+  #pipeline-description { grid-column: 2; grid-row: 3; }
+  #pipeline-lesson > .lesson-note { grid-column: 2; grid-row: 4; }
   .pipeline-sample-tools { grid-column:1;grid-row:6; }
 }
 @media (max-width: 760px) {
   .light-playback { padding: 4px 10px; gap: 6px; }
   .light-playback label { font-size: 0; gap: 0; }
   .light-playback > span { max-width: 95px; }
-  .lesson-playback span { max-width: 120px; font-size: 9px; }
+  .lesson-playback span { max-width: 120px; font-size: 11px; }
   #readout-visual { min-width: 0; }
-  #pipeline-route .btn span { font-size: 10px; }
+  #pipeline-route .btn span { font-size: 11px; }
   .workspace .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .learn-launch { padding-inline: 9px; font-size: 10px; align-self: stretch; min-height: 40px; border-width: 0 0 0 1px; }
+  .learn-launch { padding-inline: 9px; font-size: 11px; align-self: stretch; min-height: 40px; border-width: 0 0 0 1px; }
   .workspace.viewport-studio #journey { max-height: none; overflow: visible; }
-  #journey { position: relative; z-index: 70; height: 78px; min-height: 78px; padding: 4px 8px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; overflow: visible; }
-  .journey-copy { height: 34px; flex: none; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 20px 14px; gap: 0 7px; overflow: visible; }
+  #journey { position: relative; z-index: 70; height: 94px; min-height: 94px; padding: 3px 8px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; overflow: visible; }
+  .journey-copy { height: 56px; flex: none; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 26px 30px; gap: 0 7px; overflow: visible; }
   .journey-label { display: none; }
-  #journey select { grid-column: 1 / -1; grid-row: 1; height: 20px; min-height: 20px; padding: 0 18px 0 0; font-size: 11px; }
-  #journey-text { display: none; }
-  #journey #journey-caption { display: -webkit-box; grid-column: 1; grid-row: 2; min-width: 0; margin: 0; color: var(--muted); font-size: 10px; line-height: 14px; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+  #journey select { grid-column: 1 / -1; grid-row: 1; box-sizing: border-box; height: 24px; min-height: 24px; max-height: 24px; padding: 0 18px 0 0; font-size: 12px; }
+  /* The phone shows the line as #journey-caption (aria-hidden); #journey-text stays the one live region, read
+     but not drawn, so a screen reader hears each stop once (score loop r1: three regions announced it three times). */
+  #journey #journey-text { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* 4 px down into its 30 px row: 6 px under the stop picker, and its two 13 px lines still end at the row's foot
+     (score loop r2: the first line touched the select's border) */
+  #journey #journey-caption { display: -webkit-box; grid-column: 1; grid-row: 2; min-width: 0; margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 13px; align-self: start; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   #journey-more { display: block; grid-column: 2; grid-row: 2; position: static; min-width: 0; }
   #journey-more > summary { display: block; min-height: 30px; padding: 0; color: var(--accent); font-size: 11px; line-height: 30px; cursor: pointer; }
   #journey-more:not([open]) > summary { position: absolute; right: 8px; bottom: 4px; box-sizing: border-box; min-width: 46px; height: 30px; padding: 0 8px; border: 1px solid var(--line-2); text-align: center; }
@@ -123,14 +147,21 @@
   #journey-physics { margin-top: 12px; min-height: 44px; }
   #journey-more[open] #journey-more-text { display: block; }
   #journey nav { box-sizing: border-box; width: 100%; max-width: none; height: 30px; min-height: 30px; margin: 0; padding-right: 54px; justify-content: flex-start; flex-wrap: nowrap; gap: 4px; }
-  #journey nav .btn { min-height: 30px; height: 30px; padding: 0 8px; font-size: 10px; }
+  #journey nav .btn { min-height: 30px; height: 30px; min-width: 32px; justify-content: center; padding: 0 8px; font-size: 11px; }
   .workspace.viewport-studio:has(#journey:not([hidden])) .level-why { display: none; }
   .workspace.viewport-studio .viewer:has(#journey:not([hidden])) .view { height: 320px; min-height: 320px; flex: 0 0 320px; }
+  /* Score loop r5: at 390x844 the Pixel stop's column (journey band 108 + view 320 + buttons 78 + playback row 84) was 34 px taller
+     than its viewer, so "Play photons" ran under the dock's tab row. The frame stays 320 px at every stop (test-guided-layout);
+     the one optional launcher in the column, "Photon rain & noise", waits until the tour closes on a phone this short. */
+  @media (max-height: 860px) { .workspace.viewport-studio .viewer:has(#journey:not([hidden])) .rain-launch { display: none; } }
   .workspace .view:has(#sensor-lesson:not([hidden])) { height: clamp(380px, 56svh, 550px); }
+  .lesson-scroll-cue { bottom: -12px; margin-inline: -12px; }
   #sensor-lesson { padding: 12px; }
+  #sensor-lesson .lesson-note { font-size: 11px; }
+  #sensor-lesson .lesson-lead { font-size: 13px; }
   #sensor-lesson header { top: -12px; }
   #sensor-lesson h2 { font-size: 22px; }
-  #sensor-lesson header .btn { font-size: 10px; padding-inline: 8px; }
+  #sensor-lesson header .btn { font-size: 11px; padding-inline: 8px; }
   .charge-demo { grid-template-columns: 1fr; gap: 0; }
 }
 @media (min-width: 761px) {
@@ -138,7 +169,7 @@
 }
 /* At short phone heights the fixed tour frame would push the part-navigation
    row below the viewport. Let the frame yield the space needed by navigation. */
-@media (max-width: 760px) and (max-height: 700px) {
+@media (max-width: 760px) and (max-height: 820px) {
   .workspace.viewport-studio .viewer:has(#journey:not([hidden])) .view {
     height: auto; min-height: 100px; flex: 1 1 100px;
   }
@@ -164,6 +195,93 @@
 @media (max-width: 760px) {
   #journey-reading header { padding: 14px 16px; gap: 12px; }
   #journey-reading h2 { font-size: 22px; }
+  #journey-reading-context { display: none; } /* the phone's More panel, which opens this dialog, already showed it */
   .journey-reading-body { padding: 0 16px 20px; }
   #journey-reading-close { max-width: 90px; white-space: normal; font-size: 11px; }
 }
+
+/* Tablet portrait (review loop 10/10/2026, E-14): the tour band shares a ~460 px model column, where the 230 px
+   button block left the stop name cut mid-word ("Light from the s") and the teaching text cut after a line and a
+   half. Narrow the buttons into two short rows and give the words the room. */
+@media (min-width: 761px) and (max-width: 900px) {
+  #journey { padding: 6px 10px; gap: 10px; }
+  .journey-label { display: none; }
+  #journey select { font-size: 13px; min-height: 26px; }
+  #journey p { font-size: 11.5px; line-height: 1.4; margin-top: 3px; }
+  #journey-text { -webkit-line-clamp: 3; }
+  #journey nav { max-width: 150px; }
+  #journey nav .btn { min-height: 34px; padding: 0 8px; font-size: 11px; }
+  #journey-physics { min-height: 32px; margin-top: 4px; }
+}
+
+/* Review loop 10/11/2026. During the tour its own Previous/Next are the only pair on screen: the part stepper steps
+   aside (its Overview stays), and the tour's forward button carries the accent. */
+body.tour-active .part-nav :is(#part-prev, #part-next) { display: none; }
+#journey #journey-next { color: var(--accent); border-color: var(--accent); }
+/* A stop that names a slider marks it (or, on a phone, the Settings button that opens it) for a moment. */
+.tour-cue { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; transition: outline-color .4s; }
+/* Desktop: the stop's words get three full lines instead of being clamped mid-sentence at two; the band's label
+   moves into the stop menu ("1 / 8 · …") and the band grows by 8 px, the same at every stop. */
+@media (min-width: 901px) {
+  #journey { height: 140px; min-height: 140px; }
+  #journey .journey-label { display: none; }
+  #journey-text { flex: none; -webkit-line-clamp: 3; }
+  #journey-physics { min-height: 32px; }
+}
+/* At the 11 px floor (review loop r1) the playback note keeps to two lines and the strip keeps one height on every
+   level, so the 3D view does not change size between tour stops (test-guided-layout). */
+@media (min-width: 761px) {
+  .light-playback > span { max-width: 220px; line-height: 1.35; }
+  .workspace.viewport-studio .light-playback { min-height: 54px; }
+}
+/* score loop r2: which shutter the readout lesson shows, and a one-click switch */
+#readout-lesson .lesson-mode { color: var(--ink); }
+#readout-lesson .lesson-mode-switch { min-height: 28px; margin-left: 4px; padding: 2px 10px; font-size: 11px; vertical-align: baseline; }
+#readout-lesson .lesson-mode-switch[hidden] { display: none; }
+.journey-shot { color: var(--accent); border-color: var(--accent); }
+
+/* Score loop r4 (tour band, desktop). The band was 140 px tall: the stop picker and its text over a Physics button, and
+   five controls wrapped onto two rows beside them, with the close button a 29 px sliver. The Physics link now sits
+   beside the stop picker, the controls make one row, and the close button is a 36 px square, so the band is about 40 px
+   shorter and the model takes the room. The dial teaching labels step aside during the tour: they are an invitation to
+   turn things, and the tour has its own words. */
+@media (min-width: 901px) {
+  #journey { height: 92px; min-height: 92px; padding: 8px 16px; }
+  .journey-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto 1fr; column-gap: 12px; align-content: start; overflow: hidden; }
+  .journey-copy > .journey-label { grid-column: 1 / -1; grid-row: 1; margin-bottom: 0; }
+  .journey-copy > #journey-stop { grid-column: 1; grid-row: 2; }
+  .journey-copy > #journey-more { grid-column: 2; grid-row: 2; display: block; align-self: center; }
+  #journey-physics { margin-top: 0; min-height: 30px; padding-block: 3px; white-space: nowrap; }
+  .journey-copy > #journey-text { grid-column: 1 / -1; grid-row: 3; margin-top: 3px; -webkit-line-clamp: 2; }
+  #journey nav { flex-wrap: nowrap; max-width: none; justify-content: flex-end; }
+  #journey nav .btn { white-space: nowrap; }
+  #journey nav #journey-close { min-width: 36px; padding: 0 8px; font-size: 16px; line-height: 1; }
+  .workspace.viewport-studio .stage:has(#journey:not([hidden])) .body { height: calc(100svh - 146px); }
+  body.tour-active .rig-teach { display: none; }
+}
+/* Score loop r4 (access): the phone tour's stop picker was a 24 px box. On a touch screen it is 40 px, and the band
+   grows by 14 px, which the model's frame below it gives up. The tour's buttons carry 44 px hit areas
+   (studio-shell.css). */
+/* score loop r5: "Next stop ›" was 75 px in a 72 px box at 320 px; below 400 px the button reads "Next ›" (its name stays "Next stop") */
+@media (max-width: 399px) { .tour-stop-word { display: none; } }
+@media (pointer: coarse) and (max-width: 760px) {
+  #journey { height: 108px; min-height: 108px; }
+  .journey-copy { height: 70px; grid-template-rows: 40px 30px; }
+  #journey select { height: 40px; min-height: 40px; max-height: 40px; }
+}
+
+/* score loop r5: the readout's key folds under a heading, so the lesson reads as a drawing and two sliders first */
+.lesson-howto { margin-top: 8px; border: 1px solid var(--line); background: var(--surface); padding: 2px 12px 6px; }
+.lesson-howto summary { cursor: pointer; color: var(--accent); font: 600 12px/1.6 var(--sans); padding: 4px 0; }
+.lesson-howto .lesson-note { margin: 4px 0 0; }
+/* Score loop r5: on a phone Tour sat in the level row as a fifth tab. It is an action, not a level, so it is a button: its own
+   border and fill, inset from the row's edges, and a play mark. */
+@media (max-width: 760px) {
+  .workspace .steps .learn-launch { align-self: center; margin: 0 5px 0 3px; min-height: 38px; border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 12%, transparent); display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+  .workspace .steps .learn-launch::before { content: "▶"; font-size: 8px; line-height: 1; }
+}
+
+/* score loop r6: while the tour is open the "Focal length & perspective" launcher stays under the view (the frame keeps one height
+   across stops), but as a compact button at the zoom bar's end instead of a full-width bar that read as an orphaned control */
+body.workspace.viewport-studio:has(#journey:not([hidden])) #model-experiments > .perspective-launch-row { display: flex; justify-content: flex-end; }
+body.workspace.viewport-studio:has(#journey:not([hidden])) #model-experiments .perspective-launch { width: auto; }

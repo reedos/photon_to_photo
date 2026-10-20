@@ -73,7 +73,8 @@ no image library is in this project's dependencies), thresholds the disk, and co
 ```
 PASS -- backend is webgpu
 PASS -- rendered disk diameter vs bundle.diameterMm (within 20%, see "Known limits" below)
-PASS -- engine measured vs predicted blur (within the documented ~40% aberration gap)
+PASS -- engine measured (all wavelengths) vs predicted (d line): within 40%, the gap is longitudinal color plus aberration
+PASS -- engine measured at 587.6 nm vs predicted at 587.6 nm (within 10%; what is left is monochromatic aberration)
 PASS -- in-focus disk (f/11) is under 3 sensor pixels
 PASS -- stopped-down disk's angular DFT shows blade-count (or 2x) structure as a strong peak
 PASS -- the stopped-down disk actually rendered (not empty/missing)
@@ -113,12 +114,15 @@ shape, not a circle), and the disk shrinking as the aperture stops down.
   across several reasonable threshold choices on this dev machine. **needs_from_lead**: a piece hook exposing the
   landing-point cloud's RMS radius alongside `diameterMm` would let a gate check a moment-based measurement,
   which a pixel threshold approximates far more robustly than a hard outer edge.
-- **Bundle diameter vs. the closed-form prediction disagrees by up to ~40%**, and grows at close focus/off-axis.
-  This is real: `predictedBlurMm` (`camera.ts`'s `exitPupilBlurDiameterMm`) is a paraxial, non-vignetted
-  approximation; `bundle.diameterMm` is a real ray trace that includes spherical/coma aberration and mechanical
-  vignetting the closed form doesn't model. At best focus, f/1.4 wide open, the real trace still shows ~0.02mm
-  of blur from spherical aberration alone -- physically real, not a bug (confirmed by dropping to f/11, where the
-  same "in focus" case measures under 3 sensor pixels as the brief's own check expects).
+- **Bundle diameter vs. the closed-form prediction disagrees by up to ~40%**, and it is mostly longitudinal
+  color (corrected 10/11/2026, score-loop r1). `predictedBlurMm` (`camera.ts`'s `exitPupilBlurDiameterMm`) is the
+  paraxial blur at the d line (587.6 nm) only; `bundle.diameterMm` is the max chord over all 16 traced wavelengths,
+  and the 392.5 nm bin focuses well behind the others, so it sets the measured edge. p50 f/1.4, 3 m focus, 1.5 m
+  point: all colors +32% over the prediction, but the same pupil grid traced at 587.6 nm alone
+  (`bundle.dLineDiameterMm`) is within 5%. The gate checks the all-color gap loosely (40%) and the d-line gap tightly
+  (10%); what remains at the d line is real spherical aberration and vignetting. At best focus, f/1.4 wide open,
+  the real trace still shows ~0.02mm of blur from spherical aberration alone -- physically real, not a bug
+  (confirmed by dropping to f/11, where the same "in focus" case measures under 3 sensor pixels).
 - **No lens in `data/lenses/*.json` has straight blades** (`iris.rounded` is `true` for all twelve designs), so
   the brief's "straight-blade iris case" literally cannot be built from this project's data. The blade-count
   check instead uses an angular DFT of the real landing points at a stopped-down aperture (rounded blades still

@@ -263,11 +263,12 @@ export function doeGradPhi(doe: Doe, h: number): number {
  *   n2 * d2_t = n1 * d1_t + m * (lambda / (2*pi)) * grad(phi)(h),
  * where d1_t/d2_t are the tangential (in the local surface tangent plane) parts of the unit incident/outgoing
  * directions, m is the diffraction order, lambda is the ray's wavelength (mm) and grad(phi) is the radially
- * directed grating vector `doeGradPhi(doe, h)` above, projected into the surface's local tangent plane (exact for
- * a flat or nearly flat DOE substrate — the case every Nikon Phase Fresnel patent this engine models actually
- * uses; a strongly curved DOE substrate would need the grating vector computed intrinsically on the curved
- * surface, not this plane projection — see docs/engine/doe.md, "Known limits"). Reduces exactly to `refract`
- * when `doe.coeffs` are all zero (grad(phi) = 0 everywhere).
+ * directed grating vector `doeGradPhi(doe, h)` above, projected into the surface's local tangent plane. For a
+ * rotationally symmetric phase written as a function of the radial height h (the patents' convention) that
+ * projection is exact on a curved substrate too, not an approximation: the projected vector points along the
+ * meridional tangent with length dphi/dh * cos(theta) (theta the surface slope), which is dphi/ds, the phase
+ * gradient along the surface itself (score loop r2 correction; tools/review-loop/optics.mjs traces the same step
+ * intrinsically and agrees). Reduces exactly to `refract` when `doe.coeffs` are all zero (grad(phi) = 0).
  *
  * Returns null when the required tangential magnitude exceeds 1 (ordinary TIR at the substrate, OR an evanescent
  * diffraction order that the grating cannot actually launch — both report the same failure since neither is a

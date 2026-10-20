@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {mkdirSync} from 'node:fs';
-const base=process.env.P2P_URL;
+import {gateServer} from './preview.mjs';
+const server=await gateServer(),base=server.url;
 assert.equal(new URL(base).hostname,'127.0.0.1');
 mkdirSync('shots/astra-ex1/after',{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
@@ -59,4 +60,4 @@ try {
   }
   await page.close();
  }
-} finally {await browser.close();}
+} finally {await browser.close();await server.close();}

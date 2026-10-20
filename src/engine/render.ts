@@ -12,7 +12,7 @@ import { getScene, sceneFor, daylightAt, sceneDefaultLux, sceneDefaultCctK } fro
 import { radiance, shiftBillboards, illuminantSpectralIrradiance } from './scene';
 import { exitPupilBlurDiameterMm } from './camera';
 import { airyRadius } from './diffraction';
-import { imageIrradiance, photonEnergy } from './exposure';
+import { imageIrradiance, photonEnergy, ASSUMED_LENS_TRANSMISSION } from './exposure';
 import { expectedElectrons, varianceE, readout, samplePixel, fullWellAtIso, maxDn } from './sensor';
 import { makeRng } from './rng';
 import {
@@ -29,14 +29,10 @@ import {
   type Plane,
   type RgbPlanes,
 } from './pipeline';
-import { fitCameraToXYZ, whiteBalanceGains, reflectanceToXYZ, spectrumToCameraRGB, mat3Multiply, XYZ_TO_LINEAR_SRGB, type Mat3, type ChannelSensitivities } from './color';
+import { fitCameraToXYZ, whiteBalanceGains, reflectanceToXYZ, spectrumToCameraRGB, mat3Multiply, mat3Vec3, chromaticAdaptation, D65_WHITE_XYZ, XYZ_TO_LINEAR_SRGB, type Mat3, type ChannelSensitivities } from './color';
 import { CMF } from './data';
 import type { CfaColor } from './types';
 
-// Same representative lens-transmission stand-in camera.ts uses (no per-element coating data in this engine
-// yet). Evidence: assumed. Kept as its own constant here (not imported from camera.ts, which does not export
-// it) so render.ts's own dependency on it is visible at a glance.
-const ASSUMED_LENS_TRANSMISSION = 0.9;
 
 const CHANNELS: CfaColor[] = ['R', 'G', 'B'];
 
@@ -308,6 +304,15 @@ function fitColorMatrix(illuminantShape: (nm: number) => number, wbGains: readon
   const whiteScale = whiteRGBWb[1];
   const whiteXyzY = reflectanceToXYZ(() => 1, illuminantShape, BINS, CMF)[1]; // Y for a perfect reflector
 
+  // Score loop r4 (10/12/2026): the training XYZ values are the colors under the SCENE's light, but the output is sRGB,
+  // whose white is D65. White balance already made a gray neutral in camera RGB, and a matrix fitted to the scene-lit
+  // XYZ puts the light's own color back (a gray card came out RGB 126,104,75 at 4000 K, 107,116,128 at 9000 K). The
+  // display's white is D65, so each training color is first adapted from the scene's white to D65 (Bradford), the
+  // same step every raw converter takes (Adobe DNG Specification 1.7.1.0, ch. 6, ColorMatrix and ForwardMatrix, are
+  // defined to D50 for the same reason).
+  const sceneWhiteXyz = reflectanceToXYZ(() => 1, illuminantShape, BINS, CMF);
+  const adapt = chromaticAdaptation([sceneWhiteXyz[0] / whiteXyzY, 1, sceneWhiteXyz[2] / whiteXyzY], D65_WHITE_XYZ);
+
   const cameraRGBs: [number, number, number][] = [];
   const xyzs: [number, number, number][] = [];
   for (const name of COLOR_CHECKER_NAMES) {
@@ -316,10 +321,14 @@ function fitColorMatrix(illuminantShape: (nm: number) => number, wbGains: readon
     const rgb = spectrumToCameraRGB(litSpectrum, BINS, qe);
     cameraRGBs.push([(rgb[0] * wbGains[0]) / whiteScale, (rgb[1] * wbGains[1]) / whiteScale, (rgb[2] * wbGains[2]) / whiteScale]);
     const xyz = reflectanceToXYZ(reflectance, illuminantShape, BINS, CMF);
-    xyzs.push([xyz[0] / whiteXyzY, xyz[1] / whiteXyzY, xyz[2] / whiteXyzY]);
+    xyzs.push(mat3Vec3(adapt, [xyz[0] / whiteXyzY, xyz[1] / whiteXyzY, xyz[2] / whiteXyzY]));
   }
   const camToXyz = fitCameraToXYZ(cameraRGBs, xyzs);
-  return mat3Multiply(XYZ_TO_LINEAR_SRGB, camToXyz);
+  const m = mat3Multiply(XYZ_TO_LINEAR_SRGB, camToXyz);
+  // The fit is least squares over 24 colors, so the white-balanced neutral (1, 1, 1) lands near, not exactly on,
+  // sRGB white. Scale each output row so it does: a gray card reads R = G = B in every stage after white balance.
+  const white = mat3Vec3(m, [1, 1, 1]);
+  return [m[0] / white[0], m[1] / white[0], m[2] / white[0], m[3] / white[1], m[4] / white[1], m[5] / white[1], m[6] / white[2], m[7] / white[2], m[8] / white[2]];
 }
 
 /** Everything renderImage derives from `model` + a requested width/height before tracing a single pixel.

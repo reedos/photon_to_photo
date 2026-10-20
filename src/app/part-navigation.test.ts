@@ -1,4 +1,4 @@
-import { adjacentPart, insideView } from './part-navigation';
+import { adjacentPart, insidePin, insideView } from './part-navigation';
 
 describe('part navigation', () => {
   it('includes overview and wraps symmetrically without skipping the last part', () => {
@@ -16,5 +16,12 @@ describe('part navigation', () => {
     expect(insideView('focusRing')).toBe('cone');
     expect(insideView('sensor')).toBe('loupe');
     for (const part of ['mount', 'shutter', 'viewfinder', null] as const) expect(insideView(part)).toBeNull();
+  });
+  it("opens the deeper level on the camera part's own counterpart (score loop r3)", () => {
+    expect(insidePin('iris')).toBe('iris');
+    expect(insidePin('glass')).toBe('front-element');
+    expect(insidePin('focusRing')).toBe('cone');
+    expect(insidePin('sensor')).toBe('pixel');
+    expect(insidePin('lens')).toBeNull();
   });
 });

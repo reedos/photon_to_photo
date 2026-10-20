@@ -301,3 +301,131 @@ along any of these seven barrels the focus ring physically sits (front third / m
 `focusRing.positionOnBarrel` is `null` here too, same as the original 12-lens table, with the same fix: derive
 it from the lens's own focus-group position in `data/lenses/*.json` rather than guess a barrel location no
 maker publishes.
+
+## Body depth convention: open (score loop r2, 10/11/2026)
+
+The two body models read Nikon's depth figure two different ways. The DSLR's shell is 78.5 mm from the
+rear plate (y -24) to the grip front (y 54.5), the D850's published depth, with the eyepiece block and
+eyecup outside it (93.1 mm overall). The mirrorless shell is 74 mm (rear plate y -32 to grip front y 40)
+and reaches the Z8's published 83 mm only with the EVF eyecup (to y -42.9). One of the two is wrong by
+about 9 mm.
+
+What the sources say. Nikon's own spec pages for both cameras (D850:
+<https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html>; Z8:
+<https://onlinemanual.nikonimglib.com/z8/en/specifications_384.html>, both accessed 10/11/2026) give
+"Approx. 146 × 124 × 78.5 mm" and "Approx. 144 × 118.5 × 83 mm" with no note on what depth includes;
+on the same pages only the battery charger's row says "excluding projections". The industry rule is
+CIPA DCG-005 ("Measurement and notation method for mass and dimensions of digital cameras"), listed on
+CIPA's guideline page (<https://www.cipa.jp/e/std/std-sec-guideline.html>). Its text sits behind a
+download page that asks the reader to accept CIPA's disclaimer, which this build did not do without
+Reed's say-so, so the rule was not read. A secondary summary, read only through this session's web-search tool (the page itself returned HTTP 403 to a direct fetch)
+(<https://cameradecision.com/size-comparison/La4A-4tAc>, 10/11/2026), says CIPA lets protrusions
+be left out and keeps built-in parts of the shell such as the grip and the viewfinder hump; on that
+reading the eyecup is out, the DSLR is right, and the mirrorless shell is about 9 mm too thin.
+
+Decision: not changed this round. Deepening the mirrorless shell by 9 mm moves its rear plate, screen,
+controls and EVF and rests on a secondary source. To close it: Reed accepts the CIPA disclaimer and reads
+DCG-005's rule on protrusions (or a Nikon dimensioned drawing turns up). If eyecups are excluded, move the
+mirrorless rear plate back so rear plate to grip front is 83 mm (`blender/mirrorless_v2.py` YB), and
+re-run the GLB tests.
+
+### Score loop r3 (10/11/2026): the CIPA rule as Impress Watch reported it
+
+DCG-005 itself is still unread (CIPA's disclaimer page). But the news report on the guideline's launch,
+Impress Digital Camera Watch, "CIPA, デジタルカメラの質量・寸法の測定・表記方法のガイドラインを制定"
+(<https://dc.watch.impress.co.jp/docs/news/315584.html>, fetched 10/11/2026), gives its rule in the
+guideline's terms, as summarized here from the article:
+
+- dimensions are the three sides of the smallest box that encloses the body;
+- a protrusion may be left out of a dimension if it covers 20% or less of that face's area (the rule taken
+  over from JIS 27-1997);
+- but a protrusion that stands out more than 10% of the dimension at right angles to that face cannot be
+  left out;
+- a lens that cannot be detached cannot be left out.
+
+The rule is permissive: a maker *may* leave a small protrusion out and may also keep it in. Applied to the two
+models:
+
+- **Mirrorless (Z8).** The eyecup covers well under 20% of the rear's area (8% in the model, 11% in Nikon's
+  rear drawing), but it stands 10.9 mm behind the
+  74 mm shell's rear plate (14.7% of the depth), so under the rule it cannot be left out: the box runs from the
+  grip front to the back of the eyecup, 82.9 mm, which is Nikon's 83 mm. The model's reading is the rule's, and
+  the reviewers' concern (a shell 9 mm too thin) does not hold. **Closed; nothing moved.** Test:
+  `blender-glb.test.ts`, "measures the published 83 mm from the grip front to the back of the eyecup".
+- **DSLR (D850).** The model's 78.5 mm runs from the grip front to the rear plate, leaving out the screen
+  (3.4 mm proud), the eyepiece housing (4 mm) and the eyecup (14.6 mm behind the rear plate in all). Under the
+  rule a 14.6 mm protrusion on a 78.5 mm depth (18.6%) cannot be left out, so either the real D850's
+  eyepiece stands out no more than about 7.9 mm (10% of 78.5), or Nikon's 78.5 mm does not follow the rule as
+  reported. Nikon's top drawing (research/d850.md) shows the eyepiece only about 3 mm behind the rear outline,
+  but that drawing is slightly tilted and was not used for depth. **Open:** the model's eyepiece length needs a
+  published D850 eyepiece or eyecup dimension (the DK-17F eyepiece or the supplied eyecup), which this round did
+  not find. The DSLR was not changed.
+
+The mirrorless body was also checked against Nikon's drawings in x (research/z8.md, research/d850.md,
+"Exterior traced from Nikon's manual drawings"): both bodies had the lens axis too far from the port-side end
+(62 against the Z8's 56.5, 64 against the D850's 54.6), which this round corrects.
+
+## Rear controls from Nikon's manual drawings (score loop r2, 10/11/2026)
+
+Source: the rear views in Nikon's online manuals, D850 "Getting to Know the Camera"
+(<https://onlinemanual.nikonimglib.com/d850/en/02_introduction_01.html>, image `img/d850_bd_rear_add.png`) and
+Z8 "Camera Body" (<https://onlinemanual.nikonimglib.com/z8/en/camera_body_9.html>, image
+`img/guid-065e3cee-f1e7-34fc-adf0-adfba8f061f6.png`), both accessed 10/11/2026. They are line drawings, close to
+orthographic but not dimensioned; positions read off them are photo-derived, to about ±2 px (about ±1 mm).
+
+D850 (`blender/dslr_v2.py`): the left column has six buttons, top to bottom MENU; protect / Picture Control /
+help; zoom in; zoom out / thumbnails; OK; Fn2 (smaller), with playback and delete as a pair beside the eyepiece.
+The model had seven identical buttons at an even 11 mm pitch. Scaled by the model's own screen frame (its top,
+bottom and left edges match the drawing's at 0.326 mm per pixel; the frame's size itself is the model's, not
+Nikon's), the column's centers are z 21.3, 8.6, -1.5, -12.6, -24.0, -35.4 at x -55.5, and the pair z 34.6 at
+x -55.5 and -45.7.
+
+Z8 (`blender/mirrorless_v2.py`): there is no column of buttons down the left of the screen; protect / Fn3 and
+delete sit beside the viewfinder. On the right, from the top: AF-ON, the sub-selector, the i button, the
+multi-selector, then zoom in and MENU over zoom out and playback in a two-by-two block. The model had five
+buttons down the left and two below the multi-selector. Scaled across by the body's 144 mm (0.417 mm per pixel)
+and up by its bottom-to-shoulder height (0.426 mm per pixel), the offsets from the multi-selector's center are:
+i (-5.6, +15.0), zoom in (-6.2, -14.6), MENU (+6.7, -14.6), zoom out (-6.2, -27.2), playback (+6.7, -27.2) mm.
+The drawing also shows the model's absolute positions are off by several mm in places (its multi-selector sits
+about 8 mm left and 5 mm low of the drawing's, its sub-selector about 15 mm high, and its shoulder about 5 mm
+high of the drawing's proportions); these were left as they were and are open.
+
+Still open: button shapes and icons; the D850 hump outline and the eyepiece's relation to it; the grips' finger
+recess. The same drawings (and the top views, `img/d850_bd_parts_top_add.png` and the Z8 page's top view) are the
+source to use for them.
+
+**Score loop r3 (10/11/2026):** the absolute positions are now the drawings', scaled by the published envelopes, for
+both bodies' rear controls, the shoulder line and the top-plate controls; the hump outlines seen from behind and the
+D850's eyepiece surround are traced too (research/z8.md and research/d850.md, "Exterior traced from Nikon's manual
+drawings"). Still open: the grips' finger recess and flare in elevation and the humps' front rake, which need a
+square-on front or side view that the manuals do not have; button shapes and icons.
+
+### Score loop r4 (10/11/2026): the D850 eyepiece length is still not sourced
+
+Searched again for a D850 eyepiece or eyecup protrusion (DK-17 and DK-17F listings, Nikon's specification page, Nikon
+USA, DPReview, Imaging Resource, camera-size comparison sites) and for a CIPA-style depth measured without the eyepiece.
+Nikon's own page gives "Approx. 146 x 124 x 78.5 mm" with no qualifier on the camera's row and no eyepiece dimension;
+the eyepoint (17 mm from the eyepiece lens) is the only eyepiece figure, and it is not a protrusion. Nothing was
+changed in the geometry: **the DSLR's depth is not reconciled**. The shell is 78.5 mm (rear plate to grip front), the
+eyepiece housing and eyecup stand 4 and 14.6 mm behind the plate (93.6 mm overall), and the two bodies keep opposite
+conventions (the mirrorless counts its eyecup inside its 83 mm). The Models page no longer claims the whole model is
+"built to the published envelope": it quotes the number and says what the model's 78.5 mm covers
+(public/models/bodies.json `depthNote`). To close it: a Nikon dimensioned drawing or a measured side view of the
+eyepiece, or DCG-005's text read in full.
+
+### Score loop r5 (10/11/2026): the DSLR eyepiece set to the CIPA ceiling
+
+No D850 eyepiece or eyecup dimension turned up in a further search (listings for the DK-17, DK-19 and the body, Nikon's
+pages, comparison sites). The DSLR's eyepiece housing and eyecup now stand **7.8 mm** behind the rear plate instead of 14.6,
+so the two bodies read the rule the same way: the Z8's 10.9 mm eyecup on a 74 mm shell is 14.7% of the depth and counts in
+its 83 mm; the D850's 7.8 mm on a 78.5 mm shell is 9.9% and can be left out of Nikon's 78.5 mm. The 7.8 mm is the model's
+own length, chosen as the largest value the reported rule leaves out, and is flagged as such in `bodies.json` `depthNote`
+(shown on the Models page). The open item is unchanged: a Nikon dimensioned drawing or a measured side view of the
+eyepiece, or DCG-005's text read in full, would replace this number with a sourced one.
+
+### Body depth convention: what the Models page says (score loop r6, 10/11/2026)
+
+The convention above is unresolved, so the page now says it instead of leaving the two figures side by side: the DSLR's 78.5 mm
+leaves its eyepiece out (the eyepiece stands 7.8 mm behind the plate, the model's own length, since no source gives a D850 eyepiece
+or DK-17 depth: searched again 10/14/2026, nothing), and the mirrorless body's 83 mm includes its eyecup, so the two depths
+are not directly comparable (`public/models/bodies.json` `depthNote`, shown with each body's size).

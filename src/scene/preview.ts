@@ -7,6 +7,7 @@
 import * as THREE from 'three/webgpu';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { dracoLoader } from './draco';
 import * as look from '../app/look';
 import { buildDslrBody } from './bodies/dslr';
 import { buildMirrorlessBody } from './bodies/mirrorless';
@@ -83,7 +84,7 @@ async function main() {
 
   if (useGlb) {
     // ---- scripted-Blender .glb bodies (QC path) --------------------------------------------
-    const loader = new GLTFLoader();
+    const loader = new GLTFLoader().setDRACOLoader(dracoLoader());
     const load = (path: string) => new Promise<THREE.Group>((res, rej) =>
       loader.load(path, (gltf) => res(gltf.scene), undefined, rej));
 

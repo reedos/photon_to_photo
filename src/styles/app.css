@@ -2,13 +2,20 @@
    everything shared with The Intelligence Factory). New elements here still sit inside that family (design/LOOK.md,
    "One signature style"): square hairline cards, mono uppercase captions, amber only on chrome. */
 
-.note { margin: 0; color: var(--faint); font-size: 12.5px; }
+.note { margin: 0; color: var(--faint-text); font-size: 12.5px; }
 
 /* ---------- the level strip: level 1 is the product, levels 2-4 its deep dives (docs/PANE.md) ---------- */
 .steps { grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr)); }
-.step .tag { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-left: auto; padding-left: 8px; white-space: nowrap; }
+.step .tag { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint-text); margin-left: auto; padding-left: 8px; white-space: nowrap; }
 .step.deep .t { font-size: 17px; color: var(--muted); }
 .step.deep[aria-current="step"] .t, .step.deep:hover .t { color: var(--ink); }
+/* a browser drawing in software (stage.ts, softwareRendererName): why the camera is slow, and the way to the 2D reference */
+.soft-note { position: absolute; z-index: 7; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 10px 12px; background: var(--surface); border: 1px solid var(--accent); font: 12px/1.45 var(--sans); color: var(--ink); }
+.soft-note a { color: var(--accent); text-underline-offset: 4px; min-height: 24px; display: inline-flex; align-items: center; }
+.soft-note button { margin-left: auto; min-height: 24px; padding: 0 10px; background: none; border: 1px solid var(--line); color: var(--ink); font: 11px var(--mono); cursor: pointer; }
+/* a tapped level tab reads as chosen in the same frame as the tap, before the level's work runs (score loop r5) */
+.step.entering { background: var(--surface); }
+.step.deep.entering .t { color: var(--ink); }
 .step .meta .sub { overflow: hidden; text-overflow: ellipsis; }
 .step .t-short { display: none; }
 
@@ -44,7 +51,7 @@
 .layer-chip[aria-pressed="true"] { color: var(--ink); }
 .layer-chip[aria-pressed="true"] i { background: var(--c); box-shadow: 0 0 8px var(--c); }
 .layer-chip:hover { border-color: var(--ink); }
-.layer-chip:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.layer-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hud-btns .btn { min-height: 38px; padding: 0 14px; background: rgba(0,0,0,.72); backdrop-filter: blur(6px); font-size: 11px; }
 /* Fill hovers guarded against sticking after a tap (R3-05): see base.css's own note by the first one. */
 @media (hover: hover) and (pointer: fine) {
@@ -58,17 +65,57 @@
 .hud-label { z-index: 3; }
 
 /* ---------- loading and empty states ---------- */
+/* While app-start builds the workspace (main.ts adds body.app-booting), a fixed cover stands in for it: the rows
+   appear once, in their final places, instead of shifting the page as each one mounts (score loop r3). */
+.boot-cover { display: none; }
+body.app-booting #top { visibility: hidden; }
+body.app-booting .boot-cover { display: grid; position: fixed; inset: 0; z-index: 50; place-items: center; background: var(--ground);
+  font: 500 12px/1 var(--mono); letter-spacing: .08em; color: var(--muted); }
 .veil { z-index: 6; }
 .veil-in { display: grid; gap: 14px; justify-items: center; }
 .veil-bar { display: block; width: 180px; height: 2px; background: var(--line); overflow: hidden; }
 .veil-bar b { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s ease; }
-.veil.err { color: var(--vendor); pointer-events: auto; }
+/* a level compiling ahead on its first visit (stage.ts warmPiece): a moving cue, so a wait never reads as a hang */
+.veil.busy .veil-bar b { width: 40% !important; transition: none; animation: veil-busy 1s linear infinite; }
+@keyframes veil-busy { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@media (prefers-reduced-motion: reduce) { .veil.busy .veil-bar b { animation-duration: 2.4s; } }
+/* Not a cut to black (score loop r4): the first visit to a level used to cover the view with an opaque ground for 1 to 1.6 s,
+   which broke the dive motion at the reader's first interaction. The frames are still held while the level compiles, so the
+   canvas keeps the last frame of the level just left, dimmed a little, and the cue sits in the bottom-left corner. The new
+   level's own pins and overlay stay hidden until it draws (they would sit on the wrong picture), and the veil lifts by
+   fading, so the dive then starts from what the reader was looking at. */
+.veil.busy { background: rgba(0, 0, 0, .3); place-items: end start; }
+.veil.busy .veil-in { display: flex; align-items: center; gap: 10px; padding: 0 0 54px 14px; }
+.veil.busy .veil-in > span { padding: 0; max-width: none; text-align: left; font-size: 11px; letter-spacing: .06em; }
+.veil.busy .veil-bar { width: 72px; }
+.view:has(> .veil.busy:not(.off)) > :is(.pins, .piece-overlay) { visibility: hidden; }
+/* nothing is loading any more and the veil only waits for the first frame (stage.ts syncVeilState): its words go at once */
+.veil.lifting:not(.err) .veil-in { opacity: 0; transition: opacity .12s ease; }
+.veil.err { color: var(--vendor); pointer-events: auto; place-items: safe center; overflow-y: auto; box-sizing: border-box; padding-block: 12px; }
+.veil.err .veil-in { gap: 10px; }
 .veil.err .veil-bar { display: none; }
+/* a quiet compile (stage.ts): the veil is up, so the view reads as loading, but stays transparent for its first 150 ms */
+.veil.quiet { opacity: 0; transition: none; }
+/* the 3D view could not start (app-start.ts showStartupFailure): its controls would do nothing, so they are not shown */
+.startup-failed :is(#scenario, #hud-switches, #hud-btns, #hud-rail, #view-strip, #hud-btns-phone, #hint, #model-tools, #equipment-toggle, #equipment-controls, #expand-model, .inspector-tab-row, #studio-explain) { display: none !important; }
+/* score loop r6: with the controls gone the side panel was an empty box (340x778 at 1440 px); the failure message takes the width */
+.startup-failed .studio-sidebar { display: none !important; }
+.startup-failed.workspace.viewport-studio .stage .body { grid-template-columns: minmax(0, 1fr) !important; }
 .view.graphics-lost > :not(.veil) { visibility: hidden; }
 .view.graphics-lost .veil { transition: none; }
 .veil-in > span { display: block; max-width: 32ch; padding: 0 16px; text-align: center; line-height: 1.5; }
 .veil-reload { display: none; }
+.veil-keep { display: none; }
+/* A failed swap keeps the rig on screen: the message and its two buttons sit as a banner at the foot of the view, over
+   the previous lens (score loop r4; the veil used to cover it with an opaque ground). */
+.veil.err.swap { background: transparent; pointer-events: none; place-items: end center; overflow: visible; }
+.veil.err.swap .veil-in { pointer-events: auto; grid-template-columns: auto auto; justify-content: center; gap: 8px 10px; max-width: min(94%, 440px); margin-bottom: 8px; padding: 12px 14px; background: color-mix(in srgb, var(--ground) 94%, transparent); border: 1px solid var(--line); }
+.veil.err.swap .veil-in > span { grid-column: 1 / -1; padding: 0; }
+.veil.err.swap .veil-keep { display: inline-flex; min-height: 40px; padding: 0 18px; font-size: 11px; }
 .veil.err .veil-reload { display: inline-flex; min-height: 40px; padding: 0 18px; font-size: 11px; }
+.veil-reference { display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; font-size: 11px; pointer-events: auto; }
+.veil-reference.primary { border-color: var(--accent); color: var(--accent); }
+.veil-reference[hidden] { display: none; }
 .pins.held { visibility: hidden; }
 
 /* ---------- pins: 22 px to see, 44 px to hit; labels placed so none overlap ---------- */
@@ -83,7 +130,7 @@
 .pin.no-lbl .lbl { display: none; }
 /* a long name that fits nowhere on one line wraps to two at a space */
 .pin.two-line .lbl { white-space: normal; width: calc(var(--lw) + 10px); box-sizing: border-box; }
-.pin.dim { opacity: .32; }
+.pin.dim { opacity: .55; } /* score loop r6: at .32 the iris pin, the part the card was about, was nearly invisible beside a picked part */
 .pin.dim .lbl { display: none; }
 .pin .num { font-size: 11px; white-space: nowrap; }
 .pin.merged { width: auto; transform: translate(-50%, -11px); }
@@ -91,11 +138,18 @@
 /* the first-visit marks own the view for their few seconds (R1-09) */
 .pins .pin { transition: opacity .3s ease; }
 body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
+/* a deep level that left a pin out says so, in one small line in a clear corner (stage.ts updateHiddenHint, score loop r5) */
+.pin-hidden-hint { position: absolute; z-index: 2; margin: 0; padding: 3px 8px; height: 22px; box-sizing: border-box; pointer-events: none;
+  font: 500 11px/16px var(--mono); color: var(--muted); background: rgba(11,17,23,.82); border: 1px solid var(--line-2); border-radius: 3px;
+  white-space: nowrap; }
+.pin-hidden-hint[hidden] { display: none; }
+body.rig-teaching .pin-hidden-hint { display: none; }
 
 /* frames over the scissored inset viewports (pieces/types.ts Inset): the square, hairline card language */
 .inset-frame { position: absolute; border: 1px solid var(--line-2); pointer-events: none; z-index: 3; }
-.inset-frame::after { content: attr(data-label); position: absolute; left: 8px; top: 7px; font: 500 11px/1 var(--mono);
-  letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-shadow: 0 1px 6px #000; }
+.inset-frame .inset-label { position: absolute; left: 8px; right: 8px; top: 7px; font: 500 11px/1.2 var(--mono);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-shadow: 0 1px 6px #000;
+  overflow-wrap: anywhere; } /* a real element, not ::after, so a gate can measure it; it wraps inside the frame (score loop r5) */
 
 /* ---------- the final image, docked live in the view (UI-05) ----------
    On a wide screen it sits in the left rail under the exposure panel, off the subject (R1-02); on a phone it is a small
@@ -104,7 +158,7 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .hud.rail > * { pointer-events: auto; }
 .hud.rail:not(:has(> :not([hidden]))) { display: none; }
 .hud.br { flex-direction: column; align-items: flex-end; flex-wrap: nowrap; }/* In the rail's narrow text column, "FINAL IMAGE · RENDERING" wrapped to two lines and pushed the card's content
-   down for the moment a render takes (R3-07): its own line under the title instead { content: "Rendering\2026"; display: block; margin-top: 2px; color: var(--faint);
+   down for the moment a render takes (R3-07): its own line under the title instead { content: "Rendering\2026"; display: block; margin-top: 2px; color: var(--faint-text);
   font-weight: 400; text-transform: none; letter-spacing: normal; }/* in the rail: a row { width: 100%; display: grid; grid-template-columns: 150px minmax(0, 1fr); background: rgba(11,16,21,.97); }/* ---------- the final-image section: shown at 1:1 { width: 100%; height: 100%; image-rendering: auto; }
 
 
@@ -114,7 +168,7 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .parts.collapsed li:not(.sel) { display: none; }
 .card { position: relative; }
 .card h3 { font-size: 30px; line-height: .95; }
-.card-sub { font: 400 11px/1.45 var(--mono); letter-spacing: .06em; color: var(--faint); margin-top: -4px; }
+.card-sub { font: 400 11px/1.45 var(--mono); letter-spacing: .06em; color: var(--faint-text); margin-top: -4px; }
 .card-grab { display: none; }
 .card-x { display: none; }
 .specs dt, .specs dd { min-width: 0; }
@@ -137,22 +191,24 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rig-exposure .rx-fire:disabled:not([data-armed="true"]) { opacity: .4; background: transparent; color: var(--accent); cursor: not-allowed; }
 .rig-exposure .rx-fire kbd { font: 500 10.5px/1 var(--mono); padding: 2px 4px; border: 1px solid currentColor; opacity: .65; }
 @media (pointer: coarse), (max-width: 760px) { .rig-exposure .rx-fire kbd { display: none; } }
-.kpi .kd { font: 400 11px/1.35 var(--mono); color: var(--faint); }
+.kpi .kd { font: 400 11px/1.35 var(--mono); color: var(--faint-text); }
 .kpis .kv { min-height: 0; }
 .rig-exposure .rx-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12.5px; color: var(--muted); }
-.rig-exposure .rx-row small { font: 400 11px/1 var(--mono); color: var(--faint); margin-left: 4px; }
+.rig-exposure .rx-row small { font: 400 11px/1 var(--mono); color: var(--faint-text); margin-left: 4px; }
 .rig-exposure .rx-row b { font: 500 13px/1.2 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
 .rig-exposure .rx-row[data-held="true"] b { color: var(--accent); }
 .rig-exposure .rx-well { height: 5px; background: var(--raise); border: 1px solid var(--line); }
 .rig-exposure .rx-well i { display: block; height: 100%; width: 0; background: var(--accent); }
-.rig-exposure .rx-sub { font: 400 11px/1.3 var(--mono); color: var(--faint); }
-.rig-exposure .rx-cap { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
+.rig-exposure .rx-sub { font: 400 11px/1.3 var(--mono); color: var(--faint-text); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.rig-exposure .rx-sub .rx-wellk { flex: 1 1 auto; min-width: 0; }
+.rig-exposure .rx-sub .rx-snr { flex: 0 0 auto; text-align: right; }
+.rig-exposure .rx-cap { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--faint-text); }
 .rig-exposure .rx-cap[hidden] { display: none; }
 /* the firing timeline: the segments at their played lengths, and a playhead */
 .rx-tl { position: relative; display: flex; height: 22px; border: 1px solid var(--line); }
 .rx-tl[hidden] { display: none; }
 .rx-tl span { position: relative; flex: 1 1 0; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-left: 1px solid var(--line);
-  font: 500 10.5px/1 var(--mono); letter-spacing: .03em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+  font: 500 10.5px/1 var(--mono); letter-spacing: .03em; text-transform: uppercase; color: var(--faint-text); white-space: nowrap; }
 .rx-tl span:first-child { border-left: 0; }
 .rx-tl span.on { color: var(--ink); background: var(--raise); }
 .rx-tl i { position: absolute; top: -3px; bottom: -3px; width: 2px; left: 0; background: var(--accent); }
@@ -184,6 +240,7 @@ body.rig-teaching .pins .pin { opacity: 0; pointer-events: none; }
 .rig-teach i { width: 40px; height: 40px; }
 /* Phone labels choose free space outside the model and connect back to their controls. */
 .rig-teach.placed span { right: auto; bottom: auto; transform: none; }
+.rig-teach.pair span { line-height: 1.3; letter-spacing: .02em; }
 .rig-teach-leader { display: none; }
 .rig-teach.placed .rig-teach-leader { display: block; position: absolute; left: 20px; top: 20px; height: 1px;
   background: var(--accent); opacity: .55; transform-origin: 0 50%; }
@@ -232,7 +289,7 @@ body.rig-detail .pins .pin.dim { display: none; }
 .rp-pick { display: grid; gap: 2px; padding: 0 0 8px; text-align: left; background: var(--surface); color: var(--ink); font: inherit; border: 1px solid var(--line); cursor: pointer; min-width: 0; transition: border-color .15s; }
 .rp-pick img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; display: block; margin-bottom: 6px; opacity: .72; transition: opacity .15s; }
 .rp-pick-t { padding: 0 8px; font-size: 13px; line-height: 1.25; }
-.rp-pick-k { padding: 0 8px; font: 500 10px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.rp-pick-k { padding: 0 8px; font: 500 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint-text); }
 .rp-pick:hover { border-color: var(--line-2); }
 .rp-pick:hover img, .rp-pick[aria-pressed="true"] img { opacity: 1; }
 .rp-pick[aria-pressed="true"] { border-color: var(--accent); }
@@ -250,7 +307,7 @@ body.rig-detail .pins .pin.dim { display: none; }
 .rp-photo { border-right: 1px solid var(--line); }
 .rp-photo { border-bottom: 1px solid var(--line); }
 .rp-photo img { width: 100%; height: auto; object-fit: cover; display: block; background: #000; aspect-ratio: 3 / 2; }
-.rp-photo figcaption { padding: 8px 10px; font: 500 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); border-top: 1px solid var(--line); }
+.rp-photo figcaption { padding: 8px 10px; font: 500 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint-text); border-top: 1px solid var(--line); }
 /* Supporting notes; the photo-study layout supplies the responsive arrangement. */
 .rp-side { grid-column: 1 / -1; padding: 18px 20px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 40px; row-gap: 10px; align-content: start; }
 .rp-side > * { grid-column: 1; }
@@ -283,7 +340,7 @@ body.rig-detail .pins .pin.dim { display: none; }
   .hud-btns-phone .btn { min-height: 46px; padding: 0 4px; justify-content: center; border: 0; border-left: 1px solid var(--line); background: var(--ground);
     backdrop-filter: none; font-size: 11px; }
   .hud-btns-phone .btn:first-child { border-left: 0; }
-  .hud-btns-phone .hint { display: block; max-width: none; padding: 8px 12px 0; text-align: center; color: var(--faint); }
+  .hud-btns-phone .hint { display: block; max-width: none; padding: 8px 12px 0; text-align: center; color: var(--faint-text); }
   .hud.br { right: 10px; bottom: 10px; flex-direction: row; align-items: flex-end; gap: 8px; }
   .hud.bl { left: 10px; bottom: 10px; max-width: calc(100% - 150px); }/* a part is open: the sheet and the part own the screen { display: none; }
   .veil-in > span { font-size: 11.5px; }
@@ -318,3 +375,11 @@ body.rig-detail .pins .pin.dim { display: none; }
 
   .piece-overlay[data-piece="loupe"] .btn { top: 62px; }
 }
+
+/* The cue under the model that says a part's card is below the screen (ui.ts, score loop r6): a full-width strip, in the flow, so it never
+   lies over the model's labels or a level's sliders. */
+.card-cue { display: block; width: 100%; box-sizing: border-box; min-height: 40px; margin: 0; padding: 0 12px; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  background: #101820; color: var(--accent); font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; text-align: center; cursor: pointer; }
+.card-cue::after { content: " \2193"; }
+.card-cue[hidden] { display: none; }
+.card-cue:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }

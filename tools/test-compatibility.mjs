@@ -22,10 +22,10 @@ try {
   await page.waitForFunction(() => window.p2p.pieces.loupe.state().hasPixel && !window.p2p.pieces.loupe.state().pendingPixel, { timeout: 90000 });
   assert.equal(await page.evaluate(() => window.p2p.pieces.loupe.state().hasPixel), true, 'controlled pixel sample is ready');
   await page.locator('#steps [data-piece="camera"]').click();
-  await page.locator('#learn-launch').click(); await page.locator('#journey-stop').selectOption('5');
+  await page.locator('#learn-launch').click(); await page.locator('#journey-stop').selectOption('7');
   await page.locator('#lesson-readout').focus(); await page.keyboard.press('f');
   assert.equal(await page.evaluate(() => window.p2p.pieces.camera.exposure().running), false, 'hidden exposure does not fire behind a lesson');
-  await page.locator('#journey-stop').selectOption('6');
+  await page.locator('#journey-stop').selectOption('8');
   await page.waitForFunction(() => document.querySelector('#pipeline-canvas').getAttribute('aria-label').startsWith('Illustrative test sample'), { timeout: 90000 });
   await page.locator('#pipeline-stage').selectOption('tone');
   await page.locator('#journey-close').click();

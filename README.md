@@ -15,8 +15,8 @@ dimensions; where a design is tied to a product, its card says so. Estimates and
 **[Open Photon to Photo](https://reedos.dev/photon_to_photo/)**
 
 Reed authorized public launch on 10/05/2026. The camera and reference pages allow search
-indexing and are linked from [Reedos.dev](https://reedos.dev/#project-p2p). Developer model
-and scene previews remain excluded from search results.
+indexing and are linked from [Reedos.dev](https://reedos.dev/#project-p2p). The developer lens
+and scene previews are left out of the published build (`P2P_PUBLIC_BUILD=1`); `npm run build` without it keeps them.
 
 Publishing is manual: `gh workflow run pages.yml --ref main` runs the configured
 Node 22 install, typecheck, tests and build, then deploys `dist/` through GitHub Pages

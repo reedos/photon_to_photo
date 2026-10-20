@@ -21,6 +21,15 @@ describe('camera inspection context', () => {
     expect(reopened.get().cameraPart).toBe('iris');
   });
 
+  it('writes where a deeper level was entered from as from=, not part=, and still reads either (score loop r5)', () => {
+    const store = new Store({ piece: 'lens', cameraPart: 'iris', scenario: { lens: 'z35', fno: 4 } });
+    const query = queryFromState(store.get());
+    expect(query).toContain('from=iris');
+    expect(query).not.toContain('part=');
+    expect(new Store(scenarioFromQuery('?piece=lens&part=iris')).get().cameraPart).toBe('iris');
+    expect(queryFromState(new Store({ piece: 'camera', cameraPart: 'iris' }).get())).toContain('part=iris');
+  });
+
   it('gives legacy inspection links the appropriate camera context, ignores unknown parts', () => {
     for (const [piece, part] of [['lens', 'glass'], ['cone', 'focusRing'], ['loupe', 'sensor']]) {
       const store = new Store(scenarioFromQuery(`?piece=${piece}&part=bad-input`));

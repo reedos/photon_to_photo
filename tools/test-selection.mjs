@@ -59,14 +59,22 @@ try {
     await page.evaluate(() => window.p2p.pieces.camera.ready()); await cameraMatches('viewfinder');
     await page.evaluate(() => window.p2p.set({ lens: 'n50', focusM: 1.5 }));
     await page.evaluate(() => window.p2p.pieces.camera.ready());
-    const colors = new Set();
+    const colors = new Set(), hudColors = new Set();
     for (const piece of ['camera', 'lens', 'cone', 'loupe']) {
       await page.locator(`#steps [data-piece="${piece}"]`).click();
-      if (piece === 'loupe') await page.waitForFunction(() => window.p2p.pieces.loupe.state().diveStage === 'well' && window.p2p.pieces.loupe.state().hasPixel);
+      // The loupe opens on the well now (no photo-to-well dive since c6209df); it is ready once its sample resolves.
+      if (piece === 'loupe') await page.waitForFunction(() => window.p2p.pieces.loupe.state().hasPixel && !window.p2p.pieces.loupe.state().pendingPixel);
       await settled();
-      colors.add(await page.locator('.hud.tl .sub').evaluate(el => getComputedStyle(el).color));
+      // Since 8a4a3de level colors identify the level strip only; the view chrome keeps the shared house accent.
+      // (the current step's label turns ink; its marker dot keeps the level color)
+      colors.add(await page.locator(`#steps [data-piece="${piece}"] .top`).evaluate(el => getComputedStyle(el, '::before').backgroundColor));
+      hudColors.add(await page.locator('.hud.tl .sub').evaluate(el => getComputedStyle(el).color));
       if (piece !== 'camera') {
-        const ids = await page.locator('#parts button').evaluateAll(els => els.map(el => el.dataset.partId));
+        const rows = await page.locator('#parts button').evaluateAll(els => els.map(el => el.dataset.partId));
+        // The list opens with an Overview row that clears the selection; every row after it is a part.
+        assert.equal(rows[0], 'overview', `${piece}: parts list starts with Overview`);
+        const ids = rows.slice(1);
+        assert.ok(ids.length > 0, `${piece}: has parts`);
         for (const id of ids) {
           await page.locator(`#parts [data-part-id="${id}"]`).click(); await settled();
           const point = await page.evaluate(id => {
@@ -82,7 +90,8 @@ try {
         await page.locator('#reset-view').click();
         await settled();
         const after = await page.evaluate(() => window.p2p.framing());
-        assert.deepEqual(after.target, before.target, `${piece}: reset keeps selected part`);
+        // within float round-off: the reset recomputes the same part frame (cone differed by 4e-15 on 10/11/2026)
+        assert.ok(Math.hypot(...after.target.map((v, i) => v - before.target[i])) < 1e-9, `${piece}: reset keeps selected part`);
         await page.setViewportSize({ width: width + 50, height: width > 760 ? 800 : 900 }); await settled();
         assert.equal((await page.evaluate(() => window.p2p.framing())).selected, ids.at(-1));
         await page.setViewportSize({ width, height: width > 760 ? 768 : 844 }); await settled();
@@ -108,11 +117,13 @@ try {
       await page.screenshot({ path: `shots/selection/${piece}-${width}.png` });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
     }
-    assert.equal(colors.size, 4, 'each inspection has a distinct level accent');
+    assert.equal(colors.size, 4, 'each inspection has a distinct level color in the level strip');
+    assert.equal(hudColors.size, 1, 'view chrome keeps one shared accent across levels');
     await page.evaluate(() => window.p2p.pieces.loupe.back()); await settled();
-    assert.equal(await page.locator('#parts [aria-pressed="true"]').count(), 0, 'return to photo clears pixel-part selection');
+    assert.deepEqual(await page.locator('#parts [aria-pressed="true"]').evaluateAll(els => els.map(el => el.dataset.partId)), ['overview'], 'Back clears the pixel-part selection to Overview');
     assert.equal((await page.evaluate(() => window.p2p.framing())).selected, null);
-    await page.evaluate(() => { window.p2p.piece('loupe'); window.p2p.pieces.loupe.tap(100, 100); window.p2p.piece('camera'); });
+    // The loupe has no photo to tap any more; leaving it while its pixel sample is still pending must not steal framing.
+    await page.evaluate(() => { window.p2p.piece('loupe'); window.p2p.piece('camera'); });
     await page.evaluate(() => window.p2p.pieces.camera.ready()); await settled();
     const returned = await page.evaluate(() => window.p2p.framing());
     await page.waitForTimeout(700);

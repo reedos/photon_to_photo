@@ -14,14 +14,14 @@ try {
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(new URL('?piece=camera',url).href); await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
-    await page.waitForFunction(() => !document.getElementById('pin-photo').disabled, { timeout: 60000 });
+    // No synthetic photo to wait for any more (c6209df): the lessons process a controlled test chart instead.
     const shot = await page.evaluate(() => window.p2p.scenario());
     await page.locator('#learn-launch').click();
     assert.equal(await page.locator('#journey-play').textContent(), 'Play', 'tour does not auto-start');
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       await page.locator('#journey-stop').selectOption(String(i));
       assert.deepEqual(await page.evaluate(() => window.p2p.scenario()), shot, 'tour preserves all shot settings');
-      if (i === 5) {
+      if (i === 7) {
         assert.equal(await page.getByRole('slider', { name: 'Scan progress', exact: true }).count(), 1);
         assert.equal(await page.getByRole('slider', { name: 'Collected charge', exact: true }).count(), 1);
         assert.ok(await page.locator('#scan-detail').textContent().then(s => s.includes('64.00 ms')));
@@ -33,15 +33,15 @@ try {
         await page.locator('#lesson-close').click();
         assert.notEqual(await page.evaluate(() => document.activeElement.tagName), 'BODY', 'tour lesson restores visible keyboard focus');
       }
-      if (i === 6) {
+      if (i === 8) {
         await page.locator('#pipeline-stage').selectOption('tone');
         const exact = await page.evaluate(() => {
-          const v = window.p2p.render(), c = document.getElementById('pipeline-canvas');
+          const v = window.p2p.pipelineSample(), c = document.getElementById('pipeline-canvas');
           const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-          return data.every((n, i) => n === v.rgba[i]);
-        }); assert.ok(exact, 'final pipeline image equals renderer output byte-for-byte');
+          return c.width === v.width && c.height === v.height && data.every((n, i) => n === v.rgba[i]);
+        }); assert.ok(exact, 'final pipeline image equals the processed test chart byte-for-byte');
         await page.locator('#pipeline-stage').selectOption('raw');
-        assert.ok(await page.locator('#pipeline-description').textContent().then(s => s.includes('RGGB')));
+        assert.ok(await page.locator('#pipeline-description').textContent().then(s => /one filtered channel/.test(s)));
         const picture = await page.locator('#pipeline-canvas').boundingBox(), explanation = await page.locator('#pipeline-description').boundingBox();
         assert.ok(picture.height > 90 && (explanation.y >= picture.y + picture.height || explanation.x >= picture.x + picture.width), 'pipeline image and explanation have separate readable space');
         await page.screenshot({ path: `shots/learning/pipeline-${width}.png` });
@@ -53,43 +53,15 @@ try {
     await page.locator('#journey-play').click(); assert.equal(await page.locator('#journey-play').textContent(), 'Pause');
     await page.locator('#journey-play').click();
     await page.locator('#journey-close').click(); assert.equal(await page.locator('#journey').isVisible(), false);
-    await page.locator('#pin-photo').click();
-    await page.evaluate(() => window.p2p.set({ iso: 200 }));
-    assert.equal(await page.locator('#pin-photo').isDisabled(), true, 'stale render cannot be pinned');
-    await page.locator('#compare-photo').click();
-    assert.ok((await page.locator('#compare-b-caption').textContent()).includes('Updating'));
-    await page.waitForFunction(() => !document.getElementById('compare-pin').disabled, { timeout: 60000 });
-    assert.ok((await page.locator('#compare-a-caption').textContent()).includes('ISO 100'));
-    assert.ok((await page.locator('#compare-b-caption').textContent()).includes('ISO 200'));
-    assert.ok((await page.locator('#compare-difference').textContent()).includes('ISO'));
-    await page.screenshot({ path: `shots/learning/compare-${width}.png` });
-    await page.keyboard.press('Escape'); assert.equal(await page.locator('#compare-dialog').isVisible(), false);
-    assert.equal(await page.locator('#compare-photo').evaluate(e => e === document.activeElement), true);
+    // Pinning, the A/B comparison dialog and its experiments compared synthetic renders, removed on purpose in c6209df.
+    assert.equal(await page.locator('#pin-photo,#compare-photo,#compare-dialog,#experiment').count(), 0, 'removed comparison tools stay absent');
     if (width === 1440) {
-      const original = await page.evaluate(() => window.p2p.scenario());
-      await page.locator('#compare-photo').click();
-      for (const id of ['depth', 'motion', 'noise']) {
-        await page.locator('#experiment').selectOption(id); await page.locator('#experiment-start').click();
-        await page.waitForFunction(() => !document.getElementById('experiment-next').disabled, { timeout: 120000 });
-        const a = await page.locator('#compare-a-caption').textContent();
-        await page.locator('#experiment-next').click();
-        await page.waitForFunction(() => !document.getElementById('compare-pin').disabled, { timeout: 120000 });
-        assert.equal(await page.locator('#compare-a-caption').textContent(), a, 'A is immutable while B renders');
-        assert.notEqual(await page.locator('#compare-b-caption').textContent(), a);
-        await page.screenshot({ path: `shots/learning/experiment-${id}.png` });
-        await page.locator('#compare-pin').click();
-        assert.ok(!(await page.locator('#experiment-note').textContent()).includes('A:'), 'repinning cancels the old experimental claim');
-      }
-      await page.locator('#experiment-restore').click();
-      assert.deepEqual(await page.evaluate(() => window.p2p.scenario()), original, 'restore removes experiment-only state');
-      await page.locator('#compare-close').click();
       await page.locator('#tab-controls').click(); await page.locator('#open-readout').click();
       await page.keyboard.press('Escape'); assert.equal(await page.locator('#sensor-lesson').isVisible(), false);
       await page.goto(`${url}?tour=1`); await page.waitForFunction(() => window.p2p);
       assert.equal(await page.locator('#journey').isVisible(), true, 'introduction link starts tour');
       await page.evaluate(() => window.p2p.set({ focusM: .1 }));
-      await page.waitForFunction(() => !document.getElementById('pin-photo').disabled, { timeout: 60000 });
-      assert.ok(await page.evaluate(() => window.p2p.render().scenario.focusM > .1), 'clamped focus can still be pinned');
+      assert.ok(await page.evaluate(() => window.p2p.model().scenario.focusM > .1), 'focus closer than the lens allows is clamped by the model');
     }
     assert.deepEqual(errors, []); console.log(`learning ${width}x${height}: passed`); await page.close();
   }

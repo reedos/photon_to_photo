@@ -6,7 +6,7 @@
 import type { Bundle, BundleRequest, FanRequest, FanSet, Model, RenderRequest, RenderResult } from '../engine/model-types';
 import type { FormatId, Scenario } from '../engine/types';
 import { FORMATS } from '../engine/formats';
-import { compute as engineCompute, lensFans as engineLensFans, pointBundle as enginePointBundle } from '../engine/camera';
+import { compute as engineCompute, lensFans as engineLensFans, pointBundle as enginePointBundle, pointBundleSliced as enginePointBundleSliced } from '../engine/camera';
 import { renderImage as engineRenderImage } from '../engine/render';
 import { focusRingAngleRad } from '../engine/focus-travel';
 import { lensDesign, lensIds, D850_SENSOR_ID, Z8_SENSOR_ID } from '../engine/data';
@@ -156,7 +156,9 @@ export function normalizeScenario(input: Partial<Scenario>): Scenario {
   const design = lensDesign(lens);
   const fno = clamp(Math.max(input.fno ?? DEFAULT_SCENARIO.fno, design.maxFno), design.maxFno, MAX_FNO);
   const shutter = clamp(input.shutter ?? DEFAULT_SCENARIO.shutter, 1 / 8000, 30);
-  const iso = clamp(input.iso ?? DEFAULT_SCENARIO.iso, 100, 51200);
+  // r3 physics (10/11/2026): the D850 and Z8 expand to ISO 32-102,400 (native 64-25,600, data/d850.json and
+  // data/z8.json sensor.isoRange); the old 100 floor silently ran a requested base ISO 64 at ISO 100.
+  const iso = clamp(input.iso ?? DEFAULT_SCENARIO.iso, 32, 102400);
   const format: FormatId = input.format && input.format in FORMATS ? input.format : DEFAULT_SCENARIO.format;
   const shutterType = input.shutterType ?? DEFAULT_SCENARIO.shutterType;
   const scene = input.scene && sceneIds().includes(input.scene) ? input.scene : defaultSceneId(lens);
@@ -192,4 +194,8 @@ export function pointBundle(model: Model, req: BundleRequest): Bundle {
 
 export function renderImage(model: Model, req: RenderRequest): RenderResult {
   return engineRenderImage(model, req);
+}
+
+export function pointBundleSliced(model: Model, req: BundleRequest, opts: { sliceNms?: number; yieldToMain(): Promise<void>; cancelled?(): boolean }): Promise<Bundle | null> {
+  return enginePointBundleSliced(model, req, opts);
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { makeCatalog, indexAt } from './glass';
-import { loadLens, systemAt, sensorZ } from './lens';
+import { loadLens, systemAt, sensorZ, paraxialInfinityOffset } from './lens';
 import { cardinal, imageOf } from './paraxial';
 import type { GlassEntry, LensDesign, Surface } from './lens-types';
 
@@ -307,6 +307,8 @@ describe('systemAt: variable-gap (non-unit) focus method', () => {
     expect(lens.warnings.join(' ')).toMatch(/unit extension/);
     const sys = systemAt(lens, 1000);
     const obj = sys.surfaces[sys.surfaces.length - 1].z - 1000;
-    expect(imageOf(sys, NM, obj).z).toBeCloseTo(lens.sensorZ, 4);
+    // the paraxial image lands on the lens's own paraxial infinity image (here the test design's stated back focus
+    // of 45 mm is not the true one), the reference every finite focus keeps (score loop r4)
+    expect(imageOf(sys, NM, obj).z).toBeCloseTo(lens.sensorZ + paraxialInfinityOffset(lens), 4);
   });
 });

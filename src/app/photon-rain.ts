@@ -2,8 +2,7 @@ import type { Model } from '../engine/model-types';
 import { compute } from './engine-api';
 import { apertureSteps } from './stops';
 import { fmtFno, fmtNum, fmtShutter } from './units';
-import { wavelengthColor } from '../engine/spectrum';
-import { srgbEncode } from '../engine/color';
+import { spectralColor as wavelengthColor } from '../engine/data';
 import { dimReference, rainExperiment, rainSnapshot, RAIN_DURATION, type RainExperiment } from './photon-rain-model';
 import '../styles/photon-rain.css';
 
@@ -13,7 +12,7 @@ export function createPhotonRain() {
   dialog.innerHTML = `<header><div><p class="rain-kicker">A controlled 18% gray experiment</p><h2 id="rain-title">Same light. Unequal arrivals.</h2></div><button class="btn" data-rain="close" autofocus>Close</button></header>
     <p class="rain-intro">Watch eight equally lit pixels catch individual photons. Their counts differ even before the camera adds read noise.</p>
     <div class="rain-controls"><label>Aperture<select data-rain="aperture"></select></label><label>Shutter<select data-rain="shutter"></select></label><label>Reference light<select data-rain="light"></select></label><button class="btn" data-rain="compare">16× more light</button></div>
-    <div class="rain-transport"><button class="btn" data-rain="play">Play exposure</button><button class="btn" data-rain="new">New exposure</button><button class="btn rain-mobile-close" data-rain="mobile-close">Close</button><label>Exposure progress<input data-rain="time" type="range" min="0" max="1000" step="1" value="0"></label><output data-rain="clock"></output></div>
+    <div class="rain-transport"><button class="btn" data-rain="play">Play exposure</button><button class="btn" data-rain="new">New exposure</button><button class="btn rain-mobile-close" data-rain="mobile-close">Close</button><label>Exposure progress<input data-rain="time" type="range" min="0" max="1000" step="1" value="0"></label><output data-rain="clock" aria-hidden="true"></output></div>
     <div class="rain-tabs" aria-label="Experiment view"><button class="btn" data-rain="arrivals-tab" aria-pressed="true">Arrivals</button><button class="btn" data-rain="noise-tab" aria-pressed="false">Noise & counts</button></div>
     <div class="rain-main"><section class="rain-arrivals-panel"><div class="rain-section-title"><h3>Photons arriving</h3><span>1 dot = 1 photon</span></div><canvas data-rain="rain" role="img" aria-label="Wavelength-colored photon arrivals; the newest 20 per pixel are shown while counts include all arrivals"></canvas><p class="rain-well-note">Newest 20 per pixel retained; counts include all arrivals.</p><div class="rain-scale" data-rain="scale"></div></section>
     <section class="rain-noise-panel"><div class="rain-section-title"><h3>256 equally lit pixels</h3><span>One exposure</span></div><canvas data-rain="noise" role="img" aria-label="Sampled pixel counts and their expected Poisson distribution"></canvas><p class="rain-grid-note">Tile brightness is normalized to the expected mean. This is photon-count variation, not a photograph.</p></section></div>
@@ -28,7 +27,9 @@ export function createPhotonRain() {
   let base: Model, model: Model, experiment: RainExperiment, seed = 37, time = 0, playing = false, raf = 0, last = 0;
   let opener: HTMLElement | null = null, apertures: number[] = [];
   const colors = new Map<number, string>();
-  const color = (nm: number) => { if (!colors.has(nm)) { const linear=wavelengthColor(nm).linear, peak=Math.max(...linear,1e-30); colors.set(nm, `rgb(${linear.map(value => Math.round(255 * srgbEncode(value/peak))).join(' ')})`); } return colors.get(nm)!; };
+  // The site's one spectral color (engine spectralColor().srgb, already display-normalized), so a dot here and a
+  // ray in the lens cutaway at the same wavelength are pixel-identical (design/RUBRIC.md, spectral consistency).
+  const color = (nm: number) => { if (!colors.has(nm)) colors.set(nm, `rgb(${wavelengthColor(nm).srgb.map(value => Math.round(255 * value)).join(' ')})`); return colors.get(nm)!; };
   function setup(canvas: HTMLCanvasElement) {
     const width = Math.max(1, canvas.clientWidth), height = Math.max(1, canvas.clientHeight), ratio = Math.min(2, devicePixelRatio || 1);
     if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) { canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio); }
@@ -89,6 +90,7 @@ export function createPhotonRain() {
     n.fillStyle = '#ffc47d'; n.fillText('Expected Poisson', nw / 2, grid + 23);
     el('stats').replaceChildren(...[[fmtNum(snapshot.mean, 1), 'expected photons / pixel'], [fmtNum(snapshot.observedMean, 1), 'sample mean'], [fmtNum(snapshot.sigma, 2), 'shot-noise σ (photons)'], [snapshot.relativeNoise == null ? '—' : `${fmtNum(snapshot.relativeNoise * 100, 1)}%`, 'relative shot noise']].map(([value, label]) => { const span = document.createElement('span'), b = document.createElement('b'); b.textContent = value; span.append(b, label); return span; }));
     el<HTMLInputElement>('time').value = String(Math.round(progress * 1000)); el('clock').textContent = `${Math.round(progress * 100)}%`;
+    el('time').setAttribute('aria-valuetext', `${Math.round(progress * 100)}% of the exposure`);
     const timeScale = RAIN_DURATION / model.scenario.shutter;
     el('scale').textContent = `${fmtNum(experiment.mean / model.scenario.shutter, 1)} photons/s/pixel · ${fmtShutter(model.scenario.shutter)} shown in ${RAIN_DURATION} s · time ${timeScale >= 1 ? 'slowed' : 'sped up'} ${fmtNum(timeScale >= 1 ? timeScale : 1 / timeScale, 1)}× · paths schematic`;
     el('play').textContent = playing ? 'Pause' : time >= RAIN_DURATION ? 'Replay exposure' : 'Play exposure';
@@ -101,7 +103,7 @@ export function createPhotonRain() {
   function rebuild() {
     pause(); model = compute({ ...base.scenario, fno: Number(el<HTMLSelectElement>('aperture').value), shutter: Number(el<HTMLSelectElement>('shutter').value), lux: base.scenario.lux! * Number(el<HTMLSelectElement>('light').value) });
     experiment = rainExperiment(model, seed); time = reduced.matches ? RAIN_DURATION : 0;
-    el('takeaway').textContent = `Equal light still gives unequal counts. Collecting 16× more photons cuts relative photon shot noise by 4×. This experiment leaves your photo unchanged.`;
+    el('takeaway').textContent = `Equal light still gives unequal counts. Collecting 16× more photons cuts relative photon shot noise by 4×. This experiment leaves the real photographs unchanged.`;
     el('compare').textContent = Number(el<HTMLSelectElement>('light').value) === 16 ? 'Dim reference' : 'Bright reference · 16×';
     draw();
   }

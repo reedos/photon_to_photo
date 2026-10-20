@@ -34,8 +34,8 @@
       "lugs": 4,
       "contacts": 11,
       "figs": {
-        "flangeMm": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "infobox: \"Flange focal distance: 16 mm\"" },
-        "throatMm": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "infobox: \"Inner diameter: 55 mm\", described as the largest full-frame lens mount" },
+        "flangeMm": { "ev": "spec", "src": "Nikon USA, \"Nikon Z Series: Z Mount System\" (https://www.nikonusa.com/learn-and-explore/c/products-and-innovation/nikon-z-series-z-mount-system)", "loc": "\"The system's large lens mount features a 55mm inner diameter and short 16mm flange focal distance.\" (first-party, read 10/14/2026; Wikipedia's Nikon Z-mount infobox gives the same 16 mm)" },
+        "throatMm": { "ev": "spec", "src": "Nikon USA, \"Nikon Z Series: Z Mount System\" (https://www.nikonusa.com/learn-and-explore/c/products-and-innovation/nikon-z-series-z-mount-system)", "loc": "\"55mm inner diameter\" (first-party, read 10/14/2026; Wikipedia's Nikon Z-mount infobox gives the same 55 mm)" },
         "lugs": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "body text: tabs increased \"from three (on the F-mount) to four\"" },
         "contacts": { "ev": "spec", "src": "Wikipedia, \"Nikon Z-mount\"", "loc": "body text: pins increased \"from eight (on the F-mount) to eleven (on the Z-mount)\"" }
       }

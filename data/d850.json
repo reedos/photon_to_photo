@@ -5,7 +5,13 @@
     "generatedBy": "d850 research agent",
     "accessedDate": "09/28/2026",
     "scope": "Sensor and body-geometry record for the Nikon D850, in the same shape as a data/sensors.json entry plus readNoise points (data/read-noise.json shape) plus body figures. The site's DSLR body uses the D850's sensor and mount geometry (body look stays generic/unbranded). See research/d850.md for prose, conflicts and reasoning.",
-    "evidenceKinds": ["spec", "vendor", "reported", "derived", "assumed"],
+    "evidenceKinds": [
+      "spec",
+      "vendor",
+      "reported",
+      "derived",
+      "assumed"
+    ],
     "readNoiseMethod": "Same method as data/read-noise.json: photonstophotos.net's RN_e.htm/PDR.htm/Sensor_Characteristics.htm write their per-camera series into a literal JS array in the page's inline <script> (Highcharts 4.0.4 config); this pass fetched the three pages with plain curl (confirmed byte-identical to the earlier Playwright captures already in .local/read-noise/, and reused here -- see .local/d850/captures/*.html) and extracted the 'Nikon D850_14' / 'Nikon D850(ES)_14' (RN_e.htm) and 'Nikon D850' (PDR.htm) series with a bracket-balanced scan + new Function() eval, same scripts pattern as .local/read-noise/*.cjs, copied/adapted at .local/d850/*.cjs. ISO = round(3.125 * 2^x); readNoiseE = 2^y.",
     "dcgDetectionMethod": "Same slope-based method as data/read-noise.json: steepest negative slope of log2(read noise) vs log2(ISO) between adjacent, unmarked, in-normal-analog-range points. Reported as the bracketing ISO pair, derived not reported.",
     "openProblems": [
@@ -35,18 +41,20 @@
       "widthMm": {
         "v": 35.9,
         "unit": "mm",
-        "ev": "reported",
-        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
-        "loc": "infobox, \"Sensor\" row: \"35.9 x 23.9 mm\"",
-        "accessed": "09/28/2026"
+        "ev": "spec",
+        "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+        "loc": "Nikon D850 online manual, Specifications, Image sensor: \"35.9 × 23.9 mm CMOS sensor\" (width)",
+        "accessed": "10/14/2026",
+        "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://en.wikipedia.org/wiki/Nikon_D850 -- infobox, \"Sensor\" row: \"35.9 x 23.9 mm\""
       },
       "heightMm": {
         "v": 23.9,
         "unit": "mm",
-        "ev": "reported",
-        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
-        "loc": "infobox, \"Sensor\" row",
-        "accessed": "09/28/2026"
+        "ev": "spec",
+        "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+        "loc": "Nikon D850 online manual, Specifications, Image sensor: \"35.9 × 23.9 mm CMOS sensor\" (height)",
+        "accessed": "10/14/2026",
+        "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://en.wikipedia.org/wiki/Nikon_D850 -- infobox, \"Sensor\" row"
       }
     },
     "pixelCount": {
@@ -56,7 +64,13 @@
         "ev": "reported",
         "src": "https://en.wikipedia.org/wiki/Nikon_D850",
         "loc": "infobox, \"Effective pixels\" row: 45.4 megapixels (8256 x 5504); matches DPReview's own specifications page. Nikon's own marketing commonly rounds this to \"45.7 million total pixels\" (total, not effective) -- both figures appear across sources, not resolved further here.",
-        "accessed": "09/28/2026"
+        "accessed": "09/28/2026",
+        "nikon": {
+          "ev": "spec",
+          "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+          "loc": "Nikon D850 online manual, Specifications, Effective pixels: \"45.7 million\" (the Nikon UK product page prints the same, with total pixels 46.89 million). The 45.4 MP above is the largest recorded image, 8256 x 5504 px; Nikon's effective-pixel count is a little higher than the image it writes.",
+          "accessed": "10/14/2026"
+        }
       },
       "effectiveH": {
         "v": 8256,
@@ -106,10 +120,11 @@
       "expandedMin": 32,
       "expandedMax": 102400,
       "unit": "ISO",
-      "ev": "reported",
-      "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
-      "loc": "\"Native ISO: 64-25,600\", \"Boosted ISO: 32-102,400\"",
-      "accessed": "09/28/2026"
+      "ev": "spec",
+      "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+      "loc": "Nikon D850 online manual, Specifications, ISO sensitivity: \"ISO 64 – 25600 in steps of 1/3, 1/2, or 1 EV\" (native range). The extended 32 to 102400 range: Nikon UK product page (https://www.nikon.co.uk/en_GB/product/cameras/d850), \"ISO range of 64–25600, extendable from 32 to 102400 (equivalent)\".",
+      "accessed": "10/14/2026",
+      "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications -- \"Native ISO: 64-25,600\", \"Boosted ISO: 32-102,400\""
     },
     "adcBitDepthBits": {
       "rawUncompressed": {
@@ -128,6 +143,16 @@
         "loc": "\"Raw (Nikon NEF, 12 or 14 bit)\"",
         "accessed": "09/28/2026"
       }
+    },
+    "blackLevelDn": {
+      "v": 400,
+      "unit": "DN (14-bit raw)",
+      "ev": "reported",
+      "src": "https://blog.kasson.com/d850/nikon-d850-histograms-vs-iso-setting/",
+      "loc": "Jim Kasson, \"Nikon D850 histograms vs ISO setting\", 10/30/2017, full-frame dark-field histograms at 1/1600 s: at base ISO \"The black point is at 400 counts\"; \"On the transition from ISO 1250 to ISO 1600, the black point moves lower\" (no new value given)",
+      "accessed": "10/11/2026",
+      "validIsoBelow": 1600,
+      "note": "A third-party dark-frame measurement, not a Nikon specification. From ISO 1600 up the real black point is lower by an unstated amount; the model keeps 400 there and labels it assumed."
     },
     "fullWellElectrons": {
       "photonstophotosRN_e": {
@@ -171,7 +196,11 @@
     },
     "readNoiseElectrons": {
       "note": "Full per-ISO curve (electrons, base ISO through above the DCG switch) is in readNoise.points below, extracted directly from photonstophotos.net's RN_e.htm the same way as data/read-noise.json (not the JS-rendering gap the original sensor-sources.md pass hit for the three other cameras).",
-      "normalAnalogRangeIso": [63, 25600],
+      "normalAnalogRangeIso": [
+        63,
+        25600
+      ],
+      "ev": "reported",
       "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
       "loc": "series 'Nikon D850_14', Highcharts series options `loEv`/`hiEv` converted with the site's ISO formula"
     },
@@ -179,8 +208,15 @@
       "note": "photonstophotos.net tracks the D850's electronic-shutter (silent live-view) mode as a separate series, 'Nikon D850(ES)_14', with near-identical fwc/unityGain/DCG-switch figures to the mechanical-shutter series. Read noise is very slightly lower in ES mode at most ISOs.",
       "fwcElectrons": 59127,
       "unityGainIso": 233,
-      "normalAnalogRangeIso": [63, 25600],
-      "dcgSwitchIso": { "fromIso": 318, "toIso": 400 },
+      "normalAnalogRangeIso": [
+        63,
+        25600
+      ],
+      "dcgSwitchIso": {
+        "fromIso": 318,
+        "toIso": 400
+      },
+      "ev": "reported",
       "src": "https://www.photonstophotos.net/Charts/RN_e.htm",
       "loc": "series 'Nikon D850(ES)_14'"
     },
@@ -221,6 +257,7 @@
         "note": "See readNoise.points below (pdrEv field) for the full PDR-vs-ISO curve from photonstophotos.net's PDR.htm, same source/method as data/read-noise.json.",
         "pdrAtBaseIso64": 11.63,
         "lowLightEv": 10.3629,
+        "ev": "reported",
         "src": "https://www.photonstophotos.net/Charts/PDR.htm",
         "loc": "series 'Nikon D850', `lowLightEv` series option and the ISO-64 (xEv=4.33) data point"
       }
@@ -232,10 +269,29 @@
         "ev": "reported",
         "src": "https://www.photonstophotos.net/Charts/Sensor_Characteristics.htm",
         "loc": "flat data array entry 'Nikon D850_14', field `qe: 44` -- Claff's DxOMark-derived QE estimate, not a Nikon-published figure",
-        "accessed": "09/28/2026"
+        "accessed": "09/28/2026",
+        "includesFillFactor": true,
+        "definition": {
+          "src": "https://www.photonstophotos.net/Investigations/DxOMark_Gain_Analysis.htm",
+          "loc": "Bill Claff, \"DxOMark Gain Analysis\", prepared 11/05/2014: \"FWC and \\\"measured ISO\\\" can then be used to compute Quantum Efficiency (QE).\" and \"Note that we're really not computing QE but something more like the product of QE and fill factor.\" The same page warns that overestimated gain inflates the derived FWC, QE and read noise.",
+          "accessed": "10/11/2026",
+          "note": "Score loop r2: the engine no longer multiplies this figure by the assumed 0.97 microlensFillFactor (that counted the fill-factor loss twice). Claff does not state a wavelength or light source for the figure. Score loop r6: it is now only the starting scale and a cross-check; the green peak is calibrated to the camera's measured ISO (sensor.measuredIso, src/engine/data.ts calibratedGreenPeak)."
+        }
       },
       "perChannel": {
         "note": "Not obtained as numbers; not published in text-extractable form by any source checked."
+      }
+    },
+    "measuredIso": {
+      "factor": {
+        "v": 0.699,
+        "unit": "ratio",
+        "ev": "reported",
+        "src": "https://www.photonstophotos.net/Charts/Measured_ISO.htm",
+        "loc": "Bill Claff's 'DxOMark Derived Measured ISO' chart, series 'Nikon D850': factor 0.699, factorev -0.52 (measured ISO = factor x the ISO setting, a fit over the settings DxOMark measured). Read directly from the chart's embedded data 10/14/2026. The chart's notes say the open circles are DxOMark ISO Sensitivity measurements; his investigation page (https://www.photonstophotos.net/Investigations/DxOMark_ISO_Sensitivities.htm) says DxOMark measures sensor saturation on the central portion of the raw image and calls a negative shift 'the camera sensor records light as if ISO were [that many stops] lower than the ISO setting'.",
+        "accessed": "10/14/2026",
+        "factorEv": -0.52,
+        "note": "Score loop r6: this is the saturation-based measured ISO the earlier rounds could not find. The model uses it to scale the Gaussian sensitivity amplitudes (src/engine/data.ts calibratedGreenPeak) so a metered 18% gray lands where ISO 12232's saturation-based speed puts it at the camera's measured ISO. It is a third-party measurement (DxOMark's raw saturation, reduced by Claff), not a Nikon specification, and it is one body of that model; copies of the same camera vary by about a stop in practice."
       }
     },
     "isoInvariantAtIso": {
@@ -298,44 +354,204 @@
     "ev": "reported",
     "fwcElectrons": 59126,
     "unityGainIso": 233,
-    "normalAnalogRangeIso": [63, 25600],
-    "dcgIso": { "fromIso": 318, "toIso": 400, "ev": "derived" },
+    "normalAnalogRangeIso": [
+      63,
+      25600
+    ],
+    "dcgIso": {
+      "fromIso": 318,
+      "toIso": 400,
+      "ev": "derived"
+    },
     "pdrLowLightEv": 10.3629,
     "points": [
-      { "iso": 31, "readNoiseE": 4.5, "pdrEv": 11.63, "outsideNormalAnalogRange": true },
-      { "iso": 40, "readNoiseE": 4.627, "pdrEv": 11.62, "outsideNormalAnalogRange": true },
-      { "iso": 50, "readNoiseE": 4.532, "pdrEv": 11.61, "outsideNormalAnalogRange": true },
-      { "iso": 63, "readNoiseE": 4.595, "pdrEv": 11.63 },
-      { "iso": 80, "readNoiseE": 4.317, "pdrEv": 11.28 },
-      { "iso": 100, "readNoiseE": 4.112, "pdrEv": 11.08 },
-      { "iso": 126, "readNoiseE": 3.758, "pdrEv": 10.86 },
-      { "iso": 159, "readNoiseE": 3.655, "pdrEv": 10.62 },
-      { "iso": 200, "readNoiseE": 3.706, "pdrEv": 10.13 },
-      { "iso": 251, "readNoiseE": 3.458, "pdrEv": 9.9 },
-      { "iso": 318, "readNoiseE": 3.506, "pdrEv": 9.67 },
-      { "iso": 400, "readNoiseE": 1.485, "pdrEv": 9.81 },
-      { "iso": 503, "readNoiseE": 1.414, "pdrEv": 9.6 },
-      { "iso": 636, "readNoiseE": 1.366, "pdrEv": 9.1 },
-      { "iso": 800, "readNoiseE": 1.338, "pdrEv": 8.86 },
-      { "iso": 1006, "readNoiseE": 1.32, "pdrEv": 8.62 },
-      { "iso": 1273, "readNoiseE": 1.283, "pdrEv": 8.12 },
-      { "iso": 1600, "readNoiseE": 1.24, "pdrEv": 7.85 },
-      { "iso": 2011, "readNoiseE": 1.24, "pdrEv": 7.53 },
-      { "iso": 2546, "readNoiseE": 1.189, "pdrEv": 7.19 },
-      { "iso": 3200, "readNoiseE": 1.223, "pdrEv": 6.87 },
-      { "iso": 4022, "readNoiseE": 1.214, "pdrEv": 6.53 },
-      { "iso": 5091, "readNoiseE": 1.165, "pdrEv": 6.22 },
-      { "iso": 6400, "readNoiseE": 1.11, "pdrEv": 5.93 },
-      { "iso": 8045, "readNoiseE": 1.11, "pdrEv": 5.55, "digitalMarker": "triangle" },
-      { "iso": 10183, "readNoiseE": 1.028, "pdrEv": 5.21, "digitalMarker": "triangle" },
-      { "iso": 12800, "readNoiseE": 1.057, "pdrEv": 4.9, "digitalMarker": "triangle" },
-      { "iso": 16090, "readNoiseE": 1.014, "pdrEv": 4.57, "digitalMarker": "triangle" },
-      { "iso": 20366, "readNoiseE": 1.007, "pdrEv": 4.23, "digitalMarker": "triangle" },
-      { "iso": 25600, "readNoiseE": 1.035, "pdrEv": 3.89, "digitalMarker": "triangle" },
-      { "iso": 32180, "readNoiseE": 0.986, "pdrEv": 3.57, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
-      { "iso": 40731, "readNoiseE": 0.986, "pdrEv": 3.23, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
-      { "iso": 51200, "readNoiseE": 0.973, "pdrEv": 2.91, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" },
-      { "iso": 102400, "readNoiseE": 0.895, "pdrEv": 1.89, "outsideNormalAnalogRange": true, "digitalMarker": "triangle" }
+      {
+        "iso": 31,
+        "readNoiseE": 4.5,
+        "pdrEv": 11.63,
+        "outsideNormalAnalogRange": true
+      },
+      {
+        "iso": 40,
+        "readNoiseE": 4.627,
+        "pdrEv": 11.62,
+        "outsideNormalAnalogRange": true
+      },
+      {
+        "iso": 50,
+        "readNoiseE": 4.532,
+        "pdrEv": 11.61,
+        "outsideNormalAnalogRange": true
+      },
+      {
+        "iso": 63,
+        "readNoiseE": 4.595,
+        "pdrEv": 11.63
+      },
+      {
+        "iso": 80,
+        "readNoiseE": 4.317,
+        "pdrEv": 11.28
+      },
+      {
+        "iso": 100,
+        "readNoiseE": 4.112,
+        "pdrEv": 11.08
+      },
+      {
+        "iso": 126,
+        "readNoiseE": 3.758,
+        "pdrEv": 10.86
+      },
+      {
+        "iso": 159,
+        "readNoiseE": 3.655,
+        "pdrEv": 10.62
+      },
+      {
+        "iso": 200,
+        "readNoiseE": 3.706,
+        "pdrEv": 10.13
+      },
+      {
+        "iso": 251,
+        "readNoiseE": 3.458,
+        "pdrEv": 9.9
+      },
+      {
+        "iso": 318,
+        "readNoiseE": 3.506,
+        "pdrEv": 9.67
+      },
+      {
+        "iso": 400,
+        "readNoiseE": 1.485,
+        "pdrEv": 9.81
+      },
+      {
+        "iso": 503,
+        "readNoiseE": 1.414,
+        "pdrEv": 9.6
+      },
+      {
+        "iso": 636,
+        "readNoiseE": 1.366,
+        "pdrEv": 9.1
+      },
+      {
+        "iso": 800,
+        "readNoiseE": 1.338,
+        "pdrEv": 8.86
+      },
+      {
+        "iso": 1006,
+        "readNoiseE": 1.32,
+        "pdrEv": 8.62
+      },
+      {
+        "iso": 1273,
+        "readNoiseE": 1.283,
+        "pdrEv": 8.12
+      },
+      {
+        "iso": 1600,
+        "readNoiseE": 1.24,
+        "pdrEv": 7.85
+      },
+      {
+        "iso": 2011,
+        "readNoiseE": 1.24,
+        "pdrEv": 7.53
+      },
+      {
+        "iso": 2546,
+        "readNoiseE": 1.189,
+        "pdrEv": 7.19
+      },
+      {
+        "iso": 3200,
+        "readNoiseE": 1.223,
+        "pdrEv": 6.87
+      },
+      {
+        "iso": 4022,
+        "readNoiseE": 1.214,
+        "pdrEv": 6.53
+      },
+      {
+        "iso": 5091,
+        "readNoiseE": 1.165,
+        "pdrEv": 6.22
+      },
+      {
+        "iso": 6400,
+        "readNoiseE": 1.11,
+        "pdrEv": 5.93
+      },
+      {
+        "iso": 8045,
+        "readNoiseE": 1.11,
+        "pdrEv": 5.55,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 10183,
+        "readNoiseE": 1.028,
+        "pdrEv": 5.21,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 12800,
+        "readNoiseE": 1.057,
+        "pdrEv": 4.9,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 16090,
+        "readNoiseE": 1.014,
+        "pdrEv": 4.57,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 20366,
+        "readNoiseE": 1.007,
+        "pdrEv": 4.23,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 25600,
+        "readNoiseE": 1.035,
+        "pdrEv": 3.89,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 32180,
+        "readNoiseE": 0.986,
+        "pdrEv": 3.57,
+        "outsideNormalAnalogRange": true,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 40731,
+        "readNoiseE": 0.986,
+        "pdrEv": 3.23,
+        "outsideNormalAnalogRange": true,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 51200,
+        "readNoiseE": 0.973,
+        "pdrEv": 2.91,
+        "outsideNormalAnalogRange": true,
+        "digitalMarker": "triangle"
+      },
+      {
+        "iso": 102400,
+        "readNoiseE": 0.895,
+        "pdrEv": 1.89,
+        "outsideNormalAnalogRange": true,
+        "digitalMarker": "triangle"
+      }
     ],
     "notes": [
       "Marker semantics identical to data/read-noise.json: `outsideNormalAnalogRange` = open/white marker (extended-ISO digital push/pull), `digitalMarker: 'triangle'` = in-camera noise reduction or scaling applied at that ISO (this project's earlier read-noise.json used the more specific Highcharts symbol name 'triangle-down'; the D850/Z8 extraction in this pass recorded the symbol as plain 'triangle' as it appeared in the parsed marker object -- same meaning, not re-verified against the more granular up/down distinction).",
@@ -369,24 +585,32 @@
         "loc": "technical summary",
         "accessed": "09/28/2026"
       },
-      "imagePlaneNote": "The image (sensor) plane sits at the flange focal distance from the mount face, i.e. 46.5mm behind the F-mount flange -- this is the same figure as flangeFocalDistanceMm; no separate \"image plane position\" number distinct from flange focal distance was found published by Nikon or any secondary source checked (see research/d850.md)."
+      "imagePlaneNote": "The image (sensor) plane sits at the flange focal distance from the mount face, i.e. 46.5mm behind the F-mount flange -- this is the same figure as flangeFocalDistanceMm; no separate \"image plane position\" number distinct from flange focal distance was found published by Nikon or any secondary source checked (see research/d850.md).",
+      "nikonFirstParty": {
+        "ev": "spec",
+        "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+        "loc": "Nikon D850 online manual, Specifications, Lens mount: \"Nikon F mount (with AF coupling and AF contacts)\". Nikon's pages checked do not print the 46.5 mm flange distance, so that figure stays third-party (Wikipedia, and a Nikon lens engineer's video as reported by Business of Photography).",
+        "accessed": "10/14/2026"
+      }
     },
     "shutter": {
       "mechanicalShutterRangeS": {
         "v": "1/8000-30",
         "unit": "s",
-        "ev": "reported",
-        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
-        "loc": "\"30 seconds - 1/8000 second, bulb mode\"",
-        "accessed": "09/28/2026"
+        "ev": "spec",
+        "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+        "loc": "Nikon D850 online manual, Specifications, Shutter speed: \"1/8000 – 30 s in steps of 1/3, 1/2, or 1 EV, bulb, time, X250\"",
+        "accessed": "10/14/2026",
+        "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://en.wikipedia.org/wiki/Nikon_D850 -- \"30 seconds - 1/8000 second, bulb mode\""
       },
       "flashSyncSpeedS": {
         "v": "1/250",
         "unit": "s",
-        "ev": "reported",
-        "src": "https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications",
-        "loc": "\"Flash sync speed: 1/250 sec\"",
-        "accessed": "09/28/2026"
+        "ev": "spec",
+        "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+        "loc": "Nikon D850 online manual, Specifications, Flash sync speed: \"X = 1/250 s; synchronizes with shutter at 1/250 s or slower\"",
+        "accessed": "10/14/2026",
+        "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://www.dpreview.com/products/nikon/slrs/nikon_d850/specifications -- \"Flash sync speed: 1/250 sec\""
       },
       "curtainSpeedNote": "Nikon does not publish a raw shutter-curtain travel-time figure for the D850 in any source checked; flash sync speed is recorded as the standard proxy photographers use for \"how fast the curtains cross the frame\", not a direct measurement."
     },
@@ -434,10 +658,11 @@
       "height": 124,
       "depth": 78.5,
       "unit": "mm",
-      "ev": "reported",
-      "src": "https://en.wikipedia.org/wiki/Nikon_D850",
-      "loc": "infobox, \"Dimensions\" row: 146 x 124 x 78.5 mm (5.75 x 4.88 x 3.09 in)",
-      "accessed": "09/28/2026"
+      "ev": "spec",
+      "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+      "loc": "Nikon D850 online manual, Specifications, Dimensions (W × H × D): \"Approx. 146 × 124 × 78.5 mm\"",
+      "accessed": "10/14/2026",
+      "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://en.wikipedia.org/wiki/Nikon_D850 -- infobox, \"Dimensions\" row: 146 x 124 x 78.5 mm (5.75 x 4.88 x 3.09 in)"
     },
     "weightG": {
       "bodyOnly": {
@@ -451,10 +676,11 @@
       "withBattery": {
         "v": 1005,
         "unit": "g",
-        "ev": "reported",
-        "src": "https://en.wikipedia.org/wiki/Nikon_D850",
-        "loc": "infobox, weight row (with battery, 2.216 lb)",
-        "accessed": "09/28/2026"
+        "ev": "spec",
+        "src": "https://onlinemanual.nikonimglib.com/d850/en/19_technical_notes_11.html",
+        "loc": "Nikon D850 online manual, Specifications, Weight: \"Approx. 1005 g (2 lb. 3.5 oz.) with battery and XQD memory card but without body cap\" (the manual's figure includes the memory card)",
+        "accessed": "10/14/2026",
+        "crossCheck": "Earlier third-party source, kept as a cross-check (was labeled reported): https://en.wikipedia.org/wiki/Nikon_D850 -- infobox, weight row (with battery, 2.216 lb)"
       }
     },
     "imageProcessor": {

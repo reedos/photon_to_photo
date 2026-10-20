@@ -10,7 +10,7 @@ this note: 9/28/2026. Machine-readable figures with evidence labels are in
 |---|---|---|---|---|---|
 | Sony E (full-frame / FE) | 18.0 (spec) | 46.1 (spec) | 3 (reported) | 10 (reported; one other source seen says 8 — see conflict below) | [Wikipedia, Sony E-mount](https://en.wikipedia.org/wiki/Sony_E-mount); lug/contact counts from a web search aggregating [Camera-wiki.org, Sony NEX](https://camera-wiki.org/wiki/Sony_NEX) |
 | Canon RF | 20.0 (spec) | 54.0 (spec) | 3 (spec) | 12 (spec) | [Wikipedia, Canon RF lens mount](https://en.wikipedia.org/wiki/Canon_RF_lens_mount) |
-| Nikon Z (full-frame) | 16.0 (spec) | 55.0 (spec) | 4 (spec) | 11 (spec) | [Wikipedia, Nikon Z-mount](https://en.wikipedia.org/wiki/Nikon_Z-mount) |
+| Nikon Z (full-frame) | 16.0 (spec) | 55.0 (spec) | 4 (spec) | 11 (spec) | [Nikon USA, Z Mount System](https://www.nikonusa.com/learn-and-explore/c/products-and-innovation/nikon-z-series-z-mount-system) for flange and throat (first-party, 10/14/2026); [Wikipedia, Nikon Z-mount](https://en.wikipedia.org/wiki/Nikon_Z-mount) for lugs and contacts |
 | Canon EF | 44.0 (spec) | 54.0 (spec) | 3 (derived) | 8 (spec) | [Wikipedia, Canon EF lens mount](https://en.wikipedia.org/wiki/Canon_EF_lens_mount) |
 | Nikon F | 46.5 (spec) | 44.0 (spec) | 3 (spec) | 8 (reported) | [Wikipedia, Nikon F-mount](https://en.wikipedia.org/wiki/Nikon_F-mount) |
 | Sigma SA | 44.0 (spec) | 45.0 (assumed) | 3 (assumed) | 8 (derived) | [Wikipedia, Sigma SA-mount](https://en.wikipedia.org/wiki/Sigma_SA-mount) |

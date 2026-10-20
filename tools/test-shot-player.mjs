@@ -46,7 +46,7 @@ try{
   }
   await page.locator('[data-shot-chapter="3"]').click();await seek(14);
   const chargeLabelBacking=await page.locator('#shot-canvas').evaluate(canvas=>{
-   const ctx=canvas.getContext('2d'),scale=canvas.width/1000,x=Math.round((570-2)*scale),y=Math.round((520-10)*scale);
+   const ctx=canvas.getContext('2d'),scale=canvas.width/1000,x=Math.round((285-2)*scale),y=Math.round((538-10)*scale);
    return [...ctx.getImageData(x,y,1,1).data];
   });
   assert.ok(chargeLabelBacking[0]<35&&chargeLabelBacking[1]<45&&chargeLabelBacking[2]<60,
@@ -72,9 +72,17 @@ try{
  await page.locator('#shot-play').click();await page.locator('.shot-notes summary').click();await page.waitForSelector('#shot-dialog[data-playing="false"]',{timeout:1000});await page.locator('.shot-notes summary').click();
  await seek(0);
  await page.evaluate(()=>{window.shotFrames={count:0,stages:new Set(),start:performance.now()};const sample=()=>{const d=document.getElementById('shot-dialog');window.shotFrames.count++;window.shotFrames.stages.add(d.dataset.stage);if(d.dataset.playing==='true')requestAnimationFrame(sample);};document.getElementById('shot-play').click();requestAnimationFrame(sample);});
- await page.waitForSelector('#shot-dialog[data-playing="false"]',{timeout:45000});
+ await page.waitForSelector('#shot-dialog[data-playing="false"]',{timeout:150000});
  const playback=await page.evaluate(()=>({frames:window.shotFrames.count,stages:[...window.shotFrames.stages],seconds:(performance.now()-window.shotFrames.start)/1000}));
  assert.deepEqual(playback.stages,['0','1','2','3','4','5']);assert.ok(playback.frames>140,'whole sequence renders at least ten frames per illustrative second');console.log('full playback',playback);
+ // Score loop r5: a chapter stays up for the time its caption takes to read (3 words a second at 1x). The focus chapter's
+ // caption is about 40 words, so at 2x it holds for about 6.7 s of real time instead of 2 s: two seconds of playing from its
+ // start moves the clock by well under the 4 timeline seconds a fixed rate would.
+ await seek(4.5);const startedAt=Number(await page.locator('#shot-time').inputValue());
+ await page.locator('#shot-play').click();await page.waitForTimeout(2000);await page.locator('#shot-play').click();
+ const advanced=Number(await page.locator('#shot-time').inputValue())-startedAt;
+ assert.ok(advanced>.3&&advanced<2.4,`the focus chapter's clock slows to its reading time: advanced ${advanced.toFixed(2)} s in 2 s at 2x`);
+ console.log('reading pace: 2 s at 2x advanced the focus chapter by',advanced.toFixed(2),'timeline s');
  await page.locator('#shot-time').focus();await page.keyboard.press('End');assert.equal(Number(await page.locator('#shot-time').inputValue()),28);await page.keyboard.press('Home');assert.equal(Number(await page.locator('#shot-time').inputValue()),0);
  for(const [track,start,end,stage] of [['light',0,12,2],['charge',12,16,3],['data',16,28,5]]){
   await page.locator('#shot-track').selectOption(track);assert.equal(Number(await page.locator('#shot-time').inputValue()),start);
@@ -83,8 +91,17 @@ try{
  }
  await page.locator('#shot-track').selectOption('all');
  await page.addScriptTag({content:axe});
- for(const [width,height] of [[1366,768],[390,844],[320,740]]){
+ for(const [width,height] of [[1366,768],[390,844],[360,780],[320,740]]){
   await page.setViewportSize({width,height});await seek(14);
+  // Score loop r5: every label drawn on the canvas, in every chapter, keeps its padded box inside the canvas (before: "Sensor
+  // samples illustrated from the JPEG · not the orig" ran off a 360 px canvas). The player counts them on each frame.
+  for(let i=0;i<6;i++){
+   await page.locator(`[data-shot-chapter="${i}"]`).click();
+   const labels=await page.locator('#shot-canvas').evaluate(c=>({total:+c.dataset.labelsTotal,outside:+c.dataset.labelsOutside,w:c.clientWidth}));
+   assert.ok(labels.total>=1,`${width} chapter ${i+1}: labels are counted (${JSON.stringify(labels)})`);
+   assert.equal(labels.outside,0,`${width} chapter ${i+1}: no label leaves the canvas (${JSON.stringify(labels)})`);
+  }
+  await seek(14);
   const layout=await page.locator('#shot-dialog').evaluate(d=>({sw:d.scrollWidth,cw:d.clientWidth,sh:d.scrollHeight,ch:d.clientHeight,b:d.getBoundingClientRect().toJSON()}));
   assert.ok(layout.sw<=layout.cw+1,'no horizontal scroll');assert.ok(layout.b.top>=0&&layout.b.bottom<=height+1,'dialog stays within viewport');
   assert.ok(layout.sh-layout.ch <= (width<400?24:1),JSON.stringify({width,...layout})); // Primary controls are checked separately below.
@@ -102,7 +119,7 @@ try{
   await retina.locator('[data-shot-chapter="3"]').click();
   await retina.locator('#shot-time').evaluate(el=>{el.value='14';el.dispatchEvent(new Event('input',{bubbles:true}));});
   const retinaChip=await retina.locator('#shot-canvas').evaluate(canvas=>{
-   const ctx=canvas.getContext('2d'),scale=canvas.width/1000,x=Math.round((570-2)*scale),y=Math.round((520-10)*scale);
+   const ctx=canvas.getContext('2d'),scale=canvas.width/1000,x=Math.round((45-2)*scale),y=Math.round((538-10)*scale);
    return {ratio:canvas.width/canvas.getBoundingClientRect().width,pixel:[...ctx.getImageData(x,y,1,1).data]};
   });
   assert.ok(retinaChip.ratio>1.8,`phone canvas uses a high-DPR backing store: ${retinaChip.ratio}`);

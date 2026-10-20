@@ -2,9 +2,16 @@
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { createRequire } from 'node:module';
+import { dirname } from 'node:path';
 import { createServer } from 'vite';
 
-const server = await createServer({ server: { host: '127.0.0.1', port: 0, open: false, watch: null, hmr: false } });
+// three is found the way Node finds it, so the gate runs in an agent worktree whose node_modules sits in a parent folder
+// (score loop r4: the page imported /node_modules/three/..., which a worktree does not have, and the gate was skipped
+// as "environmental"). Vite is allowed to serve that folder through /@fs/.
+const threeFile = createRequire(import.meta.url).resolve('three/webgpu');
+const threeUrl = '/@fs/' + threeFile.split(String.fromCharCode(92)).join('/').replace(/^\/+/, '');
+const server = await createServer({ server: { host: '127.0.0.1', port: 0, open: false, watch: null, hmr: false, fs: { allow: [process.cwd(), dirname(dirname(threeFile))] } } });
 await server.listen();
 const url = `http://127.0.0.1:${server.httpServer.address().port}`;
 const browser = await chromium.launch({ channel: 'chrome', headless: true,
@@ -18,7 +25,7 @@ try {
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', e => { if (e.type() === 'error') errors.push(e.text()); });
   await page.goto(`${url}/?piece=lens&lens=m50`);
-  await page.waitForFunction(() => window.p2p?.render());
+  await page.waitForFunction(() => window.p2p?.pieces.lens);
   await page.waitForLoadState('networkidle');
   await page.waitForFunction(() => !window.p2p.framing().moving);
   // A piece entry must establish its own coordinate system synchronously, before
@@ -28,7 +35,8 @@ try {
     await page.locator('#view').scrollIntoViewIfNeeded();
     for (let round = 0; round < 2; round++) {
       await page.evaluate(() => window.p2p.piece('loupe'));
-      await page.waitForFunction(() => window.p2p.pieces.loupe.state().diveStage === 'well');
+      // the loupe opens on the well now (no photo-to-well dive since c6209df): wait for its sample instead
+      await page.waitForFunction(() => window.p2p.pieces.loupe.state().hasPixel && !window.p2p.pieces.loupe.state().pendingPixel);
       await page.waitForFunction(() => !window.p2p.framing().moving);
       const staleBadge = await page.evaluate(() => {
         window.p2p.piece('camera');
@@ -72,10 +80,10 @@ try {
   await page.waitForFunction(() => !window.p2p.framing().moving);
   // Exercise real geometry ownership directly: all replaced buffers must dispose,
   // including second/subsequent rebuilds (the old bug only disposed initial stubs).
-  const leaked = await page.evaluate(async () => {
+  const leaked = await page.evaluate(async (threeSpecifier) => {
     const [{ build }, look, bus, THREE] = await Promise.all([
       import('/src/pieces/cone.ts'), import('/src/app/look.ts'), import('/src/app/bus.ts'),
-      import('/node_modules/three/build/three.webgpu.js'),
+      import(threeSpecifier),
     ]);
     const overlay = document.createElement('div'); document.getElementById('view').append(overlay);
     const camera = new THREE.PerspectiveCamera(40, 1.5, .01, 100000);
@@ -95,7 +103,7 @@ try {
       for (const item of owned) if (!current.has(item.geometry) && !item.disposed) leaks.push(item.name);
     }
     handle.dispose(); overlay.remove(); return leaks;
-  });
+  }, threeUrl);
   assert.deepEqual(leaked, [], 'every replaced cone geometry must be released');
   assert.deepEqual(errors, []);
   console.log('PASS normal-motion level entry, interrupted navigation, covered-stage pause/resume, forced snapshots, repeated cone buffer disposal');

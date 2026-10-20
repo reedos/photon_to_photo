@@ -11,8 +11,11 @@ const report = { base, checks: [], findings: [], tour: {}, playback: {}, ghosts:
 try {
   browser = await chromium.launch({ channel: 'chrome', headless: true,
     args: ['--use-angle=d3d11', '--enable-unsafe-webgpu', '--ignore-gpu-blocklist'] });
-  for (const viewport of [{ width: 1440, height: 900, key: 'desktop' }, { width: 390, height: 844, key: 'phone' }, { width: 320, height: 568, key: 'phone-short' }]) {
+  // laptop: the tour band's words at 1280x720 (review loop 10/11/2026); phone-landscape: a phone on its side, where
+  // the page scrolls and the model keeps most of the screen once the level row is under the bar.
+  for (const viewport of [{ width: 1440, height: 900, key: 'desktop' }, { width: 1280, height: 720, key: 'laptop' }, { width: 390, height: 844, key: 'phone' }, { width: 320, height: 568, key: 'phone-short' }, { width: 844, height: 390, key: 'phone-landscape' }]) {
     const isPhone = viewport.key.startsWith('phone');
+    const landscape = viewport.key === 'phone-landscape';
     const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height }, reducedMotion: 'no-preference', deviceScaleFactor: isPhone ? 2 : 1, isMobile: isPhone, hasTouch: isPhone });
     page.on('pageerror', error => report.pageErrors.push(String(error)));
     page.on('console', message => { if (message.type() === 'error') report.consoleErrors.push(message.text()); });
@@ -21,33 +24,41 @@ try {
     await page.locator('#learn-launch').click();
     await page.waitForFunction(() => !document.querySelector('#journey').hidden);
     const records = [];
-    for (let index = 0; index < 8; index++) {
+    for (let index = 0; index < 10; index++) {
       await page.locator('#journey-stop').selectOption(String(index));
       await page.waitForTimeout(120);
+      // the landscape layout (access): the top bar scrolls away and the level tabs snap to the top of the screen
+      if (landscape) await page.evaluate(() => { document.querySelector('#steps').scrollIntoView({ block: 'start' }); document.querySelector('.viewer').scrollTop = 0; });
       const fast = await page.evaluate(() => {
         const box = selector => { const r = document.querySelector(selector).getBoundingClientRect(); return { x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom }; };
         const view=box('#view'), viewer=box('.viewer'), body=box('.stage .body'), nav=box('.hud-btns-phone'), sidebar=box('.studio-sidebar');
-        const overlaps=r=>r.width&&r.height?Math.max(0,Math.min(view.bottom,r.bottom)-Math.max(view.y,r.y)):0;
+        const overlaps=r=>r.width&&r.height&&Math.min(view.x+view.width,r.x+r.width)>Math.max(view.x,r.x)?Math.max(0,Math.min(view.bottom,r.bottom)-Math.max(view.y,r.y)):0;
         return { view, visibleHeight:Math.max(0,Math.min(view.bottom,viewer.bottom,body.bottom,innerHeight)-Math.max(view.y,viewer.y,body.y,0)), navOverlap:overlaps(nav), sidebarOverlap:overlaps(sidebar), text:document.querySelector('#journey-text').textContent, caption:document.querySelector('#journey-caption').textContent,
-          stop:document.querySelector('#journey-stop').value, tour:box('#journey') };
+          stop:document.querySelector('#journey-stop').value, tour:box('#journey'), lesson:!document.querySelector('#sensor-lesson').hidden,
+          // the stop's words must be readable in full where they are shown: no clamp cutting them mid-line
+          textClipped:(() => { const t=[...document.querySelectorAll('#journey-text, #journey-caption')].find(e=>getComputedStyle(e).display!=='none'); return t ? t.scrollHeight - t.clientHeight > 2 && !document.querySelector('#journey-more > summary')?.checkVisibility() : false; })() };
       });
       await page.waitForTimeout(750);
       const settled = await page.locator('#view').boundingBox();
       records.push({ index, ...fast, settledHeight:settled?.height });
       if (index === 0) await page.screenshot({ path:`${out}/${viewport.key}-tour-step-1.png` });
-      if(index===0&&isPhone){
+      if(fast.textClipped) report.findings.push(`${viewport.key} stop ${index + 1}: the tour text is clipped with no way to read the rest`);
+      if(index===0&&isPhone&&!landscape){
         const caption=await page.evaluate(()=>{const c=document.querySelector('#journey-caption'),s=document.querySelector('#journey-stop'),m=document.querySelector('#journey-more > summary'),r=c.getBoundingClientRect(),mr=m.getBoundingClientRect();return {height:r.height,line:parseFloat(getComputedStyle(c).lineHeight),top:r.top,selectBottom:s.getBoundingClientRect().bottom,moreHeight:mr.height,moreHit:m.contains(document.elementFromPoint(mr.x+mr.width/2,mr.y+mr.height/2))}});
         if(caption.height<caption.line||caption.top<caption.selectBottom-1||caption.moreHeight<30||!caption.moreHit) report.findings.push(`${viewport.key}: tour caption is vertically clipped or More is not reachable`);
       }
-      if (index === 7) await page.screenshot({ path:`${out}/${viewport.key}-tour-step-8.png` });
+      if (index === 9) await page.screenshot({ path:`${out}/${viewport.key}-tour-step-10.png` });
     }
-    const heights = records.map(record => record.view.height);
+    // A stop that opens a lesson (Read the sensor, the image pipeline) covers the model and takes the model's own rows
+    // as well (score loop r3), so the model's frame is held steady across the other stops.
+    const heights = records.filter(record => !record.lesson).map(record => record.view.height);
     const spread = Math.max(...heights) - Math.min(...heights);
     const phoneGeometry = !isPhone ? null : await page.evaluate(() => {
       const rect = element => { const r=element.getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}; };
       const view=document.querySelector('#view'), viewer=document.querySelector('.viewer'), body=document.querySelector('.stage .body'), nav=document.querySelector('.hud-btns-phone'), sidebar=document.querySelector('.studio-sidebar');
       const v=rect(view), vr=rect(viewer), br=rect(body), nr=rect(nav), sr=rect(sidebar), clippedTop=Math.max(v.y,vr.y,br.y,0), clippedBottom=Math.min(v.bottom,vr.bottom,br.bottom,innerHeight);
-      return { view:v, viewer:vr, body:br, nav:nr, sidebar:sr, visibleCanvasHeight:Math.max(0,clippedBottom-clippedTop), viewNavOverlap:Math.max(0,Math.min(v.bottom,nr.bottom)-Math.max(v.y,nr.y)), viewSidebarOverlap:Math.max(0,Math.min(v.bottom,sr.bottom)-Math.max(v.y,sr.y)) };
+      const overlap=(a,b)=>Math.min(a.right,b.right)>Math.max(a.x,b.x)?Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)):0;
+      return { view:v, viewer:vr, body:br, nav:nr, sidebar:sr, visibleCanvasHeight:Math.max(0,clippedBottom-clippedTop), viewNavOverlap:overlap(v,nr), viewSidebarOverlap:overlap(v,sr) };
     });
     report.tour[viewport.key] = { stops:records, heightSpread:spread, phoneGeometry };
     // Very short screens give the 2D readout lessons space reclaimed from the
@@ -55,14 +66,14 @@ try {
     // that space to match the smaller 3D frame.
     if (viewport.key !== 'phone-short' && spread >= 4) report.findings.push(`${viewport.key}: #view height changes by ${spread}px across tour stops`);
     if (isPhone) {
-      const minFrame = viewport.key === 'phone' ? 320 : 100;
+      const minFrame = viewport.key === 'phone' ? 320 : landscape ? Math.round(viewport.height * 0.55) : 100;
       if (phoneGeometry.visibleCanvasHeight < minFrame) report.findings.push(`${viewport.key}: only ${phoneGeometry.visibleCanvasHeight}px of #view is visible; expected at least ${minFrame}px`);
       if (phoneGeometry.viewNavOverlap > 0 || phoneGeometry.viewSidebarOverlap > 0) report.findings.push(`${viewport.key}: #view overlaps navigation or the Parts inspector`);
       for(const record of records) if(record.visibleHeight < minFrame || record.navOverlap>0 || record.sidebarOverlap>0) report.findings.push(`${viewport.key} stop ${record.index}: model frame is clipped or covered (${record.visibleHeight}px visible)`);
     }
     {
       await page.locator('#journey-stop').selectOption('1');
-      if (isPhone) await page.locator('#journey-more > summary').click();
+      if (await page.locator('#journey-more > summary').isVisible()) await page.locator('#journey-more > summary').click();
       await page.locator('#journey-physics').click();
       await page.locator('#journey-reading').waitFor({state:'visible'});
       const reading = await page.locator('#journey-reading').evaluate(dialog => {
@@ -72,7 +83,7 @@ try {
       await page.locator('#journey-use').scrollIntoViewIfNeeded();
       const reachable=await page.locator('#journey-use').evaluate(e=>{const r=e.getBoundingClientRect(),b=e.closest('.journey-reading-body').getBoundingClientRect();return r.top>=b.top-1&&r.bottom<=b.bottom+1});
       report.tour[viewport.key].reading={...reading,reachable};
-      if(reading.bodyHeight<300||reading.top<0||reading.bottom>viewport.height||reading.right>viewport.width||reading.horizontalOverflow||!reachable) report.findings.push(`${viewport.key}: physics reading sheet is clipped or too small`);
+      if(reading.bodyHeight<Math.min(300,viewport.height*0.6)||reading.top<0||reading.bottom>viewport.height||reading.right>viewport.width||reading.horizontalOverflow||!reachable) report.findings.push(`${viewport.key}: physics reading sheet is clipped or too small`);
       await page.screenshot({path:`${out}/${viewport.key}-tour-more-physics.png`});
       await page.keyboard.press('Escape');
       if(await page.locator('#journey-reading').isVisible()||await page.evaluate(()=>document.activeElement.id)!=='journey-physics') report.findings.push(`${viewport.key}: reading sheet did not close and return keyboard focus`);
@@ -81,11 +92,12 @@ try {
       await page.locator('#journey-close').click();
       await page.waitForFunction(() => document.querySelector('#journey').hidden);
       await page.close();
-      report.checks.push(`${viewport.key}: all tour stops share a stable frame (${phoneGeometry.visibleCanvasHeight}px visible), with no navigation or Parts overlap.`);
+      report.checks.push(`${viewport.key}: all tour stops share a stable frame (${phoneGeometry.visibleCanvasHeight}px visible), with no navigation or Parts overlap, and the stop text is readable.`);
       if (viewport.key === 'phone') report.checks.push('Physics opens in a spacious reading sheet with accessible closing and focus return.');
       continue;
     }
-    report.checks.push(`Desktop: all eight tour stops sampled; #view height spread ${spread}px.`);
+    report.checks.push(`${viewport.key}: all ten tour stops sampled; #view height spread ${spread}px; no stop's text clipped.`);
+    if (viewport.key === 'laptop') { await page.close(); continue; }
     await page.locator('#journey-close').click();
     await page.waitForFunction(() => document.querySelector('#journey').hidden);
     await page.locator('#tab-controls').click();

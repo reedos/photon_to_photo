@@ -3,9 +3,11 @@ import type { CameraFrame } from '../pieces/types';
 
 /** Fit the actual component envelopes, avoiding the empty corners of one large world-axis box.
  * Called only for an automatic overview/reset; manual orbit and selected-part framing stay with their owners. */
-export function overviewFrame(root: THREE.Object3D, direction: THREE.Vector3, tanH: number, tanV: number): CameraFrame | null {
+export function overviewFrame(root: THREE.Object3D, direction: THREE.Vector3, tanH: number, tanV: number,
+  extra: THREE.Vector3[] = []): CameraFrame | null {
   root.updateWorldMatrix(true, true);
-  const points: THREE.Vector3[] = [];
+  // `extra`: world points that must be in frame as well (the cutaway's arriving rays, camera-rig.ts)
+  const points: THREE.Vector3[] = extra.map((p) => p.clone());
   root.traverseVisible(object => {
     const mesh = object as THREE.Mesh;
     if (!mesh.isMesh || mesh.userData.edgeBand) return;

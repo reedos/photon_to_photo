@@ -159,6 +159,31 @@ export function srgbDecode(c: number): number {
   return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
 }
 
+// ---- chromatic adaptation (Bradford) ------------------------------------------------------------------------
+
+/** The Bradford cone-response matrix (Lam, K. M., "Metamerism and Colour Constancy," PhD thesis, University of
+ *  Bradford, 1985), as tabulated by Lindbloom, B., "Chromatic Adaptation," brucelindbloom.com. */
+export const BRADFORD: Mat3 = [0.8951, 0.2664, -0.1614, -0.7502, 1.7135, 0.0367, 0.0389, -0.0685, 1.0296];
+
+/** The XYZ white of linear sRGB, (1, 1, 1) through the sRGB primaries matrix: D65, Y = 1. */
+export const D65_WHITE_XYZ: Vec3 = [
+  LINEAR_SRGB_TO_XYZ[0] + LINEAR_SRGB_TO_XYZ[1] + LINEAR_SRGB_TO_XYZ[2],
+  LINEAR_SRGB_TO_XYZ[3] + LINEAR_SRGB_TO_XYZ[4] + LINEAR_SRGB_TO_XYZ[5],
+  LINEAR_SRGB_TO_XYZ[6] + LINEAR_SRGB_TO_XYZ[7] + LINEAR_SRGB_TO_XYZ[8],
+];
+
+/**
+ * The XYZ -> XYZ matrix that carries colors seen under a light of white `srcWhite` to the same appearance under
+ * `dstWhite`: the Bradford transform, a von Kries scaling in the Bradford cone space (Lindbloom, "Chromatic
+ * Adaptation"). `srcWhite` itself maps exactly to `dstWhite`.
+ */
+export function chromaticAdaptation(srcWhite: Vec3, dstWhite: Vec3): Mat3 {
+  const s = mat3Vec3(BRADFORD, srcWhite);
+  const d = mat3Vec3(BRADFORD, dstWhite);
+  const scale: Mat3 = [d[0] / s[0], 0, 0, 0, d[1] / s[1], 0, 0, 0, d[2] / s[2]];
+  return mat3Multiply(mat3Invert(BRADFORD), mat3Multiply(scale, BRADFORD));
+}
+
 // ---- camera-to-XYZ matrix, fitted by least squares --------------------------------------------------------
 
 /**

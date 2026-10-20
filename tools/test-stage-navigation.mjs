@@ -30,6 +30,8 @@ try {
     held: document.getElementById('pins').classList.contains('held'),
     text: document.getElementById('veil-msg').textContent,
   }));
+  const veilClears = (label) => page.waitForFunction(() => document.getElementById('veil').classList.contains('off'), null, { timeout: 3000 })
+    .catch(() => assert.fail(label));
   const closeEnough = (a, b, label) => {
     for (const key of ['position', 'target'])
       assert.ok(Math.hypot(...a[key].map((v, i) => v - b[key][i])) < 1e-4, label);
@@ -46,7 +48,9 @@ try {
   await emitLoading({ id: 'camera', loading: true, progress: 0.4, label: 'Retrying camera' });
   assert.deepEqual(await veil(), { hidden: false, error: false, held: true, text: 'Retrying camera' });
   await emitLoading({ id: 'camera', loading: false });
-  assert.equal((await veil()).hidden, true, 'success clears the veil immediately');
+  // The veil lifts once a frame of the loaded view is drawn and the GPU has finished it (score loop r2): the first
+  // frame builds the pipelines, and that freeze belongs behind the veil. So success clears it within a frame or two.
+  await veilClears('success clears the veil after the next drawn frame');
   assert.equal((await veil()).error, false, 'success clears stale error styling');
   assert.equal((await veil()).held, false, 'success restores part pins');
 
@@ -64,7 +68,7 @@ try {
   assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'm50');
   assert.equal(await page.evaluate(() => window.p2p.pieces.camera.state().body), 'mirrorless');
   assert.equal((await framing()).selected, 'focusRing');
-  assert.equal((await veil()).hidden, true);
+  await veilClears('the veil is clear once the camera is ready');
 
   // Every inspection owns its camera and resets to its selected part, including after resize.
   for (const piece of ['lens', 'cone', 'loupe']) {
@@ -72,11 +76,14 @@ try {
     await page.evaluate(piece => window.p2p.piece(piece), piece);
     await page.waitForLoadState('networkidle');
     if (piece === 'loupe') {
-      await page.waitForFunction(() => window.p2p.render()?.scenario.lens === 'm50');
-      await page.waitForFunction(() => window.p2p.pieces.loupe.state().diveStage === 'well');
+      // no synthetic photo or photo-to-well dive since c6209df: the loupe is ready when its m50 sample resolves
+      await page.waitForFunction(() => window.p2p.scenario().lens === 'm50'
+        && window.p2p.pieces.loupe.state().hasPixel && !window.p2p.pieces.loupe.state().pendingPixel);
     }
     await page.locator('#tab-explain').click();
-    const first = page.locator('#parts button').first();
+    // the list opens with an Overview row (selection null); the first part is the row after it
+    assert.equal(await page.locator('#parts button').first().getAttribute('data-part-id'), 'overview');
+    const first = page.locator('#parts button:not([data-part-id="overview"])').first();
     await first.click();
     await settle();
     const picked = await framing();

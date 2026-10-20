@@ -122,6 +122,19 @@ describe('wavelengthColor', () => {
     }
   });
 
+  // R-S1 (10/10/2026 correctness review): the lens cutaway drew 742.5 and 767.5 nm rays as pure black and
+  // 392.5 nm as [0,0,47]; design/LOOK.md requires display-brightness normalization across the visible range.
+  it('srgb is display-normalized: every visible wavelength has a full-brightness channel, hue from linear', () => {
+    for (let nm = VISIBLE_LO_NM; nm <= VISIBLE_HI_NM; nm += 2.5) {
+      const c = wavelengthColor(nm);
+      expect(Math.max(...c.srgb)).toBeCloseTo(1, 9);
+      const peak = Math.max(...c.linear);
+      // the encoded channels decode back to linear / peak (same hue as the CMF color, brightness normalized)
+      const decode = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      for (let i = 0; i < 3; i++) expect(decode(c.srgb[i])).toBeCloseTo(c.linear[i] / peak, 9);
+    }
+  });
+
   it('linear never has a negative component (gamut-clipped)', () => {
     for (let nm = 380; nm <= 780; nm += 10) {
       const c = wavelengthColor(nm);

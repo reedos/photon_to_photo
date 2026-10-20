@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as THREE from 'three/webgpu';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { nodeDracoLoader } from './bodies/draco-node';
 import { compute } from '../app/engine-api';
 import { createExposure } from './rig-exposure';
 import bodyHw from '../../data/hardware/body.json';
@@ -18,7 +19,7 @@ const CURTAIN_MS = (bodyHw as any).shutter.curtainTravelMs.v as number; // 4ms, 
 function loadGlb(relPath: string): Promise<THREE.Group> {
   const buf = readFileSync(resolve(ROOT, relPath));
   const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-  const loader = new GLTFLoader();
+  const loader = new GLTFLoader().setDRACOLoader(nodeDracoLoader());
   return new Promise((resolve_, reject) => {
     loader.parse(arrayBuffer, '', (gltf) => resolve_(gltf.scene as unknown as THREE.Group), (err) => reject(err));
   });
@@ -153,6 +154,56 @@ describe('shutter curtain coverage and timing (Astra-6 C2)', () => {
       expect(openAt).toBeGreaterThanOrEqual(0);
       expect(closeAt).toBeGreaterThan(openAt);
       expect(closeAt - openAt).toBeCloseTo(shutterMs, 0);
+      exp.dispose();
+    });
+  });
+});
+
+describe('the rig lifts the mirror clear and folds the curtains (score loop r1, 10/11/2026)', () => {
+  let scene: THREE.Group;
+  beforeAll(async () => { scene = await loadGlb('public/models/dslr.glb'); });
+
+  it('the raised mirror and the folded sub-mirror lie under the screen and above the light cone; reset puts them back', () => {
+    withFakeGlobals(({ overlay }) => {
+      const model = compute({ lens: 'n50', shutter: 1 / 250 });
+      const body = scene.clone(true), group = new THREE.Group(); group.add(body);
+      const exp = createExposure({ group, overlay, badge: { show() {}, hide() {} } as any, body: () => 'dslr',
+        model: () => model, node: (n) => body.getObjectByName(n), paths: () => [] });
+      const box = (n: string) => { body.updateMatrixWorld(true); return new THREE.Box3().setFromObject(body.getObjectByName(n)!); };
+      const down = box('mirror');
+      exp.liftMirror(true);
+      const mirror = box('mirror'), sub = box('subMirror'), screen = box('focusingScreen');
+      // flat (the 1 mm slab), under the screen, behind the mirror box's front, and above the cone from the throat
+      // (r 22 at the 46.5 mm mount face) to the frame's top edge (11.95 mm at the sensor) at its front edge
+      expect(mirror.max.y - mirror.min.y).toBeLessThan(1.1);
+      expect(mirror.max.y).toBeLessThan(screen.min.y);
+      expect(mirror.min.z).toBeGreaterThan(box('mirrorBox').min.z - 0.05);
+      const coneTop = (z: number) => 11.95 + (22 - 11.95) * Math.min(1, -z / 46.5);
+      expect(mirror.min.y).toBeGreaterThan(coneTop(mirror.min.z) + 1);
+      expect(sub.min.y).toBeGreaterThan(coneTop(sub.min.z) + 1);
+      expect(sub.max.y).toBeLessThan(mirror.min.y);
+      exp.reset();
+      const back = box('mirror');
+      expect(back.min.distanceTo(down.min)).toBeLessThan(1e-6);
+      expect(back.max.distanceTo(down.max)).toBeLessThan(1e-6);
+      exp.dispose();
+    });
+  });
+
+  it('through a shot the curtains stay below the eyepiece path', () => {
+    withFakeGlobals(({ overlay }) => {
+      const model = compute({ lens: 'n50', shutter: 1 / 250 });
+      const body = scene.clone(true), group = new THREE.Group(); group.add(body);
+      const exp = createExposure({ group, overlay, badge: { show() {}, hide() {} } as any, body: () => 'dslr',
+        model: () => model, node: (n) => body.getObjectByName(n), paths: () => [] });
+      const box = (n: string) => { body.updateMatrixWorld(true); return new THREE.Box3().setFromObject(body.getObjectByName(n)!); };
+      const eyepath = box('eyepieceOptics').min.y;
+      exp.fire();
+      for (let k = 0; k <= 100; k++) {
+        exp.seek(k / 100);
+        expect(box('shutterCurtainFront').max.y).toBeLessThan(eyepath);
+        expect(box('shutterCurtainRear').max.y).toBeLessThan(eyepath);
+      }
       exp.dispose();
     });
   });
@@ -380,14 +431,14 @@ describe('exposure inspection', () => {
       exp.fire();
       const seg = exp.state().segs[0];
       expect(exp.state().segs).toHaveLength(1);
-      // The published/modelled 3.6ms row traverse reaches the center after 1.8ms.
-      exp.seek(1.8 * seg.factor / exp.state().durationVisMs);
+      // The published/modelled 3.7ms row traverse reaches the center after 1.85ms.
+      exp.seek(1.85 * seg.factor / exp.state().durationVisMs);
       const scan = group.getObjectByName('readout-line')!;
       expect(scan.visible).toBe(true);
       expect(scan.position.y).toBeCloseTo(0, 6);
       dom.now = 10000; exp.tick(dom.now, 10000);
       expect(scan.position.y).toBeCloseTo(0, 6);
-      exp.seek((1.8 + 2) * seg.factor / exp.state().durationVisMs);
+      exp.seek((1.85 + 2) * seg.factor / exp.state().durationVisMs);
       expect(exp.state().shownFraction).toBeCloseTo(0.5, 12);
       exp.setEnabled(false);
       expect(exp.state().status).toBe('idle');

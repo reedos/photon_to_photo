@@ -18,7 +18,9 @@ try {
     await page.waitForFunction(() => window.p2p?.pieces.camera);
     await page.evaluate(() => window.p2p.pieces.camera.ready());
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
-    for (const selector of ['#finalimg-canvas', '#compact-fire', ...(width<600?['#tab-controls','#tab-explain']:['#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso'])]) {
+    // The synthetic final photo and the scene picker were removed on purpose (c6209df); the model view replaces the photo.
+    assert.equal(await page.locator('#finalimg-canvas,#kit-scene').count(), 0, 'removed photo and scene controls stay absent');
+    for (const selector of ['#gl', '#compact-fire', ...(width<600?['#tab-controls','#tab-explain']:['#sc-fno', '#sc-focus', '#sc-shutter', '#sc-iso'])]) {
       const box = await page.locator(selector).boundingBox();
       assert.ok(box && box.y >= 0 && box.y + box.height <= height, `${selector} fits ${width}×${height}: ${JSON.stringify(box)}`);
     }
@@ -26,7 +28,7 @@ try {
       assert.equal(await page.locator('#kit-body').isVisible(),false,'compact equipment starts collapsed');
       await page.locator('#equipment-toggle').click();
     }
-    for(const selector of ['#kit-body','#kit-lens','#kit-scene']) {
+    for(const selector of ['#kit-body','#kit-lens']) {
       const box=await page.locator(selector).boundingBox();
       assert.ok(box && box.y>=0 && box.y+box.height<=height,`${selector} equipment editor fits viewport`);
     }
@@ -35,8 +37,6 @@ try {
     assert.equal(await page.evaluate(() => window.p2p.model().scenario.sensor), 'full-frame-z8');
     await page.locator('#kit-lens').selectOption('z800');
     assert.equal(await page.evaluate(() => window.p2p.scenario().lens), 'z800');
-    await page.locator('#kit-scene').selectOption('bench');
-    assert.equal(await page.evaluate(() => window.p2p.scenario().scene), 'bench');
     const before = await page.evaluate(() => window.p2p.scenario().iso);
     await page.locator('#sc-iso').focus();
     await page.locator('#sc-iso').press('ArrowRight');
@@ -45,15 +45,16 @@ try {
     await page.locator('#tab-controls').focus();
     await page.locator('#tab-controls').press('ArrowRight');
     if(width>=600) assert.equal(await page.locator('#tab-explain').getAttribute('aria-selected'), 'true');
-    assert.equal(await page.locator('#studio-explain').isVisible(), true);
+    // the drawer's close event, which brings the Parts dock back, fires a task later; wait for it rather than race it
+    await page.locator('#studio-explain').waitFor({ state: 'visible', timeout: 5000 });
     await page.locator('#parts button[data-part-id="iris"]').click();
     assert.equal(await page.locator('#card').isVisible(), true);
-    const photo = await page.locator('#finalimg-canvas').boundingBox();
-    assert.ok(photo.y >= 0 && photo.y + photo.height <= height, 'photo stays in view while reading a part');
-    assert.equal(await page.locator('#finalimg-canvas').evaluate(canvas => {
+    const view = await page.locator('#gl').boundingBox();
+    assert.ok(view.y >= 0 && view.y + view.height <= height, 'model view stays in view while reading a part');
+    assert.equal(await page.locator('#gl').evaluate(canvas => {
       const box = canvas.getBoundingClientRect();
-      return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === canvas;
-    }), true, 'part explanation does not cover the photo');
+      return document.getElementById('view').contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+    }), true, 'part explanation does not cover the model view');
     await page.locator('#steps [data-piece="camera"]').click();
     assert.equal(await page.locator('#studio-explain').isVisible(), true, 'overview does not hide the parts pane');
     await page.locator('#tab-controls').click();
@@ -63,14 +64,14 @@ try {
     if(width<600) await page.locator('#tab-controls').click();
     assert.equal(await page.locator('.rx-scrub').isVisible(), true);
     if(width<600) await page.locator('#phone-settings-close').click();
-    // A just-changed shot intentionally holds inspection until its current pixels arrive.
-    await page.waitForFunction(() => document.getElementById('finalimg-canvas').getAttribute('aria-disabled') === 'false', null, { timeout: 90000 });
-    await page.locator('#finalimg-canvas').focus();
-    await page.locator('#finalimg-canvas').press('Enter');
+    // Pixel inspection used to open from the photo; it is now the Pixel level, reached by keyboard from the level strip.
+    await page.locator('#steps [data-piece="loupe"]').focus();
+    await page.locator('#steps [data-piece="loupe"]').press('Enter');
+    await page.waitForFunction(() => window.p2p.framing().piece === 'loupe' && window.p2p.pieces.loupe.state().hasPixel);
     assert.equal(new URL(page.url()).searchParams.get('piece'), 'loupe');
-    assert.equal(await page.locator('#finalimg-canvas').isVisible(), true);
+    assert.equal(await page.locator('#gl').isVisible(), true);
     assert.deepEqual(errors, []);
-    console.log(`PASS workspace ${width}×${height}: visible controls/photo, selectors, keyboard tabs, part return, playback, pixel inspection`);
+    console.log(`PASS workspace ${width}×${height}: visible controls/model view, selectors, keyboard tabs, part return, playback, pixel inspection`);
     await page.close();
   }
 } finally { await browser.close(); await server?.close(); }

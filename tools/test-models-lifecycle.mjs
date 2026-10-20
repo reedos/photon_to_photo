@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
 import {decodePng} from './accuracy/png.mjs';
-const url=process.env.P2P_URL||'http://127.0.0.1:47701/';
+import {gateServer} from './preview.mjs';
+const server=await gateServer(),url=server.url;
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 mkdirSync('shots/models-lifecycle',{recursive:true});
 const report=[];
@@ -91,4 +92,4 @@ try {
   console.log(`Models lifecycle ${backend}: passed (${disposed} temporary materials released)`);
  }
  writeFileSync('shots/models-lifecycle/report.json',JSON.stringify(report,null,2));
-} finally {await browser.close()}
+} finally {await browser.close();await server.close()}

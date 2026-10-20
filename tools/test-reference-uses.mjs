@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
-const url=process.env.P2P_URL||'http://127.0.0.1:47722/';
+import { gateServer } from './preview.mjs';
+const server=await gateServer(),url=server.url;
 const browser=await chromium.launch({channel:'chrome',headless:true});
 mkdirSync('shots/reference-uses',{recursive:true});
 try{
@@ -25,8 +26,8 @@ try{
   await page.locator('#ref-search').fill('no matching field zzz');assert.equal(await page.locator('.evidence-row:visible').count(),0);
   assert.match(await page.locator('#search-count').textContent(),/try a different search/);
   await page.goto(url+'reference.html?page=glossary&q=shot%20noise');
-  assert.equal(await page.locator('[data-search]:visible').count(),1);
-  await page.locator('#ref-clear').click();assert.equal(await page.locator('[data-search]:visible').count(),16);
+  assert.equal(await page.locator('[data-search]:visible').count(),2); // Shot noise, and Poisson distribution (score loop r4), whose entry says its scatter is shot noise
+  await page.locator('#ref-clear').click();assert.equal(await page.locator('[data-search]:visible').count(),59); // 57 before "Blur disk" (score loop r5), 58 before "RAW" (score loop r6)
   assert.deepEqual(errors,[]);await page.close();console.log(`reference uses ${width}: passed`);
  }
-}finally{await browser.close();}
+}finally{await browser.close();await server.close();}

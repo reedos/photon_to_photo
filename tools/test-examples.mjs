@@ -34,7 +34,7 @@ try {
     assert.notEqual(selectedSrc, initialSrc);
     await page.locator('#rp-play').click();
     await page.locator('#shot-dialog').waitFor({ state: 'visible' });
-    assert.match(await page.locator('#shot-status').textContent(), /Supplied JPEG|Loading your photograph/);
+    assert.match(await page.locator('#shot-status').textContent(), /Original JPEG|Loading the photograph/);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width);
     assert.deepEqual(errors, []);
     assert.equal(workers.some(url => url.includes('example-worker')), false, 'gallery does not create a synthetic-render worker');

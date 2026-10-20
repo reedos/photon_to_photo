@@ -7,7 +7,9 @@ import { startPreview } from '../preview.mjs';
 import { decodePNG } from './pngdecode.mjs';
 const server=process.env.P2P_URL?null:await startPreview(),base=process.env.P2P_URL||server.url;
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
-mkdirSync('shots/loupe-accuracy',{recursive:true});
+// SHOT_DIR overrides where the PNGs land, so a read-only checkout can run the gate (default shots/loupe-accuracy).
+const SHOT_DIR=process.env.SHOT_DIR||'shots/loupe-accuracy';
+mkdirSync(SHOT_DIR,{recursive:true});
 try {
  for(const backend of ['webgpu','webgl2']) {
   const p=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'}),errors=[];
@@ -22,7 +24,7 @@ try {
    assert.ok(data.probe.pixel.photonsMean>0);assert.ok(Math.abs(data.fill.fillHeightUnits/data.fill.wellHeightUnits-data.fill.fillFrac)<.01);
    assert.ok(Math.abs(data.badge.photonsMean-data.badge.n*data.badge.dotsDrawn)<=data.badge.n);
    assert.ok(data.camera.chargeVisible);assert.ok(data.camera.chargeNdc.every(Number.isFinite));
-   const bytes=await p.locator('#gl').screenshot({path:`shots/loupe-accuracy/${backend}-${shutter}.png`}),png=decodePNG(bytes);
+   const bytes=await p.locator('#gl').screenshot({path:`${SHOT_DIR}/${backend}-${shutter}.png`}),png=decodePNG(bytes);
    const x=Math.round((data.camera.chargeNdc[0]+1)*png.width/2),y=Math.round((1-data.camera.chargeNdc[1])*png.height/2);
    assert.ok(x>0&&x<png.width&&y>0&&y<png.height,'charge well stays in frame');
    const offset=(y*png.width+x)*4,color=Array.from(png.data.slice(offset,offset+3));

@@ -11,14 +11,18 @@ const rest=async()=>page.waitForFunction(()=>window.p2p&&!window.p2p.framing().m
 async function capture(name){
  const state=await page.evaluate(()=>({viewport:[innerWidth,innerHeight],document:[document.documentElement.scrollWidth,document.documentElement.scrollHeight],view:document.querySelector('#gl').getBoundingClientRect().toJSON(),drawer:document.querySelector('#phone-settings').open,parts:document.querySelector('#studio-explain').checkVisibility()}));
  report.samples.push({name,...state}); await page.screenshot({path:`${output}/${name}.png`});
- assert.deepEqual(state.document,state.viewport,`${name}: no page overflow`);
+ // A phone 680 px tall or less scrolls the model workspace while Settings is closed (studio-shell.css, review loop r1), so its
+ // view keeps 240 px; nothing may overflow sideways, and with Settings open the workspace is one screen again.
+ const scrolls=state.viewport[1]<=680&&!state.drawer;
+ assert.equal(state.document[0],state.viewport[0],`${name}: no sideways overflow`);
+ if(!scrolls) assert.deepEqual(state.document,state.viewport,`${name}: no page overflow`);
  assert.equal(state.parts,!state.drawer,`${name}: Parts dock returns when Settings closes`);
  if(state.drawer) {
   assert.ok(state.view.height >= (state.viewport[0]===390?380:190),`${name}: the live model remains visible (${state.view.height}px)`);
   const dialog=await page.locator('#phone-settings').boundingBox();
   assert.ok(state.view.bottom<=dialog.y+1,`${name}: Settings does not cover the model`);
  }
- if(!state.drawer) for(const selector of ['#part-next','#part-prev','#zoom-in','#zoom-out','#tab-controls','#tab-explain','#inspector-size']) assert.equal(await page.locator(selector).evaluate(el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===hit||el.contains(hit);}),true,`${name}: ${selector} reachable`);
+ if(!state.drawer) for(const selector of ['#part-next','#part-prev','#zoom-in','#zoom-out','#tab-controls','#tab-explain',...(scrolls?[]:['#inspector-size'])]) assert.equal(await page.locator(selector).evaluate(el=>{el.scrollIntoView({block:'nearest'});const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===hit||el.contains(hit);}),true,`${name}: ${selector} reachable`);
 }
 try{
  for(const [width,height] of [[390,844],[320,568]]){
@@ -33,8 +37,14 @@ try{
   await capture(`${width}-camera`);
   const cameraHeight=await page.locator('#gl').evaluate(el=>el.clientHeight);
   assert.ok(cameraHeight>=(width===390?370:155),`${width}: model gains useful height (${cameraHeight})`);
+  // Score loop r2: with the camera ready, opening the sheet only resizes the canvas, so the loading veil must not
+  // come up over the model the sheet promises to update; sample it on every frame from the click on.
+  await page.evaluate(()=>{window.__veil=[];const v=document.querySelector('#veil'),t0=performance.now();const tick=()=>{window.__veil.push(!v.classList.contains('off')||Number(getComputedStyle(v).opacity)>0.01);if(performance.now()-t0<1500)requestAnimationFrame(tick);};tick();});
   await page.locator('#tab-controls').click();await page.locator('#phone-settings').waitFor({state:'visible'});
   assert.equal(await page.evaluate(()=>document.activeElement.id),'phone-settings-close');
+  await page.waitForTimeout(1600);
+  const veilFrames=await page.evaluate(()=>window.__veil);
+  assert.equal(veilFrames.filter(Boolean).length,0,`${width}: the loading veil showed on ${veilFrames.filter(Boolean).length} of ${veilFrames.length} frames after Settings opened`);
   await capture(`${width}-drawer`);
   await page.waitForFunction(()=>!window.p2p.framing().moving);
   const modelBefore=await page.locator('#gl').screenshot();
@@ -58,7 +68,8 @@ try{
   await page.locator('#tab-controls').click();await page.keyboard.press('Escape');await page.locator('#phone-settings').waitFor({state:'hidden'});
   assert.equal(await page.evaluate(()=>window.p2p.framing().selected),selection,'Escape closes settings without clearing the part behind it');
   await page.locator('#part-overview').click();await rest();
-  await page.locator('#inspector-size').click();assert.equal(await page.locator('#inspector-size').getAttribute('aria-expanded'),'true');await page.locator('#inspector-size').click();
+  // the size button exists where the studio is one screen; a phone 680 px tall or less scrolls instead (review loop r1)
+  if(await page.locator('#inspector-size').isVisible()){await page.locator('#inspector-size').click();assert.equal(await page.locator('#inspector-size').getAttribute('aria-expanded'),'true');await page.locator('#inspector-size').click();}
   for(const piece of ['lens','cone','loupe']){await page.locator(`#steps [data-piece="${piece}"]`).click();await rest();await capture(`${width}-${piece}`);}
   await page.locator('#tab-controls').click();await page.locator('#open-pipeline').click();
   assert.equal(await page.locator('#phone-settings').isVisible(),false,'lesson handoff closes drawer');

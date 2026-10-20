@@ -116,6 +116,16 @@ if (lensEntries.length === 0) {
       it(`group count matches the file (${design.groups}; plates are not groups)`, () => {
         expect(get().lens.groups.length).toBe(design.groups);
       });
+
+      // Score loop r3 (10/11/2026): z800 had the resin tag on the air surface after the PF assembly instead of on
+      // material B's front surface, so material B resolved as an ordinary glass. The tag goes on the surface whose
+      // following medium is the resin layer.
+      it('every diffractive-layer material is tagged layer: "resin"', () => {
+        design.surfaces.forEach((s, i) => {
+          if (/diffractive-layer material/i.test(s.label ?? '')) expect(s.layer, `surface ${i}`).toBe('resin');
+          if (s.layer === 'resin') expect(s.medium, `surface ${i}: a resin tag needs a non-air medium after it`).not.toBe('air');
+        });
+      });
     });
   }
 }

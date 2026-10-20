@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { pipelinePixels, rowWindow, movingEdgeFraction, TOUR } from './learning-model';
+import { pipelinePixels, rowWindow, movingEdgeFraction, TOUR, tourStop } from './learning-model';
 import { compute, normalizeScenario } from './engine-api';
 import { createPipelineTestSample } from './pipeline-test-sample';
+import { learningInsights } from './learning-insights';
 
 describe('sensor-to-photo lessons', () => {
   it('integrates the moving-edge chart over each row window, keeping skew separate from exposure blur', () => {
@@ -21,8 +22,8 @@ describe('sensor-to-photo lessons', () => {
   });
   it('uses each body’s recorded scan time and retains its uncertainty', () => {
     const d850 = compute({ lens: 'n50' }).sensor, z8 = compute({ lens: 'm50' }).sensor;
-    expect(d850.readoutS).toBe(.064); expect(z8.readoutS).toBe(.0036);
-    expect(d850.figs.readoutS.loc).toContain('directly'); expect(z8.figs.readoutS.loc).toContain('low');
+    expect(d850.readoutS).toBe(.064); expect(z8.readoutS).toBe(.0037);
+    expect(d850.figs.readoutS.loc).toContain('directly'); expect(z8.figs.readoutS.loc).toContain('secondary');
   });
   it('processes an explicit controlled test chart without depending on a photo render', () => {
     const scenario = normalizeScenario({ lens: 'n50' });
@@ -43,6 +44,46 @@ describe('sensor-to-photo lessons', () => {
   it('labels the pipeline tour as an illustrative sample separate from the user photograph', () => {
     const stop = TOUR.find(s => s.lesson === 'pipeline')!;
     expect(stop.text).toMatch(/illustrative test sample/i);
-    expect(stop.text).toMatch(/separate from your photograph/i);
+    expect(stop.text).toMatch(/separate from the real photographs/i);
+  });
+  it('tells the story in the order the light meets each part, with a shutter stop beside the aperture', () => {
+    expect(TOUR.map(s => s.id)).toEqual(['scene', 'lens', 'aperture', 'focus', 'viewfinder', 'shutter', 'pixel', 'readout', 'pipeline', 'photo']);
+    expect(TOUR.find(s => s.id === 'shutter')!.part).toBe('shutter');
+  });
+  it('keeps every band line short enough for two phone lines, and gives More its own words', () => {
+    for (const stop of TOUR) {
+      expect(stop.text.length, stop.id).toBeLessThanOrEqual(120);
+      expect(stop.more.length, stop.id).toBeGreaterThan(stop.text.length);
+      expect(stop.more).not.toContain(stop.text);
+    }
+    // the misconception the pixel stop corrects must be in the band itself, not only behind More
+    expect(TOUR.find(s => s.id === 'pixel')!.text).toMatch(/ISO adds no photons/);
+  });
+  // score loop r2 (10/11/2026)
+  it('names a Phase Fresnel surface only for a lens that has one', () => {
+    expect(learningInsights(compute({ lens: 'n50' })).lens.live).not.toMatch(/Fresnel/);
+    expect(learningInsights(compute({ lens: 'n500' })).lens.live).toMatch(/This lens’s Phase Fresnel element/);
+  });
+  it('names the pixel channel, the filter-and-QE loss and both SNR figures in the pixel reading', () => {
+    const m = compute({ lens: 'n50' });
+    const live = learningInsights(m).pixel.live;
+    expect(live).toMatch(/^Green pixel, 18% gray/);
+    expect(live).toContain(Math.round(m.exposure.photonsMidGray).toLocaleString('en-US'));
+    expect(live).toContain(Math.round(m.exposure.electronsMidGray).toLocaleString('en-US'));
+    expect(live).toContain(`signal-to-noise ratio of ${Math.sqrt(m.exposure.electronsMidGray).toLocaleString('en-US', { maximumFractionDigits: 1 })}`);
+    expect(live).toMatch(/PRNU/);
+    expect(learningInsights(m).pixel.equation).toMatch(/Tλ/);
+    expect(learningInsights(m).photo.live).not.toMatch(/no moving subject/);
+  });
+});
+
+describe('tourStop (score loop r2)', () => {
+  it('reads the stop an address names, 1-based in the URL and 0-based here', () => {
+    expect(tourStop('')).toBeNull();
+    expect(tourStop('?tour=1')).toBe(0);
+    expect(tourStop('?tour=4')).toBe(3);
+    expect(tourStop(`?tour=${TOUR.length + 5}`)).toBe(TOUR.length - 1);
+    expect(tourStop('?tour=junk')).toBe(0);
+    expect(tourStop('?tour=0')).toBe(0);
   });
 });

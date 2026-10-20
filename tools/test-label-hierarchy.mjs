@@ -2,13 +2,15 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
+import {gateServer} from './preview.mjs';
+const server=await gateServer();
 const output=process.env.P2P_AUDIT_OUTPUT||'shots/label-hierarchy';mkdirSync(output,{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 const errors=[];
 try {
  const page=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'reduce'});
  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
- await page.goto(new URL('?piece=camera&lens=m50',process.env.P2P_URL||'http://127.0.0.1:47743/').href);
+ await page.goto(new URL('?piece=camera&lens=m50',server.url).href);
  await page.waitForFunction(()=>window.p2p?.pieces.camera?.state().loaded);await page.evaluate(()=>window.p2p.pieces.camera.ready());await page.evaluate(()=>window.p2p.settle());
  await page.mouse.move(3,3);await page.waitForTimeout(350);
  const visibleLabels=()=>page.locator('#pins .pin .lbl').evaluateAll(es=>es.filter(e=>e.checkVisibility()).length);
@@ -29,4 +31,4 @@ try {
  assert.equal(await page.locator('#pins .pin.on .lbl').isVisible(),true,'phone selection keeps its label');
  await page.screenshot({path:output+'/selected-phone.png'});
  assert.deepEqual(errors,[]);writeFileSync(output+'/report.json',JSON.stringify({passed:true,errors},null,2));console.log('PASS quiet overview, keyboard/pointer names, selected desktop/phone labels, zero errors');
-}finally{await browser.close()}
+}finally{await browser.close();await server.close()}

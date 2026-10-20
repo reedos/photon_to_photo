@@ -8,6 +8,12 @@ export function fmtNum(v: number, digits = 1): string {
   return v.toLocaleString('en-US', { maximumFractionDigits: digits });
 }
 
+/** A small span on the sensor (an inset's width): micrometers below 1 mm, so the caption keeps about three
+ *  significant digits (R-C7, 10/10/2026 review: "0.08 mm across" captioned an 85 um inset, 6% short). */
+export function fmtSpanMm(mm: number): string {
+  return mm < 1 ? `${Math.round(mm * 1000)} µm` : `${mm.toFixed(2)} mm`;
+}
+
 /** A distance from the sensor, in meters: 0.45 m, 1.50 m, 12.3 m, 140 m; null or non-finite reads "infinity". */
 export function fmtDistance(mm: number | null): string {
   if (mm === null || !Number.isFinite(mm)) return 'infinity';
@@ -49,6 +55,14 @@ export function fmtShutter(t: number): string {
   return v < 1 && Math.abs(1 / v - denominator) < 1e-8 ? `1/${denominator} s` : `${Number(v.toFixed(3))} s`;
 }
 
+/** A magnification to two significant figures (148 -> "150×", 1,234 -> "1,200×"), one formatter for the Optics
+ *  inset's caption and its part card, which disagreed (score loop r1: "100×" on the picture, "148×" on the card). */
+export function fmtMag(v: number): string {
+  if (!Number.isFinite(v) || v <= 0) return '–';
+  const p = Math.pow(10, Math.floor(Math.log10(v)) - 1);
+  return `${(Math.round(v / p) * p).toLocaleString('en-US', { maximumFractionDigits: 1 })}×`;
+}
+
 export function fmtPitch(um: number): string {
   return `${um.toFixed(2)} µm`;
 }
@@ -76,7 +90,16 @@ export function fmtPow10(n: number): string {
   return Math.abs(n - 10 ** e) / n < 1e-9 ? `10${superscript(e)}` : fmtSci(n);
 }
 
-/** Uppercase for mono captions, leaving a micro sign a micro sign (CSS uppercase turns µ into a Greek capital Mu). */
+/** Uppercase for mono captions, leaving a micro unit as written: "4.35 µm pitch" reads "4.35 µm PITCH", never
+ *  "µM" (a megameter-looking unit) or "ΜM" (CSS uppercase turns µ into a Greek capital Mu). The unit letter after
+ *  µ stays lowercase too (score loop r1, 10/11/2026: an inset caption read "458 ΜM ACROSS"). */
 export function upperKeepMicro(s: string): string {
-  return s.replace(/[^µ]+/g, (m) => m.toUpperCase());
+  return s.split(/(µ[a-zA-Z]?)/).map((part, i) => (i % 2 ? part : part.toUpperCase())).join('');
+}
+
+/** The 18% gray patch signal-to-noise ratio, or "n/a (clipped)" once the patch is past the pixel usable limit (the lower of
+ *  the full well and the ADC clip): a clipped value has no meaningful SNR, and the analytic figure has no clip, so it would make a
+ *  blown patch look clean (score loop r5). */
+export function fmtSnr(exposure: { snrMidGray: number; grayClipped: boolean }, digits = 1): string {
+  return exposure.grayClipped ? 'n/a (clipped)' : fmtNum(exposure.snrMidGray, digits);
 }

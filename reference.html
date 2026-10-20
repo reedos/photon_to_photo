@@ -4,10 +4,12 @@
 <meta name="robots" content="index, follow"><title>Guide · Photon to Photo</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<!-- not render-blocking: a stalled fonts.googleapis.com (captive portal, filtered network) must not stop the first paint; the stacks fall back to system fonts until it arrives -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="/src/styles/tokens.css"><link rel="stylesheet" href="/src/styles/base.css"><link rel="stylesheet" href="/src/styles/reference.css">
 </head><body class="reference">
-<header class="topbar" id="topbar"><a class="brand" href="./reference.html?page=story"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-t">Photon to Photo</span></a><nav class="topnav" id="topnav" aria-label="Site"></nav><button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav"><span aria-hidden="true"></span>Menu</button></header>
+<header class="topbar" id="topbar"><a class="brand" href="./index.html?start=1" aria-label="Photon to Photo, the opening"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-t">Photon to Photo</span></a><nav class="topnav" id="topnav" aria-label="Site"></nav><button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav"><span aria-hidden="true"></span>Menu</button></header>
+<noscript><main class="wrap" style="padding:48px 16px;max-width:42rem;margin:0 auto"><h1 style="margin:0 0 12px;font-size:clamp(24px,7vw,36px);line-height:1.1">The reference needs JavaScript</h1><p>JavaScript is off or blocked in this browser, so this page cannot be drawn. Turn it on and reload. <a href="./index.html">Back to the opening</a></p></main></noscript>
 <main id="reference-main"></main>
 <footer>Personal educational project based on cited public sources. Models are illustrative; measured, calculated and assumed quantities are labeled.</footer>
 <script type="module" src="/src/reference.ts"></script>

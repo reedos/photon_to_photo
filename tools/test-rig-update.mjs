@@ -12,14 +12,14 @@ try {
   await page.goto(url+`?piece=camera&lens=${lens}&fno=4&focus=3`);
   await page.waitForFunction(()=>window.p2p?.pieces.camera);
   await page.evaluate(()=>window.p2p.pieces.camera.ready());
-  await page.waitForFunction(()=>window.p2p.render());
   const revision=await page.evaluate(()=>window.p2p.pieces.camera.state().opticsRevision);
   assert.ok(revision>0);
   const durations=await page.evaluate(()=>Array.from({length:12},(_,i)=>{
    const start=performance.now();window.p2p.set({iso:i%2?800:100,shutter:i%2?1/125:1/250,lux:i%2?8000:10000});return performance.now()-start;
   }));
   assert.equal(await page.evaluate(()=>window.p2p.pieces.camera.state().opticsRevision),revision,'exposure-only edits retain computed rays and iris geometry');
-  await page.waitForFunction(()=>window.p2p.render()?.scenario.iso===800&&window.p2p.render()?.scenario.shutter===1/125);
+  // the synthetic photo that used to confirm the edit is gone (c6209df); the model and the readout must carry it
+  await page.waitForFunction(()=>window.p2p.model().scenario.iso===800&&window.p2p.model().scenario.shutter===1/125);
   await page.waitForFunction(()=>document.querySelector('.rx-k').textContent.includes('1/125'));
   await page.evaluate(()=>window.p2p.set({fno:8}));
   const apertureRevision=await page.evaluate(()=>window.p2p.pieces.camera.state().opticsRevision);

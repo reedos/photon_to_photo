@@ -89,6 +89,7 @@
       "sdSource": "estimated-from-marginal-ray",
       "label": "PF assembly, diffractive-layer material B -- the diffractive optical surface (patent's surface 7, marked '#', PF element Epf on this surface, per the patent's own text) is this surface's FRONT face, the material-A/material-B joint",
       "coated": false,
+      "layer": "resin",
       "doe": {
         "convention": "Patent's own phase-difference formula, verbatim as machine-translated, identical in form to m500.json's Example 1 (same patent, JP 2023-023323 A / granted JP 7695611 B2), Table 17: psi(h,n) = (2*pi/(n*lambda0)) * (C2*h^2 + C4*h^4) -- h is height above the axis (mm), n is the diffraction order, lambda0 the design wavelength (nm). Paraxial refractive power at wavelength lambda and order n, also given verbatim by the patent: phiD(lambda,n) = -2*C2*n*lambda/lambda0. At the design condition (lambda=lambda0, n=1) this reduces to phiD = -2*C2. Convention check: phiD = -2*(-4.02091e-05) = 8.04182e-05 /mm -> fpf = 1/phiD = 12434.996 mm, matching the patent's own directly-stated Table 26 value for the Sixth Example, fpf=12434.996, to 8 significant figures.",
         "lambda0Nm": 587.6,
@@ -106,8 +107,7 @@
       "medium": "air",
       "sd": 55.512,
       "sdSource": "estimated-from-marginal-ray",
-      "label": "PF assembly rear (to air)",
-      "layer": "resin"
+      "label": "PF assembly rear (to air)"
     },
     {
       "r": 94.801,
@@ -182,6 +182,8 @@
       "medium": "glass",
       "nd": 1.66382,
       "vd": 27.35,
+      "thetaGF": 0.6319,
+      "thetaGFSource": "JP 7695611 B2 (JP 2023-023323 A), Table 26, Sixth Example: conditional expression (2) thetagFp1 = 0.6319, the partial dispersion ratio (ng - nF)/(nF - nC) of the positive lens with the smallest Abbe number in the first lens group G1; rows (7) vdp1 = 27.35 and (15) ndp1 = 1.664 identify it as this element (L18). Read 10/11/2026 via r.jina.ai from patents.google.com/patent/JP7695611B2/en.",
       "sd": 35.656,
       "sdSource": "estimated-from-marginal-ray",
       "label": "L17/L18 cemented interface (L18, positive), end of lens group G1's fixed elements"

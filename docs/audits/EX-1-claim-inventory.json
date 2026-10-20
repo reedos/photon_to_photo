@@ -27376,7 +27376,7 @@
     {
       "file": "src/app/models.ts",
       "line": 76,
-      "text": "'Filters in front of the pixels: IR cut, low-pass and cover glass, 2 mm in all. The lens designs account for it.'",
+      "text": "'Filters in front of the pixels: IR cut and cover glass, 2 mm in all (a representative thickness). Neither the D850 nor the Z8 has an optical low-pass filter; Nikon lists both as low-pass-filter-less. The lens designs account for the glass.'",
       "basis": [
         "optics",
         "sensor"

@@ -10,7 +10,8 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<!-- not render-blocking: a stalled fonts.googleapis.com (captive portal, filtered network) must not stop the first paint; the stacks fall back to system fonts until it arrives -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="/src/styles/tokens.css">
 <link rel="stylesheet" href="/src/styles/base.css">
 <link rel="stylesheet" href="/src/styles/app.css">
@@ -22,8 +23,9 @@
 <link rel="stylesheet" href="/src/styles/photo-opening.css">
 </head>
 <body class="entry-pending">
+<a class="skip-link" href="#stage-section">Skip to 3D view and controls</a>
 <header class="topbar" id="topbar">
-  <a class="brand" href="#top" aria-label="Photon to Photo, top of the page">
+  <a class="brand" href="#photo-opening" aria-label="Photon to Photo, top of the page">
     <span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>
     <span class="brand-t">Photon to Photo</span>
   </a>
@@ -38,26 +40,31 @@
   </button>
 </header>
 
-<section id="photo-opening" class="photo-opening" aria-labelledby="opening-title" hidden>
+<noscript><main class="wrap" id="no-script" style="padding:48px 16px;max-width:42rem;margin:0 auto">
+  <h1 style="margin:0 0 12px;font-size:clamp(24px,7vw,36px);line-height:1.1">Photon to Photo needs JavaScript</h1>
+  <p>JavaScript is off or blocked in this browser, so the camera, the opening and the controls cannot start. Turn it on and reload this page. If a script was blocked or an old browser could not run it, the <a href="./reference.html?page=story">2D story and reference</a> needs no 3D view.</p>
+</main></noscript>
+<main id="photo-opening" class="photo-opening" aria-labelledby="opening-title" hidden>
   <div class="opening-grid">
     <div class="opening-copy">
       <p class="eyebrow">A real moment. An invisible journey.</p>
-      <h1 id="opening-title">A photograph starts with <em>light.</em></h1>
+      <h1 id="opening-title"><span style="white-space:nowrap">A photograph</span> starts with <em>light.</em></h1>
       <p class="opening-lede">From a bird on a branch to glass, a pixel, and a photograph. See what happens inside the camera.</p>
       <div class="opening-actions">
         <button type="button" class="btn" id="opening-explore"><strong>Explore the camera →</strong><span>Rotate the model. Open it up. Try the controls.</span></button>
-        <button type="button" class="btn opening-primary" id="opening-follow"><strong>Play a shot →</strong><span>Follow light through glass, charge, and image data.</span></button>
-        <button type="button" class="btn" id="opening-photos"><strong>Explore my photos →</strong><span>Look closely at real photographs and how they were made.</span></button>
+        <button type="button" class="btn opening-primary" id="opening-follow"><strong>Play the shot →</strong><span>Follow light through glass, charge, and image data.</span></button>
+        <button type="button" class="btn" id="opening-photos"><strong>Explore real photographs →</strong><span>Look closely at real photographs and how they were made.</span></button>
       </div>
       <p class="opening-note">Choose a way in. You can switch paths anytime.</p>
+      <p class="opening-no3d" id="opening-no3d" role="note" hidden>This browser cannot draw the 3D view, which needs WebGL2. <a href="./reference.html?page=story">Read the 2D story and reference</a> instead.</p>
     </div>
     <figure class="opening-photo">
       <img id="opening-photo" width="1600" height="1066" fetchpriority="high" alt="A red vermilion flycatcher beside its nest in a web of branches">
       <figcaption><strong>Vermilion flycatcher · Photo by Reed Osaki</strong><span>Recorded · 500 mm · f/5.6 · 1/4000 s · ISO 1400</span></figcaption>
     </figure>
   </div>
-  <div class="opening-path"><div><span>Light</span> → Glass → Charge → Color</div><a href="./reference.html?page=story">Read the story →</a></div>
-</section>
+  <div class="opening-path"><div><span>Light</span> → Lens → Focus → Exposure → Pixel → Readout → Photo</div><a href="./reference.html?page=story">Read the story →</a></div>
+</main>
 <main class="wrap" id="top" hidden>
   <header class="page-head">
     <p class="eyebrow" id="piece-counter">From light to a photograph</p>
@@ -69,11 +76,16 @@
     <nav class="steps" id="steps" aria-label="Level"></nav>
     <div class="body">
       <div class="viewer" id="viewer">
+        <h2 class="sr-only">3D view</h2>
+        <!-- the level's name for a screen reader, and the one polite region for level and part changes (score loop r4); the
+             drawn title in the view is hidden on phones, so it could not carry either -->
+        <h3 class="sr-only" id="level-heading">The camera</h3>
+        <p class="sr-only" id="sr-announce" role="status" aria-live="polite"></p>
         <div class="view" id="view">
-          <canvas id="gl" tabindex="0" aria-label="3D scene. Drag to orbit, Scroll or pinch to zoom; plus and minus keys also zoom."></canvas>
+          <canvas id="gl" tabindex="0" role="application" aria-roledescription="3D model" aria-label="3D scene. Drag to orbit, Scroll or pinch to zoom; plus and minus keys also zoom. Left and right arrows step through the parts. Up and down arrows tilt the model, and Shift with the left and right arrows turns it. Escape returns to the overview, then up to the camera."></canvas>
           <div class="pins" id="pins"></div>
           <div class="hud tl" data-inset="top">
-            <span class="ttl" id="hud-title">The camera</span>
+            <span class="ttl" id="hud-title" aria-hidden="true">The camera</span>
             <span class="sub" id="hud-sub"></span>
           </div>
           <div class="hud bl">
@@ -102,7 +114,7 @@
             <p class="hint" id="hint">Drag the ring or the dials &middot; drag elsewhere to orbit &middot; scroll to zoom</p>
           </div>
           <div class="toast" id="toast" role="status" hidden></div>
-          <div class="veil" id="veil"><div class="veil-in"><span id="veil-msg">Starting the renderer&hellip;</span><i class="veil-bar"><b id="veil-bar"></b></i><button type="button" class="btn veil-reload" id="veil-reload">Reload</button></div></div>
+          <div class="veil" id="veil"><div class="veil-in"><span id="veil-msg">Starting the renderer&hellip;</span><i class="veil-bar"><b id="veil-bar"></b></i><button type="button" class="btn veil-reload" id="veil-reload">Reload</button><button type="button" class="btn veil-keep" id="veil-keep">Keep current lens</button></div></div>
         </div>
         <div class="view-strip" id="view-strip"></div>
         <div class="hud-btns-phone" id="hud-btns-phone"></div>
@@ -111,7 +123,7 @@
           <span class="vc-short">Personal project &middot; lenses from public patents</span>
         </p>
       </div>
-      <aside class="panel" aria-label="Parts">
+      <div class="panel" role="region" aria-label="Parts">
         <div class="panel-scroll">
           <p class="intro" id="intro">Pick a part to see how it works.</p>
           <div class="parts-head">
@@ -126,10 +138,12 @@
             <h3 id="card-t"></h3>
             <span class="card-sub" id="card-sub" hidden></span>
             <p id="card-b"></p>
+            <details class="card-more" id="card-more" hidden><summary>More detail</summary><p id="card-more-b"></p></details>
             <dl class="specs" id="card-s"></dl>
+            <details class="card-more card-more-specs" id="card-more-specs" hidden><summary>More settings</summary><dl class="specs" id="card-s2"></dl></details>
           </article>
         </div>
-      </aside>
+      </div>
     </div>
   </section>
 
@@ -152,21 +166,24 @@
         </div>
       </div>
       <div class="sc-group">
-        <div class="ctl-head"><label for="sc-fno">Aperture</label><output id="sc-fno-v" for="sc-fno">f/4</output></div>
+        <div class="ctl-head"><label for="sc-fno">Aperture</label><output id="sc-fno-v" for="sc-fno" aria-hidden="true">f/4</output></div>
         <input type="range" id="sc-fno" value="0">
+        <p class="sc-note" id="sc-fno-note" hidden></p>
       </div>
       <div class="sc-group">
-        <div class="ctl-head"><label for="sc-focus">Focus distance</label><output id="sc-focus-v" for="sc-focus">3 m</output></div>
+        <div class="ctl-head"><label for="sc-focus">Focus distance</label><output id="sc-focus-v" for="sc-focus" aria-hidden="true">3 m</output></div>
         <input type="range" id="sc-focus" value="0">
       </div>
       <div class="sc-group">
-        <div class="ctl-head"><label for="sc-shutter">Shutter</label><output id="sc-shutter-v" for="sc-shutter">1/250 s</output></div>
+        <div class="ctl-head"><label for="sc-shutter">Shutter</label><output id="sc-shutter-v" for="sc-shutter" aria-hidden="true">1/250 s</output></div>
         <input type="range" id="sc-shutter" value="0">
       </div>
       <div class="sc-group">
-        <div class="ctl-head"><label for="sc-iso">ISO</label><output id="sc-iso-v" for="sc-iso">400</output></div>
+        <div class="ctl-head"><label for="sc-iso">ISO</label><output id="sc-iso-v" for="sc-iso" aria-hidden="true">400</output></div>
         <input type="range" id="sc-iso" value="0">
       </div>
+      <p class="sc-live" id="sc-live" role="status" aria-live="polite"></p>
+      <button type="button" class="sc-reset" id="sc-reset" title="Aperture, focus distance, shutter and ISO back to their defaults for this lens">Reset settings</button>
     </div>
     <div class="sc-group sc-format">
       <span class="lab">Format / crop</span>
@@ -184,7 +201,7 @@
   <section class="rp-card" aria-labelledby="rp-h" id="rp-card" hidden>
     <div class="sc-head">
       <p class="eyebrow">Real photo</p>
-      <h2 id="rp-h">Your photographs, explained</h2>
+      <h2 id="rp-h">Real photographs, explained</h2>
     </div>
     <div class="rp-picks" id="rp-picks"></div>
     <div class="rp-compare">
@@ -195,12 +212,15 @@
       <div class="rp-side">
         <p class="rp-settings" id="rp-settings"></p>
         <p class="rp-note" id="rp-note"></p>
-        <p class="note">Explore the recorded settings with a representative camera model. Your original photograph stays unchanged.</p>
-        <button type="button" class="btn rp-match" id="rp-match">Explore these settings</button>
+        <p class="note">Set the camera to this photo’s recorded settings. The original photograph stays unchanged.</p>
+        <button type="button" class="btn rp-match" id="rp-match">Use these settings</button>
       </div>
     </div>
   </section>
 </main>
+<!-- covers the workspace while app-start builds it (body.app-booting), so its rows appear in their final places
+     instead of shifting as each part mounts (cold-load layout shift, score loop r3) -->
+<div class="boot-cover" role="status"><span>Starting the renderer&hellip;</span></div>
 
 <script type="module" src="/src/main.ts"></script>
 </body>

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
-const url=process.env.P2P_URL||'http://127.0.0.1:47722/';
+import { gateServer } from './preview.mjs';
+const server=await gateServer(),url=server.url;
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 mkdirSync('shots/pipeline-teaching',{recursive:true});
 try{
@@ -9,18 +10,18 @@ try{
   const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'}),errors=[];page.setDefaultTimeout(90000);
   page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto(url+'?piece=camera');await page.waitForFunction(()=>window.p2p?.pieces.camera);
-  await page.evaluate(()=>window.p2p.pieces.camera.ready());await page.waitForFunction(()=>!document.getElementById('pin-photo').disabled);
-  await page.locator('#learn-launch').click();await page.locator('#journey-stop').selectOption('6');
+  await page.evaluate(()=>window.p2p.pieces.camera.ready());
+  await page.locator('#learn-launch').click();await page.locator('#journey-stop').selectOption('8');
   await page.locator('#pipeline-stage').selectOption('raw');
   const canvas=page.locator('#pipeline-canvas'),region=page.locator('#pipeline-region');
   const original=await region.getAttribute('style');
-  await canvas.click({position:{x:24,y:24}});assert.notEqual(await region.getAttribute('style'),original);
+  const canvasBox=await canvas.boundingBox();await canvas.click({position:{x:Math.round(canvasBox.width*.3),y:Math.round(canvasBox.height*.3)}});assert.notEqual(await region.getAttribute('style'),original);
   const clicked=await region.getAttribute('style');await canvas.focus();await page.keyboard.press('ArrowRight');assert.notEqual(await region.getAttribute('style'),clicked);
   await page.keyboard.press('Enter');assert.equal(await region.getAttribute('style'),original);
   for(const stage of ['raw','demosaic','wb','ccm','tone']){
    await page.locator('#pipeline-stage').selectOption(stage);assert.ok((await page.locator('#pipeline-look-for').textContent()).length>40);
   }
-  assert.ok(await page.evaluate(()=>{const c=document.getElementById('pipeline-canvas'),v=window.p2p.render();return c.getContext('2d').getImageData(0,0,c.width,c.height).data.every((n,i)=>n===v.rgba[i]);}),'final remains actual renderer pixels');
+  assert.ok(await page.evaluate(()=>{const c=document.getElementById('pipeline-canvas'),v=window.p2p.pipelineSample();return c.width===v.width&&c.height===v.height&&c.getContext('2d').getImageData(0,0,c.width,c.height).data.every((n,i)=>n===v.rgba[i]);}),'final remains the processed test chart pixels (synthetic renders removed in c6209df)');
   await page.locator('#pipeline-stage').selectOption('raw');await canvas.scrollIntoViewIfNeeded();
   // Follow actual normal-motion playback, not just settled/scrubbed frames. Writing
   // identical canvas dimensions reallocates and clears its backing store every RAF.
@@ -41,4 +42,4 @@ try{
   await page.screenshot({path:`shots/pipeline-teaching/pipeline-${width}.png`});
   assert.deepEqual(errors,[]);await page.close();console.log(`pipeline teaching ${width}: passed`);
  }
-}finally{await browser.close();}
+}finally{await browser.close();await server.close();}

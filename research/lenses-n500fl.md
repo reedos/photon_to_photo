@@ -138,14 +138,21 @@ Total: 4+2+1+2+3 = **12 groups**, 5+3+2+3+3 = **16 elements**.
    different doublet. The patent gives no glass names, only nd/vd/θgf, so which two of the three (if any exactly
    two) correspond to Nikon's marketed "ED" elements cannot be determined from the patent text alone. Recorded
    as an open note in the JSON rather than guessed.
-2. **No VariableGap entries are recorded**, unlike some of the wide/normal lens files. The patent's focus table
-   gives three focus states (infinity / intermediate / close) for the two moving air gaps (d11, d16), but the
-   close-focus row is stated only as a magnification (β = -0.153), not an object distance — unlike p200.json's
-   Nikon patent, which printed a raw object distance (D0) directly. Converting β to an object distance would
-   require re-deriving the close-focus system's own principal-plane shift (the whole prescription changes
-   between focus states, since G2 physically moves), which is possible but is a multi-step derivation rather
-   than a patent-stated number, so it wasn't done. The raw d11/d16 values at all three focus states are recorded
-   verbatim in the two variable-gap surfaces' own `label` fields for whoever picks this up next.
+2. **Focus gaps (resolved 10/12/2026, score loop r4).** The patent's focus table gives three states for the two moving
+   air gaps, d11 (G1 to G2, this file's surface 10) and d16 (G2 to the stop, surface 15): infinity 14.505 and 36.105
+   mm, intermediate 17.427 and 33.183 mm (beta = -0.033), close 28.403 and 22.207 mm (beta = -0.153). The first and
+   last states are now `focus.gaps` in `data/lenses/n500fl.json` (verbatim from the patent table, already recorded in
+   the two surface labels). The close state gives a magnification, not an object distance, so
+   `closeObjectDistance` is DERIVED: the engine's paraxial (d line) solve of the lens with those gaps puts the object
+   whose image lands on the sensor 3,598.9 mm from the sensor, where its magnification is -0.1530, the patent's printed
+   beta. The intermediate state reproduces -0.0333 at 15.12 m against the patent's -0.033. That agreement checks the
+   transcription of both gaps and the prescription at close focus, and the derived distance equals Nikon's 3.6 m
+   minimum focus distance (3.599 m against 3.6 m). d11 + d16 is 50.610 mm in all three states, so the second group moves
+   as one unit between the first group and the stop and the back focus (87.772 mm) does not change. Effect on the model:
+   the lens keeps its length at close focus (it used to grow, moving the whole optic as a stand-in), its focal length
+   breathes from 490.0 to 385.6 mm at 3.6 m, the magnification at 3.6 m is 0.153x (stand-in: 0.214x), and the working
+   f-number stays f/4.12 (the stop and the rear group do not move, so the image-side cone does not change; the stand-in
+   gave f/6.97). The earlier text here said the derivation was not attempted; the derivation is a single paraxial solve.
 3. **No aspheric surfaces** are printed for Example 1 (checked the full surface table; no aspheric-coefficient
    section follows it for this example), consistent with an all-spherical, conventional (non-PF) telephoto.
 4. Every semi-diameter is `estimated-from-marginal-ray` (the patent prints none), same situation and same method

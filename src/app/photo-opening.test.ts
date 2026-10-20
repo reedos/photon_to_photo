@@ -12,6 +12,10 @@ describe('photo opening entry routing', () => {
       expect(shouldShowPhotoOpening(query, '', false)).toBe(false);
     }
   });
+  it('opens for Start here and the brand link, even after a visit', () => {
+    expect(shouldShowPhotoOpening('?start=1', '', true)).toBe(true);
+    expect(shouldShowPhotoOpening('?start=1', '', false)).toBe(true);
+  });
   it('keeps anchored and returning visitors in the workspace', () => {
     expect(shouldShowPhotoOpening('', '#rp-card', false)).toBe(false);
     expect(shouldShowPhotoOpening('', '#stage-section', false)).toBe(false);

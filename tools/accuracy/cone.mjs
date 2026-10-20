@@ -10,6 +10,8 @@ import { inflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { startPreview } from '../preview.mjs';
 
+// SHOT_DIR overrides where the sensor-face PNGs land, so a read-only checkout can run the gate (default shots/accuracy-cone).
+const SHOT_DIR = process.env.SHOT_DIR || 'shots/accuracy-cone';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
@@ -242,8 +244,8 @@ async function capture(page, dom, scenario, pointDistMm, fieldFrac, geometryMask
     height: rect.height,
   };
   const png = await page.screenshot({ clip });
-  mkdirSync('shots/accuracy-cone', { recursive: true });
-  writeFileSync(`shots/accuracy-cone/${scenario.lens}-f${scenario.fno}-field${fieldFrac}.png`, png);
+  mkdirSync(SHOT_DIR, { recursive: true });
+  writeFileSync(`${SHOT_DIR}/${scenario.lens}-f${scenario.fno}-field${fieldFrac}.png`, png);
   const img = decodePNG(png);
   if (geometryMask) await page.evaluate(() => window.p2p.pieces.cone.geometryMask(false));
   return { probe, img };
@@ -277,8 +279,10 @@ async function main() {
 
     // ---- case 1: a representative defocus (p50, f/1.4, focused at 3m, point at 1.5m, on axis) --------------
     {
-      const { probe, img } = await capture(page, null, { lens: 'p50', fno: 1.4, focusM: 3, format: 'ff' }, 1500, 0);
-      const hull = convexHull(thresholdDisk(img));
+      // r3 (10/11/2026): the drawn disk weights each color by its recorded share, so violet and deep red are a faint
+      // halo; the geometric comparison with the all-ray chord uses the unweighted geometry mask.
+      const { probe, img } = await capture(page, null, { lens: 'p50', fno: 1.4, focusM: 3, format: 'ff' }, 1500, 0, true);
+      const hull = convexHull(thresholdDisk(img, true));
       const mmPerPixel = probe.inset.mmPerPixel;
       const measuredMm = maxPairwiseDistance(hull) * mmPerPixel;
       const relErr = Math.abs(measuredMm - probe.diameterMeasuredMm) / Math.max(1e-9, probe.diameterMeasuredMm);
@@ -297,14 +301,31 @@ async function main() {
         relErr <= 0.2,
         `rendered=${measuredMm.toFixed(4)}mm engine=${probe.diameterMeasuredMm.toFixed(4)}mm rel_err=${(relErr * 100).toFixed(2)}%`,
       );
-      // The engine's own closed-form prediction is a paraxial, non-vignetted approximation (camera.ts's
-      // exitPupilBlurDiameterMm doc comment); the real ray-traced bundle includes aberrations it doesn't model,
-      // so this is checked against a documented gap, not a tight percentage -- see docs/pieces/cone.md.
+      // The engine's closed-form prediction is the paraxial blur at the d line (587.6 nm) only (camera.ts
+      // exitPupilBlurDiameterMm). bundle.diameterMm is the max chord over EVERY traced wavelength, so the gap between
+      // the two is mostly longitudinal color: the 392.5 nm bin focuses well behind the others and sets the measured
+      // edge (p50 f/1.4, 3 m focus, 1.5 m point: all colors +32%, 392.5 nm widest; d line alone -4.9%; see
+      // docs/score-loop/r1-physics/cone-bundle-after.txt). Score-loop r1 (10/11/2026) replaced the old "~40%
+      // aberration gap" wording: the all-color bound stays loose, and the like-for-like d-line check is tight.
       const predRelErr = Math.abs(probe.diameterMeasuredMm - probe.predictedBlurMm) / Math.max(1e-9, probe.predictedBlurMm);
       check(
-        'engine measured vs predicted blur (within the documented ~40% aberration gap)',
+        'engine measured (all wavelengths) vs predicted (d line): within 40%, the gap is longitudinal color plus aberration',
         predRelErr <= 0.4,
         `measured=${probe.diameterMeasuredMm.toFixed(4)}mm predicted=${probe.predictedBlurMm.toFixed(4)}mm rel_err=${(predRelErr * 100).toFixed(1)}%`,
+      );
+      // The recorded (sensor-weighted, 90% energy) disk of a defocused point: about sqrt(0.9) = 0.95 of the d-line disk,
+      // never above the unweighted widest extent.
+      const recRel = probe.recordedDiameterMm / Math.max(1e-9, probe.dLineDiameterMm);
+      check(
+        'recorded disk (90% of recorded light) vs measured at 587.6 nm: 0.85-1.05, and under the all-color extent',
+        recRel >= 0.85 && recRel <= 1.05 && probe.recordedDiameterMm <= probe.diameterMeasuredMm,
+        `recorded=${probe.recordedDiameterMm.toFixed(4)}mm d=${probe.dLineDiameterMm.toFixed(4)}mm all=${probe.diameterMeasuredMm.toFixed(4)}mm ratio=${recRel.toFixed(3)}`,
+      );
+      const dRelErr = Math.abs(probe.dLineDiameterMm - probe.predictedBlurMm) / Math.max(1e-9, probe.predictedBlurMm);
+      check(
+        'engine measured at 587.6 nm vs predicted at 587.6 nm (within 10%; what is left is monochromatic aberration)',
+        Number.isFinite(dRelErr) && dRelErr <= 0.1,
+        `measured_d=${probe.dLineDiameterMm?.toFixed(4)}mm predicted=${probe.predictedBlurMm.toFixed(4)}mm rel_err=${(dRelErr * 100).toFixed(1)}%`,
       );
     }
 
@@ -315,8 +336,18 @@ async function main() {
     // small enough that "in focus" actually means "a few pixels", the case the brief's own check describes.
     {
       const { probe } = await capture(page, null, { lens: 'p50', fno: 11, focusM: 3, format: 'ff' }, 3000, 0);
-      const px = probe.diameterMeasuredMm / (probe.pitchUm / 1000);
-      check('in-focus disk (f/11) is under 3 sensor pixels', px < 3, `${px.toFixed(2)} px (diameter ${probe.diameterMeasuredMm.toFixed(4)}mm / pitch ${probe.pitchUm}um)`);
+      // r3 (10/11/2026): the reported disk is the recorded-light one (90% of the sensor-weighted energy). The point now
+      // sits exactly at the focus distance (the slider's focus detent); the unweighted all-color extent, set by the
+      // 392.5 nm and 767.5 nm bins, is listed for reference (3.04 px on 10/11/2026).
+      const px = probe.recordedDiameterMm / (probe.pitchUm / 1000);
+      // r5 (10/14/2026): the traced disk is rays only. A real recorded point is at least its Airy disk, so the sensor sees about
+      // max(geometric, Airy) (their quadrature sum, a common estimate, is printed too). At f/11 the Airy disk is 3.4 px on the D850
+      // sensor, so the geometric check stays under 3 px while the honest 'point on the sensor' number is reported beside it.
+      const airyPx = probe.airyDiameterMm / (probe.pitchUm / 1000);
+      const seenPx = Math.max(px, airyPx), quadPx = Math.hypot(px, airyPx);
+      check('in-focus disk (f/11), as recorded (rays only), is under 3 sensor pixels; the real point is max(geometric, Airy)',
+        px < 3 && Number.isFinite(airyPx) && airyPx > 0,
+        `geometric ${px.toFixed(2)} px, Airy disk ${airyPx.toFixed(2)} px, max ${seenPx.toFixed(2)} px, quadrature ${quadPx.toFixed(2)} px (recorded ${probe.recordedDiameterMm.toFixed(4)}mm / pitch ${probe.pitchUm}um; all-color extent ${(probe.diameterMeasuredMm / (probe.pitchUm / 1000)).toFixed(2)} px; point ${probe.pointDistMm.toFixed(1)} mm)`);
     }
 
     // ---- case 3: blade-count check. No lens in data/lenses/*.json has straight blades (all rounded=true, per

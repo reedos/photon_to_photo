@@ -770,13 +770,14 @@
   "generic": {
     "prnu": {
       "typicalPercent": {
-        "v": 1.5,
+        "v": 0.4,
         "unit": "% RMS",
         "ev": "reported",
-        "src": "https://www.onsemi.com/pdf/datasheet/noii4sm6600a-d.pdf",
-        "loc": "onsemi NOII4SM6600A datasheet, PRNU spec row (one named commercial CMOS sensor, cited as a representative example, not a universal constant)",
-        "accessed": "09/28/2026",
-        "note": "PRNU varies by sensor design; this is one concretely cited data point in the commonly reported ~1-2% RMS range for consumer/industrial CMOS sensors. No PRNU figure specific to any of the three chosen camera sensors was found."
+        "appliedEv": "assumed",
+        "src": "https://blog.kasson.com/the-last-word/sensor-photon-transfer-analysis-prnu",
+        "loc": "Jim Kasson, 'Sensor photon transfer analysis: PRNU' (12/11/2014), Nikon D4 at base ISO, 400x400 ROI: 'the kernel size makes the difference between the PRNU being about 0.4% and 0.3%' (99x99 and 7x7 high-pass kernels). Same method and result for the Sony a9 at ISO 100, 'approaching an asymptote of between 0.3% and 0.4%' (https://blog.kasson.com/the-last-word/sony-a9-prnu, 5/28/2017); the Nikon D5 measured 'slightly under 0.2%' (https://blog.kasson.com/?p=14261, 3/31/2016).",
+        "accessed": "10/11/2026",
+        "note": "Measured on other full-frame cameras (Nikon D4, Sony a9), not on the D850 or Z8: Kasson's Z9 PRNU post (2/5/2022) shows spectra only, and no D850 or Z8 figure was found. 0.4% is the upper end of those measurements with Kasson's standard 99x99 kernel; it stands in for the modeled cameras, so wherever it is applied to them its evidence is 'assumed' (appliedEv). Replaces 1.5% RMS from the onsemi NOII4SM6600A industrial sensor datasheet (score loop r3, 10/11/2026). PRNU is fixed-pattern: it adds to spatial noise across a uniform patch, not to frame-to-frame noise in one pixel."
       }
     },
     "darkCurrent": {

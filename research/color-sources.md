@@ -82,11 +82,18 @@ deployment ships this file as-is.**
 **Fallback, unencumbered**: `data/color/camera-sensitivity-gaussian-model.json`. Per the brief's
 instruction ("if licensing is unclear, ALSO provide a documented parametric model... marked
 derived") I built this even though the license wasn't unclear, because NC is exactly the situation
-that instruction is for. Method: for each of the Nikon D700's R/G/B curves, compute the
-**method-of-moments Gaussian** — weighted mean wavelength (= peak), weighted standard deviation
-(= sigma), curve maximum (= amplitude) — over the measured curve. This is *not* a nonlinear
-least-squares fit to the curve's shape; it's a cheap, fully-documented three-number summary
-(`peak_nm`, `sigma_nm`, `amplitude` per channel), computed in `build_camera_and_checker.py`.
+that instruction is for. Method (refit 10/11/2026): for each of the Nikon D700's R/G/B curves,
+`peak_nm` and `sigma_nm` are a least-squares fit to the measured curve on its own 400-720 nm, 10 nm
+grid, with the amplitude constrained so the Gaussian's photon-weighted response under CIE D65
+(sum of S(lambda) x D65(lambda) x lambda) equals the measured channel's; the three amplitudes are then
+divided by the largest so G peaks at 1.0. Result: R 606.3 nm / 27.7 nm / 0.7337, G 534.2 / 36.1 / 1.0,
+B 462.3 / 29.3 / 0.984; daylight R/G 0.550 and B/G 0.723, the same as the measured D700 (pinned in
+src/engine/data.test.ts). The original fit (before 10/11/2026) was a method-of-moments summary:
+weighted mean (= peak), weighted standard deviation (= sigma), curve maximum (= amplitude). The red
+channel's secondary blue-green lobe inflated its sigma to 48.6 nm while the amplitude stayed at the
+measured peak, so the red curve's area was about 1.8x too large and daylight R/G came out 0.955
+instead of 0.550 (a score-loop reviewer found this; the loupe's red reference pixel read about 1.75x
+too many electrons). The old numbers are kept in the JSON as `previous_params_method_of_moments`.
 Labeled `derived`. It reproduces the broad peak/width of each channel but not fine structure (the
 red channel's blue-tail bump from IR-cut/CFA crosstalk, etc.) — the file's `note` says to label any
 UI use of it "representative CFA shape, not a measured camera." Because only three numbers per

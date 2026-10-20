@@ -58,6 +58,9 @@ describe.each(Object.keys(lenses))('lens %s (Blender export)', (id) => {
       if (surface.sdRealized !== null) expect(surface.sdRealized).toBeCloseTo(current[surface.index], 5);
     }
     expect(m.clipped).toEqual([]);
+    // and none trimmed to a smaller rim: the engine's apertures are physical now (edges.ts), and lens_v2.py refuses to
+    // build glass inside glass instead of trimming it (aperture review 10/11/2026)
+    expect(m.trimmed ?? []).toEqual([]);
   });
 
   it('is under 1.5 MB (the phone loads it over the tailnet)', () => {
@@ -108,6 +111,37 @@ describe.each(Object.keys(lenses))('lens %s (Blender export)', (id) => {
     });
   });
 
+  it('shapes the rim of every element to its prescribed clear semi-diameter, within 0.05 mm (score loop r5: the stale n500fl was 1.8-4.6 mm off)', () => {
+    const els = optics.elements.filter((e: any) => -e.zFrontWorld - m.flangeMm > -8);
+    els.forEach((e: any, k: number) => {
+      const name = `element${String(k + 1).padStart(2, '0')}`;
+      const box = b.get(name)!.box;
+      const rim = Math.max(box.max.x, box.max.y, -box.min.x, -box.min.y);
+      const sd = Math.max(optics.surfaces[e.frontSurface].sdRealized ?? 0, optics.surfaces[e.backSurface].sdRealized ?? 0);
+      expect(Math.abs(rim - sd), `${name} rim ${rim.toFixed(3)} against prescribed ${sd.toFixed(3)}`).toBeLessThanOrEqual(0.05);
+    });
+  });
+
+  it('stands nothing past the barrel front but the z35 front element, and says so (score loop r5: the engraving stood 0.12 mm proud)', () => {
+    const front = b.get('barrel')!.box.min.z;                 // the lens points toward -z
+    const past: Record<string, number> = {};
+    for (const [name, v] of b) {
+      if (['lens', 'glass'].includes(name) || v.box.isEmpty()) continue;
+      if (front - v.box.min.z > 0.01) past[name] = +(front - v.box.min.z).toFixed(2);
+    }
+    if (id === 'z35') {
+      expect(past).toEqual({ element01: 0.5, element01Cut: 0.5 });
+      expect(m.notes.join(' ')).toContain('element 1 stands 0.5 mm past the barrel front');
+    } else {
+      expect(past).toEqual({});
+    }
+  });
+
+  it('flags its printed decals (text, scale marks, front engraving) in the export', () => {
+    expect(b.get('specText')!.extras.decal).toBe(true);
+    expect(b.get('frontEngraving')!.extras.decal).toBe(true);
+  });
+
   it('reports each element the barrel had to clip, and only those', () => {
     const barrelR = m.diameterMm / 2;
     for (const c of m.clipped) expect(c.sd).toBeGreaterThan(c.shown);
@@ -116,6 +150,13 @@ describe.each(Object.keys(lenses))('lens %s (Blender export)', (id) => {
       if (e.maxSd >= barrelR) expect(clippedIdx.has(e.index), `element ${e.index} (sd ${e.maxSd}) exceeds the barrel but is not reported`).toBe(true);
     }
   });
+  it('has no generic mesh names and no duplicate ".00x" materials (score loop r2: exported through tidy_for_export)', () => {
+    const json = g as unknown as { meshes: { name?: string }[]; materials?: { name?: string }[] };
+    expect(json.meshes.map((x) => x.name ?? '').filter((n) => /^(Cube|Plane|Cylinder|Circle|Sphere|Text)(\.\d+)?$/.test(n))).toEqual([]);
+    const mats = (json.materials ?? []).map((x) => x.name ?? '');
+    expect(mats.filter((n) => /\.\d{3}$/.test(n) && mats.includes(n.replace(/\.\d{3}$/, '')))).toEqual([]);
+  });
+
   it('carries the front-ring engraving (design review FID-18)', () => {
     expect(b.has('frontEngraving')).toBe(true);
     // on the front face, not floating in front of it

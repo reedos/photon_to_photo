@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { gateServer } from './preview.mjs';
 
-const url=process.env.P2P_URL||'http://127.0.0.1:47722/';
+const server=await gateServer(),url=server.url;
 const out='shots/experience';mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=d3d11','--enable-unsafe-webgpu','--ignore-gpu-blocklist']});
 const results=[];
@@ -14,7 +15,15 @@ try {
   assert.equal(await page.locator('#photo-opening').isVisible(),true);
   assert.equal(await page.locator('#top').isVisible(),false);
   assert.equal(await page.evaluate(()=>!!window.p2p),false,'no camera initialization on arrival');
-  assert.equal(requests.some(request=>/app-start-|render-worker-|\.glb(?:\?|$)/.test(request)),false,'no engine, workers, or model downloads on arrival');
+  // Score loop r3: the opening warms the camera (src/app/warm.ts) once its photograph has loaded and the page is idle,
+  // so the downloads may start then, but never before the photograph, and nothing runs the camera's code.
+  const early=await page.evaluate(()=>{
+   const photo=performance.getEntriesByType('resource').find(e=>/examples\/flycatcher-2026/.test(e.name));
+   const loaded=photo?photo.responseEnd:Infinity;
+   return performance.getEntriesByType('resource').filter(e=>/app-start-|render-worker-|\.glb(?:\?|$)/.test(e.name)&&e.startTime<loaded).map(e=>e.name);
+  });
+  assert.deepEqual(early,[],'no engine, workers, or model downloads before the opening photograph has loaded');
+  assert.equal(requests.some(request=>/render-worker-/.test(request)),false,'no workers on arrival');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
   for(const id of ['opening-follow','opening-explore']){
    const box=await page.locator('#'+id).boundingBox();assert.ok(box.y+box.height<=height,`${id} visible without scroll at${width}`);
@@ -52,4 +61,4 @@ try {
  await follow.close();assert.deepEqual(errors,[]);
  results.push({flows:'Explore, returning bare index, scenario deep link, actual-photo launch/close, story readout deep link'});
  console.log(JSON.stringify(results,null,2));writeFileSync(`${out}/validation.json`,JSON.stringify(results,null,2)+'\n');
-}finally{await browser.close();}
+}finally{await browser.close();await server.close();}

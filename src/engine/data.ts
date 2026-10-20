@@ -8,7 +8,7 @@
 // and pupil (docs/engine/e4.md, "realize.ts") that costs on the order of 100 ms — paid once per lens id, not
 // once per scenario.
 
-import type { Bins, TraceSurface } from './types';
+import type { Bins, Fig } from './types';
 import type { GlassEntry, LensDesign } from './lens-types';
 import type { CfaColor } from './types';
 import type { CMFs, ChannelSensitivities } from './color';
@@ -17,9 +17,12 @@ import type { LensInfo, SensorInfo } from './model-types';
 import type { Format, FormatId } from './types';
 
 import { makeCatalog, type GlassCatalog, FRAUNHOFER_D_NM } from './glass';
-import { loadLens, cardinal, type ResolvedLens } from './lens';
-import { realize, type RealizedLens } from './realize';
+import { loadLens, cardinal, systemAt, type ResolvedLens } from './lens';
+import { applyRealization, realize, type Realization, type RealizedLens } from './realize';
 import { FORMATS } from './formats';
+import { wavelengthColor, type WavelengthColor } from './spectrum';
+import { daylightSpd, illuminantSpectralIrradiance } from './scene';
+import { photonEnergy, ASSUMED_LENS_TRANSMISSION, METER_CONSTANT_K, ISO_12232_SAT_CONSTANT } from './exposure';
 
 // ---- raw JSON --------------------------------------------------------------------------------------------
 
@@ -137,6 +140,16 @@ interface LensBundle {
 }
 
 const lensCache = new Map<string, LensBundle>();
+const primedRealizations = new Map<string, Realization>();
+
+/**
+ * Hands over realize()'s numbers for lens ids, computed ahead by the same code (the app's build does it; see
+ * vite.config.ts, p2p-realizations), so the first compute() of each lens skips the real-ray survey. A realization
+ * whose surface count does not match the lens is ignored. Nothing in the engine or its tests calls this.
+ */
+export function primeRealizations(table: Record<string, Realization>): void {
+  for (const [id, r] of Object.entries(table)) if (!lensCache.has(id)) primedRealizations.set(id, r);
+}
 
 /**
  * loadLens -> realize for a lens id, cached: realize() runs a real-ray field/pupil survey that costs on the
@@ -147,16 +160,15 @@ function getLensBundle(id: string): LensBundle {
   if (cached) return cached;
   const design = lensDesign(id);
   const resolved: ResolvedLens = loadLens(design, GLASS_CATALOG);
-  const realized = realize(resolved);
+  const primed = primedRealizations.get(id);
+  const realized = primed && primed.afShift && primed.sdRealized.length === resolved.raw.length ? applyRealization(resolved, primed) : realize(resolved);
 
   // LensInfo.efl/maxFno are the DESIGN's own values, at infinity focus and the design's own maximum stop —
   // independent of whatever scenario.fno the reader has picked, unlike Model.cardinal (which is the current
   // stop, current focus). Computed once here, at realize()'s own wide-open infinity-focus stop radius.
-  const infCardinal = cardinal(
-    { surfaces: buildInfinitySurfacesFor(realized), index: realized.index },
-    FRAUNHOFER_D_NM,
-    realized.realization.stopRadius,
-  );
+  // r4 (10/12/2026): the system comes from systemAt(lens, null) so each surface keeps its diffractive spec; the
+  // helper that rebuilt the surfaces here dropped it, and n500 read 538.94 mm (traced 489.71), z800 859.05 (780.01).
+  const infCardinal = cardinal(systemAt(realized, null), FRAUNHOFER_D_NM, realized.realization.stopRadius);
 
   const info: LensInfo = {
     id: design.id,
@@ -184,20 +196,6 @@ function getLensBundle(id: string): LensBundle {
   const bundle: LensBundle = { realized, info };
   lensCache.set(id, bundle);
   return bundle;
-}
-
-// Small local helper: the infinity-focus TraceSystem's surfaces for a RealizedLens, without going through
-// lens.ts's systemAt (which needs a ResolvedLens, and RealizedLens already carries afOffset-adjusted raw
-// surfaces from realize()). Mirrors systemAt(lens, null)'s own surface-building loop.
-function buildInfinitySurfacesFor(lens: RealizedLens): TraceSurface[] {
-  const out: TraceSurface[] = [];
-  let z = 0;
-  for (const r of lens.raw) {
-    out.push({ z, c: r.c, k: r.k, a: r.a, sd: r.sd, kind: r.kind, mediumAfter: r.mediumAfter, label: r.label, coated: r.coated });
-    z += r.t;
-  }
-  out.push({ z: z + (lens.afOffset ?? 0), c: 0, k: 0, a: [], sd: 1e9, kind: 'image', mediumAfter: 'air' });
-  return out;
 }
 
 export function getRealizedLens(id: string): RealizedLens {
@@ -240,6 +238,12 @@ export const CMF: CMFs = {
   ybar: tableSpectrum(cmfData.lambda, cmfData.values.y_bar),
   zbar: tableSpectrum(cmfData.lambda, cmfData.values.z_bar),
 };
+
+/** The site's one spectral display color (design/LOOK.md's spectral color rule), from the cited 1 nm CIE 1931
+ *  table rather than spectrum.ts's analytic fit: look.ts colors every ray, dot and swatch with this. */
+export function spectralColor(nm: number): WavelengthColor {
+  return wavelengthColor(nm, CMF);
+}
 
 /** CIE y-bar doubles as V(lambda), the photopic luminous efficiency function (see docs/engine/e3.md, scene.ts
  *  section: "ybar IS the CIE 1924 photopic luminous efficiency function"). */
@@ -439,9 +443,14 @@ interface BodySensorJson {
     pixelPitchUm: { v: number };
     pixelCount: { effectiveH: { v: number }; effectiveV: { v: number } };
     microlensFillFactor: { v: number };
-    qe: { dxomarkDerivedPeakPercent: { v: number } };
+    qe: { dxomarkDerivedPeakPercent: { v: number; includesFillFactor?: boolean; definition?: { src: string; loc: string } } };
     adcBitDepthBits?: { rawUncompressed?: { v: number }; raw?: { v: number } };
     readout: { electronicFullFrameMs: { v: number; src: string; confidence: string } };
+    /** The camera's measured (DxOMark, saturation-based) ISO as a multiple of the ISO setting (Claff's Measured ISO chart). */
+    measuredIso?: { factor: { v: number; src: string; loc: string; factorEv: number } };
+    /** A cited raw black level, when one exists (D850: Kasson's dark-frame measurement). 14-bit DN. */
+    blackLevelDn?: { v: number; src: string; loc: string; validIsoBelow?: number };
+    isoRange?: { nativeMin: number; nativeMax: number; expandedMin: number; expandedMax: number; src: string; loc: string };
   };
   readNoise: {
     fwcElectrons: number;
@@ -476,6 +485,54 @@ function assumedBodyDarkCurrentEPerS(): number {
   return darkCurrentEPerS(rec);
 }
 
+/**
+ * Each color channel's own peak quantum efficiency. `qePeak` (the sensor's figure) is the strongest channel's peak (green);
+ * the red and blue filters peak lower (amplitudes 0.7337 and 0.984 of green's in the D700-fitted Gaussian model), so a
+ * red pixel's photodiode card must not show the green figure (score loop r4, 10/12/2026: it showed 44% for red, about 32%).
+ */
+function channelPeakFigs(qe: ChannelSensitivities, qePeak: Fig): Record<'qePeakR' | 'qePeakG' | 'qePeakB', Fig> {
+  const peak = (f: (nm: number) => number): number => { let m = 0; for (let nm = 380; nm <= 780; nm++) m = Math.max(m, f(nm)); return m; };
+  const mk = (ch: 'R' | 'G' | 'B'): Fig => ({
+    v: peak(qe[ch]), unit: 'fraction', ev: 'derived', src: qePeak.src, loc: qePeak.loc,
+    calc: `${qePeak.calc ? qePeak.calc + '; ' : ''}the ${ch} channel's Gaussian peak: the sensor figure times the ${ch} amplitude over the strongest channel's, from data/color/camera-sensitivity-gaussian-model.json`,
+  });
+  return { qePeakR: mk('R'), qePeakG: mk('G'), qePeakB: mk('B') };
+}
+
+/** The reference light for the ISO calibration: 5500 K daylight (the bench scene's own illuminant, BENCH_CCT_K in scenes.ts). */
+const CALIBRATION_CCT_K = 5500;
+
+/**
+ * Score loop r6 (10/14/2026): the green raw level, as a share of the ADC clip, that a metered 18% gray (or any metered exposure
+ * of a daylight scene) reaches with this sensor's QE curves. The sensor-plane exposure the meter picks is H = pi K T / (4 S)
+ * lux s (ISO 2720; T the assumed lens transmission); its spectrum is 5500 K daylight, normalized to that illuminance. Photons
+ * per bin x the green sensitivity x the fill factor is the electron count; the ISO setting cancels, since the clip (adcClipE)
+ * and the exposure both scale as 1 / ISO. Same arithmetic as camera.ts's grayRawFractionMetered, without a scenario.
+ */
+export function meteredGreenRawFraction(spec: SensorSpec, iso: number): number {
+  const spectrum = tableSpectrum(DAYLIGHT_LAMBDAS, daylightSpd(CALIBRATION_CCT_K, DAYLIGHT_S0, DAYLIGHT_S1, DAYLIGHT_S2));
+  const perLux = illuminantSpectralIrradiance(spectrum, 1, BINS, V_LAMBDA); // W / m^2 / nm for 1 lux
+  const exposureLuxS = (Math.PI * METER_CONSTANT_K * ASSUMED_LENS_TRANSMISSION) / (4 * iso);
+  const pixelAreaM2 = (spec.pitchUm * 1e-6) ** 2;
+  let electrons = 0;
+  for (let i = 0; i < BINS.centers.length; i++) {
+    const nm = BINS.centers[i];
+    electrons += (perLux(nm) * exposureLuxS * pixelAreaM2 * BINS.weights[i] / photonEnergy(nm)) * spec.qe.G(nm);
+  }
+  return (spec.fillFactor * electrons) / adcClipElectrons(spec, iso);
+}
+
+/**
+ * The green sensitivity peak that puts a metered 18% gray where ISO 12232's saturation-based speed puts it at the camera's
+ * MEASURED ISO: the nominal expectation (pi K T / (4 x 78), 11.3% of the raw clip) times the measured-to-nominal ISO factor.
+ * The peak starts from `startPeak` (Claff's effective QE); the engine's own metered gray fraction there, and the target, fix the scale. The
+ * sensitivity amplitudes scale together (red, green and blue keep their ratios), so the gray fraction scales linearly.
+ */
+export function calibratedGreenPeak(startPeak: number, spec: SensorSpec, iso: number, measuredIsoFactor: number): number {
+  const target = measuredIsoFactor * (Math.PI * METER_CONSTANT_K * ASSUMED_LENS_TRANSMISSION) / (4 * ISO_12232_SAT_CONSTANT);
+  return startPeak * target / meteredGreenRawFraction(spec, iso);
+}
+
 function buildBodySensorBundle(body: BodySensorJson, format: FormatId, iso: number): SensorBundle {
   const { sensor: rec, readNoise: rn } = body;
   const rnE = interpolateReadNoise(rn.points, iso);
@@ -485,22 +542,40 @@ function buildBodySensorBundle(body: BodySensorJson, format: FormatId, iso: numb
   const bits = rec.adcBitDepthBits?.rawUncompressed?.v ?? rec.adcBitDepthBits?.raw?.v ?? 14;
   const pitchUm = rec.pixelPitchUm.v;
   const qePeak = rec.qe.dxomarkDerivedPeakPercent.v / 100;
+  // Score loop r2 (10/11/2026): Claff's DxOMark-derived QE is "something more like the product of QE and fill
+  // factor" (his DxOMark Gain Analysis page, recorded in qe.dxomarkDerivedPeakPercent.definition), so the assumed
+  // microlens fill factor is not applied on top of it again.
+  const qeDef = rec.qe.dxomarkDerivedPeakPercent;
+  const fillInQe = qeDef.includesFillFactor === true;
   const darkCurrentEPerSVal = assumedBodyDarkCurrentEPerS();
+  // Score-loop r1 (10/11/2026): the D850 carries a reported black level (Kasson, 400 DN at base ISO). It is labeled
+  // reported only below the ISO where Kasson saw it move lower (by an amount he does not give). The Z8 has no cited
+  // figure, so it keeps the project's assumed 512 DN at 14 bits, scaled to the bit depth.
+  const cited = rec.blackLevelDn;
+  const blackDn = cited ? Math.round(cited.v * ((2 ** bits - 1) / (2 ** 14 - 1))) : Math.round(512 * ((2 ** bits - 1) / (2 ** 14 - 1)));
+  const blackCitedHere = !!cited && (cited.validIsoBelow === undefined || iso < cited.validIsoBelow);
 
+  const claffPeak = qePeak;
   const spec: SensorSpec = {
     pitchUm,
-    fillFactor: rec.microlensFillFactor.v,
-    qe: gaussianCameraSensitivities(qePeak),
+    fillFactor: fillInQe ? 1 : rec.microlensFillFactor.v,
+    qe: gaussianCameraSensitivities(claffPeak),
     fullWellE,
     darkCurrentEPerS: darkCurrentEPerSVal,
     readNoise: { lcgE: rnE, hcgE: rnE },
     dcgSwitchIso: 0, // this ISO's own interpolated read noise is already baked into both modes above
     unityGainIso,
     bitDepth: bits,
-    blackLevelDn: Math.round(512 * ((2 ** bits - 1) / (2 ** 14 - 1))), // same assumed convention as the other picks
+    blackLevelDn: blackDn,
     prnuStdDev: sensorsData.generic.prnu.typicalPercent.v / 100,
     baseIso: rn.normalAnalogRangeIso[0],
   };
+
+  // Score loop r6: with a measured saturation-based ISO on file, the sensitivity amplitudes are scaled to it; without one the
+  // effective-QE reading of Claff's figure stands (the earlier rounds' behavior, 0.8 EV under the label).
+  const measured = rec.measuredIso?.factor;
+  const calibratedPeak = measured ? calibratedGreenPeak(claffPeak, spec, iso, measured.v) : claffPeak;
+  if (measured) spec.qe = gaussianCameraSensitivities(calibratedPeak);
 
   const srcFile = rec.id === D850_SENSOR_ID ? 'data/d850.json' : 'data/z8.json';
   const info: SensorInfo = {
@@ -515,21 +590,44 @@ function buildBodySensorBundle(body: BodySensorJson, format: FormatId, iso: numb
     readNoiseE: rnE,
     unityGainIso,
     bits,
+    adcClipE: adcClipElectrons(spec, iso),
+    ...(rec.isoRange ? { isoRange: { nativeMin: rec.isoRange.nativeMin, nativeMax: rec.isoRange.nativeMax, expandedMin: rec.isoRange.expandedMin, expandedMax: rec.isoRange.expandedMax } } : {}),
     readoutS: rec.readout.electronicFullFrameMs.v / 1000,
+    ...(measured ? { measuredIsoFactor: measured.v } : {}),
     figs: {
-      readoutS: { v: rec.readout.electronicFullFrameMs.v / 1000, unit: 's', ev: 'reported', src: rec.readout.electronicFullFrameMs.src, loc: `sensor.readout.electronicFullFrameMs; ${rec.readout.electronicFullFrameMs.confidence}` },
+      ...(rec.isoRange ? { isoNativeMax: { v: rec.isoRange.nativeMax, unit: 'ISO', ev: 'reported' as const, src: rec.isoRange.src, loc: `${srcFile} sensor.isoRange: ${rec.isoRange.loc}` } } : {}),
+      adcClipE: { v: adcClipElectrons(spec, iso), unit: 'e-', ev: 'derived', src: srcFile, calc: `(2^${bits} - 1 - ${spec.blackLevelDn} DN black level) / gain, gain = ISO ${iso} / unity-gain ISO ${unityGainIso} DN per electron: the electron count at which the raw value clips at this ISO` },
+      readoutS: { v: rec.readout.electronicFullFrameMs.v / 1000, unit: 's', ev: 'reported', src: rec.readout.electronicFullFrameMs.src, loc: `sensor.readout.electronicFullFrameMs; ${/^low/i.test(rec.readout.electronicFullFrameMs.confidence ?? '') ? 'secondary sources only, low confidence (not read from a primary table). ' : /^secondary/i.test(rec.readout.electronicFullFrameMs.confidence ?? '') ? 'secondary source only (a third-party measured list, not Nikon or a primary table). ' : ''}${rec.readout.electronicFullFrameMs.confidence}` },
       pitchUm: { v: pitchUm, unit: 'um', ev: 'reported', src: srcFile, loc: 'sensor.pixelPitchUm' },
       fullWellE: { v: fullWellE, unit: 'e-', ev: 'reported', src: srcFile, loc: 'readNoise.fwcElectrons', calc: 'Claff RN_e.htm series fwc field' },
       readNoiseE: { v: rnE, unit: 'e- rms', ev: 'derived', src: srcFile, loc: 'readNoise.points', calc: `log-log interpolation of Claff's measured points at ISO ${iso}` },
       unityGainIso: { v: unityGainIso, unit: 'ISO', ev: 'reported', src: srcFile, loc: 'readNoise.unityGainIso' },
       dcgSwitchIso: { v: dcgSwitchIso, unit: 'ISO', ev: 'derived', src: srcFile, loc: 'readNoise.dcgIso', calc: 'steepest adjacent-point drop in log2(read noise) vs log2(ISO)' },
-      qePeak: { v: qePeak, unit: 'fraction', ev: 'derived', src: `${srcFile} + data/color/camera-sensitivity-gaussian-model.json`, loc: 'sensor.qe.dxomarkDerivedPeakPercent', calc: 'sensor peak-QE spec scales the Gaussian sensitivity model (see gaussianCameraSensitivities)' },
+      qePeak: measured
+        ? { v: calibratedPeak, unit: 'fraction', ev: 'derived', src: `${srcFile} + data/color/camera-sensitivity-gaussian-model.json`, loc: `sensor.measuredIso.factor (${measured.v}, ${measured.factorEv} EV); sensor.qe.dxomarkDerivedPeakPercent (${Math.round(claffPeak * 100)}%)`, calc: `calibrated to the measured ISO: the Gaussian sensitivity model's amplitudes are scaled so a metered 18% gray in 5500 K daylight lands at ${(100 * measured.v * Math.PI * METER_CONSTANT_K * ASSUMED_LENS_TRANSMISSION / (4 * ISO_12232_SAT_CONSTANT)).toFixed(1)}% of the raw clip, ISO 12232's saturation-based expectation (pi K T / (4 x 78) = 11.3%) times this camera's measured-to-nominal ISO factor ${measured.v}; Claff's DxOMark-derived ${Math.round(claffPeak * 100)}% effective QE (QE x fill factor) is the starting scale and a cross-check, and the calibrated green peak is ${calibratedPeak.toFixed(2)} (a derived effective figure, not a published peak QE)` }
+        : { v: qePeak, unit: 'fraction', ev: 'derived', src: `${srcFile} + data/color/camera-sensitivity-gaussian-model.json`, loc: 'sensor.qe.dxomarkDerivedPeakPercent', calc: fillInQe ? "Claff's effective QE (QE x fill factor, DxOMark-derived) scales the Gaussian sensitivity model as the green peak (see gaussianCameraSensitivities); the peak reading is this project's interpretation" : 'sensor peak-QE spec scales the Gaussian sensitivity model (see gaussianCameraSensitivities)' },
+      fillFactor: fillInQe
+        ? { v: 1, unit: 'fraction', ev: 'reported', src: qeDef.definition?.src ?? srcFile, loc: `${srcFile} sensor.qe.dxomarkDerivedPeakPercent.definition: already inside the effective QE (${qeDef.definition?.loc ?? 'Claff'}); not applied again` }
+        : { v: rec.microlensFillFactor.v, unit: 'fraction', ev: 'assumed', src: srcFile, loc: 'sensor.microlensFillFactor: no camera-specific figure published; BSI fill factor "approaches 100%"' },
       darkCurrentEPerS: { v: darkCurrentEPerSVal, unit: 'e-/s/pix', ev: 'assumed', src: 'data/sensors.json (full-frame-a7r4-imx455)', loc: 'no dark-current figure is published for either the D850 or Z8; borrows the same-format full-frame BSI stand-in already used elsewhere' },
-      blackLevelDn: { v: spec.blackLevelDn, unit: 'DN', ev: 'assumed', src: 'src/engine/fixtures/e3-sensor.ts convention', loc: 'no cited black-level figure for this sensor' },
+      blackLevelDn: cited
+        ? (blackCitedHere
+          ? { v: spec.blackLevelDn, unit: 'DN', ev: 'reported', src: cited.src, loc: `${srcFile} sensor.blackLevelDn: ${cited.loc}` }
+          : { v: spec.blackLevelDn, unit: 'DN', ev: 'assumed', src: cited.src, loc: `${srcFile} sensor.blackLevelDn: measured ${cited.v} DN below ISO ${cited.validIsoBelow}; at this ISO the source reports a lower, unstated value, so ${cited.v} DN is kept as an assumption` })
+        : { v: spec.blackLevelDn, unit: 'DN', ev: 'assumed', src: 'src/engine/fixtures/e3-sensor.ts convention', loc: 'no cited black-level figure for this sensor (searched 10/11/2026)' },
     },
   };
 
+  info.figs = { ...info.figs, ...channelPeakFigs(spec.qe, info.figs.qePeak) };
   return { spec, info };
+}
+
+/** Electrons at which the raw value reaches the ADC's top code at this ISO: (2^bits - 1 - black level) / gain, with
+ *  gain = ISO / unityGainIso DN per electron (sensor.ts analogGain). Below the full well at every ISO for the D850
+ *  and Z8, including base ISO 64 (about 1.6% below the D850's 59,126 e-), so the raw value clips before the well
+ *  fills. */
+export function adcClipElectrons(spec: SensorSpec, iso: number): number {
+  return ((2 ** spec.bitDepth - 1 - spec.blackLevelDn) * spec.unityGainIso) / iso;
 }
 
 export interface SensorBundle {
@@ -625,6 +723,7 @@ export function sensorFor(format: FormatId, iso: number, sensorId?: string): Sen
     readNoiseE: rn,
     unityGainIso,
     bits,
+    adcClipE: adcClipElectrons(spec, iso),
     readoutS: 0.05, // placeholder scan time; no per-format figure is wired here (out of E4's own path list)
     figs: {
       readoutS: { v: 0.05, unit: 's', ev: 'assumed', loc: 'Illustrative 50 ms scan; no camera-specific value is wired for this sensor.' },
@@ -634,11 +733,13 @@ export function sensorFor(format: FormatId, iso: number, sensorId?: string): Sen
       unityGainIso: { v: unityGainIso, unit: 'ISO', ev: 'reported', src: 'data/read-noise.json', loc: `${readNoiseKey}.unityGainIso` },
       dcgSwitchIso: { v: dcgSwitchIso, unit: 'ISO', ev: 'derived', src: 'data/read-noise.json', loc: `${readNoiseKey}.dcgIso`, calc: 'steepest adjacent-point drop in log2(read noise) vs log2(ISO)' },
       qePeak: { v: qePeak, unit: 'fraction', ev: 'derived', src: 'data/sensors.json + data/color/camera-sensitivity-gaussian-model.json', loc: `${rec.id}.qe`, calc: 'sensor peak-QE spec scales the Gaussian sensitivity model (see gaussianCameraSensitivities)' },
+      fillFactor: { v: rec.microlensFillFactor.v, unit: 'fraction', ev: 'assumed', src: 'data/sensors.json', loc: `${rec.id}.microlensFillFactor: no sensor-specific figure published` },
       darkCurrentEPerS: { v: spec.darkCurrentEPerS, unit: 'e-/s/pix', ev: 'derived', src: 'data/sensors.json', loc: `${rec.id}.darkCurrent`, calc: 'doubling-temperature extrapolation to a representative 60C in-camera operating point' },
       blackLevelDn: { v: spec.blackLevelDn, unit: 'DN', ev: 'assumed', src: 'src/engine/fixtures/e3-sensor.ts convention', loc: 'no cited black-level figure for these sensors' },
     },
   };
 
+  info.figs = { ...info.figs, ...channelPeakFigs(spec.qe, info.figs.qePeak) };
   const bundle: SensorBundle = { spec, info };
   return cacheSensor(key, bundle);
 }

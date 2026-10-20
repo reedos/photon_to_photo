@@ -14,7 +14,7 @@ export const SPEED_OF_LIGHT = 299792458;
 
 /**
  * Luminous efficacy of monochromatic 555 nm (540 THz) radiation, lm/W. Exact by definition (the SI candela
- * definition; BIPM SI Brochure, 9th ed., ยง2.3.1). Converting a broadband radiometric quantity to photometric units
+ * definition; BIPM SI Brochure, 9th ed., section 2.3.1). Converting a broadband radiometric quantity to photometric units
  * with this single constant is only exact AT 555 nm; away from the photopic peak it requires weighting by the full
  * CIE 1931 V(lambda) luminosity function, which this module does not carry (that data lives in a later
  * workstream's color module). `radiometricFromPhotometric`/`photometricFromRadiometric` below use it as a labeled
@@ -81,6 +81,8 @@ export function shutterForEv(N: number, evValue: number): number {
  * show that spread rather than silently picking one.
  */
 export const METER_CONSTANT_K = 12.5;
+/** ISO 12232:2019, saturation-based speed: S_sat = 78 / H_sat, H_sat the sensor-plane exposure (lux s) at raw saturation. */
+export const ISO_12232_SAT_CONSTANT = 78;
 export const METER_CONSTANT_K_ALT = 14;
 
 /** Scene luminance (cd/m^2) implied by a correctly-metered exposure: L = K * N^2 / (t * S), from N^2/t = LS/K. */
@@ -106,6 +108,20 @@ export function workingFNumberForFocus(N: number, f: number, objectDistance: num
   return workingFNumber(N, magnificationFromObject(objectDistance, f), pupilMag);
 }
 
+/**
+ * A lens's own transmission (coating/element losses) is not modeled per element anywhere in this engine (BRIEF.md
+ * lists T-stop/coatings as later work); one representative value stands in for every lens. 0.9 (about 1/7 stop of
+ * loss) is a commonly cited round figure for a modern multi-coated photographic lens's overall transmission.
+ * Evidence: assumed. The one copy every exposure path uses (camera.ts, render.ts, pieces/pixel-sample.ts; score
+ * loop r2 merged three copies), surfaced as Model.figs.lensTransmission so the UI can label it.
+ */
+export const ASSUMED_LENS_TRANSMISSION = 0.9;
+
+/** The evidence note on every figure that is calculated from the assumed scene illuminance and the assumed lens transmission
+ *  (photons, electrons, SNR, light on the sensor, scene EV): one rule, a result carries the weakest label of its inputs, so
+ *  they read ASSUMED wherever they appear (score loop r5; the Sensor card said CALC. for what More settings called ASSUMED). */
+export const ASSUMED_INPUTS_NOTE = 'Calculated by the simulator, but from an assumed scene illuminance and an assumed lens transmission; a result carries the weakest label of its inputs.';
+
 /** cos^4(theta): the natural-vignetting falloff factor for a point imaged at off-axis angle `thetaRad`. */
 export function cos4Falloff(thetaRad: number): number {
   const c = Math.cos(thetaRad);
@@ -119,11 +135,12 @@ export function offAxisAngle(imageHeightMm: number, f: number): number {
 
 /**
  * The "effective solid angle" factor pi / (4 N_w^2) (steradians) that the camera equation multiplies scene
- * radiance/luminance by. Derivation: the image-side ray cone from the working f-number N_w has half-angle u'
- * with sin(u') ~ 1/(2 N_w) in the paraxial approximation (N_w = image distance / entrance-pupil diameter, so
- * tan(u') ~ 1/(2N_w), and small angles let sin ~ tan). The solid angle of a cone of half-angle u' is
- * Omega = 2*pi*(1 - cos(u')) ~ pi * sin^2(u') for small u', giving Omega ~ pi / (4 N_w^2). This is the same
- * paraxial/small-angle approximation the camera equation itself assumes (see `imageIlluminance` below).
+ * radiance/luminance by. Derivation: a Lambertian source of luminance L lights a surface to E = pi L sin^2(u'),
+ * where u' is the half-angle of the cone arriving at the image point (the projected solid angle of the cone, exact
+ * for any u'). For a lens that obeys the sine condition (an aplanatic lens), which is what the engine's definition
+ * N = EFL / EPD assumes, sin(u') = 1/(2 N_w) exactly, so the factor pi / (4 N_w^2) is exact, not a small-angle
+ * approximation. What a real lens adds is pupil aberration, vignetting and the sine-condition error left in the
+ * design; the traced cone shows those, and this factor does not.
  */
 export function effectiveSolidAngle(workingFNo: number): number {
   return Math.PI / (4 * workingFNo * workingFNo);
@@ -138,8 +155,9 @@ export function effectiveSolidAngle(workingFNo: number): number {
  * or the RP Photonics Encyclopedia entry "camera equation"):
  *   - the scene element is Lambertian (radiance/luminance independent of viewing angle), so a single L describes
  *     it fully;
- *   - the paraxial/small-angle approximation used in `effectiveSolidAngle` (breaks down for very fast, very wide
- *     lenses at the field edge - the same regime where cos^4 itself is an approximation of real vignetting);
+ *   - the lens obeys the sine condition, sin(u') = 1/(2 N_w), which makes `effectiveSolidAngle` exact; a real lens
+ *     deviates through pupil aberration and vignetting (the cone shows them), and cos^4 itself is only the natural
+ *     falloff of a simple lens, not real vignetting;
  *   - T lumps every transmission loss (absorption, uncoated-surface reflection, etc.) into one scalar, uniform
  *     over the pupil and over field angle;
  *   - N_w already includes any pupil-magnification/bellows correction the caller wants (see `workingFNumber`);

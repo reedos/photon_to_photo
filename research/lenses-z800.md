@@ -259,3 +259,40 @@ lens loads and traces end to end with no engine-side workaround needed, unlike `
    is strong internal evidence the whole table is transcribed correctly, but none of it was checked
    against the patent's own PDF page images (patentimages.storage.googleapis.com), which returned no
    accessible URL for this specific patent in this session.
+3. **Blue focuses poorly on axis (score loop r2, 10/11/2026; unresolved).** Traced wide open at infinity, on axis,
+   the per-bin landing chord is 315 um at 417.5 nm and 147 um at 442.5 nm, against 2-35 um from 492.5 to 692.5 nm
+   (n500's PF design: under 6 um in every bin; `docs/score-loop/r2-physics/z800-per-bin.txt`). The DOE itself is
+   traced exactly (its phase coefficients, lambda0 = 587.6 nm and order 1 reproduce the patent's stated f to
+   0.0012% and fpf to 8 figures, above), and an independent tracer that takes the diffractive step intrinsically
+   on the substrate (`tools/review-loop/optics.mjs`, measure.mjs L2) lands the same rays within 0.001 um, so the
+   blur is not a tracing error. The likeliest source is the two resin layers' dispersion: the patent
+   gives only nd/vd for them, and `resolveMedium` borrows the dispersion SHAPE of the nearest catalog glass for a
+   `layer: "resin"` surface. Resins used for close-contact multilayer DOEs are chosen for anomalous partial
+   dispersion, so a normal-glass shape can be wrong at 400-450 nm. This is a hypothesis, not a finding. Settling it needs either the patent's own g-line (435.8 nm) aberration
+   curves for Example 6 (the longitudinal-aberration figure) or published ng/nF/nC for the two resins. Neither was
+   read this round, so no lens card claims the blue blur is a property of the real lens.
+
+### Open problem 3 resolved (score loop r3, 10/11/2026)
+
+The cause was not the resins. The patent's Table 26 (conditional-expression values) states, for the Sixth Example,
+conditional expression (2) `thetagFp1 = 0.6319`: the partial dispersion ratio (ng - nF)/(nF - nC) of the positive
+lens with the smallest Abbe number in G1, which rows (7) `vdp1 = 27.35` and (15) `ndp1 = 1.664` identify as L18
+(surface index 15, nd 1.66382 / vd 27.35, no catalog match, most likely the SR element). The model had borrowed the
+shape of CDGM D-ZF10-25 (theta_g,F 0.5992), a normal flint. The same table gives `thetagFp1 = 0.6291` for the First
+Example (m500.json surface 14, nd 1.75575 / vd 24.71). Both values are now in the lens files (`thetaGF`,
+`thetaGFSource`), and `lens.ts` builds a model glass that reproduces nd, vd and theta_g,F (a change of curvature in
+1/lambda^2; `src/engine/model-glass.test.ts` checks that form against 78 anomalous catalog glasses: median error
+0.0026 x (nF - nC) from 420 to 700 nm, against 0.0239 without it). No catalog search (OHARA, HOYA, SUMITA, HIKARI,
+CDGM, SCHOTT as carried in `data/glass/catalog.json`) has a glass within vd 30 at nd 1.62-1.71 at all.
+
+Effect, paraxial focus at infinity relative to the d line: g line +1,385 um -> -198 um, F +242 -> -78 um,
+C +218 -> -107 um. Real-ray on-axis chord wide open at infinity: 417.5 nm 355.5 -> 10.0 um, 442.5 nm 170.5 ->
+13.1 um; widest bin 355.5 -> 20.4 um (d line 18.1 um). Evidence: `docs/score-loop/r3-physics/z800-bins-*.txt`.
+
+The resin hypothesis is ruled out: the three PF surfaces share one radius (154.1141 mm) and the layers are 0.1 and
+0.25 mm thick, so their refractive power nearly cancels whatever their indices. Setting the resins' vd to 25 and 70,
+or giving material A a theta_g,F of 0.70, moves the g, F and C foci by under 2 um (`resin-sensitivity.txt`). The
+resins' dispersion stays an assumption (the patent gives only nd/vd) but no longer matters for anything drawn.
+
+Not done: the patent's longitudinal-aberration figure for Example 6 is an image in the PDF; it was not read, so the
+unit test pins the corrected model's own secondary spectrum (every line within 0.25 mm of d) rather than the figure.

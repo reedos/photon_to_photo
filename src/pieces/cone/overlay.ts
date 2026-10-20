@@ -16,6 +16,10 @@ export interface ConeControls {
   set(pointDistMm: number, fieldFrac: number): void;
   /** Re-clamps the slider's floor when the lens (and so its closest focus) changes. */
   setMinMm(mm: number): void;
+  /** The focus distance (null = infinity). The slider step nearest it is a detent that traces exactly that
+   *  distance: a log step is about 2-3% of the distance, wider than a long lens's depth of field (z800 at 15 m:
+   *  14.94-15.07 m), so without it no step lands inside the sharp zone. */
+  setFocusMm(mm: number | null): void;
   onChange(cb: () => void): void;
   dispose(): void;
 }
@@ -50,10 +54,10 @@ export function buildOverlay(minMm: number): ConeControls {
   el.setAttribute('aria-label', 'The traced point');
   el.innerHTML = `
     <p class="lv-ctl-k">The traced point</p>
-    <label class="lv-ctl-row"><span class="lv-ctl-l">Distance</span><output id="cone-dist-v" for="cone-dist"></output>
-      <input type="range" id="cone-dist" min="0" max="${STEPS}" step="1" value="0"></label>
-    <label class="lv-ctl-row"><span class="lv-ctl-l">Off center</span><output id="cone-field-v" for="cone-field"></output>
-      <input type="range" id="cone-field" min="0" max="${STEPS}" step="1" value="0"></label>
+    <label class="lv-ctl-row"><span class="lv-ctl-l">Point distance</span><output id="cone-dist-v" for="cone-dist" aria-hidden="true"></output>
+      <input type="range" id="cone-dist" aria-label="Point distance" min="0" max="${STEPS}" step="1" value="0"></label>
+    <label class="lv-ctl-row"><span class="lv-ctl-l">Off center</span><output id="cone-field-v" for="cone-field" aria-hidden="true"></output>
+      <input type="range" id="cone-field" aria-label="Off center" min="0" max="${STEPS}" step="1" value="0"></label>
   `;
 
   const distEl = el.querySelector<HTMLInputElement>('#cone-dist')!;
@@ -63,10 +67,18 @@ export function buildOverlay(minMm: number): ConeControls {
 
   let onChangeCb: (() => void) | null = null;
   let curMinMm = minMm;
+  let focusMm: number | null = null;
+  const focusStep = () => (focusMm !== null && focusMm >= curMinMm && focusMm <= maxMm ? logStepFromMm(curMinMm, maxMm, focusMm) : -1);
+  const valueAt = (step: number) => (step === focusStep() ? focusMm! : logStepValue(curMinMm, maxMm, step));
 
   function syncOutputs() {
-    distV.textContent = fmtDist(logStepValue(curMinMm, maxMm, Number(distEl.value)));
+    const step = Number(distEl.value);
+    distV.textContent = fmtDist(valueAt(step)) + (step === focusStep() ? ' · in focus' : '');
     fieldV.textContent = fmtField(Number(fieldEl.value) / STEPS);
+    // the sliders' raw values are step numbers (0..STEPS); a screen reader hears the shown value instead, and the
+    // output beside each is hidden from it so the value is not read twice (score loop r3)
+    distEl.setAttribute('aria-valuetext', distV.textContent);
+    fieldEl.setAttribute('aria-valuetext', fieldV.textContent);
     // the amber fill of the site's slider track (base.css reads --pct)
     distEl.style.setProperty('--pct', `${(Number(distEl.value) / STEPS) * 100}%`);
     fieldEl.style.setProperty('--pct', `${(Number(fieldEl.value) / STEPS) * 100}%`);
@@ -79,16 +91,21 @@ export function buildOverlay(minMm: number): ConeControls {
 
   return {
     el,
-    pointDistMm() { return logStepValue(curMinMm, maxMm, Number(distEl.value)); },
+    pointDistMm() { return valueAt(Number(distEl.value)); },
     fieldFrac() { return Number(fieldEl.value) / STEPS; },
     set(pointDistMm, fieldFrac) {
       distEl.value = String(logStepFromMm(curMinMm, maxMm, pointDistMm));
       fieldEl.value = String(Math.round(Math.min(1, Math.max(0, fieldFrac)) * STEPS));
       syncOutputs();
     },
+    setFocusMm(mm) {
+      if (mm === focusMm) return;
+      focusMm = mm;
+      syncOutputs();
+    },
     setMinMm(mm) {
       if (mm === curMinMm) return;
-      const currentMm = logStepValue(curMinMm, maxMm, Number(distEl.value));
+      const currentMm = valueAt(Number(distEl.value));
       curMinMm = Math.max(1, mm);
       distEl.value = String(logStepFromMm(curMinMm, maxMm, currentMm));
       syncOutputs();

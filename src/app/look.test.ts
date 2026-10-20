@@ -3,22 +3,13 @@ import * as THREE from 'three/webgpu';
 import { cutawayGlassMaterial, opticalGlassMaterial, sectionGlassMaterial, sensorArrayMaterial, studioReplacement } from './look';
 
 describe('studio cover glass', () => {
-  it.each(['filterGlass', 'evfGlass'])('renders %s without a viewport transmission sampler', (name) => {
-    const source = new THREE.MeshPhysicalMaterial({ name, color: 0xc1def2, transmission: 1,
-      roughness: 0.04, ior: 1.52, thickness: 1.8, side: THREE.DoubleSide });
-    const glass = studioReplacement(source) as THREE.MeshPhysicalMaterial;
-    expect(glass.transmission).toBe(0);
-    expect(glass.transparent).toBe(true);
-    expect(glass.opacity).toBeGreaterThan(0);
-    expect(glass.opacity).toBeLessThan(0.5);
-    expect(glass.depthWrite).toBe(false);
-    expect(glass.color.equals(source.color)).toBe(true);
-    expect(glass.roughness).toBe(source.roughness);
-    expect(glass.ior).toBe(source.ior);
-    expect(glass.side).toBe(source.side);
-    expect(studioReplacement(source)).toBe(glass);
-    expect(source.transmission).toBe(1);
-    expect(source.transparent).toBe(false);
+  // The filter stack and the EVF eyepiece now export as dark coated glass with alpha and no transmission
+  // (blender/bodykit.py mat_cover_glass, aperture review 10/11/2026), so the studio look keeps them as authored.
+  // src/scene/bodies/blender-glb.test.ts holds the GLB itself to that.
+  it.each(['filterGlass', 'evfGlass'])('leaves %s as exported', (name) => {
+    const source = new THREE.MeshPhysicalMaterial({ name, color: 0x0a0e10, transparent: true, opacity: 0.3, depthWrite: false });
+    expect(studioReplacement(source)).toBeNull();
+    source.dispose();
   });
 });
 

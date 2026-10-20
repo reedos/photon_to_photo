@@ -14,6 +14,9 @@ export interface DiskTexture {
 }
 
 const CANVAS_PX = 320;
+/** The faintest a recorded-weighted splat is drawn, as a fraction of full alpha: keeps a violet or deep-red rim
+ *  visible as a halo (score loop r3, 10/11/2026). A display floor, stated on the Bokeh disk card. */
+export const RECORDED_ALPHA_FLOOR = 0.12;
 
 /**
  * `landing`: the bundle's real landing points (mm, sensor-plane x/y) with each ray's wavelength. `cx`/`cy`: the
@@ -26,6 +29,14 @@ export function buildDiskTexture(
   cy: number,
   halfExtentMm: number,
   lookMod: typeof look,
+  /** Each wavelength's share of the recorded signal relative to the strongest (Bundle.recordedWeightByNm). When given,
+   *  a splat's alpha is scaled by it (never below RECORDED_ALPHA_FLOOR), so colors the sensor barely records keep
+   *  their hue but show as a faint halo instead of a full-brightness rim. Omitted: every ray at full alpha (the
+   *  geometry mask the accuracy gates measure). */
+  weightOf?: (nm: number) => number,
+  /** A coarse bundle (the drag preview, score loop r6) has few landing points: its splats are this many times wider so the disk
+   *  keeps about the area and the light of the full one. 1 is the full bundle. */
+  splatScale = 1,
 ): DiskTexture {
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_PX;
@@ -52,7 +63,7 @@ export function buildDiskTexture(
   // sharp boundary -- a soft radial gradient removes that hard edge so overlapping splats blend continuously
   // instead). Each splat is still stamped with exactly one wavelengthToThreeColor(nm), radially symmetric about
   // its own center, so a splat's color is never a function of direction (LOOK.md's spectral-color rule).
-  const rPx = CANVAS_PX / 55; // ~5.8px at 320px -- wide enough for neighboring landing points to overlap and merge
+  const rPx = (CANVAS_PX / 55) * splatScale; // ~5.8px at 320px -- wide enough for neighboring landing points to overlap and merge
 
   for (const p of landing) {
     // Canvas CSS colors are encoded sRGB; the Three material helper returns linear working-space values.
@@ -62,8 +73,9 @@ export function buildDiskTexture(
     // v=1 on a default-UV PlaneGeometry (local +Y, up) -- so "model y up" must map to "small canvas py" here.
     const py = CANVAS_PX / 2 - ((p.y - cy) / halfExtentMm) * (CANVAS_PX / 2);
     const rgb = `${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)}`;
+    const alpha = weightOf ? perRayAlpha * Math.max(RECORDED_ALPHA_FLOOR, Math.min(1, weightOf(p.nm))) : perRayAlpha;
     const grad = g.createRadialGradient(px, py, 0, px, py, rPx);
-    grad.addColorStop(0, `rgba(${rgb},${perRayAlpha})`);
+    grad.addColorStop(0, `rgba(${rgb},${alpha.toFixed(4)})`);
     grad.addColorStop(1, `rgba(${rgb},0)`);
     g.beginPath();
     g.arc(px, py, rPx, 0, Math.PI * 2);

@@ -13,35 +13,16 @@ mkdirSync('shots/audit', { recursive: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 }, reducedMotion: 'reduce' });
   const errors = []; page.on('pageerror', e => errors.push(String(e)));
-  await page.addInitScript(() => {
-    const OriginalWorker = window.Worker; let fail = true;
-    window.Worker = class extends OriginalWorker {
-      constructor(source, options) { super(source, options); this.photo = String(source).includes('render-worker'); if (this.photo) window.auditWorker = this; }
-      postMessage(message, ...args) {
-        if (this.photo && fail && message.type === 'render') {
-          fail = false;
-          setTimeout(() => this.dispatchEvent(new ErrorEvent('error', { message: 'Injected worker failure', cancelable: true })), 10);
-          return;
-        }
-        return super.postMessage(message, ...args);
-      }
-    };
-  });
-  await page.goto(url + '?gl=webgl2');
-  await page.waitForFunction(() => window.p2p);
+  // The October audit's first check injected render-worker crashes into the synthetic final photo and required a
+  // visible Retry. Synthetic photo rendering was removed on purpose (c6209df), so that worker, its Retry and the
+  // pinned photo no longer exist; the check now guards that none of them come back and that the camera still loads.
+  const workers = []; page.on('worker', worker => workers.push(worker.url()));
+  await page.goto(url + '?piece=camera&gl=webgl2');
+  await page.waitForFunction(() => window.p2p?.pieces.camera);
   await page.evaluate(() => window.p2p.pieces.camera.ready());
-  await page.locator('#finalimg-retry').waitFor({ state: 'visible' });
-  assert.equal(await page.locator('.finalimg-card').evaluate(el => el.classList.contains('rendering')), false);
-  assert.equal(await page.locator('#finalimg-canvas').getAttribute('aria-busy'), 'false');
-  await page.locator('#finalimg-retry').click();
-  await page.waitForFunction(() => window.p2p.render(), null, { timeout: 60000 });
-  // A worker can also fail after delivering a photo: its old pixel buffer must not appear inspectable.
-  await page.evaluate(() => window.auditWorker.dispatchEvent(new ErrorEvent('error', { message: 'Injected completed-worker failure', cancelable: true })));
-  await page.locator('#finalimg-retry').waitFor({ state: 'visible' });
-  assert.equal(await page.locator('#pin-photo').isDisabled(), true);
-  assert.equal(await page.evaluate(() => window.p2p.render()), null);
-  await page.locator('#finalimg-retry').click();
-  await page.waitForFunction(() => window.p2p.render(), null, { timeout: 60000 });
+  assert.equal(await page.evaluate(() => window.p2p.backend()), 'webgl2');
+  assert.equal(await page.locator('#finalimg,#finalimg-retry,#finalimg-canvas,#pin-photo').count(), 0, 'removed synthetic photo panel stays absent');
+  assert.equal(workers.some(w => /render-worker|example-worker/.test(w)), false, 'no synthetic-render worker starts');
   await page.locator('#kit-body').selectOption('mirrorless');
   assert.equal(await page.evaluate(() => window.p2p.model().scenario.sensor), 'full-frame-z8');
   assert.match(await page.evaluate(() => window.p2p.model().sensor.name), /Z8/);
@@ -57,7 +38,7 @@ try {
   assert.deepEqual(await restored.evaluate(() => window.p2p.scenario()), before);
   await restored.close();
   await page.screenshot({ path: 'shots/audit/workspace.png' });
-  console.log('PASS live worker crash/retry, body sensor, spoken control values, exact shared shot');
+  console.log('PASS no synthetic-render worker, body sensor, spoken control values, exact shared shot');
 
   for (const width of [1366, 390]) {
     await page.setViewportSize({ width, height: 844 });
@@ -99,7 +80,9 @@ try {
   const desktopDistance = await page.evaluate(() => window.p2pModels.camera.position.length());
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300); // ResizeObserver and the menu's responsive transition.
-  assert.ok(await page.evaluate(() => window.p2pModels.camera.position.length()) > desktopDistance, 'portrait resize refits a long lens');
+  // score loop r5: the phone's pinned model view is 40% of the screen, about as wide as it is tall, so the long lens fits at the
+  // desktop's distance there (it was a 0.6-aspect column that needed to pull back); it must still be refitted, never closer
+  assert.ok(await page.evaluate(() => window.p2pModels.camera.position.length()) >= desktopDistance - 1e-6, 'portrait resize refits a long lens');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390);
   await page.screenshot({ path: 'shots/audit/models-phone.png' });
   assert.deepEqual(errors, []);
@@ -113,7 +96,7 @@ try {
       return context.call(this, type, ...args);
     };
   });
-  await failed.goto(url + '?gl=webgl2');
+  await failed.goto(url + '?piece=camera&gl=webgl2');
   await failed.locator('#veil.err #veil-reload').waitFor({ state: 'visible' });
   await Promise.all([failed.waitForEvent('domcontentloaded'), failed.locator('#veil-reload').click()]);
   await failed.close();

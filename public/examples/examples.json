@@ -25,7 +25,7 @@
         "y": 0.467
       },
       "credit": "Photo: Reed Osaki. Camera-recorded focus distance is approximate.",
-      "note": "The bird and nest hold fine detail while branches at other distances soften. A long lens and a wide aperture help isolate this small subject.",
+      "note": "The bird and nest hold fine detail while branches at other distances soften. A long lens at its widest aperture (f/5.6 on this lens) helps isolate this small subject.",
       "details": [
         {
           "label": "Bird & nest",
@@ -221,7 +221,7 @@
         "y": 0.37
       },
       "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
-      "note": "The face stands out against a soft backdrop. The edited file retains aperture, shutter and ISO, but no recorded focus distance.",
+      "note": "The face stands out against a soft backdrop. At 500 mm and f/5.6 the opening is about 89 mm wide, so each out-of-focus point behind the fox spreads into a large blur disk, and the long lens also magnifies the backdrop, melting it into smooth tone. The edited file keeps aperture, shutter and ISO, but no focus distance.",
       "details": [
         {
           "label": "Face & whiskers",
@@ -270,7 +270,7 @@
         "y": 0.77
       },
       "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
-      "note": "A 50 mm view includes both the flock and the mountain setting. At f/1.8, depth of field remains limited even though the wider view makes the landscape recognizable.",
+      "note": "At f/1.8 the wide opening keeps the sharp zone shallow: the nearest sheep is crisp, while the flock behind it and the mountains soften, even though the 50 mm view takes in the whole valley.",
       "details": [
         {
           "label": "Foreground sheep",
@@ -319,7 +319,7 @@
         "y": 0.43
       },
       "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
-      "note": "The close composition emphasizes curls and a dark face. The supplied file records a 500 mm lens; the portrait framing also reflects the supplied crop.",
+      "note": "The curls hold fine detail: 1/1000 s is short enough to freeze small movements of the head. The recorded ISO 1800 brightens the image after capture without adding light, so the dark face, which collected the fewest photons, is where noise shows first. The original file records a 500 mm lens; the tight framing also reflects a crop.",
       "details": [
         {
           "label": "Face & curls",
@@ -368,7 +368,7 @@
         "y": 0.42
       },
       "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
-      "note": "The horns and face stand out against a green hillside. The long lens and scene geometry separate the subject from its surroundings; focus distance is unavailable.",
+      "note": "The horns and face stand out against a green hillside. At 500 mm and f/5.6 the opening is about 89 mm wide, so the hillside, well behind the sheep, spreads into large blur disks and its detail dissolves into color while the horns stay sharp. Focus distance is unavailable.",
       "details": [
         {
           "label": "Horns & face",
@@ -466,7 +466,7 @@
         "y": 0.61
       },
       "credit": "Photo: Reed Osaki. Focus distance was not retained in the supplied file.",
-      "note": "The nearer bear and the second bear occupy different depths. This photograph was recorded with a Canon EOS Rebel T7 and a 75–300 mm lens at 160 mm; that lens is not in the simulator.",
+      "note": "At 160 mm and f/5, both bears stay reasonably sharp although they stand at different depths, while the bushes behind them soften. This photograph was recorded with a Canon EOS Rebel T7 and a 75–300 mm lens at 160 mm; that lens is not in the simulator.",
       "details": [
         {
           "label": "Near bear",

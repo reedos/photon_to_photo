@@ -58,7 +58,8 @@
         "switches"
       ],
       "focusRingThrowDeg": 100.0,
-      "body": "dslr"
+      "body": "dslr",
+      "glbLite": "public/models/lenses/s35.lite.glb"
     },
     "n50": {
       "lens": "n50",
@@ -110,7 +111,8 @@
         "switches"
       ],
       "focusRingThrowDeg": 80.0,
-      "body": "dslr"
+      "body": "dslr",
+      "glbLite": "public/models/lenses/n50.lite.glb"
     },
     "n500": {
       "lens": "n500",
@@ -173,7 +175,8 @@
         "switches"
       ],
       "focusRingThrowDeg": 90.0,
-      "body": "dslr"
+      "body": "dslr",
+      "glbLite": "public/models/lenses/n500.lite.glb"
     },
     "n500fl": {
       "lens": "n500fl",
@@ -238,12 +241,15 @@
         "tripodFoot"
       ],
       "focusRingThrowDeg": 100.0,
-      "body": "dslr"
+      "body": "dslr",
+      "glbLite": "public/models/lenses/n500fl.lite.glb"
     },
     "z35": {
       "lens": "z35",
       "clipped": [],
-      "notes": [],
+      "notes": [
+        "element 1 stands 0.5 mm past the barrel front: the prescription (data/lenses) puts its front vertex there and no source found places the real filter-ring face; kept as prescribed"
+      ],
       "glb": "public/models/lenses/z35.glb",
       "mount": "nikonZ",
       "flangeMm": 16.0,
@@ -291,7 +297,8 @@
         "switches"
       ],
       "focusRingThrowDeg": 60.0,
-      "body": "mirrorless"
+      "body": "mirrorless",
+      "glbLite": "public/models/lenses/z35.lite.glb"
     },
     "m50": {
       "lens": "m50",
@@ -345,7 +352,8 @@
         "switches"
       ],
       "focusRingThrowDeg": 60.0,
-      "body": "mirrorless"
+      "body": "mirrorless",
+      "glbLite": "public/models/lenses/m50.lite.glb"
     },
     "z800": {
       "lens": "z800",
@@ -414,7 +422,8 @@
         "tripodFoot"
       ],
       "focusRingThrowDeg": 70.0,
-      "body": "mirrorless"
+      "body": "mirrorless",
+      "glbLite": "public/models/lenses/z800.lite.glb"
     }
   }
 }
