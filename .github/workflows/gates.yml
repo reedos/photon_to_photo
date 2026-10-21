@@ -30,7 +30,7 @@ jobs:
       - run: npm ci
       - run: node tools/run-gates.mjs --prod --shard=${{ matrix.shard }}/8
         env: { P2P_GATE_TIMEOUT: '900' }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: gate-logs-shard-${{ matrix.shard }}
